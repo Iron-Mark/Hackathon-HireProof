@@ -1,0 +1,46 @@
+{
+  "name": "v0-project",
+  "version": "1.0.0",
+  "description": "HireProof is a proof-backed AI agent for checking suspicious job posts before someone applies. A user pastes a job post, recruiter message, or job URL, and the app investigates the opportunity with visible evidence before returning a verdict: **Safe**, **Caution**, or **High-Risk**.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://x-access-token:ghs_2gmk7KNJHiWkudYA66fGDJx8Tz5HA71fAv76@github.com/Iron-Mark/hackathon-v0-zero_to_agent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues"
+  },
+  "homepage": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.11.0",
+    "next": "16.2.4",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "typescript": "6.0.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.4"
+  }
+}
