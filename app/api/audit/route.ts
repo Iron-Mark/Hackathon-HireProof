@@ -40,19 +40,31 @@ export async function POST(request: Request) {
     // For now, return demo fixture based on heuristics
     const textLower = validated.text.toLowerCase()
     
-    let fixture = DEMO_FIXTURES.safe
+    let fixture: AuditReport
     if (textLower.includes('80000') || textLower.includes('telegram')) {
-      fixture = DEMO_FIXTURES.highRisk
+      fixture = {
+        id: `report_${Date.now()}`,
+        ...DEMO_FIXTURES.highRisk,
+        timestamp: new Date().toISOString(),
+        mode: 'demo',
+      }
     } else if (textLower.includes('unclear') || textLower.includes('caution')) {
-      fixture = DEMO_FIXTURES.caution
+      fixture = {
+        id: `report_${Date.now()}`,
+        ...DEMO_FIXTURES.caution,
+        timestamp: new Date().toISOString(),
+        mode: 'demo',
+      }
+    } else {
+      fixture = {
+        id: `report_${Date.now()}`,
+        ...DEMO_FIXTURES.safe,
+        timestamp: new Date().toISOString(),
+        mode: 'demo',
+      }
     }
 
-    const report: AuditReport = {
-      id: `report_${Date.now()}`,
-      ...fixture,
-      timestamp: new Date().toISOString(),
-      mode: 'demo',
-    }
+    const report: AuditReport = fixture
 
     return new Response(JSON.stringify(report), {
       status: 200,
