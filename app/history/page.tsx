@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { AlertTriangle, Zap, CheckCircle2, ArrowRight } from 'lucide-react'
+import { SiteHeader } from '@/components/site-header'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
-import type { AuditReport } from '@/lib/schemas'
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState<'all' | 'safe' | 'caution' | 'high-risk'>('all')
@@ -16,21 +16,21 @@ export default function HistoryPage() {
     switch (verdict) {
       case 'safe':
         return (
-          <div className="flex items-center gap-2 px-3 py-1 bg-safe/10 text-safe rounded text-sm font-medium">
+          <div className="flex items-center gap-2 rounded-full bg-safe-bg px-3 py-1 text-sm font-black text-safe-text">
             <CheckCircle2 className="w-4 h-4" />
             Safe
           </div>
         )
       case 'caution':
         return (
-          <div className="flex items-center gap-2 px-3 py-1 bg-caution/10 text-caution rounded text-sm font-medium">
+          <div className="flex items-center gap-2 rounded-full bg-caution-bg px-3 py-1 text-sm font-black text-caution-text">
             <Zap className="w-4 h-4" />
             Caution
           </div>
         )
       case 'high-risk':
         return (
-          <div className="flex items-center gap-2 px-3 py-1 bg-high-risk/10 text-high-risk rounded text-sm font-medium">
+          <div className="flex items-center gap-2 rounded-full bg-risk-bg px-3 py-1 text-sm font-black text-risk-text">
             <AlertTriangle className="w-4 h-4" />
             High-Risk
           </div>
@@ -40,107 +40,95 @@ export default function HistoryPage() {
     }
   }
 
+  const filterClasses = (active: boolean, tone: 'default' | 'safe' | 'caution' | 'risk' = 'default') => {
+    if (active && tone === 'safe') return 'bg-safe text-white border-safe'
+    if (active && tone === 'caution') return 'bg-caution text-white border-caution'
+    if (active && tone === 'risk') return 'bg-high-risk text-white border-high-risk'
+    if (active) return 'bg-foreground text-white border-foreground'
+    return 'bg-surface text-muted border-border hover:bg-background hover:text-foreground'
+  }
+
   return (
-    <div className="bg-background min-h-screen">
-      <header className="border-b">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div className="font-bold text-2xl">HireProof</div>
-          <nav className="flex gap-6 text-sm">
-            <Link href="/" className="hover:text-muted">Home</Link>
-            <Link href="/audit" className="hover:text-muted">Audit</Link>
-            <Link href="/history" className="hover:text-muted">History</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Investigation History</h1>
-          <p className="text-muted">All your past investigations saved locally.</p>
-        </div>
+      <div className="hireproof-grid border-b border-border-soft">
+        <div className="mx-auto max-w-4xl px-4 py-10">
+          <div className="mb-8">
+            <div className="mb-3 inline-flex rounded-full bg-evidence-bg px-3 py-1 text-xs font-black uppercase tracking-normal text-evidence">
+              Local reports
+            </div>
+            <h1 className="text-4xl font-black leading-tight">Investigation history</h1>
+            <p className="mt-3 font-semibold text-muted">Past HireProof reports saved locally in this browser.</p>
+          </div>
 
-        {/* Filters */}
-        <div className="flex gap-3 mb-8">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-              filter === 'all'
-                ? 'bg-foreground text-background'
-                : 'bg-white/50 border hover:bg-white'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('safe')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
-              filter === 'safe'
-                ? 'bg-safe text-white'
-                : 'bg-white/50 border hover:bg-white text-safe'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Safe
-          </button>
-          <button
-            onClick={() => setFilter('caution')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
-              filter === 'caution'
-                ? 'bg-caution text-white'
-                : 'bg-white/50 border hover:bg-white text-caution'
-            }`}
-          >
-            <Zap className="w-4 h-4" />
-            Caution
-          </button>
-          <button
-            onClick={() => setFilter('high-risk')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
-              filter === 'high-risk'
-                ? 'bg-high-risk text-white'
-                : 'bg-white/50 border hover:bg-white text-high-risk'
-            }`}
-          >
-            <AlertTriangle className="w-4 h-4" />
-            High-Risk
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setFilter('all')}
+              className={`hireproof-focus rounded-full border px-4 py-2 text-sm font-black ${filterClasses(filter === 'all')}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('safe')}
+              className={`hireproof-focus flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-black ${filterClasses(filter === 'safe', 'safe')}`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Safe
+            </button>
+            <button
+              onClick={() => setFilter('caution')}
+              className={`hireproof-focus flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-black ${filterClasses(filter === 'caution', 'caution')}`}
+            >
+              <Zap className="w-4 h-4" />
+              Caution
+            </button>
+            <button
+              onClick={() => setFilter('high-risk')}
+              className={`hireproof-focus flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-black ${filterClasses(filter === 'high-risk', 'risk')}`}
+            >
+              <AlertTriangle className="w-4 h-4" />
+              High-Risk
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* History List */}
+      <div className="mx-auto max-w-4xl px-4 py-10">
         {!isLoaded ? (
-          <div className="text-center py-16">
-            <p className="text-muted">Loading history...</p>
+          <div className="rounded-2xl border border-border-soft bg-surface py-16 text-center shadow-sm">
+            <p className="font-semibold text-muted">Loading history...</p>
           </div>
         ) : filtered.length > 0 ? (
           <div className="space-y-3">
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="border rounded-lg p-4 hover:bg-white/50 transition-colors flex items-center justify-between"
+                className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-surface p-4 shadow-sm transition-colors hover:bg-white"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
                     {getVerdictBadge(item.verdict)}
-                    <span className="text-sm text-muted">Risk Score: {item.riskScore}</span>
+                    <span className="text-sm font-black text-muted">Risk Score: {item.riskScore}</span>
                   </div>
-                  <h3 className="font-semibold">{item.extractedClaims.role}</h3>
-                  <p className="text-sm text-muted">{item.extractedClaims.company}</p>
-                  <p className="text-xs text-muted mt-1">
+                  <h3 className="truncate font-black">{item.extractedClaims.role}</h3>
+                  <p className="truncate text-sm font-semibold text-muted">{item.extractedClaims.company}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted">
                     {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Recently'}
                   </p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted" />
+                <ArrowRight className="h-5 w-5 shrink-0 text-muted" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-muted mb-6">No investigations yet.</p>
+          <div className="rounded-2xl border border-border-soft bg-surface px-6 py-16 text-center shadow-sm">
+            <p className="mb-6 font-semibold text-muted">No investigations yet.</p>
             <Link
               href="/audit"
-              className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-2 rounded font-medium hover:opacity-90"
+              className="hireproof-focus inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 font-black text-white shadow-lg hover:bg-safe"
             >
-              Start Investigation <ArrowRight className="w-4 h-4" />
+              Start investigation <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         )}

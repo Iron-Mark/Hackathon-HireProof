@@ -1,7 +1,7 @@
 import type { EvidenceItem } from '@/lib/schemas'
 
 const SERPAPI_KEY = process.env.SERPAPI_API_KEY
-const API_BASE = 'https://serpapi.com'
+const API_BASE = 'https://serpapi.com/search.json'
 
 interface SerpApiSearchResult {
   title: string
@@ -14,14 +14,17 @@ interface SerpApiResponse {
   news_results?: Array<{
     title: string
     link: string
-    source: string
-    date: string
+    source?: string | { name?: string }
+    date?: string
   }>
   jobs_results?: Array<{
     title: string
     company_name: string
     location: string
     salary?: string
+    via?: string
+    related_links?: Array<{ link?: string }>
+    job_highlights?: Array<{ title?: string; items?: string[] }>
   }>
   local_results?: Array<{
     title: string
@@ -30,7 +33,11 @@ interface SerpApiResponse {
   }>
 }
 
-async function fetchSerpApi(endpoint: string, params: Record<string, any>) {
+export function isSerpApiConfigured() {
+  return Boolean(SERPAPI_KEY)
+}
+
+async function fetchSerpApi(params: Record<string, any>): Promise<SerpApiResponse | null> {
   if (!SERPAPI_KEY) {
     return null // Return null if API key not configured
   }
@@ -41,19 +48,19 @@ async function fetchSerpApi(endpoint: string, params: Record<string, any>) {
       ...params,
     })
 
-    const response = await fetch(`${API_BASE}/${endpoint}?${queryParams.toString()}`, {
+    const response = await fetch(`${API_BASE}?${queryParams.toString()}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })
 
     if (!response.ok) {
-      console.warn(`[SerpApi] ${endpoint} returned status ${response.status}`)
+      console.warn(`[SerpApi] search returned status ${response.status}`)
       return null
     }
 
     return await response.json()
   } catch (error) {
-    console.error(`[SerpApi] ${endpoint} error:`, error)
+    console.error('[SerpApi] search error:', error)
     return null
   }
 }
@@ -68,7 +75,8 @@ export async function searchCompanyPresence(
   const evidence: EvidenceItem[] = []
 
   try {
-    const data = await fetchSerpApi('search', {
+    const data = await fetchSerpApi({
+      engine: 'google',
       q: `${companyName} company official website linkedin`,
       num: 5,
       gl: 'us',
@@ -98,16 +106,21 @@ export async function searchNewsReputation(companyName: string): Promise<Evidenc
   const evidence: EvidenceItem[] = []
 
   try {
-    const data = await fetchSerpApi('news', {
+    const data = await fetchSerpApi({
+      engine: 'google_news',
       q: `${companyName} scam fraud review reputation`,
       num: 5,
       gl: 'us',
     })
 
     if (data?.news_results) {
-      data.news_results.slice(0, 3).forEach((result: any) => {
+      data.news_results.slice(0, 3).forEach((result) => {
+        const source = typeof result.source === 'string'
+          ? result.source
+          : result.source?.name
+
         evidence.push({
-          source: result.source || 'News',
+          source: source || 'News',
           snippet: result.title || '',
           url: result.link,
           type: 'Reputation',
@@ -131,18 +144,20 @@ export async function searchComparableJobs(
   const evidence: EvidenceItem[] = []
 
   try {
-    const data = await fetchSerpApi('jobs', {
+    const data = await fetchSerpApi({
+      engine: 'google_jobs',
       q: `${role} jobs ${location}`,
       num: 5,
       gl: 'us',
     })
 
     if (data?.jobs_results) {
-      data.jobs_results.slice(0, 3).forEach((result: any) => {
+      data.jobs_results.slice(0, 3).forEach((result) => {
         const salaryInfo = result.salary ? ` - ${result.salary}` : ''
         evidence.push({
-          source: 'Job Board',
+          source: result.via || 'Job Board',
           snippet: `${result.title} at ${result.company_name}${salaryInfo}`,
+          url: result.related_links?.find(link => link.link)?.link,
           type: 'Comparable Jobs',
         })
       })
@@ -164,9 +179,9 @@ export async function searchLocalPresence(
   const evidence: EvidenceItem[] = []
 
   try {
-    const data = await fetchSerpApi('search', {
+    const data = await fetchSerpApi({
+      engine: 'google',
       q: `"${companyName}" business address ${location} maps`,
-      type: 'places',
       num: 5,
       gl: 'us',
     })
@@ -176,6 +191,15 @@ export async function searchLocalPresence(
         evidence.push({
           source: 'Local Search',
           snippet: `${result.title} - ${result.address}`,
+          type: 'Local Presence',
+        })
+      })
+    } else if (data?.organic_results) {
+      data.organic_results.slice(0, 2).forEach((result: SerpApiSearchResult) => {
+        evidence.push({
+          source: 'Local Search',
+          snippet: result.snippet || result.title,
+          url: result.link,
           type: 'Local Presence',
         })
       })

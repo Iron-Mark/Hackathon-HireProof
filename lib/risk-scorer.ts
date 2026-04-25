@@ -22,17 +22,21 @@ export function calculateRiskScore(
   greenFlags: string[],
   evidence: EvidenceItem[]
 ): number {
-  let score = 50 // Base neutral score
+  let score = 25 // Base low-to-medium risk before signals
 
-  // Red flags deduct points
+  // Red flags increase the risk score.
   const redFlagWeights: Record<string, number> = {
-    'unrealistic_salary': -20,
-    'no_interview': -15,
-    'telegram_contact': -15,
-    'no_company_info': -20,
-    'negative_reputation': -15,
-    'no_local_presence': -10,
-    'payment_request': -25,
+    unrealistic: 25,
+    salary: 12,
+    interview: 15,
+    telegram: 18,
+    whatsapp: 14,
+    company: 15,
+    reputation: 18,
+    local: 10,
+    payment: 25,
+    fee: 25,
+    pressure: 12,
   }
 
   redFlags.forEach(flag => {
@@ -43,12 +47,14 @@ export function calculateRiskScore(
     }
   })
 
-  // Green flags add points
+  // Green flags reduce the risk score.
   const greenFlagWeights: Record<string, number> = {
-    'company_verified': 15,
-    'formal_process': 10,
-    'industry_standard': 15,
-    'legitimate_company': 20,
+    verified: -18,
+    official: -14,
+    professional: -12,
+    standard: -10,
+    legitimate: -15,
+    specific: -8,
   }
 
   greenFlags.forEach(flag => {
