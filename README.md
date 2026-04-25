@@ -98,6 +98,6 @@ If live API calls fail, the app should fall back to demo data and show a visible
 ## Docs
 
 - [Final presentation plan](docs/final-presentation-plan.md)
-- [v0 build prompt spec](docs/v0-build-prompt-spec.md)
+- [v0 build prompt spec](docs/prompts/v0-build-prompt-spec.md)
 - [Submission package](docs/submission-package.md)
 - [Docs index](docs/README.md)
