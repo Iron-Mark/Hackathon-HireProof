@@ -1,482 +1,430 @@
-# v0 Build Prompt Spec
+# v0 Build Prompt Pack: HireProof
 
-This is the copy-ready v0 prompt plan for building the Zero to Agent project.
+Copy these prompts into v0 in order. The goal is a polished hackathon demo for the **v0 + MCPs** track: **HireProof**, a proof-backed AI agent that audits suspicious job posts before someone applies.
 
-Canonical product name: **HireProof**  
-Alternate name if preferred: **OfferProof**
+Canonical product name: **HireProof**<br>
+Track: **v0 + MCPs**<br>
+Core promise: **Paste a job post. Know if it's legit before you apply.**
 
-Use the prompts in order. After each v0 output, inspect the generated app, fix obvious breakage, and snapshot the working state before moving to the next prompt.
+## How to Use This Pack
 
-## Build Goal
+- Run one phase at a time.
+- After each phase, inspect the app before continuing.
+- Keep the app focused on the main demo: paste a suspicious job post, run an investigation, reveal a proof-backed verdict.
+- Do not add auth, accounts, document uploads, payments, wallets, Slack/Discord bots, or large dashboards.
+- Preserve demo mode so the app works even without API keys.
 
-Build a production-ready Next.js App Router app for the Zero to Agent hackathon.
+## Phase 0: Product Plan Only
 
-HireProof is an AI verification agent for job opportunities. A user pastes a suspicious job post, recruiter pitch, or job URL, and the app investigates it using live evidence, structured scoring, and visible agent steps.
-
-The finished demo should show:
-
-- a clear verdict: Safe, Caution, or High-Risk
-- a 0-100 risk score
-- extracted claims from the job post
-- red flags and green flags
-- an investigation timeline
-- evidence cards with source links
-- safer alternative jobs
-- exportable/shareable result summary
-- demo-mode fallback for reliable presentations
-
-## Prompt 0: PRD-Only Planning Prompt
-
-Paste this first if you want v0 to plan before writing code.
+Use this first if v0 should plan before writing code.
 
 ```text
-Build "HireProof," a production-ready Next.js App Router app for the Vercel Zero to Agent hackathon.
+Create a concise implementation plan for a Next.js App Router app called HireProof.
 
-Purpose:
-HireProof is an AI verification agent for job opportunities. A user pastes a suspicious job post, recruiter pitch, or job URL. The app investigates it and returns a structured trust report with a Safe, Caution, or High-Risk verdict.
+Context:
+HireProof is a proof-backed AI agent for suspicious job opportunities. A user pastes a job post, recruiter message, or job URL. The agent extracts claims, researches live evidence, checks company footprint, compares similar openings, and returns a verdict: Safe, Caution, or High-Risk.
 
-Core workflow:
-1. Extract claims from the pasted job post or URL.
-2. Search company and role presence.
-3. Check recent news and reputation signals.
-4. Compare against similar legitimate jobs.
-5. Check local/company footprint.
-6. Score the risk and produce a clear report.
+Hackathon track:
+v0 + MCPs.
 
-Required app surfaces:
-- Landing page at /
-- Main audit workspace at /audit
-- History page at /history
-- Demo mode using seeded data
+Core demo:
+Use the sample "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram." The demo should show an investigation timeline, a High-Risk verdict, evidence cards, safer alternatives, and an export/share result card.
 
-Technical target:
+Recommended stack:
 - Next.js App Router
 - TypeScript
 - Tailwind CSS
 - shadcn/ui
+- AI SDK structured outputs
+- runtime MCP route inside the app
+- AI SDK MCP client over HTTP
+- SerpApi for Search, News, Jobs, and Local evidence
+- localStorage for MVP history
 - Vercel deployment
-- AI SDK structured outputs later
-- Runtime MCP server route later
-- SerpApi-backed evidence tools later
-- localStorage history
-- no auth
-- no database for MVP
 
-First output only:
-- PRD
+Return only:
 - route map
 - component tree
-- state model
-- data schema
-- server action/API plan
+- data model
+- agent flow
 - MCP tool plan
 - SerpApi integration plan
 - demo fallback plan
-- step-by-step build order
+- build order
 
 Do not generate code yet.
 ```
 
-## Prompt 1: Full UI Scaffold
+Inspect/check:
+- Product name is HireProof everywhere.
+- The app is positioned as an investigator, not a chatbot.
+- The route and API plan includes `/audit`, `/history`, `/api/audit`, and `/api/mcp`.
+
+## Phase 1: App Scaffold and Main Screens
 
 ```text
-Build a production-looking Next.js App Router web app called HireProof.
+Build the first working version of HireProof as a Next.js App Router app.
 
 Product:
-HireProof is an AI verification agent for job opportunities.
-A user pastes a suspicious job post, recruiter pitch, or job URL.
-The app investigates it and returns:
-1. a verdict badge: Safe / Caution / High-Risk
-2. a numeric risk score from 0 to 100
-3. a short plain-language summary
-4. extracted claims like company, role, location, salary, contact method
-5. red flags
-6. green flags
-7. an investigation timeline UI showing the agent checked search, news, comparable jobs, and local presence
-8. evidence cards with title, snippet, source label, and positive/neutral/negative signal
-9. safer alternative jobs
-10. next steps
+HireProof helps job seekers verify suspicious opportunities before applying. Users paste a job post, recruiter message, or job URL. The app returns a structured trust report with a Safe, Caution, or High-Risk verdict.
 
-Design goals:
-- not a generic AI chatbot
-- editorial investigative feel, clean and premium
-- strong hierarchy, asymmetrical spacing, serious trust signals
-- use Next.js, TypeScript, Tailwind, shadcn/ui
-- responsive and accessible
-- no auth
-- no fake analytics dashboard
-- no giant sidebar by default
-- no glassmorphism overload
-- no excessive gradients
+Required pages:
+- `/` landing page
+- `/audit` main audit workspace
+- `/history` local report history
 
-Pages:
-- landing page at /
-- main audit workspace at /audit
-- history page at /history
+Landing page:
+- Hero headline: "Paste a job post. Know if it's legit before you apply."
+- Supporting copy: "HireProof checks company presence, recent news, comparable openings, and local signals before you waste time applying."
+- Primary CTA to `/audit`
+- A visible sample suspicious job post card
+- Short sections for how it works, evidence checked, and demo mode
 
-Landing page requirements:
-- hero headline: "Paste a job post. Know if it's legit before you apply."
-- clear sample suspicious input card
-- CTA to open /audit
-- concise sections: how it works, why it matters, what evidence it checks
-- polished social-proof style layout even without logos
-- include a "demo mode available" note
-
-Audit workspace requirements:
-- large textarea for pasted job text or recruiter message
-- optional URL field
-- optional location field defaulting to Philippines
-- primary CTA: Investigate
-- sample input chips
-- loading state with visible investigation steps
-- result layout with verdict panel, timeline, evidence grid, safer alternatives, and export/share buttons
-- clean empty state before first run
+Audit page:
+- Large textarea for pasted job text or recruiter message
+- Optional job URL field
+- Optional location field defaulting to Philippines
+- Sample chips for high-risk, caution, and safer listings
+- Primary CTA: Investigate
+- Empty, loading, success, and error states
+- Result-ready layout with verdict, timeline, evidence, flags, alternatives, and export/share card
 
 History page:
-- simple clean list of previous local reports
-- cards showing verdict, company, role, score, timestamp
-- empty state
+- Simple local report list using mock records for now
+- Filters: All, Safe, Caution, High-Risk
+- Empty state and action back to `/audit`
 
-Implementation requirements:
-- create reusable components
-- structure app cleanly for later integration with AI SDK, MCP, and SerpApi
-- use mock data first so the full experience is demoable immediately
-- include polished empty, loading, error, and success states
-- generate all code needed for the UI and routing
-- include comments marking where runtime logic will plug in later
+Design:
+- Serious, clean, investigative, and premium
+- Neutral base palette with semantic risk colors
+- Strong hierarchy, thin borders, readable cards
+- Responsive and accessible
+- Avoid chat bubbles, giant sidebars, glassmorphism overload, or generic dashboards
 
-Do not:
-- add authentication
-- add chat bubbles
-- add unnecessary settings pages
-- add database complexity yet
-- overcomplicate the first version
-
-Return the full app scaffold with routes, components, and mock data wired in.
+Implementation:
+- Use TypeScript, Tailwind, and shadcn/ui
+- Use mock data so the demo works immediately
+- Add reusable components for verdict badges, risk score, timeline, evidence cards, alternatives, and export card
+- Add comments where AI SDK, MCP, SerpApi, and persistence will plug in later
 ```
 
-Expected output:
+Inspect/check:
+- `/audit` is clearly the main product screen.
+- The first viewport communicates the job-verification use case.
+- The app works with mock data before any live API exists.
 
-- A working Next.js app scaffold.
-- `/`, `/audit`, and `/history` routes.
-- Mock data wired into the audit result screen.
-- A visible product experience before live APIs exist.
-
-## Prompt 2: Route Map, State, and TODOs
+## Phase 2: Demo Fixtures and Structured Results
 
 ```text
-Refine HireProof into a concise PRD inside the codebase comments and scaffold the final route map, component tree, and state model. Keep the existing UI. Add a technical TODO checklist for AI SDK, MCP server route, SerpApi wrappers, localStorage history, and demo mode.
+Refine HireProof with realistic demo fixtures and a complete structured result screen.
+
+Create three demo cases:
+1. High-Risk: remote frontend intern, PHP 80,000/week, no interview, Telegram contact.
+2. Caution: ambiguous recruiter pitch with limited company detail but not clearly fraudulent.
+3. Safe: legitimate-looking listing with consistent company, role, location, and application flow.
+
+For each demo case, include:
+- extracted claims: company, role, salary, location, contact method, application path
+- verdict: Safe, Caution, or High-Risk
+- numeric risk score from 0 to 100
+- confidence label
+- plain-language summary
+- red flags
+- green flags
+- evidence cards with source label, snippet, URL, and signal type
+- safer alternative jobs
+- next steps
+
+Wire the `/audit` page so sample chips load these fixtures and the result layout renders the selected structured report.
+
+Keep the UI polished and presentation-safe. Add a visible "Demo Data" badge when a fixture is shown.
 ```
 
-Inspect:
+Inspect/check:
+- High-risk sample consistently looks dramatic and screenshot-ready.
+- Safe and caution examples avoid false panic.
+- Demo badge is visible but not distracting.
 
-- route map
-- TODO placement
-- component ownership
-- no unwanted redesign
-
-## Prompt 3: Design System
+## Phase 3: Types, Schemas, and Local History
 
 ```text
-Apply a custom design system for HireProof: editorial investigative feel, neutral base palette, semantic risk colors, strong typography, thin borders, subtle shadows, custom badges, and non-generic cards. Keep everything Tailwind + shadcn/ui compatible.
+Add the core HireProof data layer.
+
+Create central TypeScript types and zod schemas for:
+- AuditReport
+- ExtractedClaims
+- EvidenceItem
+- AlternativeJob
+- InvestigationStep
+- Verdict
+- RiskSignal
+
+Wire the UI to consume these central types instead of duplicated local shapes.
+
+Implement localStorage history:
+- Persist completed demo/live audit reports and timestamps.
+- Hydrate safely in client components.
+- Avoid hydration warnings.
+- Gracefully handle unavailable storage.
+- Store only report data, not raw secrets or API responses.
+
+Update `/history` to read from this local history and support simple verdict filters.
 ```
 
-Inspect:
+Inspect/check:
+- Types match what the result UI actually renders.
+- Refresh keeps completed reports.
+- No API keys, raw provider payloads, or sensitive data are stored client-side.
 
-- verdict colors are consistent
-- typography feels serious and readable
-- UI does not look like a generic chatbot or dashboard template
-
-## Prompt 4: Landing Page
+## Phase 4: Runtime MCP Server Shape
 
 ```text
-Improve the landing page so it sells the product in under 10 seconds. Add a premium hero, a real sample suspicious job post card, a three-step how-it-works section, and a clear CTA to /audit. Keep copy sharp and non-generic.
+Add a runtime MCP server route for HireProof.
+
+Create a Next.js-compatible MCP route at `/api/mcp` that exposes exactly these tools:
+- `search_company`
+- `news_check`
+- `jobs_compare`
+- `local_presence`
+
+For now, each tool should return mocked normalized data matching the HireProof schema.
+
+Tool behavior:
+- `search_company`: checks web presence for the claimed company and role.
+- `news_check`: checks recent reputation or scam-related news signals.
+- `jobs_compare`: compares the listing against similar legitimate jobs.
+- `local_presence`: checks location, maps, directory, or business-footprint signals.
+
+Requirements:
+- Keep the MCP route server-only.
+- Keep tool names stable.
+- Return normalized objects, not UI components.
+- Add clear comments showing where SerpApi will plug into each tool.
+- Do not expose secrets to client components.
 ```
 
-Inspect:
+Inspect/check:
+- MCP tool names are exact and stable.
+- Mocked MCP responses can drive an AuditReport.
+- Client bundles do not import server-only code.
 
-- headline is immediately understandable
-- CTA is visible on desktop and mobile
-- sample post makes the product obvious
-
-## Prompt 5: Audit Workspace
+## Phase 5: SerpApi Evidence Wrappers
 
 ```text
-Build the /audit workspace as the main product screen. Use a large input area, optional URL and location fields, sample chips, and a two-column result-ready layout that can show verdict, timeline, evidence, and alternatives.
+Replace the mocked internals of the MCP tools with SerpApi-backed server-only wrappers.
+
+Create a server-only helper such as `lib/serpapi.ts` that supports:
+- Google Search evidence for company and role presence
+- Google News evidence for recent reputation signals
+- Google Jobs evidence for comparable legitimate openings
+- Google Local or Maps-style evidence for location and business footprint
+
+Environment variable:
+- `SERPAPI_API_KEY`
+
+Requirements:
+- Never expose `SERPAPI_API_KEY` to the browser.
+- Normalize SerpApi responses into HireProof evidence objects.
+- Handle timeout, missing key, empty results, and provider errors.
+- Preserve the same MCP response shape from Phase 4.
+- Add concise fallback responses when live evidence is unavailable.
 ```
 
-Inspect:
+Inspect/check:
+- No `NEXT_PUBLIC_SERPAPI_API_KEY` exists.
+- Empty or failed SerpApi responses do not crash the app.
+- Evidence cards show useful normalized snippets, source labels, URLs, and signal types.
 
-- input flow is obvious
-- result regions have clear hierarchy
-- mobile stacks cleanly
-
-## Prompt 6: Validation
+## Phase 6: AI SDK Audit Endpoint
 
 ```text
-Add strong form validation with zod-style client feedback. Validate that at least one of pasted text or URL is present. Add inline helper text and polished disabled/loading CTA behavior.
+Integrate AI SDK into HireProof with a server-side audit endpoint.
+
+Create `/api/audit` or a server action that:
+1. accepts pasted text, optional URL, optional location, and mode
+2. extracts structured claims from the input
+3. connects to the runtime MCP server over HTTP with the AI SDK MCP client
+4. lets the model call these MCP tools:
+   - `search_company`
+   - `news_check`
+   - `jobs_compare`
+   - `local_presence`
+5. returns a validated structured AuditReport
+
+Use AI SDK structured outputs with the central zod schema.
+
+Environment variable placeholder:
+- `MODEL_PROVIDER_KEY`
+
+Requirements:
+- Keep model and API key code server-side.
+- Validate input before running the agent.
+- Validate output before returning it to the client.
+- Keep a stable response shape for the UI.
+- If the model or MCP call fails, return a graceful error that the UI can recover from.
 ```
 
-Inspect:
+Inspect/check:
+- API keys never appear in client files.
+- The output validates against the schema.
+- The UI can render both demo reports and live reports through the same component path.
 
-- empty submit is blocked
-- validation copy is helpful
-- CTA behavior is clear
-
-## Prompt 7: Investigation Timeline
+## Phase 7: Risk Scoring and Verdict Logic
 
 ```text
-Create a visible investigation timeline component for the audit flow. Show steps for Extract Claims, Search Presence, Check News, Compare Jobs, Check Local Footprint, Score Risk. Add loading, active, success, and failure visual states.
+Add deterministic risk scoring to HireProof.
+
+Create a risk-scoring layer that combines:
+- extracted claims
+- MCP evidence
+- red flag heuristics
+- green flag heuristics
+- model explanation
+
+Verdict rules:
+- Safe: low risk, consistent company presence, normal application path, no urgent off-platform pressure
+- Caution: mixed evidence, missing details, unclear recruiter identity, or incomplete company footprint
+- High-Risk: unrealistic compensation, no interview, payment request, Telegram/WhatsApp-only contact, impersonation signals, or inconsistent company evidence
+
+Requirements:
+- Obvious scam cases should reliably score High-Risk.
+- Legitimate examples should avoid false panic.
+- Score, verdict, red flags, and explanation must agree.
+- Keep heuristics readable and easy to adjust.
 ```
 
-Inspect:
+Inspect/check:
+- High-risk demo lands above 75.
+- Caution lands in the middle range.
+- Safe demo does not show alarming copy.
 
-- the timeline proves the agent is doing work
-- step labels are visible in screenshots
-- loading state is more than a spinner
-
-## Prompt 8: Structured Result Screen
+## Phase 8: Live Mode, Demo Mode, and Recovery
 
 ```text
-Build the result screen UI using mock structured data. Include a verdict badge, risk score ring, confidence label, summary block, extracted claims table, red flags, green flags, evidence cards, safer alternatives, and next steps.
+Upgrade the audit flow to support both live mode and demo mode.
+
+Behavior:
+- Demo mode works with no API keys.
+- Live mode uses `/api/audit`, AI SDK, runtime MCP, and SerpApi.
+- If live mode fails because of missing keys, timeout, MCP failure, or SerpApi error, fall back to a matching demo fixture.
+- Show a visible "Demo Data" badge and a short notice when fallback data is used.
+
+Add UI controls:
+- Try live investigation
+- Use demo mode
+- Retry
+
+Requirements:
+- Never leave the user on a dead error screen.
+- Keep fallback honest and labeled.
+- Preserve the report layout for both live and demo results.
 ```
 
-Inspect:
+Inspect/check:
+- App remains usable with no env vars.
+- Fallback is clearly labeled.
+- Error copy gives a next action.
 
-- verdict and score are visible immediately
-- red flags and evidence are easy to scan
-- safer alternatives feel useful, not decorative
-
-## Prompt 9: Export and Share Card
+## Phase 9: Export Card, Mobile, and Accessibility
 
 ```text
-Add an export/share result card UI. It should generate a compact visual summary that can be screenshotted or shared: verdict, score, 3 top red flags, and "safer alternatives found" indicator.
+Polish HireProof for presentation and screenshots.
+
+Add or refine:
+- screenshot-ready export/share result card
+- visible verdict, score, top 3 red flags, and safer alternatives indicator
+- mobile-first stacking for timeline, evidence, and alternatives
+- keyboard navigation
+- semantic headings
+- associated form labels
+- visible focus states
+- status announcements for investigation progress
+- strong contrast for Safe, Caution, and High-Risk states
+
+Keep visual style serious and trustworthy. Avoid decorative clutter, over-animation, and generic AI chatbot patterns.
 ```
 
-Inspect:
+Inspect/check:
+- First mobile viewport still shows the product value.
+- Export card can serve as the hackathon cover screenshot.
+- Keyboard and screen-reader basics are covered.
 
-- card works as a submission/social screenshot
-- card does not break the main result layout
-
-## Prompt 10: History
+## Phase 10: Metadata, Deployment Prep, and Submission Notes
 
 ```text
-Create the /history page using local mock records first. Use a clean list or masonry card layout with filters for all, safe, caution, high-risk. Add an empty state and clear actions to re-open a report.
+Prepare HireProof for Vercel deployment and hackathon submission.
+
+Add:
+- page metadata
+- Open Graph title and description
+- Twitter/X card copy
+- environment variable documentation in comments or README handoff notes
+- build-safe server-only imports
+- dead-code cleanup
+
+Required env vars:
+- `SERPAPI_API_KEY`
+- `MODEL_PROVIDER_KEY`
+- `APP_BASE_URL`
+
+Submission framing:
+- Title: HireProof
+- Short description: "A proof-backed AI agent that audits job posts before you apply."
+- Technical story: "Built with v0, deployed on Vercel, and powered by runtime MCP tools plus SerpApi evidence."
+- Demo script: paste suspicious job post, run investigation, reveal High-Risk verdict, show evidence, show safer alternatives, show export card.
+
+Verify the build is ready for Vercel.
 ```
 
-Inspect:
+Inspect/check:
+- Build passes.
+- Metadata is consistent with HireProof.
+- Submission copy emphasizes v0 + MCPs, SerpApi, and the result screen.
 
-- no heavy dashboard feel
-- filters are simple
-- report cards are easy to compare
+## Recovery Prompts
 
-## Prompt 11: Demo Mode
+Use these when v0 drifts, breaks the app, or overbuilds.
+
+### Recover Product Focus
 
 ```text
-Add demo mode to HireProof. Create 3 polished sample cases: an obvious scammy recruiter pitch, a caution-level ambiguous listing, and a safer legitimate listing. Add a visible badge when demo data is being shown.
+Refocus the app on HireProof's core workflow: paste a suspicious job post, run an investigation, show a Safe/Caution/High-Risk verdict with proof. Remove unrelated dashboards, chat UI, accounts, uploads, payments, and settings. Keep `/audit` as the main product screen.
 ```
 
-Inspect:
-
-- sample cases are realistic
-- verdict contrast is obvious
-- demo mode is reliable for presentations
-
-## Prompt 12: localStorage History
+### Recover Design Direction
 
 ```text
-Implement localStorage persistence for completed audits and history. Persist only the structured report and timestamp. Add hydration-safe logic and graceful fallback if storage is unavailable.
+Make the UI feel serious, investigative, and trustworthy. Reduce decorative gradients, glassmorphism, giant sidebars, and generic AI chatbot elements. Use neutral surfaces, thin borders, semantic risk colors, clear hierarchy, and readable evidence cards.
 ```
 
-Inspect:
-
-- refresh keeps completed reports
-- no hydration warnings
-- unavailable storage does not crash the app
-
-## Prompt 13: Schemas and Types
+### Recover Technical Architecture
 
 ```text
-Create the HireProof structured types and zod schemas in a central file. Define AuditReport, EvidenceItem, AlternativeJob, and ExtractedClaims. Wire the result screen to consume these typed objects cleanly.
+Restore the intended architecture: Next.js App Router, TypeScript, Tailwind, shadcn/ui, `/api/audit` for the audit flow, `/api/mcp` for runtime MCP tools, server-only SerpApi wrappers, AI SDK structured outputs, localStorage history, and demo fallback. Keep API keys server-side only.
 ```
 
-Inspect:
-
-- schema matches the UI
-- optional fields are handled
-- types are not duplicated across components
-
-## Prompt 14: Runtime MCP Shape
+### Recover Broken Live Mode
 
 ```text
-Add a runtime MCP server route for HireProof using a Next.js-compatible structure. It should expose four tools: search_company, news_check, jobs_compare, local_presence. For now, return mocked data objects in each tool so the server shape is working.
+Fix live mode without breaking demo mode. If AI SDK, MCP, or SerpApi calls fail, show a clear notice and fall back to labeled demo data. The user should always be able to complete the demo and see a full report.
 ```
 
-Inspect:
-
-- tool names are exactly stable
-- route is server-only
-- mocked responses match the schema
-
-## Prompt 15: SerpApi Wrappers
+### Recover Data Consistency
 
 ```text
-Replace the mocked MCP tool internals with SerpApi-backed wrappers. Create a server-only helper file for SerpApi requests. Each tool should return normalized data shaped for HireProof rather than raw API responses.
+Normalize all result rendering through the central AuditReport schema. Ensure demo fixtures, MCP outputs, SerpApi wrappers, AI SDK responses, history records, and result components use compatible field names and optional fields safely.
 ```
-
-Inspect:
-
-- `SERPAPI_API_KEY` is never exposed client-side
-- helpers handle timeout and empty results
-- normalized responses keep the same shape
-
-## Prompt 16: AI SDK Audit Action
-
-```text
-Integrate AI SDK into HireProof. Add a server-side audit action that:
-1. extracts claims from user input
-2. connects to the MCP server with createMCPClient over HTTP
-3. makes the model use the MCP tools
-4. returns a final structured AuditReport object
-Use a clear placeholder for the model provider environment variable.
-```
-
-Inspect:
-
-- no API keys leak to client components
-- action signature stays stable
-- structured output validates against the schema
-
-## Prompt 17: Risk Scoring
-
-```text
-Add a robust risk-scoring layer after tool results. Convert evidence into a final verdict using explicit heuristics plus the model's explanation. Make the output deterministic enough that obvious scam cases reliably score high-risk.
-```
-
-Inspect:
-
-- scam demo consistently returns High-Risk
-- legitimate demo avoids false panic
-- explanation and score agree
-
-## Prompt 18: Live Mode and Fallback
-
-```text
-Upgrade the audit action to support live mode and demo mode. If live API calls fail, automatically fall back to demo fixtures with a visible "Demo Data" badge and a user-friendly notice.
-```
-
-Inspect:
-
-- live failure path is graceful
-- demo badge is visible
-- app remains usable without keys
-
-## Prompt 19: Loading, Empty, and Error States
-
-```text
-Add polished loading, empty, and error states across HireProof. The loading state should feel like a real investigation, not a spinner. The error state should offer retry and demo mode.
-```
-
-Inspect:
-
-- loading communicates progress
-- error state gives a next action
-- empty state teaches by example without long instructions
-
-## Prompt 20: Mobile Polish
-
-```text
-Polish mobile responsiveness across all screens. Keep the verdict and CTA visible early on mobile. Make evidence cards and timeline stack cleanly without looking like a dashboard.
-```
-
-Inspect:
-
-- first mobile viewport shows the product value
-- buttons and cards do not overflow
-- result content is readable
-
-## Prompt 21: Accessibility
-
-```text
-Polish accessibility across HireProof: semantic headings, keyboard navigation, visible focus states, label associations, contrast improvements, and status announcements for investigation progress.
-```
-
-Inspect:
-
-- keyboard flow works
-- form labels are associated
-- status changes are announced
-- contrast is strong
-
-## Prompt 22: Final Visual Polish
-
-```text
-Add final visual polish: microinteractions, subtle motion, refined spacing, stronger empty states, cleaner section labels, and a more premium result card. Keep the product serious and trustworthy.
-```
-
-Inspect:
-
-- motion is subtle
-- seriousness is preserved
-- no distracting decorative clutter
-
-## Prompt 23: Metadata and Social Assets
-
-```text
-Create metadata and social assets for HireProof. Add page metadata, Open Graph content, Twitter/X card copy, and an OG image direction that clearly shows the verdict + score + red flags.
-```
-
-Inspect:
-
-- title and description are submission-ready
-- OG content communicates the verdict/result view
-- product name is consistent
-
-## Prompt 24: Vercel Deployment Prep
-
-```text
-Prepare HireProof for deployment on Vercel. Verify environment variable placeholders, server-only imports, route handlers, and build safety. Remove dead code and add notes for required variables:
-SERPAPI_API_KEY
-MODEL_PROVIDER_KEY
-APP_BASE_URL
-```
-
-Inspect:
-
-- build passes
-- env vars are documented
-- server-only code does not enter client bundles
-
-## Prompt 25: README and Submission Pack
-
-```text
-Generate a concise README and hackathon submission pack inside the repo. Include:
-- what HireProof does
-- why it is agentic
-- how MCP is used at runtime
-- how SerpApi is used
-- how to run locally
-- required environment variables
-- demo script summary
-- screenshots needed for Showcase
-Keep it hackathon-ready and polished.
-```
-
-Inspect:
-
-- README is under 120 lines
-- submission copy is judge-friendly
-- screenshot checklist favors the result screen, not only the landing page
 
 ## Final Acceptance Checklist
 
-- App runs locally.
-- App deploys on Vercel.
+- `/` explains HireProof in under 10 seconds.
 - `/audit` works in demo mode with no API keys.
-- Live mode uses server-side environment variables only.
-- Result screen shows verdict, score, evidence, and alternatives.
-- Timeline visibly proves multi-step agent work.
+- `/history` shows local reports.
+- The result screen shows verdict, risk score, evidence, flags, alternatives, and next steps.
+- Investigation timeline visibly proves multi-step agent work.
+- Runtime MCP route exposes `search_company`, `news_check`, `jobs_compare`, and `local_presence`.
+- SerpApi calls are server-only and normalized.
+- AI SDK returns validated structured output.
+- Live mode falls back gracefully to labeled demo data.
 - Export/share card is screenshot-ready.
-- README explains v0, MCP, SerpApi, and AI SDK usage.
-- Submission screenshot uses the result view.
-- No auth, database, giant dashboard, or unrelated settings pages were added.
+- Vercel deployment uses server-side env vars only.
