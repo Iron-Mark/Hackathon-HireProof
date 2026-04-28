@@ -197,15 +197,25 @@ export async function POST(request: Request) {
   // 2. Rate Limiting (Agent Tier: 20 reqs / 1 min)
   const rateLimitResult = checkRateLimit(apiKey, { limit: 20, windowMs: 60000 })
   if (!rateLimitResult.success) {
-    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+    const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+      },
+    })
   }
 
   let validated: AuditRequest
   try {
     const body = await request.json()
     validated = AuditRequestSchema.parse(body)
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Invalid request format' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+  } catch (error: any) {
+    const message = error?.issues
+      ? `Validation error: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ')}`
+      : 'Invalid request format'
+    return new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } })
   }
 
   try {
@@ -352,18 +362,31 @@ export async function POST(request: Request) {
     }
 
     if (validated.webhook_url) {
-      // Process asynchronously
+      // Process asynchronously with retry
       Promise.resolve().then(async () => {
         const report = await performInvestigation()
         if (report) {
-          try {
-            await fetch(validated.webhook_url as string, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(report)
-            })
-          } catch (e) {
-            console.error('Failed to post to webhook', e)
+          const maxRetries = 3
+          for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+              const res = await fetch(validated.webhook_url as string, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(report),
+                signal: AbortSignal.timeout(10_000),
+              })
+              if (res.ok || (res.status >= 200 && res.status < 300)) break
+              if (res.status >= 400 && res.status < 500) {
+                console.error(`[Webhook] Client error ${res.status}, not retrying.`)
+                break
+              }
+              console.warn(`[Webhook] Attempt ${attempt + 1} failed with ${res.status}, retrying...`)
+            } catch (e) {
+              console.error(`[Webhook] Attempt ${attempt + 1} failed:`, e)
+            }
+            if (attempt < maxRetries - 1) {
+              await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)))
+            }
           }
         }
       })

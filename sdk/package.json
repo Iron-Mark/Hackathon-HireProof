@@ -1,0 +1,17 @@
+{
+  "name": "hireproof-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for the HireProof Job Verification API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["hireproof", "job-verification", "scam-detection", "mcp", "agent", "sdk"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
-import { BookOpen, Code2, ChevronRight } from 'lucide-react'
+import { BookOpen, Code2, Package, ChevronRight } from 'lucide-react'
 
 const docsSidebar = [
   {
@@ -30,6 +30,13 @@ const docsSidebar = [
       { label: 'Headless API', href: '/docs/headless-api' },
       { label: 'Webhooks', href: '/docs/webhooks' },
       { label: 'Chrome Extension', href: '/docs/chrome-extension' },
+    ],
+  },
+  {
+    title: 'SDK',
+    items: [
+      { label: 'Overview', href: '/docs/sdk' },
+      { label: 'Quickstart', href: '/docs/sdk-quickstart' },
     ],
   },
   {
@@ -65,7 +72,9 @@ const apiSidebar = [
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isApiRef = pathname === '/docs/api-reference'
+  const isSdk = pathname.startsWith('/docs/sdk')
   const sidebar = isApiRef ? apiSidebar : docsSidebar
+  const activeTab = isApiRef ? 'api' : isSdk ? 'sdk' : 'docs'
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,7 +84,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <Link
             href="/docs"
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
-              !isApiRef ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+              activeTab === 'docs' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
             }`}
           >
             <BookOpen className="h-4 w-4" />
@@ -84,11 +93,20 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <Link
             href="/docs/api-reference"
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
-              isApiRef ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+              activeTab === 'api' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
             }`}
           >
             <Code2 className="h-4 w-4" />
             API Reference
+          </Link>
+          <Link
+            href="/docs/sdk"
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+              activeTab === 'sdk' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+            }`}
+          >
+            <Package className="h-4 w-4" />
+            SDK
           </Link>
         </div>
       </div>

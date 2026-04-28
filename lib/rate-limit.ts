@@ -12,8 +12,31 @@ interface RateLimitRecord {
 // For production on Vercel Edge/Serverless, replace with @upstash/ratelimit and Vercel KV.
 const store = new Map<string, RateLimitRecord>()
 
-export function checkRateLimit(identifier: string, options: RateLimiterOptions) {
+// Periodic cleanup to prevent unbounded memory growth
+const CLEANUP_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const MAX_STORE_SIZE = 10_000
+
+let lastCleanup = Date.now()
+
+function cleanupStale(windowMs: number) {
   const now = Date.now()
+  if (now - lastCleanup < CLEANUP_INTERVAL && store.size < MAX_STORE_SIZE) return
+  lastCleanup = now
+  for (const [key, record] of store) {
+    if (now - record.timestamp > windowMs * 2) {
+      store.delete(key)
+    }
+  }
+}
+
+export function checkRateLimit(identifier: string, options: RateLimiterOptions) {
+  if (!identifier || typeof identifier !== 'string') {
+    return { success: false, remaining: 0 }
+  }
+
+  const now = Date.now()
+  cleanupStale(options.windowMs)
+
   const record = store.get(identifier)
 
   if (!record) {
@@ -29,7 +52,8 @@ export function checkRateLimit(identifier: string, options: RateLimiterOptions) 
 
   // If over the limit within the window
   if (record.count >= options.limit) {
-    return { success: false, remaining: 0 }
+    const retryAfterMs = options.windowMs - (now - record.timestamp)
+    return { success: false, remaining: 0, retryAfterMs }
   }
 
   // Increment

@@ -190,7 +190,14 @@ export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
   const rateLimitResult = checkRateLimit(ip, { limit: 5, windowMs: 60000 })
   if (!rateLimitResult.success) {
-    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), { status: 429 })
+    const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+      },
+    })
   }
 
   let validated: AuditRequest
@@ -198,8 +205,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     validated = AuditRequestSchema.parse(body)
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Invalid request format' }), { status: 400 })
+  } catch (error: any) {
+    const message = error?.issues
+      ? `Validation error: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ')}`
+      : 'Invalid request format'
+    return new Response(JSON.stringify({ error: message }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   const stream = new TransformStream()

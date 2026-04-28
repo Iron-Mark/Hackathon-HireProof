@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import AuditForm from '@/components/audit-form'
 import ResultScreen from '@/components/result-screen'
 import { SiteHeader } from '@/components/site-header'
+import { ErrorBoundary } from '@/components/error-boundary'
 import { DEMO_FIXTURES } from '@/lib/fixtures'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
 import { useLiveMode } from '@/hooks/useLiveMode'
@@ -73,14 +74,18 @@ export default function AuditPage() {
 
       const isLiveRequest = isLiveMode && !demoFixture
 
+      const controller = new AbortController()
+
       const response = await fetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, mode: isLiveRequest ? 'live' : 'demo' }),
+        signal: controller.signal,
       })
 
       if (!response.ok) {
-        throw new Error('Audit request failed')
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error((errBody as any)?.error || `Audit request failed (${response.status})`)
       }
 
       const reader = response.body?.getReader()
@@ -88,30 +93,40 @@ export default function AuditPage() {
       let buffer = ''
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n\n')
-          buffer = lines.pop() || ''
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n\n')
+            buffer = lines.pop() || ''
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const parsed = JSON.parse(line.slice(6))
-              if (parsed.type === 'log') {
-                setAgentLogs(prev => [...prev, parsed.message])
-              } else if (parsed.type === 'result') {
-                const report = parsed.data as AuditReport
-                setIsDemo(report.mode !== 'live')
-                setResult(report)
-                addReport(report)
-                window.history.pushState(null, '', '/audit/' + report.id)
-              } else if (parsed.type === 'error') {
-                throw new Error(parsed.message)
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                let parsed: any
+                try {
+                  parsed = JSON.parse(line.slice(6))
+                } catch {
+                  console.warn('[SSE] Malformed event, skipping:', line.slice(0, 80))
+                  continue
+                }
+                if (parsed.type === 'log') {
+                  setAgentLogs(prev => [...prev, parsed.message])
+                } else if (parsed.type === 'result') {
+                  const report = parsed.data as AuditReport
+                  setIsDemo(report.mode !== 'live')
+                  setResult(report)
+                  addReport(report)
+                  window.history.pushState(null, '', '/audit/' + report.id)
+                } else if (parsed.type === 'error') {
+                  throw new Error(parsed.message)
+                }
               }
             }
           }
+        } finally {
+          reader.releaseLock()
         }
       }
     } catch (err) {
@@ -155,7 +170,9 @@ export default function AuditPage() {
         className="bg-background"
       >
         <SiteHeader />
-        <ResultScreen result={result} isDemo={isDemo} onBackToAudit={() => setResult(null)} />
+        <ErrorBoundary fallbackMessage="Failed to render the investigation report. Please try a new investigation.">
+          <ResultScreen result={result} isDemo={isDemo} onBackToAudit={() => setResult(null)} />
+        </ErrorBoundary>
       </motion.div>
     )
   }
