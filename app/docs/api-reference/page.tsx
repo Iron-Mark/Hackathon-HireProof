@@ -1,3 +1,6 @@
+import { CodeBlock } from '@/components/ui/code-block'
+import { ApiPlayground } from '@/components/api-playground'
+
 export const metadata = { title: 'API Reference — HireProof' }
 
 function Endpoint({ method, path, badge, description, children }: {
@@ -11,18 +14,9 @@ function Endpoint({ method, path, badge, description, children }: {
         <code className="text-sm font-black">{path}</code>
         {badge && <span className="rounded-full bg-caution/10 px-2 py-0.5 text-[10px] font-black text-caution">{badge}</span>}
       </div>
-      <p className="mb-4 text-sm font-semibold text-muted">{description}</p>
+      <p className="mb-6 text-sm font-semibold text-muted leading-relaxed">{description}</p>
       {children}
     </section>
-  )
-}
-
-function CodeBlock({ title, code }: { title: string; code: string }) {
-  return (
-    <div className="mb-4 rounded-xl border border-border-soft bg-surface overflow-hidden shadow-sm">
-      <div className="border-b border-border-soft px-4 py-2 text-xs font-black text-muted">{title}</div>
-      <pre className="overflow-x-auto p-4 text-xs leading-6"><code>{code}</code></pre>
-    </div>
   )
 }
 
@@ -61,10 +55,16 @@ export default function ApiReferencePage() {
         </p>
       </div>
 
+      <div className="mb-16">
+        <ApiPlayground />
+      </div>
+
       {/* Base URL */}
-      <div className="mb-10 rounded-xl border border-border-soft bg-surface p-4">
-        <div className="text-xs font-black text-muted mb-1">Base URL</div>
-        <code className="text-sm font-black">https://yourapp.vercel.app</code>
+      <div className="mb-10 overflow-hidden rounded-xl border border-border-soft bg-surface">
+        <div className="border-b border-border-soft px-4 py-3 text-xs font-black text-muted">Base URL</div>
+        <div className="px-4 py-3">
+          <code className="text-sm font-black">https://yourapp.vercel.app</code>
+        </div>
       </div>
 
       <hr className="border-border-soft mb-10" />

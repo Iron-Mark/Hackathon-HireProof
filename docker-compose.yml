@@ -1,0 +1,21 @@
+services:
+  hireproof:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hireproof
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+# Optional: Enable Redis for global persistence and rate limiting
+#  redis:
+#    image: redis:alpine
+#    container_name: hireproof-redis
+#    ports:
+#      - "6379:6379"
+#    restart: always

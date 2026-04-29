@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   // Rate limit MCP tool calls (30 reqs / 1 min per key)
-  const rateLimitResult = checkRateLimit(`mcp_${apiKey}`, { limit: 30, windowMs: 60000 })
+  const rateLimitResult = await checkRateLimit(`mcp_${apiKey}`, { limit: 30, windowMs: 60000 })
   if (!rateLimitResult.success) {
     const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
     return new Response(JSON.stringify({ error: 'Rate limit exceeded.' }), {

@@ -6,8 +6,8 @@
 
 ### Production URLs
 
-- **Latest Deployment (Ready)**: https://hackathon-v0-zero-to-agent-oclj9um9z-iron-marks-projects.vercel.app
-- **Project**: iron-marks-projects/hackathon-v0-zero-to-agent
+- **Latest Deployment (Ready)**: https://hireproof-sigma.vercel.app (or https://hireproof-4pifbhowb-iron-marks-projects.vercel.app)
+- **Project**: iron-marks-projects/hireproof
 - **Vercel Project ID**: prj_8pHu5GQQ0EzG49bgCcMm1QdNK9JB
 
 ### Build & Deploy Log
@@ -22,6 +22,10 @@
   ├ /api/audit (API endpoint - dynamic)
   └ /api/mcp (MCP tools endpoint - dynamic)
 ✓ Deployment: Ready (Status: Ready)
+
+### 🚀 Enterprise Upgrades Applied
+- **Global Rate Limiting:** Powered by Upstash Redis (Edge Cache).
+- **Hybrid Database:** Audit reports are now permanently saved to Upstash Redis with a 30-day auto-expiry TTL. Shared links (`/audit/report_xyz`) will now survive serverless cold starts.
 ```
 
 ### What's Live

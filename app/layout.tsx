@@ -2,12 +2,42 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToastProvider } from '@/components/toast'
+import { CommandMenu } from '@/components/command-menu'
+import { SiteFooter } from '@/components/site-footer'
 
 export const metadata: Metadata = {
-  title: 'HireProof',
-  description: 'Paste a job post. Know if it\'s legit before you apply. HireProof investigates opportunities with visible evidence to keep you safe.',
-  keywords: ['job search', 'scam detector', 'hireproof', 'job verification', 'recruitment fraud'],
+  title: {
+    default: 'HireProof | The Human Filter for Job Scams',
+    template: '%s | HireProof'
+  },
+  description: 'The last line of defense against automated recruitment scams. Filter out the "Dead Internet" and verify job posts with live evidence.',
+  metadataBase: new URL('https://hireproof.vercel.app'),
+  keywords: ['job search', 'scam detector', 'hireproof', 'job verification', 'dead internet theory', 'bot detection', 'recruitment fraud'],
   authors: [{ name: 'HireProof Team' }],
+  manifest: '/manifest.json',
+  themeColor: '#0c0f14',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'HireProof',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: '/icon.svg',
   },
@@ -42,12 +72,32 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <body className="antialiased bg-background text-foreground" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ToastProvider>
+            <CommandMenu />
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  '@context': 'https://schema.org',
+                  '@type': 'SoftwareApplication',
+                  name: 'HireProof',
+                  applicationCategory: 'SecurityApplication',
+                  operatingSystem: 'Web, Chrome',
+                  description: 'AI-powered job post verification and scam detection platform.',
+                  offers: {
+                    '@type': 'Offer',
+                    price: '0',
+                    priceCurrency: 'USD',
+                  },
+                }),
+              }}
+            />
             <main className="min-h-screen">
               {children}
             </main>
+            <SiteFooter />
           </ToastProvider>
         </ThemeProvider>
       </body>

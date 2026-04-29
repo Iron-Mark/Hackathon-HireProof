@@ -208,7 +208,7 @@ export async function POST(request: Request) {
   }
 
   // 2. Rate Limiting (Agent Tier: 20 reqs / 1 min)
-  const rateLimitResult = checkRateLimit(apiKey, { limit: 20, windowMs: 60000 })
+  const rateLimitResult = await checkRateLimit(apiKey, { limit: 20, windowMs: 60000 })
   if (!rateLimitResult.success) {
     const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
     return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), {

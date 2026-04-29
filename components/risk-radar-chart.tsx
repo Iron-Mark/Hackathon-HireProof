@@ -66,17 +66,17 @@ export default function RiskRadarChart({ extractedClaims, redFlags, greenFlags, 
     computeAxis('Contact Safety', contactScore),
   ]
 
-  const fillColor = verdict === 'safe' ? 'hsl(152 60% 42%)' : verdict === 'caution' ? 'hsl(38 92% 50%)' : 'hsl(0 84% 60%)'
-  const strokeColor = verdict === 'safe' ? 'hsl(152 60% 35%)' : verdict === 'caution' ? 'hsl(38 92% 42%)' : 'hsl(0 84% 50%)'
+  const fillColor = verdict === 'safe' ? 'var(--hireproof-safe)' : verdict === 'caution' ? 'var(--hireproof-caution)' : 'var(--hireproof-risk)'
+  const strokeColor = verdict === 'safe' ? 'var(--hireproof-safe-text)' : verdict === 'caution' ? 'var(--hireproof-caution-text)' : 'var(--hireproof-risk-text)'
 
   return (
     <div className="w-full h-[280px] sm:h-[320px]">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="72%" data={data}>
-          <PolarGrid stroke="var(--color-border, #e5e7eb)" strokeDasharray="3 3" />
+          <PolarGrid stroke="var(--hireproof-border, #cbd5c7)" strokeDasharray="3 3" />
           <PolarAngleAxis
             dataKey="axis"
-            tick={{ fill: 'var(--color-muted, #6b7280)', fontSize: 11, fontWeight: 700 }}
+            tick={{ fill: 'var(--hireproof-muted, #475569)', fontSize: 11, fontWeight: 700 }}
           />
           <Radar
             name="Risk"

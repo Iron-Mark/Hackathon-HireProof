@@ -1,0 +1,32 @@
+.hireproof-scan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #22c55e !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: transform 0.2s, background 0.2s !important;
+  vertical-align: middle !important;
+  z-index: 9999 !important;
+}
+
+.hireproof-scan-btn:hover {
+  background: #16a34a !important;
+  transform: scale(1.05);
+}
+
+.hireproof-scan-btn svg {
+  stroke: white;
+}
+
+.hireproof-scan-btn.indeed {
+  margin-top: 4px;
+}

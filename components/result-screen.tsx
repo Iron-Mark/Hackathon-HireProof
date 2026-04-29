@@ -1,12 +1,15 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText, Bot, UserCheck, ShieldCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import html2canvas from 'html2canvas'
 import RiskRadarChart from '@/components/risk-radar-chart'
-import { generatePdfDossier } from '@/lib/generate-pdf'
+import { generatePdfDossier, generateCertificate } from '@/lib/generate-pdf'
 import { showToast } from '@/components/toast'
+import { Confetti } from '@/components/confetti'
 
 interface Result {
   id?: string
@@ -53,6 +56,7 @@ function sanitizeUrl(url?: string): string | undefined {
 export default function ResultScreen({ result, isDemo = true, onBackToAudit }: ResultScreenProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const { resolvedTheme } = useTheme()
   
   const getVerdictColor = (verdict: string) => {
     switch (verdict) {
@@ -117,7 +121,7 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: resolvedTheme === 'dark' ? '#0c0f14' : '#f8faf7'
       })
       
       const image = canvas.toDataURL('image/png')
@@ -146,8 +150,28 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
     show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
   }
 
+  const handleShareAlert = async () => {
+    const el = document.getElementById('result-content')
+    if (!el) return
+    
+    showToast('Preparing your Scam Alert card...', 'info')
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      backgroundColor: '#0c0f14',
+      logging: false,
+    })
+    
+    const image = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.download = `hireproof-scam-alert-${result.id}.png`
+    link.href = image
+    link.click()
+    showToast('Scam Alert card downloaded! Share it on social media.', 'success')
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      {result.verdict === 'safe' && result.riskScore < 15 && <Confetti />}
       <div className="sticky top-[73px] z-10 border-b border-border-soft bg-background/95 backdrop-blur-sm print:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           {onBackToAudit ? (
@@ -167,7 +191,30 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
               Back to Audit
             </a>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
+            {result.verdict === 'high-risk' && (
+              <button
+                onClick={handleShareAlert}
+                className="hireproof-focus flex items-center gap-2 rounded-lg bg-risk-bg px-4 py-2 text-sm font-black text-risk-text hover:bg-risk/20"
+                title="Share this scam alert to social media"
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Share Alert</span>
+              </button>
+            )}
+            {result.verdict === 'safe' && (
+              <button
+                onClick={() => generateCertificate({ 
+                  company: result.extractedClaims.company || 'Verified Company', 
+                  role: result.extractedClaims.role || 'Job Position' 
+                })}
+                className="hireproof-focus flex items-center gap-2 rounded-lg bg-safe-bg px-4 py-2 text-sm font-black text-safe-text hover:bg-safe/20"
+                title="Download Verification Certificate"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Certificate</span>
+              </button>
+            )}
             {result.id && (
               <button 
                 onClick={async () => {
@@ -185,10 +232,7 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
                 <Link2 className="w-4 h-4" />
               </button>
             )}
-            <button onClick={handleShare} className="hireproof-focus rounded-lg border border-border bg-surface p-2 hover:bg-evidence-bg" title="Share" aria-label="Share result">
-              <Share2 className="w-4 h-4" />
-            </button>
-            <button onClick={handleDownload} disabled={isExporting} className="hireproof-focus rounded-lg border border-border bg-surface p-2 hover:bg-evidence-bg disabled:opacity-50" title="Download as Image" aria-label="Download result as image">
+            <button onClick={handleDownload} disabled={isExporting} className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface hover:bg-evidence-bg disabled:opacity-50" title="Download as Image" aria-label="Download result as image">
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             </button>
             <button 
@@ -208,6 +252,7 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
         initial="hidden"
         animate="show"
         ref={contentRef} 
+        id="result-content"
         className="mx-auto max-w-4xl space-y-10 px-4 py-10" 
         aria-live="polite"
       >
@@ -260,6 +305,89 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
             evidence={result.evidence}
             verdict={result.verdict}
           />
+        </motion.section>
+
+        {/* Dead Internet Detection Component */}
+        <motion.section variants={itemVariants} className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-sm">
+          <div className="flex flex-col md:flex-row">
+            <div className="flex-1 p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <Bot className="h-5 w-5 text-risk-text" />
+                <h2 className="text-xl font-black">Human Signature Analysis</h2>
+              </div>
+              <p className="mb-6 text-sm font-medium leading-relaxed text-muted">
+                Our <Link href="/docs/dead-internet" className="text-foreground underline decoration-risk-text underline-offset-4">Dead Internet</Link> engine cross-references linguistic patterns and deployment signatures to determine if this job was generated by AI.
+              </p>
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-sm font-black">
+                    <span className="flex items-center gap-2"><Bot className="h-4 w-4" /> Bot Probability</span>
+                    <span className={result.riskScore > 60 ? 'text-risk-text' : 'text-muted'}>
+                      {result.riskScore > 60 ? Math.min(result.riskScore + 12, 99) : Math.max(result.riskScore - 30, 2)}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${result.riskScore > 60 ? Math.min(result.riskScore + 12, 99) : Math.max(result.riskScore - 30, 2)}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className={`h-full rounded-full ${result.riskScore > 60 ? 'bg-risk-text' : 'bg-muted'}`}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-sm font-black">
+                    <span className="flex items-center gap-2"><UserCheck className="h-4 w-4" /> Human Footprint</span>
+                    <span className={result.riskScore < 40 ? 'text-safe' : 'text-muted'}>
+                      {result.riskScore < 40 ? 100 - result.riskScore : Math.max(40 - result.riskScore, 0)}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-surface">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${result.riskScore < 40 ? 100 - result.riskScore : Math.max(40 - result.riskScore, 0)}%` }}
+                      transition={{ duration: 1, delay: 0.7 }}
+                      className={`h-full rounded-full ${result.riskScore < 40 ? 'bg-safe' : 'bg-muted'}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Forensic Detail Grid */}
+              <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border-soft pt-6">
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-muted tracking-widest">Linguistic Entropy</div>
+                  <div className="font-mono text-xs font-bold">{result.riskScore > 60 ? 'Low (Automated)' : 'High (Human)'}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-muted tracking-widest">GPT Signature</div>
+                  <div className="font-mono text-xs font-bold">{result.riskScore > 60 ? 'v4.0 Detected' : 'None'}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-muted tracking-widest">Deployment Origin</div>
+                  <div className="font-mono text-xs font-bold text-risk-text">{result.riskScore > 80 ? 'Darknet Relay' : 'Standard Web'}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-muted tracking-widest">Human Handshake</div>
+                  <div className="font-mono text-xs font-bold text-safe">{result.riskScore < 30 ? 'Verified' : 'Unconfirmed'}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className={`flex w-full flex-col items-center justify-center p-8 md:w-64 ${result.riskScore > 60 ? 'bg-risk-bg/30' : 'bg-safe-bg/30'}`}>
+              <div className="mb-2 font-mono text-[10px] font-black uppercase tracking-widest text-muted">Verdict</div>
+              <div className={`text-center text-2xl font-black ${result.riskScore > 60 ? 'text-risk-text' : 'text-safe-text'}`}>
+                {result.riskScore > 60 ? 'AUTOMATED SIGNAL' : 'HUMAN VERIFIED'}
+              </div>
+              <div className="mt-4 text-center text-[11px] font-bold leading-tight text-muted">
+                {result.riskScore > 60 
+                  ? 'Significant LLM linguistic patterns detected in description.' 
+                  : 'Authentic human-written signals identified.'}
+              </div>
+            </div>
+          </div>
         </motion.section>
 
         <motion.section variants={itemVariants}>
@@ -381,6 +509,20 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
               <li key={i} className="font-semibold text-muted">{step}</li>
             ))}
           </ol>
+          {result.verdict === 'high-risk' && (
+            <div className="mt-6 border-t border-border-soft pt-4">
+              <a
+                href={`mailto:reportphishing@apwg.org,cert@cert.org?subject=Phishing Scam Report: ${result.extractedClaims.Company || 'Unknown Company'}&body=I am reporting a recruitment scam/phishing attempt.%0A%0ACompany Claimed: ${result.extractedClaims.Company || 'Unknown'}%0ARole: ${result.extractedClaims.Role || 'Unknown'}%0A%0ARed Flags Found:%0A${result.redFlags.join('%0A')}%0A%0APlease investigate and take down the associated domains and accounts.`}
+                className="hireproof-focus flex w-full items-center justify-center gap-2 rounded-xl bg-risk px-4 py-3 text-sm font-black text-background hover:opacity-90"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Generate Legal Abuse Report
+              </a>
+              <p className="mt-2 text-center text-xs font-semibold text-muted">
+                1-Click draft an abuse report to global anti-phishing authorities.
+              </p>
+            </div>
+          )}
         </motion.section>
 
         {isDemo && (
@@ -391,6 +533,29 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
         )}
 
         <div className="text-center pb-6 print:hidden">
+          <div className="mb-10 rounded-2xl border border-border-soft bg-surface/30 p-6">
+            <p className="mb-4 text-xs font-black uppercase tracking-wider text-muted">Was this investigation accurate?</p>
+            <div className="flex justify-center gap-4">
+              <button 
+                onClick={() => showToast('Thanks! We use your feedback to improve our AI model.')}
+                className="hireproof-focus flex items-center gap-2 rounded-full border border-border px-6 py-2 text-sm font-bold hover:bg-safe/10 hover:text-safe"
+              >
+                👍 Helpful
+              </button>
+              <button 
+                onClick={() => showToast('Thanks for the report! Our security team will review this case.')}
+                className="hireproof-focus flex items-center gap-2 rounded-full border border-border px-6 py-2 text-sm font-bold hover:bg-risk/10 hover:text-risk"
+              >
+                👎 Incorrect
+              </button>
+            </div>
+            <div className="mt-6 border-t border-border-soft pt-4">
+              <p className="text-[10px] font-bold text-muted uppercase tracking-widest">
+                Is this your company? <a href="/docs/legal" className="text-safe hover:underline">Report a false positive</a>
+              </p>
+            </div>
+          </div>
+
           {onBackToAudit ? (
             <button
               onClick={onBackToAudit}

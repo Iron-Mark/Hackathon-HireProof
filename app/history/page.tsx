@@ -41,10 +41,10 @@ export default function HistoryPage() {
   }
 
   const filterClasses = (active: boolean, tone: 'default' | 'safe' | 'caution' | 'risk' = 'default') => {
-    if (active && tone === 'safe') return 'bg-safe text-white border-safe'
-    if (active && tone === 'caution') return 'bg-caution text-white border-caution'
-    if (active && tone === 'risk') return 'bg-high-risk text-white border-high-risk'
-    if (active) return 'bg-foreground text-white border-foreground'
+    if (active && tone === 'safe') return 'bg-safe text-background border-safe'
+    if (active && tone === 'caution') return 'bg-caution text-background border-caution'
+    if (active && tone === 'risk') return 'bg-high-risk text-background border-high-risk'
+    if (active) return 'bg-foreground text-background border-foreground'
     return 'bg-surface text-muted border-border hover:bg-background hover:text-foreground'
   }
 
@@ -104,7 +104,7 @@ export default function HistoryPage() {
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-surface p-4 shadow-sm transition-colors hover:bg-white"
+                className="flex items-center justify-between gap-4 rounded-2xl border border-border-soft bg-surface p-4 shadow-sm transition-colors hover:bg-background"
               >
                 <div className="min-w-0 flex-1">
                   <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -126,7 +126,7 @@ export default function HistoryPage() {
             <p className="mb-6 font-semibold text-muted">No investigations yet.</p>
             <Link
               href="/audit"
-              className="hireproof-focus inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 font-black text-white shadow-lg hover:bg-safe"
+              className="hireproof-focus inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 font-black text-background shadow-lg hover:bg-safe"
             >
               Start investigation <ArrowRight className="h-4 w-4" />
             </Link>

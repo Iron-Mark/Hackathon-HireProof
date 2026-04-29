@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
-import { BookOpen, Code2, Package, ChevronRight } from 'lucide-react'
+import { BookOpen, Code2, Package, ChevronRight, FileText } from 'lucide-react'
+import { showToast } from '@/components/toast'
 
 const docsSidebar = [
   {
@@ -11,6 +12,9 @@ const docsSidebar = [
     items: [
       { label: 'Overview', href: '/docs' },
       { label: 'Quickstart', href: '/docs/quickstart' },
+      { label: 'Self-Hosting', href: '/docs/self-hosting' },
+      { label: 'Verified Badge', href: '/docs/verified-badge' },
+      { label: 'Dead Internet Theory', href: '/docs/dead-internet' },
       { label: 'Architecture', href: '/docs/architecture' },
     ],
   },
@@ -42,8 +46,31 @@ const docsSidebar = [
   {
     title: 'Security',
     items: [
+      { label: 'Security Whitepaper', href: '/docs/security' },
       { label: 'Authentication', href: '/docs/authentication' },
       { label: 'Rate Limiting', href: '/docs/rate-limiting' },
+    ],
+  },
+  {
+    title: 'Integrations',
+    items: [
+      { label: 'n8n & Automations', href: '/docs/automations' },
+      { label: 'Email Forwarding', href: '/docs/email-forwarding' },
+      { label: 'LangChain & Agents', href: '/docs/langchain' },
+      { label: 'Discord / Slack Bots', href: '/docs/discord-bot' },
+      { label: 'Cursor / IDE Skills', href: '/docs/ide-skills' },
+    ],
+  },
+  {
+    title: 'Open Skills',
+    items: [
+      { label: 'Agent Skills', href: '/docs/skills' },
+    ],
+  },
+  {
+    title: 'Legal',
+    items: [
+      { label: 'Disclaimer & Disputes', href: '/docs/legal' },
     ],
   },
 ]
@@ -123,14 +150,16 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-all duration-200 ${
                           pathname === item.href
-                            ? 'bg-safe/10 text-safe font-black'
-                            : 'text-muted hover:bg-surface hover:text-foreground'
+                            ? 'bg-safe/10 text-safe font-black shadow-sm'
+                            : 'text-muted font-semibold hover:bg-surface hover:text-foreground hover:shadow-sm'
                         }`}
                       >
-                        {pathname === item.href && <ChevronRight className="h-3 w-3" />}
-                        {item.label}
+                        <span>{item.label}</span>
+                        <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                          pathname === item.href ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-50'
+                        }`} />
                       </Link>
                     </li>
                   ))}
@@ -147,6 +176,27 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
         </main>
       </div>
+
+      {/* Floating Copy Docs Button for DX */}
+      <button
+        onClick={async () => {
+          const mainContent = document.querySelector('main')?.innerText
+          if (mainContent) {
+            try {
+              await navigator.clipboard.writeText(mainContent)
+              showToast('Page content copied to clipboard!', 'success')
+            } catch (err) {
+              showToast('Failed to copy content.', 'info')
+            }
+          }
+        }}
+        className="hireproof-focus group fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-border bg-foreground px-5 py-3 text-sm font-black text-background shadow-2xl transition-all hover:-translate-y-1 hover:bg-safe hover:shadow-safe/20"
+        title="Copy page text for AI Prompting"
+        aria-label="Copy page text for AI Prompting"
+      >
+        <FileText className="h-4 w-4 transition-transform group-hover:scale-110" />
+        <span className="hidden sm:inline">Copy for AI</span>
+      </button>
     </div>
   )
 }

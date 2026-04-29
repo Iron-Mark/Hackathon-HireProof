@@ -227,7 +227,7 @@ export async function POST(request: Request) {
   const xRealIp = request.headers.get('x-real-ip')
   const ip = xRealIp || (xForwardedFor ? xForwardedFor.split(',')[0].trim() : '127.0.0.1')
   
-  const rateLimitResult = checkRateLimit(ip, { limit: 5, windowMs: 60000 })
+  const rateLimitResult = await checkRateLimit(ip, { limit: 5, windowMs: 60000 })
   if (!rateLimitResult.success) {
     const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
     return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {

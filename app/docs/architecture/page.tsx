@@ -1,30 +1,82 @@
+import { Globe, Cpu, Plug, PuzzleIcon } from 'lucide-react'
+
 export const metadata = { title: 'Architecture — HireProof' }
+
+function FlowStep({ step, title, desc, badge }: { step: string; title: string; desc: string; badge?: string }) {
+  return (
+    <div className="relative flex gap-5">
+      <div className="flex flex-col items-center">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-safe text-sm font-black text-background shadow-sm">
+          {step}
+        </span>
+        <div className="mt-1 w-px flex-1 bg-border-soft" />
+      </div>
+      <div className="pb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="text-sm font-black">{title}</div>
+          {badge && <span className="rounded-full bg-evidence/10 px-2 py-0.5 text-[10px] font-black text-evidence">{badge}</span>}
+        </div>
+        <p className="text-sm font-semibold text-muted leading-6">{desc}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function ArchitecturePage() {
   return (
     <div>
       <h1 className="mb-4 text-4xl font-black tracking-tight">Architecture</h1>
-      <p className="mb-8 text-lg font-semibold text-muted">How HireProof is structured end-to-end.</p>
+      <p className="mb-10 text-lg font-semibold text-muted leading-8">
+        HireProof is a multi-surface, Omni-Modal AI Agent platform. A single secure core powers four distinct access surfaces simultaneously.
+      </p>
 
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-black">Tech Stack</h2>
+      {/* Access Surfaces */}
+      <section className="mb-12">
+        <h2 className="mb-5 text-2xl font-black">Access Surfaces</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { icon: Globe, title: 'Web App', desc: 'React 19 + Next.js 16 App Router. Real-time SSE streaming of agent steps directly to the browser.', color: 'border-safe/30 bg-safe/5' },
+            { icon: Plug, title: 'Headless REST API', desc: '/api/v1/audit — authenticated JSON endpoint for external AI agents and automations.', color: 'border-evidence/30 bg-evidence/5' },
+            { icon: Cpu, title: 'MCP Server', desc: '/api/mcp — exposes 4 investigation tools via the Model Context Protocol for direct agent tool-calling.', color: 'border-caution/30 bg-caution/5' },
+            { icon: PuzzleIcon, title: 'Chrome Extension', desc: 'Manifest V3 extension that scrapes the active tab and sends it to the investigation engine.', color: 'border-risk-bg bg-risk-bg/20' },
+          ].map((s) => (
+            <div key={s.title} className={`rounded-2xl border p-5 ${s.color}`}>
+              <s.icon className="h-5 w-5 mb-3 opacity-70" />
+              <div className="text-sm font-black mb-1">{s.title}</div>
+              <p className="text-xs font-semibold text-muted leading-5">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Tech Stack */}
+      <section className="mb-12">
+        <h2 className="mb-5 text-2xl font-black">Tech Stack</h2>
         <div className="overflow-hidden rounded-xl border border-border-soft">
           <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-soft bg-surface">
+                <th className="px-4 py-3 text-left text-xs font-black text-muted uppercase tracking-wider w-40">Layer</th>
+                <th className="px-4 py-3 text-left text-xs font-black text-muted uppercase tracking-wider">Technology</th>
+              </tr>
+            </thead>
             <tbody>
               {[
-                ['Framework', 'Next.js 16 (App Router)'],
+                ['Framework', 'Next.js 16 (App Router) + React 19'],
                 ['Language', 'TypeScript 6'],
                 ['Styling', 'Tailwind CSS 4 + Custom Design Tokens'],
-                ['AI SDK', 'Vercel AI SDK 6 (ai, @ai-sdk/openai)'],
+                ['AI Engine', 'Vercel AI SDK 6 + Groq (Llama / Gemini)'],
                 ['Animation', 'Framer Motion 12'],
-                ['Charts', 'Recharts'],
-                ['PDF', 'jsPDF'],
-                ['Search', 'SerpApi (Google Search, News, Jobs, Maps)'],
+                ['Charts', 'Recharts (Radar, Bar)'],
+                ['PDF Export', 'jsPDF + html2canvas'],
+                ['Web Intelligence', 'SerpApi (Google, News, Jobs, Maps)'],
                 ['Protocol', 'Model Context Protocol (MCP)'],
+                ['Database', 'Upstash Serverless Redis (hybrid fallback)'],
+                ['Deployment', 'Vercel Edge Network'],
               ].map(([layer, tech]) => (
-                <tr key={layer} className="border-b border-border-soft last:border-0">
-                  <td className="px-4 py-3 font-black w-40">{layer}</td>
-                  <td className="px-4 py-3 text-muted font-semibold">{tech}</td>
+                <tr key={layer} className="border-b border-border-soft last:border-0 hover:bg-surface/50 transition-colors">
+                  <td className="px-4 py-3 font-black text-sm">{layer}</td>
+                  <td className="px-4 py-3 text-muted font-semibold text-sm">{tech}</td>
                 </tr>
               ))}
             </tbody>
@@ -32,64 +84,45 @@ export default function ArchitecturePage() {
         </div>
       </section>
 
+      {/* Request Flow */}
       <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-black">Directory Structure</h2>
-        <div className="rounded-xl border border-border-soft bg-surface overflow-hidden shadow-sm">
-          <pre className="overflow-x-auto p-5 text-xs leading-6"><code>{`app/
-├── page.tsx                    # Landing page
-├── audit/page.tsx              # Investigation workspace (SSE consumer)
-├── audit/[id]/page.tsx         # Shareable permalink view
-├── history/page.tsx            # Local report history
-├── docs/                       # Documentation hub
-│   ├── layout.tsx              # Sidebar + tabbed nav
-│   ├── page.tsx                # Docs overview
-│   ├── api-reference/page.tsx  # Full API reference
-│   ├── quickstart/page.tsx     # Getting started guide
-│   └── ...                     # Additional doc pages
-├── api/
-│   ├── audit/route.ts          # SSE streaming endpoint
-│   ├── v1/audit/route.ts       # Headless agent JSON API
-│   └── mcp/route.ts            # MCP tool server
-components/
-├── audit-form.tsx              # Omni-modal input (text + image + voice)
-├── result-screen.tsx           # Animated verdict display
-├── risk-radar-chart.tsx        # 5-axis Recharts radar
-├── voice-input-button.tsx      # Web Speech API input
-├── theme-toggle.tsx            # Dark mode switch
-├── site-header.tsx             # Global navigation
-lib/
-├── schemas.ts                  # Zod schemas and types
-├── risk-scorer.ts              # Deterministic scoring engine
-├── serpapi.ts                  # SerpApi wrapper functions
-├── mcp-tools.ts                # MCP tool definitions
-├── rate-limit.ts               # In-memory rate limiter
-├── db.ts                       # JSON file persistence
-├── generate-pdf.ts             # PDF dossier generator
-├── fixtures.ts                 # Demo data
-extension/
-├── manifest.json               # Chrome Manifest V3
-├── popup.html/js/css           # Extension popup UI`}</code></pre>
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-black">Data Flow</h2>
-        <div className="space-y-4">
-          {[
-            { step: '1', title: 'Input Layer', desc: 'User submits via text textarea, image upload, or voice dictation. The AuditForm component normalizes all inputs into an AuditRequest object.' },
-            { step: '2', title: 'Claims Extraction', desc: 'GPT-4o-mini (via Vercel AI SDK generateObject) extracts structured claims: company, role, salary, contact method, application path. Supports multi-modal image input.' },
-            { step: '3', title: 'Evidence Gathering', desc: 'An autonomous agent loop (generateText with tools) calls 4 MCP tools via the internal /api/mcp server. Each tool wraps a SerpApi search type.' },
-            { step: '4', title: 'Risk Scoring', desc: 'A deterministic scorer assigns weighted penalties for red flags and bonuses for green flags, producing a 0-100 risk score and verdict.' },
-            { step: '5', title: 'Output Layer', desc: 'Results stream to the UI via SSE, or return as JSON via the headless API. Reports are persisted to disk and accessible via permalinks.' },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-4 rounded-xl border border-border-soft bg-surface p-4">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-safe text-sm font-black text-white">{item.step}</span>
-              <div>
-                <div className="text-sm font-black">{item.title}</div>
-                <p className="mt-1 text-xs font-semibold text-muted leading-5">{item.desc}</p>
-              </div>
-            </div>
-          ))}
+        <h2 className="mb-6 text-2xl font-black">Request Flow</h2>
+        <div className="pl-1">
+          <FlowStep
+            step="1"
+            title="Input Layer"
+            badge="Omni-Modal"
+            desc="User submits via text, image upload, or voice dictation. Inputs are normalized into a typed AuditRequest object and sent to the backend."
+          />
+          <FlowStep
+            step="2"
+            title="Security Proxy"
+            badge="Edge"
+            desc="proxy.ts intercepts every request. Blocks malicious User-Agents, enforces 16KB header limits, and attaches CSP, CORS, and X-Frame-Options security headers."
+          />
+          <FlowStep
+            step="3"
+            title="Claims Extraction"
+            badge="AI"
+            desc="The AI model uses structured output generation to extract company, role, salary, contact method, and application path from the raw input — including image screenshots."
+          />
+          <FlowStep
+            step="4"
+            title="Concurrent Evidence Gathering"
+            badge="Agent Loop"
+            desc="An autonomous agentic loop calls 4 MCP investigation tools in parallel: company web presence check, news scam search, salary market comparison, and local business footprint."
+          />
+          <FlowStep
+            step="5"
+            title="Deterministic Risk Scoring"
+            desc="A deterministic scorer assigns weighted penalties for red flags and bonuses for green flags, producing a final 0–100 risk score and one of three verdicts: Safe, Caution, or High-Risk."
+          />
+          <FlowStep
+            step="6"
+            title="Output & Persistence"
+            badge="Hybrid"
+            desc="Results stream to the browser via SSE, or return as JSON for headless clients. Reports are persisted to Upstash Redis (or local disk) and accessible via shareable permalink."
+          />
         </div>
       </section>
     </div>

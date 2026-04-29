@@ -212,3 +212,70 @@ export function generatePdfDossier(data: PdfReportData) {
 
   doc.save(`hireproof-dossier-${data.verdict}.pdf`)
 }
+
+export function generateCertificate(data: { company: string; role: string; timestamp?: string }) {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  
+  // --- Decorative Border ---
+  doc.setDrawColor(22, 163, 74) // Safe Green
+  doc.setLineWidth(2)
+  doc.rect(5, 5, pageWidth - 10, pageHeight - 10, 'S')
+  
+  doc.setDrawColor(20, 20, 20)
+  doc.setLineWidth(0.5)
+  doc.rect(7, 7, pageWidth - 14, pageHeight - 14, 'S')
+
+  // --- Background Elements ---
+  doc.setFillColor(248, 250, 252)
+  doc.rect(8, 8, pageWidth - 16, pageHeight - 16, 'F')
+
+  // --- Header ---
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(40)
+  doc.setTextColor(20, 20, 20)
+  doc.text('CERTIFICATE OF SAFETY', pageWidth / 2, 45, { align: 'center' })
+  
+  doc.setFontSize(14)
+  doc.setTextColor(100, 100, 100)
+  doc.text('OFFICIALLY VERIFIED BY HIREPROOF AI', pageWidth / 2, 55, { align: 'center' })
+
+  // --- Content ---
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(18)
+  doc.setTextColor(60, 60, 60)
+  doc.text('This document confirms that the recruitment process for:', pageWidth / 2, 85, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(32)
+  doc.setTextColor(22, 163, 74)
+  doc.text(data.company.toUpperCase(), pageWidth / 2, 105, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(18)
+  doc.setTextColor(60, 60, 60)
+  doc.text(`for the role of ${data.role}`, pageWidth / 2, 120, { align: 'center' })
+
+  doc.setFontSize(14)
+  doc.text('has been audited and found to meet all HireProof security standards.', pageWidth / 2, 140, { align: 'center' })
+
+  // --- Footer Details ---
+  const date = data.timestamp ? new Date(data.timestamp).toLocaleDateString() : new Date().toLocaleDateString()
+  
+  doc.setFontSize(10)
+  doc.setTextColor(120, 120, 120)
+  doc.text(`Verification Date: ${date}`, 20, pageHeight - 25)
+  doc.text(`Certificate ID: HP-${Math.random().toString(36).substring(2, 10).toUpperCase()}`, 20, pageHeight - 20)
+
+  // --- Seal ---
+  doc.setFillColor(22, 163, 74)
+  doc.circle(pageWidth - 40, pageHeight - 40, 20, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  doc.text('HIREPROOF', pageWidth - 40, pageHeight - 42, { align: 'center' })
+  doc.text('SECURE', pageWidth - 40, pageHeight - 37, { align: 'center' })
+
+  doc.save(`hireproof-certificate-${data.company.replace(/\s+/g, '-').toLowerCase()}.pdf`)
+}

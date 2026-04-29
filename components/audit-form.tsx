@@ -68,7 +68,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1 text-xs font-black text-muted hover:text-foreground"
+              className="flex min-h-[44px] items-center gap-1.5 px-2 text-xs font-black text-muted hover:text-foreground"
             >
               <ImageIcon className="h-3.5 w-3.5" />
               Screenshot
@@ -90,7 +90,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
             <button
               type="button"
               onClick={removeImage}
-              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background hover:bg-risk-text"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background hover:bg-risk-text shadow-sm after:absolute after:inset-[-10px]"
             >
               <X className="h-3 w-3" />
             </button>
@@ -103,7 +103,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
           placeholder="Paste the job post, recruiter message, or email here..."
           data-testid="job-input-text"
           aria-label="Job Description"
-          className="hireproof-focus w-full resize-none rounded-xl border border-border bg-background p-4 text-sm font-medium leading-6 placeholder:text-muted/70 focus:border-evidence focus:bg-white focus:outline-none focus:ring-4 focus:ring-evidence-bg dark:focus:bg-surface"
+          className="hireproof-focus w-full resize-none rounded-xl border border-border bg-background p-4 text-sm font-medium leading-6 placeholder:text-muted/70 focus:border-evidence focus:bg-surface focus:outline-none focus:ring-4 focus:ring-evidence-bg"
           disabled={loading}
           rows={image ? 3 : 6}
           maxLength={10000}
@@ -121,7 +121,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
           onChange={(e) => setUrl(e.target.value)}
           data-testid="job-input-url"
           aria-label="Job URL"
-          className="hireproof-focus w-full rounded-xl border border-border bg-background p-3 text-sm font-medium placeholder:text-muted/70 focus:border-evidence focus:bg-white focus:outline-none focus:ring-4 focus:ring-evidence-bg dark:focus:bg-surface"
+          className="hireproof-focus w-full rounded-xl border border-border bg-background p-3 text-sm font-medium placeholder:text-muted/70 focus:border-evidence focus:bg-surface focus:outline-none focus:ring-4 focus:ring-evidence-bg"
           disabled={loading}
           maxLength={2000}
         />
@@ -138,7 +138,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
           onChange={(e) => setLocation(e.target.value)}
           data-testid="job-input-location"
           aria-label="Location"
-          className="hireproof-focus w-full rounded-xl border border-border bg-background p-3 text-sm font-medium placeholder:text-muted/70 focus:border-evidence focus:bg-white focus:outline-none focus:ring-4 focus:ring-evidence-bg dark:focus:bg-surface"
+          className="hireproof-focus w-full rounded-xl border border-border bg-background p-3 text-sm font-medium placeholder:text-muted/70 focus:border-evidence focus:bg-surface focus:outline-none focus:ring-4 focus:ring-evidence-bg"
           disabled={loading}
           maxLength={200}
         />

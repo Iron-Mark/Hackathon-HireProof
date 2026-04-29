@@ -1,7 +1,7 @@
 {
   "name": "hireproof-sdk",
   "version": "1.0.0",
-  "description": "TypeScript SDK for the HireProof Job Verification API",
+  "description": "TypeScript SDK for the HireProof Job Verification API — detect recruitment scams with live web evidence",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
@@ -9,8 +9,31 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["hireproof", "job-verification", "scam-detection", "mcp", "agent", "sdk"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent.git",
+    "directory": "sdk"
+  },
+  "homepage": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent#readme",
+  "bugs": {
+    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues"
+  },
+  "author": "Iron-Mark",
+  "keywords": [
+    "hireproof",
+    "job-verification",
+    "scam-detection",
+    "recruitment-fraud",
+    "mcp",
+    "agent",
+    "sdk",
+    "ai-agent",
+    "model-context-protocol"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

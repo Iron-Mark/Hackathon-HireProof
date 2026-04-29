@@ -10,7 +10,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="hireproof-focus flex items-center justify-center rounded-full p-2 text-muted hover:bg-background hover:text-foreground"
+      className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-background hover:text-foreground"
       title="Toggle theme"
       aria-label="Toggle theme"
     >

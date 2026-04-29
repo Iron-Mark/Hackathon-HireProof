@@ -22,18 +22,35 @@ HireProof is a proof-backed AI agent that investigates suspicious job posts with
 - **Framer Motion Animations** — Staggered reveal of verdict, flags, and evidence cards
 - **Interactive Radar Chart** — 5-axis risk breakdown (Company, Reputation, Salary, Local, Contact)
 
-### Agent-to-Agent (A2A) Platform
-- **Headless REST API** (`/api/v1/audit`) — Authenticated JSON endpoint for external AI agents
-- **MCP Server** (`/api/mcp`) — Model Context Protocol for direct tool access
-- **Async Webhooks** — Fire-and-forget with `webhook_url` for background processing
-- **Rate Limiting** — In-memory token bucket (5/min UI, 20/min API)
-- **Agent-Friendly DOM** — `data-testid` and `aria-label` on all interactive elements
+### Agent-to-Agent (A2A) & Integrations
+- **Security Middleware for AI Pipelines** — Plug HireProof into **n8n**, **Make.com**, or **LangChain** workflows. Prevent your automated job-hunting agents from accidentally submitting resumes and PII to phishing scams.
+- **Headless REST API** (`/api/v1/audit`) — Authenticated JSON endpoint for external AI agents.
+- **TypeScript SDK** — Programmatic Node.js library (`hireproof-sdk`) for deep integrations.
+- **MCP Server** (`/api/mcp`) — Model Context Protocol for direct tool access.
+- **Async Webhooks** — Fire-and-forget with `webhook_url` for background processing.
+- **Self-Hostable** — 100% portable Next.js architecture with a **Bring Your Own Key (BYOK)** model.
+- **Rate Limiting** — In-memory token bucket (5/min UI, 20/min API).
+- **Agent-Friendly DOM** — `data-testid` and `aria-label` on all interactive elements.
+
+## 🚀 Self-Hosting & Portability
+
+HireProof is built for extreme portability. Whether you want to use our managed cloud or host it on your own hardware, the experience is identical.
+
+- **Vercel Native**: One-click deployment to Vercel with Edge Function support.
+- **BYOK (Bring Your Own Key)**: Use your own OpenAI and SerpApi keys to bypass our managed limits.
+- **Hybrid Storage Engine**: The app automatically detects if Upstash Redis is configured. If not, it gracefully degrades to local `localStorage` and local `fs` storage, making it cost $0.00 to run.
+- **Zero-Config Docker**: Coming soon.
 
 ### Output & Sharing
 - **PDF Dossier Export** — Multi-page, color-coded investigation report with jsPDF
 - **PNG Screenshot Export** — Full result capture via html2canvas
 - **Shareable Permalinks** — Every audit is persisted and accessible via `/audit/[id]`
 - **Copy Link Button** — One-click permalink sharing
+
+### Enterprise Infrastructure & Security
+- **Hybrid Database Architecture** — Uses Upstash Redis for permanent, globally distributed storage of shareable links, gracefully degrading to local ephemeral `fs` if keys are missing (zero-cost Hackathon mode).
+- **L7 DDoS Immunity** — Edge-distributed rate limiter via Upstash prevents "Denial of Wallet" attacks against LLM billing APIs.
+- **Deep Security Hardening** — SSRF webhook protection, Prototype Pollution guards, strict CSP headers, and dynamic SEO no-index tags for data privacy.
 
 ### UI Polish
 - **Dark Mode** — System-aware theme toggle with `next-themes`
@@ -51,6 +68,7 @@ HireProof is a proof-backed AI agent that investigates suspicious job posts with
 | Charts | Recharts |
 | PDF | jsPDF |
 | Search | SerpApi |
+| Database / Cache | Upstash Serverless Redis (Optional) |
 | Protocol | Model Context Protocol (MCP) |
 
 ## Quick Start
@@ -77,6 +95,8 @@ Open [http://localhost:3000](http://localhost:3000) and navigate to `/audit`.
 | `SERPAPI_API_KEY` | For live mode | SerpApi key for web evidence |
 | `APP_BASE_URL` | For agent loop | Base URL for internal MCP calls |
 | `AGENT_API_KEY` | Optional | API key for headless agent access |
+| `UPSTASH_REDIS_REST_URL` | Optional | Upstash DB URL for global persistence/rate limits |
+| `UPSTASH_REDIS_REST_TOKEN` | Optional | Upstash Token for global persistence/rate limits |
 
 Demo mode works without any API keys.
 
@@ -133,12 +153,18 @@ lib/
 ├── schemas.ts                  Zod schemas and types
 ├── risk-scorer.ts              Deterministic scoring engine
 ├── serpapi.ts                  SerpApi wrapper functions
-├── rate-limit.ts               In-memory rate limiter
-├── db.ts                       JSON file persistence
+├── rate-limit.ts               Hybrid Upstash/In-memory rate limiter
+├── db.ts                       Hybrid Upstash/JSON file persistence
 ├── generate-pdf.ts             PDF dossier generator
 extension/
 ├── manifest.json               Chrome Manifest V3
 ├── popup.html/js/css           Extension popup UI
+sdk/
+├── index.ts                    TypeScript SDK logic
+├── package.json                NPM configuration
+docs/
+├── security.md                 Threat model & defenses
+├── api-reference.md            API schemas
 ```
 
 ## License

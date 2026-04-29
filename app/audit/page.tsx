@@ -7,6 +7,7 @@ import AuditForm from '@/components/audit-form'
 import ResultScreen from '@/components/result-screen'
 import { SiteHeader } from '@/components/site-header'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { AuditSkeleton } from '@/components/audit-skeleton'
 import { DEMO_FIXTURES } from '@/lib/fixtures'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
 import { useLiveMode } from '@/hooks/useLiveMode'
@@ -162,10 +163,17 @@ export default function AuditPage() {
   useEffect(() => {
     if (startedFromUrl.current || typeof window === 'undefined') return
 
-    const demo = new URLSearchParams(window.location.search).get('demo')
+    const params = new URLSearchParams(window.location.search)
+    const demo = params.get('demo')
+    const text = params.get('text')
+
     if (demo === 'high-risk' || demo === 'caution' || demo === 'safe') {
       startedFromUrl.current = true
       runQuickDemo(demo)
+      window.history.replaceState(null, '', '/audit')
+    } else if (text) {
+      startedFromUrl.current = true
+      void handleInvestigate({ text })
       window.history.replaceState(null, '', '/audit')
     }
   }, [])
@@ -210,7 +218,7 @@ export default function AuditPage() {
               aria-label="Run Quick Demo"
               onClick={() => runQuickDemo('high-risk')}
               disabled={loading}
-              className="hireproof-focus mt-6 inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 font-black text-white shadow-lg hover:bg-safe disabled:cursor-not-allowed disabled:opacity-50"
+              className="hireproof-focus mt-6 inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 font-black text-background shadow-lg hover:bg-safe disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Play className="h-4 w-4 fill-current" />
               Run quick demo
@@ -225,14 +233,12 @@ export default function AuditPage() {
         <AnimatePresence>
           {loading && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6 overflow-hidden space-y-4" 
-              aria-live="polite"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mb-10"
             >
-              {/* Agent status bar */}
-              <div className="rounded-2xl border border-border bg-surface shadow-sm p-6">
+              <div className="mb-6 rounded-2xl border border-border bg-surface shadow-sm p-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-black">Investigation running</p>
@@ -263,35 +269,7 @@ export default function AuditPage() {
                   )}
                 </div>
               </div>
-
-              {/* Skeleton cards */}
-              <div className="rounded-2xl border border-border-soft bg-surface p-6 shadow-sm animate-pulse">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-border-soft" />
-                  <div className="flex-1 space-y-3">
-                    <div className="h-7 w-48 rounded-lg bg-border-soft" />
-                    <div className="h-4 w-full rounded bg-border-soft" />
-                    <div className="h-4 w-3/4 rounded bg-border-soft" />
-                    <div className="mt-4 h-3 w-56 rounded-full bg-border-soft" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="rounded-2xl border border-border-soft bg-surface p-4 shadow-sm animate-pulse">
-                    <div className="mb-2 h-3 w-20 rounded bg-border-soft" />
-                    <div className="h-5 w-32 rounded bg-border-soft" />
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-2xl border border-border-soft bg-surface p-5 shadow-sm animate-pulse">
-                <div className="mb-3 h-5 w-32 rounded bg-border-soft" />
-                <div className="space-y-2">
-                  <div className="h-3 w-full rounded bg-border-soft" />
-                  <div className="h-3 w-5/6 rounded bg-border-soft" />
-                  <div className="h-3 w-4/6 rounded bg-border-soft" />
-                </div>
-              </div>
+              <AuditSkeleton />
             </motion.div>
           )}
         </AnimatePresence>
@@ -304,7 +282,7 @@ export default function AuditPage() {
             {lastRequest && (
               <button
                 onClick={() => handleInvestigate(lastRequest)}
-                className="hireproof-focus whitespace-nowrap rounded-lg bg-surface px-4 py-2 text-sm font-black text-foreground shadow-sm hover:bg-white"
+                className="hireproof-focus whitespace-nowrap rounded-lg bg-surface px-4 py-2 text-sm font-black text-foreground shadow-sm hover:bg-background"
               >
                 Retry Investigation
               </button>
@@ -319,7 +297,7 @@ export default function AuditPage() {
               data-testid="demo-high-risk-btn"
               onClick={() => runQuickDemo('high-risk')}
               disabled={loading}
-              className="hireproof-focus flex items-center gap-2 rounded-full border border-risk-bg bg-risk-bg px-4 py-2 text-sm font-black text-risk-text hover:bg-white disabled:opacity-50"
+              className="hireproof-focus flex items-center gap-2 rounded-full border border-risk-bg bg-risk-bg px-4 py-2 text-sm font-black text-risk-text hover:bg-background disabled:opacity-50"
             >
               <AlertTriangle className="w-4 h-4 text-high-risk" />
               High-Risk
@@ -328,7 +306,7 @@ export default function AuditPage() {
               data-testid="demo-caution-btn"
               onClick={() => runQuickDemo('caution')}
               disabled={loading}
-              className="hireproof-focus flex items-center gap-2 rounded-full border border-caution-bg bg-caution-bg px-4 py-2 text-sm font-black text-caution-text hover:bg-white disabled:opacity-50"
+              className="hireproof-focus flex items-center gap-2 rounded-full border border-caution-bg bg-caution-bg px-4 py-2 text-sm font-black text-caution-text hover:bg-background disabled:opacity-50"
             >
               <Zap className="w-4 h-4 text-caution" />
               Caution
@@ -337,7 +315,7 @@ export default function AuditPage() {
               data-testid="demo-safe-btn"
               onClick={() => runQuickDemo('safe')}
               disabled={loading}
-              className="hireproof-focus flex items-center gap-2 rounded-full border border-safe-bg bg-safe-bg px-4 py-2 text-sm font-black text-safe-text hover:bg-white disabled:opacity-50"
+              className="hireproof-focus flex items-center gap-2 rounded-full border border-safe-bg bg-safe-bg px-4 py-2 text-sm font-black text-safe-text hover:bg-background disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4 text-safe" />
               Safe

@@ -2,6 +2,8 @@
 
 TypeScript client for the HireProof Job Verification API.
 
+Perfect for building **Security Middleware** into your automated job-hunting pipelines (n8n, Make.com, LangChain). HireProof prevents your AI agents from carelessly submitting your resume and PII to phishing scams.
+
 ## Install
 
 ```bash

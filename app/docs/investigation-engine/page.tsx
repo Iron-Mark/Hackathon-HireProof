@@ -1,57 +1,101 @@
-export const metadata = { title: 'AI Investigation Engine — HireProof' }
-export default function Page() {
+import { Cpu, Zap, Search, ShieldCheck, Workflow, Brain, Microscope } from 'lucide-react'
+import { CodeBlock } from '@/components/ui/code-block'
+
+export const metadata = { 
+  title: 'AI Investigation Engine — HireProof Docs',
+  description: 'How HireProof\'s autonomous agent investigates job posts using real-time web evidence.'
+}
+
+export default function InvestigationEnginePage() {
   return (
-    <div>
-      <h1 className="mb-4 text-4xl font-black tracking-tight">AI Investigation Engine</h1>
-      <p className="mb-8 text-lg font-semibold text-muted">How HireProof&apos;s autonomous agent investigates job posts end-to-end.</p>
-
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-black">Autonomous Agent Loop</h2>
-        <p className="mb-4 text-sm font-semibold text-muted leading-6">
-          HireProof uses the Vercel AI SDK&apos;s <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">generateText</code> function
-          with multi-step tool orchestration. The agent is given 4 MCP tools and autonomously decides which to call, in what order,
-          and how to interpret the results — up to a maximum of 5 tool-calling steps.
+    <div className="space-y-12 pb-24 text-foreground">
+      <section className="space-y-4">
+        <h1 className="text-4xl font-black tracking-tight lg:text-5xl">AI Investigation Engine</h1>
+        <p className="text-xl font-medium leading-relaxed text-muted">
+          HireProof is powered by an autonomous, multi-surface investigation engine that combines structured extraction with real-time tool calling.
         </p>
-        <div className="rounded-xl border border-border-soft bg-surface overflow-hidden shadow-sm">
-          <div className="border-b border-border-soft px-4 py-2 text-xs font-black text-muted">Agent Configuration</div>
-          <pre className="overflow-x-auto p-4 text-xs leading-6"><code>{`const result = await generateText({
+      </section>
+
+      {/* The Core Agent */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-border-soft pb-2">
+          <Brain className="h-6 w-6 text-foreground" />
+          <h2 className="text-2xl font-black">Autonomous Agent Loop</h2>
+        </div>
+        <p className="font-medium text-muted leading-relaxed">
+          The engine utilizes the <strong>Vercel AI SDK</strong> with multi-step tool orchestration. Unlike static scanners, our agent autonomously decides which tools to invoke based on the claims extracted from the job post.
+        </p>
+        
+        <div className="hireproof-card overflow-hidden rounded-3xl border border-border-soft">
+          <div className="border-b border-border-soft bg-surface px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-muted">Execution logic</div>
+          <div className="p-0">
+            <CodeBlock 
+              language="typescript"
+              code={`const result = await generateText({
   model: openai('gpt-4o-mini'),
-  stopWhen: stepCountIs(5),
+  system: "You are HireProof Investigator. Use tools to verify claims.",
+  maxSteps: 5,
   tools: {
-    search_company,   // Check web presence
-    news_check,       // Search scam reports
-    jobs_compare,     // Find comparable listings
-    local_presence,   // Verify local footprint
+    search_company,   // Web presence & LinkedIn
+    news_check,       // Scam reports & press
+    jobs_compare,     // Market rate benchmarking
+    local_presence,   // Maps & office registration
   },
-  prompt: \`You are HireProof Agent...
-    Company: \${claims.company}
-    Role: \${claims.role}
-    Location: \${claims.location}
-    Use all tools.\`,
-})`}</code></pre>
+  prompt: \`Investigate: \${extractedClaims.text}\`,
+})`} 
+            />
+          </div>
         </div>
       </section>
 
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-black">Claims Extraction</h2>
-        <p className="mb-4 text-sm font-semibold text-muted leading-6">
-          Before evidence gathering, the AI extracts structured claims from the raw job post using <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">generateObject</code> with a Zod schema.
-          This works with text, images (via multi-modal vision), or both.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {['Company Name', 'Job Title', 'Salary', 'Location', 'Contact Method', 'Application Path'].map((claim) => (
-            <div key={claim} className="rounded-lg border border-border-soft bg-surface px-4 py-3 text-sm font-black">{claim}</div>
-          ))}
+      {/* Investigation Pipeline */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-border-soft pb-2">
+          <Workflow className="h-6 w-6 text-foreground" />
+          <h2 className="text-2xl font-black">The Investigation Pipeline</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="space-y-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-safe/10 text-safe">
+              <Zap className="h-5 w-5" />
+            </div>
+            <h3 className="font-black">1. Extraction</h3>
+            <p className="text-xs font-medium text-muted leading-relaxed">
+              The engine uses Vision or NLP to extract claims (Salary, Role, Contact Method) into a typed object.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-evidence/10 text-evidence">
+              <Search className="h-5 w-5" />
+            </div>
+            <h3 className="font-black">2. Evidence</h3>
+            <p className="text-xs font-medium text-muted leading-relaxed">
+              The agent calls MCP tools in parallel to verify each claim against live web data and news archives.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-caution/10 text-caution">
+              <Microscope className="h-5 w-5" />
+            </div>
+            <h3 className="font-black">3. Forensic Analysis</h3>
+            <p className="text-xs font-medium text-muted leading-relaxed">
+              Verdicts are generated by weighing the collected evidence against historical scam patterns.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-4 text-2xl font-black">Fallback Strategy</h2>
-        <p className="text-sm font-semibold text-muted leading-6">
-          If the AI SDK is unavailable (no <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">MODEL_PROVIDER_KEY</code>),
-          the engine falls back to regex-based extraction. If the agent loop fails, it falls back to direct SerpApi calls.
-          If SerpApi is unavailable, it falls back to demo fixtures. The app never crashes — it always produces a result.
-        </p>
+      {/* Resilience */}
+      <section className="rounded-2xl border border-border bg-surface p-6">
+        <div className="flex items-start gap-4">
+          <ShieldCheck className="mt-1 h-5 w-5 text-safe" />
+          <div className="space-y-2">
+            <p className="text-sm font-black uppercase tracking-widest">Fail-Safe Resilience</p>
+            <p className="text-sm font-medium text-muted leading-relaxed">
+              If a specific AI model or tool is unavailable, the engine automatically pivots to fallback heuristics. We prioritize <strong>Deterministic Scoring</strong> over raw LLM output to ensure explainable and consistent verdicts.
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   )

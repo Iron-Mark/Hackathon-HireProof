@@ -69,7 +69,7 @@ export default function VoiceInputButton({ onTranscript, disabled }: VoiceInputB
       type="button"
       onClick={toggleListening}
       disabled={disabled}
-      className={`flex items-center gap-1.5 text-xs font-black transition-colors ${
+      className={`flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 px-2 text-xs font-black transition-colors ${
         isListening
           ? 'text-high-risk animate-pulse'
           : 'text-muted hover:text-foreground'

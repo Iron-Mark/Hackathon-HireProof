@@ -3,8 +3,39 @@ import ResultScreen from '@/components/result-screen'
 import { SiteHeader } from '@/components/site-header'
 import { redirect } from 'next/navigation'
 import { ErrorBoundary } from '@/components/error-boundary'
+import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const report = await getReport(params.id)
+  const verdict = report?.verdict?.toUpperCase() || 'UNKNOWN'
+  const risk = report?.riskScore || 0
+
+  const isScam = verdict === 'HIGH-RISK'
+  const title = isScam 
+    ? `🚨 SCAM DETECTED: Risk Score ${risk}/100` 
+    : `HireProof Report: ${verdict} (${risk}/100)`
+
+  return {
+    title,
+    description: report?.summary || 'Archived job investigation report from HireProof.',
+    robots: {
+      index: false,
+      follow: false,
+      nocache: true,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
+    openGraph: {
+      title,
+      description: `Risk Score: ${risk}/100. ${report?.summary?.substring(0, 100)}...`,
+      type: 'article',
+    },
+  }
+}
 
 export default async function AuditPermalinkPage({ params }: { params: { id: string } }) {
   // Input validation: ensure ID only contains valid characters to guard against path traversal or injections

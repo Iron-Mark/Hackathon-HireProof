@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
-import { ArrowRight, CheckCircle2, AlertCircle, Globe, TrendingUp, MapPin, ShieldAlert, SearchCheck, FileText, Sparkles, Zap } from 'lucide-react'
+import { ArrowRight, CheckCircle2, AlertCircle, Globe, TrendingUp, MapPin, ShieldAlert, SearchCheck, FileText, Sparkles, Zap, Bot, Terminal, Cpu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { SiteHeader } from '@/components/site-header'
 import { BrandMark } from '@/components/brand-mark'
+import { ImpactTicker } from '@/components/impact-ticker'
 
 const flags = [
   'PHP 80,000/week for an internship',
@@ -38,6 +39,8 @@ const typingPhrases = [
   'Senior Software Engineer at Microsoft...',
   'Urgent! Data entry clerk needed, $5000/week...',
 ]
+
+const heroEase: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 function TypewriterEffect() {
   const [text, setText] = useState('')
@@ -75,7 +78,11 @@ function TypewriterEffect() {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } }),
+  show: (i: number) => ({ 
+    opacity: 1, 
+    y: 0, 
+    transition: { delay: i * 0.12, duration: 0.5, ease: heroEase } 
+  }),
 }
 
 const staggerContainer = {
@@ -93,6 +100,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <ImpactTicker />
       <SiteHeader />
 
       <section ref={heroRef} className="hireproof-grid border-b border-border-soft overflow-hidden">
@@ -129,13 +137,13 @@ export default function Home() {
             <motion.div variants={fadeUp} custom={4} className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/audit"
-                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-6 py-3 font-bold text-white shadow-lg hover:bg-safe transition-colors"
+                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-6 py-3 font-bold text-background shadow-lg hover:bg-safe transition-colors"
               >
                 Start investigation <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/audit?demo=high-risk"
-                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-6 py-3 font-bold hover:bg-white transition-colors"
+                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-6 py-3 font-bold hover:bg-background transition-colors"
               >
                 Quick demo
               </Link>
@@ -234,6 +242,98 @@ export default function Home() {
         </div>
       </section>
 
+      {/* The Dead Internet Manifesto */}
+      <section className="border-b border-border-soft bg-background py-24 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#00ffc310,transparent_50%)]" />
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h2 className="text-5xl font-black tracking-tighter sm:text-6xl text-balance leading-[0.9]">
+                  The Dead Internet <span className="text-muted">is Real</span>
+                </h2>
+                <div className="inline-flex items-center gap-2 rounded-full border border-risk-bg bg-risk-bg/50 px-3 py-1 text-xs font-black uppercase tracking-widest text-risk-text">
+                  <Bot className="h-3.5 w-3.5" />
+                  40% of the internet is now bots
+                </div>
+              </div>
+              
+              <p className="text-xl font-medium text-muted leading-relaxed">
+                The job market is the new frontier for automated phishing. AI is posting jobs, AI is sending messages, and AI is interviewing you. <strong className="text-foreground">HireProof is the human filter.</strong>
+              </p>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-3 p-6 rounded-3xl border border-border-soft bg-surface/50 backdrop-blur-sm transition-colors hover:border-evidence/30">
+                  <div className="h-10 w-10 rounded-xl bg-evidence/10 text-evidence flex items-center justify-center">
+                    <Cpu className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-black">LLM Forensics</h3>
+                  <p className="text-sm font-medium text-muted leading-relaxed">
+                    Our engine identifies linguistic patterns unique to generative AI models.
+                  </p>
+                </div>
+                <div className="space-y-3 p-6 rounded-3xl border border-border-soft bg-surface/50 backdrop-blur-sm transition-colors hover:border-safe/30">
+                  <div className="h-10 w-10 rounded-xl bg-safe/10 text-safe flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-black">Bot-Speed Detection</h3>
+                  <p className="text-sm font-medium text-muted leading-relaxed">
+                    We flag listings that appear across hundreds of domains in milliseconds.
+                  </p>
+                </div>
+              </div>
+
+              <Link href="/docs/dead-internet" className="group inline-flex items-center gap-2 text-sm font-black text-muted hover:text-foreground transition-colors">
+                Learn about our bot-defense 
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            {/* Forensics Terminal */}
+            <div className="hireproof-card rounded-3xl overflow-hidden border border-border-soft shadow-2xl relative">
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-md z-[-1]" />
+              <div className="border-b border-border-soft bg-surface px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-risk-text/40" />
+                  <div className="h-3 w-3 rounded-full bg-caution/40" />
+                  <div className="h-3 w-3 rounded-full bg-safe/40" />
+                  <span className="ml-2 text-[10px] font-black text-muted uppercase tracking-widest">Forensic Console</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-safe animate-pulse" />
+                  <span className="text-[10px] font-black text-safe uppercase tracking-widest">Detection Active</span>
+                </div>
+              </div>
+              <div className="p-6 font-mono text-[11px] leading-relaxed space-y-4">
+                <div className="text-muted">SCANNING FOR AUTOMATION...</div>
+                
+                <div className="space-y-1">
+                  <div className="text-foreground font-bold">MATCH: &quot;We are looking for a highly motivated individual...&quot;</div>
+                  <div className="text-safe">// Probability of GPT-4 origin: 98.4%</div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-foreground font-bold">MATCH: &quot;Salary: $5000/week&quot;</div>
+                  <div className="text-caution">// Pattern: Unrealistic compensation outlier</div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-foreground font-bold">MATCH: Domain created 2 hours ago.</div>
+                  <div className="text-high-risk">// Status: High-risk throwaway infrastructure</div>
+                </div>
+
+                <div className="pt-4 border-t border-border-soft space-y-2">
+                  <div className="text-high-risk font-black uppercase text-xs">Bot Signature Found</div>
+                  <div className="text-muted">Isolating human footprint: <span className="text-high-risk">0% lacks contrast</span></div>
+                </div>
+              </div>
+              {/* Scanline Effect */}
+              <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_4px,3px_100%]" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="border-b border-border-soft bg-surface">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[360px_1fr]">
@@ -251,7 +351,7 @@ export default function Home() {
               <p><strong>Contact:</strong> Message us on Telegram</p>
               <p className="sm:col-span-2"><strong>Requirements:</strong> Basic HTML/CSS knowledge, no interview needed</p>
             </div>
-            <Link href="/audit?demo=high-risk" className="hireproof-focus mt-5 inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-bold text-white hover:bg-safe transition-colors">
+            <Link href="/audit?demo=high-risk" className="hireproof-focus mt-5 inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-bold text-background hover:bg-safe transition-colors">
               Run quick demo <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -324,12 +424,189 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-background">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm font-semibold text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>HireProof. Job-post verification with receipts.</p>
-          <Link href="/audit?demo=high-risk" className="hireproof-focus inline-flex items-center gap-2 rounded-lg text-foreground hover:text-safe transition-colors">
-            Try demo mode <ArrowRight className="h-4 w-4" />
-          </Link>
+      {/* Dead Internet Theory Section */}
+      <section className="relative overflow-hidden bg-black py-24 text-white">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+        </div>
+        
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-black uppercase tracking-widest text-risk-text">
+                <Bot className="h-4 w-4" />
+                The Dead Internet is Real
+              </div>
+              <h2 className="text-4xl font-black leading-tight sm:text-5xl">
+                40% of the internet <br />
+                <span className="text-risk-text">is now bots.</span>
+              </h2>
+              <p className="mt-6 text-lg font-medium leading-relaxed text-white/60">
+                The job market is the new frontier for automated phishing. AI is posting jobs, AI is sending messages, and AI is interviewing you. HireProof is the human filter.
+              </p>
+              
+              <div className="mt-10 grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
+                    <Cpu className="h-5 w-5 text-risk-text" />
+                  </div>
+                  <h3 className="font-bold">LLM Forensics</h3>
+                  <p className="text-sm text-white/40">Our engine identifies linguistic patterns unique to generative AI models.</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
+                    <Terminal className="h-5 w-5 text-safe" />
+                  </div>
+                  <h3 className="font-bold">Bot-Speed Detection</h3>
+                  <p className="text-sm text-white/40">We flag listings that appear across hundreds of domains in milliseconds.</p>
+                </div>
+              </div>
+              
+              <Link
+                href="/docs/dead-internet"
+                className="mt-10 inline-flex items-center gap-2 font-black text-white hover:text-safe transition-colors"
+              >
+                Learn about our bot-defense <ArrowRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, type: 'spring' }}
+              className="relative rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2 font-mono text-xs text-white/40">
+                  <span className="h-2 w-2 rounded-full bg-risk-text animate-pulse"></span>
+                  SCANNING FOR AUTOMATION...
+                </div>
+                <div className="text-xs font-black text-risk-text">DETECTION ACTIVE</div>
+              </div>
+              
+              <div className="space-y-4 font-mono">
+                <div className="rounded border border-white/5 bg-black/40 p-3 text-xs leading-relaxed text-white/80">
+                  <span className="text-risk-text">MATCH:</span> "We are looking for a highly motivated individual..." <br/>
+                  <span className="text-white/40">// Probability of GPT-4 origin: 98.4%</span>
+                </div>
+                <div className="rounded border border-white/5 bg-black/40 p-3 text-xs leading-relaxed text-white/80">
+                  <span className="text-risk-text">MATCH:</span> "Salary: $5000/week" <br/>
+                  <span className="text-white/40">// Pattern: Unrealistic compensation outlier</span>
+                </div>
+                <div className="rounded border border-white/5 bg-black/40 p-3 text-xs leading-relaxed text-white/80">
+                  <span className="text-risk-text">MATCH:</span> Domain created 2 hours ago. <br/>
+                  <span className="text-white/40">// Status: High-risk throwaway infrastructure</span>
+                </div>
+              </div>
+              
+              <div className="mt-8 relative rounded-xl bg-risk-bg/20 border border-risk-bg/30 p-4 text-center overflow-hidden">
+                <div className="bot-scan-line"></div>
+                <div className="text-2xl font-black text-risk-text glitch-hover uppercase">Bot Signature Found</div>
+                <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Isolating human footprint: 0%</div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Spot the Bot Section */}
+      <section className="bg-surface border-b border-border-soft py-20">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-evidence-bg px-3 py-1 text-xs font-black uppercase text-evidence">
+            <Sparkles className="h-4 w-4" />
+            Interactive Training
+          </div>
+          <h2 className="text-3xl font-black">Can you spot the bot?</h2>
+          <p className="mt-3 text-muted font-medium">Click on the job post that you think is AI-generated.</p>
+          
+          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              onClick={() => { alert("Correct! This is LLM-generated.") }}
+              className="flex flex-col text-left rounded-2xl border border-border bg-background p-6 hover:border-risk-text transition-all group"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-muted">Example A</span>
+                <Bot className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-risk-text" />
+              </div>
+              <p className="text-sm font-bold leading-relaxed">
+                "Seeking a highly motivated Frontend Developer to join our dynamic team. Competitive salary and remote work options available. Apply now!"
+              </p>
+              <div className="mt-6 flex items-center gap-2 text-xs font-black text-risk-text opacity-0 group-hover:opacity-100 transition-opacity">
+                SELECT BOT <ArrowRight className="h-3 w-3" />
+              </div>
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              onClick={() => { alert("Incorrect! This is a human-written post.") }}
+              className="flex flex-col text-left rounded-2xl border border-border bg-background p-6 hover:border-safe transition-all group"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-muted">Example B</span>
+                <Bot className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-safe rotate-180" />
+              </div>
+              <p className="text-sm font-bold leading-relaxed italic">
+                "Small team at Vertex Labs looking for a dev who doesn't mind diving into legacy code. Warning: our office dog will bark at your first PR."
+              </p>
+              <div className="mt-6 flex items-center gap-2 text-xs font-black text-safe opacity-0 group-hover:opacity-100 transition-opacity">
+                SELECT HUMAN <ArrowRight className="h-3 w-3" />
+              </div>
+            </motion.button>
+          </div>
+          
+          <div className="mt-12 rounded-xl bg-evidence-bg/30 p-6 text-center">
+            <p className="text-sm font-semibold leading-relaxed text-evidence">
+              Bots often use "Generic Optimization" patterns. HireProof detects thousands of these linguistic markers in milliseconds—far faster than a human ever could.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-background border-t border-border-soft">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 text-sm font-semibold text-muted">
+          <div className="flex flex-col justify-between gap-8 sm:flex-row">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-foreground font-black">
+                <BrandMark className="h-6 w-6" />
+                HireProof
+              </div>
+              <p className="max-w-xs leading-relaxed">
+                Job-post verification with receipts. Built for the modern job seeker.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-12 sm:grid-cols-3">
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Product</h4>
+                <ul className="space-y-2">
+                  <li><Link href="/audit" className="hover:text-safe">Audit</Link></li>
+                  <li><Link href="/explore" className="hover:text-safe">Explore</Link></li>
+                  <li><Link href="/pricing" className="hover:text-safe">Pricing</Link></li>
+                  <li><Link href="/developer" className="hover:text-safe">Developer Portal</Link></li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Resources</h4>
+                <ul className="space-y-2">
+                  <li><Link href="/docs" className="hover:text-safe">Documentation</Link></li>
+                  <li><Link href="/docs/security" className="hover:text-safe">Security</Link></li>
+                  <li><Link href="/docs/legal" className="hover:text-safe">Legal</Link></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col justify-between gap-4 border-t border-border-soft pt-8 sm:flex-row sm:items-center">
+            <p>© 2026 HireProof. All rights reserved.</p>
+            <Link href="/audit?demo=high-risk" className="hireproof-focus inline-flex items-center gap-2 rounded-lg text-foreground hover:text-safe transition-colors">
+              Try demo mode <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

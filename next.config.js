@@ -23,7 +23,7 @@ const nextConfig = {
           // Permissions policy
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
           // Content Security Policy
-          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https: wss:; frame-src 'none'; frame-ancestors 'none'; object-src 'none';" },
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none';" },
         ],
       },
       {
@@ -38,6 +38,8 @@ const nextConfig = {
   },
   // Don't expose server-side errors in production
   productionBrowserSourceMaps: false,
+  // Optimized output for Docker self-hosting
+  output: 'standalone',
 }
 
 module.exports = nextConfig

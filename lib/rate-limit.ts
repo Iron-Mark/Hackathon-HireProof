@@ -1,3 +1,6 @@
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
 export interface RateLimiterOptions {
   limit: number
   windowMs: number
@@ -8,8 +11,7 @@ interface RateLimitRecord {
   timestamp: number
 }
 
-// In-memory store for Hackathon demo purposes.
-// For production on Vercel Edge/Serverless, replace with @upstash/ratelimit and Vercel KV.
+// In-memory store fallback for Hackathon demo purposes.
 const store = new Map<string, RateLimitRecord>()
 
 // Periodic cleanup to prevent unbounded memory growth
@@ -29,10 +31,52 @@ function cleanupStale(windowMs: number) {
   }
 }
 
-export function checkRateLimit(identifier: string, options: RateLimiterOptions) {
+let globalRedis: Redis | null = null
+
+function getRedis() {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null
+  if (!globalRedis) {
+    try {
+      globalRedis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    } catch {
+      return null
+    }
+  }
+  return globalRedis
+}
+
+export async function checkRateLimit(identifier: string, options: RateLimiterOptions) {
   if (!identifier || typeof identifier !== 'string') {
     return { success: false, remaining: 0 }
   }
+
+  // 1. Enterprise Distributed Protection (Upstash Redis)
+  const redis = getRedis()
+  if (redis) {
+    try {
+      const windowSeconds = Math.max(1, Math.floor(options.windowMs / 1000))
+      const rl = new Ratelimit({
+        redis: redis,
+        limiter: Ratelimit.slidingWindow(options.limit, `${windowSeconds} s` as any),
+        ephemeralCache: new Map(),
+      })
+      
+      const res = await rl.limit(identifier)
+      if (!res.success) {
+        const retryAfterMs = res.reset - Date.now()
+        return { success: false, remaining: 0, retryAfterMs: Math.max(0, retryAfterMs) }
+      }
+      return { success: true, remaining: res.remaining }
+    } catch (e) {
+      console.warn("[Security] Upstash distributed limit failed, falling back to local memory.", e)
+      // Fall through to in-memory to prevent complete denial of service if DB is transiently down
+    }
+  }
+
+  // 2. Hackathon Local Fallback (In-Memory)
 
   const now = Date.now()
   cleanupStale(options.windowMs)

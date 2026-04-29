@@ -3,13 +3,23 @@
   "name": "HireProof - Job Post Checker",
   "version": "1.0.0",
   "description": "Instantly check if a job post is safe, suspicious, or a scam. Powered by HireProof AI Agent.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "host_permissions": [
     "*://*.linkedin.com/*",
     "*://*.indeed.com/*",
     "*://*.glassdoor.com/*",
     "*://*.upwork.com/*",
     "*://*.onlinejobs.ph/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.linkedin.com/*", "*://*.indeed.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; frame-ancestors 'none';"
