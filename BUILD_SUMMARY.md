@@ -6,7 +6,9 @@
 
 **Tagline**: "Paste a job post. Know if it's legit before you apply."
 
-**Track**: v0 + MCPs (Model Context Protocol)
+**Track**: v0 + MCPs, with credential-gated ChatSDK Agents and Vercel Workflow / WDK support
+
+**Latest local verification**: April 30, 2026
 
 ## Build Completion Status
 
@@ -56,9 +58,9 @@ All 10 phases of the v0-build-prompt-pack have been implemented:
 ### ✓ Phase 6: AI SDK Audit Endpoint
 - Created `/api/audit` route handler
 - Validates input with Zod AuditRequestSchema
-- Returns structured AuditReport with validation
-- Currently returns demo fixtures (placeholder for AI SDK integration)
-- Includes fallback on errors
+- Streams investigation progress and returns structured AuditReport payloads
+- Uses Vercel AI SDK with AI Gateway as the preferred provider and OpenAI-compatible fallback
+- Includes demo fallback on missing credentials or controlled recovery paths
 
 ### ✓ Phase 7: Risk Scoring and Verdict Logic
 - Created `/lib/risk-scorer.ts` with scoring engine
@@ -94,6 +96,8 @@ hireproof/
 ├── hooks/
 │   └── useAuditHistory.ts      # localStorage hook
 ├── package.json
+├── scripts/
+│   └── cleanup-local-data.mjs  # Local JSON retention cleanup
 ├── tsconfig.json
 ├── tailwind.config.ts
 ├── postcss.config.js
@@ -137,7 +141,7 @@ hireproof/
 - **Icons**: Lucide React
 - **Validation**: Zod
 - **Data**: localStorage (MVP)
-- **API Integration**: Ready for SerpApi + AI SDK
+- **API Integration**: SerpApi + Vercel AI SDK 6 with AI Gateway/OpenAI-compatible fallback
 - **Deployment**: Vercel (pre-configured)
 
 ## Environment Variables
@@ -148,7 +152,11 @@ Create a `.env.local` file with:
 # Optional - for live SerpApi integration (Phase 5+)
 SERPAPI_API_KEY=your_key_here
 
-# Optional - for live AI SDK integration (Phase 6+)
+# Preferred - Vercel AI Gateway
+AI_GATEWAY_API_KEY=your_key_here
+HIREPROOF_MODEL=openai/gpt-4o-mini
+
+# Optional - fallback for live AI SDK integration
 MODEL_PROVIDER_KEY=your_key_here
 
 # Base URL for deployment
@@ -188,7 +196,14 @@ npm start
 - Full SEO metadata and OG tags
 - Complete documentation portal at `/docs`
 - Production deployment on Vercel Edge
-- Chrome Extension (Manifest V3)
+- Local Chrome Extension (Manifest V3)
+
+### ✓ April 30 Polish & Hardening
+- Chrome extension docs now claim local install only.
+- Legal abuse report mailto uses lowercase extracted claim keys.
+- Trends page exports a clearly labeled JSON file.
+- Local JSON cleanup is available with `npm run cleanup:local-data`.
+- Verified badge routes and platform proof status endpoints are present in the build.
 
 ## Testing the App
 
@@ -237,7 +252,7 @@ npm start
 
 ## Current Status
 
-- [x] AI SDK integration — Vercel AI SDK 6 with Groq (Llama/Gemini)
+- [x] AI SDK integration — Vercel AI SDK 6 with AI Gateway/OpenAI-compatible fallback
 - [x] SerpApi live calls — All 4 evidence tools operational
 - [x] Live mode with automatic demo fallback
 - [x] Mobile-optimized responsive design
@@ -270,7 +285,10 @@ vercel
 
 Set environment variables in Vercel dashboard:
 - `SERPAPI_API_KEY` (optional, for live mode)
-- `MODEL_PROVIDER_KEY` (optional, for AI integration)
+- `AI_GATEWAY_API_KEY` (preferred, for AI integration)
+- `MODEL_PROVIDER_KEY` (optional fallback for AI integration)
+- `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `REDIS_URL` (optional, for live ChatSDK)
+- `WORKFLOW_SECRET` (optional, for protected WDK workflow starts)
 
 ---
 

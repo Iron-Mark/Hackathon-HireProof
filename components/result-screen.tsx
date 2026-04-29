@@ -11,6 +11,7 @@ import RiskRadarChart from '@/components/risk-radar-chart'
 import { generatePdfDossier, generateCertificate } from '@/lib/generate-pdf'
 import { showToast } from '@/components/toast'
 import { Confetti } from '@/components/confetti'
+import { buildLegalAbuseReportMailto } from '@/lib/report-actions.mjs'
 
 interface Result {
   id?: string
@@ -485,7 +486,7 @@ export default function ResultScreen({ result, isDemo = true, onBackToAudit }: R
           {result.verdict === 'high-risk' && (
             <div className="mt-6 border-t border-border-soft pt-4">
               <a
-                href={`mailto:reportphishing@apwg.org,cert@cert.org?subject=Phishing Scam Report: ${result.extractedClaims.Company || 'Unknown Company'}&body=I am reporting a recruitment scam/phishing attempt.%0A%0ACompany Claimed: ${result.extractedClaims.Company || 'Unknown'}%0ARole: ${result.extractedClaims.Role || 'Unknown'}%0A%0ARed Flags Found:%0A${result.redFlags.join('%0A')}%0A%0APlease investigate and take down the associated domains and accounts.`}
+                href={buildLegalAbuseReportMailto(result)}
                 className="hireproof-focus flex w-full items-center justify-center gap-2 rounded-xl bg-risk px-4 py-3 text-sm font-black text-background hover:opacity-90"
               >
                 <AlertTriangle className="h-4 w-4" />

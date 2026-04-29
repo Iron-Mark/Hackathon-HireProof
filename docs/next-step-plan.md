@@ -101,6 +101,17 @@ Acceptance:
 - `docs/remaining-work.md` no longer lists completed work as open.
 - User-facing claims match actual verified behavior.
 
+Status: complete as of 2026-04-30.
+
+Result:
+
+- Verified badge now stores account-owned domain records, verifies DNS TXT ownership, and exposes safe public token embeds through `/api/verified-badge/script`.
+- `/api/integrations/proof` reports ChatSDK, WDK, and AI Gateway E2E readiness without pretending missing credentials are live.
+- Chrome extension docs are limited to local install wording.
+- Legal abuse report mailto generation uses lowercase extracted claim keys.
+- Trends export is an explicit `Export trends JSON` action.
+- Local JSON cleanup is available through `npm run cleanup:local-data`.
+
 ## Phase 4: Local Smoke Test
 
 Start or confirm the app on `localhost:3002`.

@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     status: 'credential-required',
     track: 'Vercel Workflow',
-    message: 'Workflow route is implemented with WDK startAuditWorkflow plumbing. Set WORKFLOW_SECRET and deploy with Vercel Workflow to claim live durable execution.',
+    message: 'Workflow route is implemented with WDK startAuditWorkflow plumbing. Set WORKFLOW_SECRET and deploy with Vercel Workflow before verifying live durable execution.',
     durableWorkflow: {
       intendedRunner: 'Vercel Workflow',
       sourceEndpoint: '/api/workflows/audit',

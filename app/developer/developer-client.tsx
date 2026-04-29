@@ -24,6 +24,15 @@ import { showToast } from '@/components/toast'
 type User = { id: string; email: string; name: string }
 type ApiKey = { id: string; name: string; lastFour: string; createdAt: string; lastUsedAt: string | null }
 type Usage = { totalRequests: number; successfulRequests: number; failedRequests: number; recent: Array<{ id: string; endpoint: string; status: number; createdAt: string }> }
+type VerifiedDomain = {
+  id: string
+  domain: string
+  status: 'pending' | 'verified'
+  verificationToken: string
+  publicToken: string
+  badgeUrl: string
+  scriptUrl: string
+}
 
 export function DeveloperClient() {
   const [user, setUser] = useState<User | null>(null)
@@ -36,6 +45,10 @@ export function DeveloperClient() {
   const [newKey, setNewKey] = useState<string | null>(null)
   const [webhookUrl, setWebhookUrl] = useState('')
   const [isTestingWebhook, setIsTestingWebhook] = useState(false)
+  const [domainInput, setDomainInput] = useState('')
+  const [domains, setDomains] = useState<VerifiedDomain[]>([])
+  const [isAddingDomain, setIsAddingDomain] = useState(false)
+  const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null)
   
   // Infrastructure Keys (BYOK)
   const [openaiKey, setOpenaiKey] = useState('')
@@ -51,12 +64,14 @@ export function DeveloperClient() {
       const me = await fetch('/api/auth/me').then((res) => res.json())
       setUser(me.user)
       if (me.user) {
-        const [keyRes, usageRes] = await Promise.all([
+        const [keyRes, usageRes, domainRes] = await Promise.all([
           fetch('/api/developer/keys').then((res) => res.json()),
           fetch('/api/developer/usage').then((res) => res.json()),
+          fetch('/api/developer/domains').then((res) => res.json()),
         ])
         setKeys(keyRes.keys || [])
         setUsage(usageRes)
+        setDomains(domainRes.domains || [])
       }
     } catch (e) {
       console.error('Failed to load developer portal state')
@@ -141,6 +156,48 @@ export function DeveloperClient() {
       addLog('Network error during webhook orchestration.', 'error')
     } finally {
       setIsTestingWebhook(false)
+    }
+  }
+
+  async function addDomain() {
+    if (!domainInput.trim()) return showToast('Enter a domain first.', 'info')
+    setIsAddingDomain(true)
+    try {
+      const res = await fetch('/api/developer/domains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domainInput }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        showToast(json.error || 'Could not add domain.', 'info')
+        return
+      }
+      setDomainInput('')
+      showToast('Domain added. Add the TXT record, then verify it.', 'success')
+      await load()
+    } finally {
+      setIsAddingDomain(false)
+    }
+  }
+
+  async function verifyDomain(domain: string) {
+    setVerifyingDomain(domain)
+    try {
+      const res = await fetch('/api/developer/domains/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.verified) {
+        showToast(json.error || 'TXT record not found yet.', 'info')
+        return
+      }
+      showToast(`${domain} is verified.`, 'success')
+      await load()
+    } finally {
+      setVerifyingDomain(null)
     }
   }
 
@@ -513,34 +570,66 @@ export function DeveloperClient() {
               </div>
               
               <p className="mb-6 text-xs font-semibold text-muted leading-relaxed">
-                Display your HireProof status on your careers page. This badge automatically updates based on your domain verification.
+                Add your careers domain, publish the TXT record, then embed a public-token badge that does not expose API keys.
               </p>
 
-              <div className="relative flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-border-soft bg-background/50 mb-6 overflow-hidden">
-                <div className="bot-scan-line opacity-10" />
-                <div className="relative z-10 transition-transform hover:scale-110 cursor-pointer">
-                  <iframe 
-                    src={`/api/verified-badge?domain=${user?.email.split('@')[1] || 'demo.com'}&apiKey=demo`} 
-                    className="h-[60px] w-[200px] border-none pointer-events-none"
-                  />
-                </div>
+              <div className="mb-5 flex gap-2">
+                <input
+                  value={domainInput}
+                  onChange={(event) => setDomainInput(event.target.value)}
+                  placeholder={user?.email.split('@')[1] || 'careers.example.com'}
+                  className="min-w-0 flex-1 rounded-xl border border-border-soft bg-background p-3 text-xs font-semibold outline-none focus:border-safe"
+                />
+                <button
+                  onClick={addDomain}
+                  disabled={isAddingDomain}
+                  className="rounded-xl bg-foreground px-4 py-3 text-xs font-black text-background transition-all hover:bg-safe disabled:opacity-50"
+                >
+                  Add
+                </button>
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-xl bg-background p-4 font-mono text-[10px] text-muted overflow-x-auto border border-border-soft group/code relative">
-                  <code className="whitespace-pre">
-                    {`<iframe \n  src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/verified-badge?domain=${user?.email.split('@')[1] || 'yourdomain.com'}"\n  width="200"\n  height="60"\n  frameborder="0"\n/>`}
-                  </code>
-                  <button 
-                    onClick={() => {
-                      const code = `<iframe src="${window.location.origin}/api/verified-badge?domain=${user?.email.split('@')[1] || 'yourdomain.com'}" width="200" height="60" frameborder="0"/>`
-                      copy(code)
-                    }}
-                    className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity bg-surface p-1.5 rounded-lg border border-border-soft hover:bg-safe hover:text-background"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                {domains.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border-soft bg-background/50 p-6 text-center text-xs font-bold text-muted">
+                    No domains added yet.
+                  </div>
+                ) : domains.map((domain) => {
+                  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+                  const script = `<script src="${origin}${domain.scriptUrl}" async></script>`
+                  return (
+                    <div key={domain.id} className="rounded-2xl border border-border-soft bg-background p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-black">{domain.domain}</div>
+                          <div className={`mt-1 text-[10px] font-black uppercase tracking-widest ${domain.status === 'verified' ? 'text-safe' : 'text-caution'}`}>
+                            {domain.status}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => verifyDomain(domain.domain)}
+                          disabled={verifyingDomain === domain.domain}
+                          className="rounded-lg border border-border-soft px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-surface disabled:opacity-50"
+                        >
+                          {verifyingDomain === domain.domain ? 'Checking' : 'Verify'}
+                        </button>
+                      </div>
+                      <div className="mb-3 rounded-xl border border-border-soft bg-surface p-3 font-mono text-[10px] text-muted">
+                        TXT: {domain.verificationToken}
+                      </div>
+                      <div className="rounded-xl bg-surface p-3 font-mono text-[10px] text-muted overflow-x-auto border border-border-soft group/code relative">
+                        <code className="whitespace-pre">{script}</code>
+                        <button
+                          onClick={() => copy(script)}
+                          className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity bg-background p-1.5 rounded-lg border border-border-soft hover:bg-safe hover:text-background"
+                          aria-label={`Copy badge script for ${domain.domain}`}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
                 <Link href="/docs/verified-badge" className="flex items-center justify-between rounded-2xl border border-border-soft bg-background px-4 py-3 text-xs font-black transition-all hover:bg-surface">
                   Integration Guide
                   <ArrowUpRight className="h-4 w-4" />

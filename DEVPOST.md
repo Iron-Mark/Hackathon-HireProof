@@ -5,7 +5,7 @@ Job scams are becoming increasingly sophisticated. Scammers clone real job posts
 
 ## 🚀 What it does
 HireProof is an Omni-Modal AI Agent that acts as an automated background checker for job listings. 
-When a user pastes a job description, a recruiter's message, or a URL into the platform (or uses our Chrome Extension directly on LinkedIn/Indeed), the HireProof Agent wakes up. 
+When a user pastes a job description, a recruiter's message, or a URL into the platform, the HireProof Agent wakes up. A local Chrome extension is also available for browser-toolbar testing.
 It instantly decomposes the text to extract the core claims (Company, Role, Salary, Location) and then utilizes a suite of concurrent external tools to:
 1. **Verify Company Presence:** Cross-references official domains against known scam registries.
 2. **Check Reputation Signals:** Searches news outlets for "scam" or "fraud" reports related to the company.
@@ -18,8 +18,8 @@ It then compiles all this visible evidence into a comprehensive **Audit Report**
 We built HireProof with an unapologetic focus on modern architecture, security, and agentic AI.
 
 - **Frontend & Core Framework:** Next.js 16 (App Router), React 19, Tailwind CSS 4.0, and Framer Motion for a premium, native-feeling UI.
-- **Agentic AI Engine:** Powered by the Vercel AI SDK and Groq (Llama-3/Gemini) for hyper-fast reasoning, combined with SerpApi for live web intelligence.
-- **Omni-Modal Architecture:** We didn't just build a web app. We built a headless `v1/audit` API, an **MCP (Model Context Protocol) Server**, a TypeScript SDK, and a Chrome Extension, meaning HireProof can be accessed anywhere.
+- **Agentic AI Engine:** Powered by the Vercel AI SDK with AI Gateway as the preferred model provider and OpenAI-compatible fallback, combined with SerpApi for live web intelligence.
+- **Omni-Modal Architecture:** We didn't just build a web app. We built a headless `v1/audit` API, an **MCP (Model Context Protocol) Server**, a TypeScript SDK, credential-gated ChatSDK/Workflow surfaces, and a local Chrome Extension, meaning HireProof can be accessed from multiple workflows.
 - **Security Middleware for AI Agents:** Developers building automated job-hunting pipelines (via n8n, Make.com, or LangChain) can plug HireProof into their workflows as a mandatory security filter. If the AI detects a `high-risk` verdict, the pipeline halts, protecting the user's resume and PII from being automatically submitted to phishing scams.
 - **Enterprise Infrastructure:** Deployed on Vercel Edge. We implemented a **Hybrid Database Architecture** using Upstash Redis for global rate-limiting and permanent storage of shareable investigation links, perfectly gracefully degrading to local storage for zero-cost local development.
 
@@ -30,7 +30,7 @@ Additionally, securing the platform against abuse was a massive undertaking. We 
 
 ## 🎉 Accomplishments that we're proud of
 1. **The Architecture:** We built a genuinely secure, production-ready platform. It features global security middleware, strict CSP headers, and protection against CSRF, SSRF, and Prototype Pollution. It isn't just a prototype; it's an enterprise-grade fortress.
-2. **The Speed:** By leveraging Groq and running our evidence-gathering functions concurrently, complex multi-vector investigations complete in under 5 seconds.
+2. **The Evidence Loop:** By separating model reasoning from deterministic evidence tools, HireProof shows the user why a job post is risky instead of asking them to trust a black-box answer.
 3. **The Omni-Modal Approach:** The fact that the same core AI engine powers the Web App, the Chrome Extension, and the Headless API proves the flexibility of our design.
 4. **B2C Automation Protection:** Empowering developers to safely build automated job application agents without the fear of their AI carelessly leaking PII to scammers.
 
@@ -41,3 +41,4 @@ Building an "Agent" is less about prompt engineering and more about strict orche
 1. **WAF Integration:** Moving our edge rate-limiter behind a dedicated Web Application Firewall (WAF) for deeper packet inspection.
 2. **Automated Takedowns:** Integrating with domain registrars to automatically file abuse reports for confirmed scam domains.
 3. **Enterprise Dashboard:** A B2B portal for recruiting agencies to bulk-verify their inbound vendor requests.
+4. **Live Platform Proof:** Configure production Slack, Redis, and Workflow credentials so the ChatSDK and WDK routes can be demonstrated with real platform events.

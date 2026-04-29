@@ -41,6 +41,7 @@ See [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md) for the hon
 - **TypeScript SDK** — Programmatic Node.js library (`hireproof-sdk`) for deep integrations.
 - **MCP Server** (`/api/mcp`) — Model Context Protocol for direct tool access.
 - **Async Webhooks** — Fire-and-forget with `webhook_url` for background processing.
+- **Verified Badge API** — Domain-scoped badge status and script endpoints for approved career pages.
 - **Self-Hostable** — 100% portable Next.js architecture with a **Bring Your Own Key (BYOK)** model.
 - **Rate Limiting** — In-memory token bucket (5/min UI, 20/min API).
 - **Agent-Friendly DOM** — `data-testid` and `aria-label` on all interactive elements.
@@ -55,19 +56,20 @@ HireProof is built to be portable. Whether you use the hosted demo or run it you
 - **Zero-Config Docker**: Coming soon.
 
 ### Output & Sharing
-- **PDF Dossier Export** — Multi-page, color-coded investigation report with jsPDF
-- **PNG Screenshot Export** — Full result capture via html2canvas
+- **PNG Screenshot Export** — Full result capture via html2canvas from the report screen
+- **Trend JSON Export** — Download saved aggregate trend data as JSON
 - **Shareable Permalinks** — Every audit is persisted and accessible via `/audit/[id]`
 - **Copy Link Button** — One-click permalink sharing
 
 ### Infrastructure & Security
 - **Hybrid Database Architecture** — Uses Upstash Redis for permanent, globally distributed storage of shareable links, gracefully degrading to local ephemeral `fs` if keys are missing (zero-cost Hackathon mode).
+- **Local Data Cleanup** — `npm run cleanup:local-data` prunes local JSON reports and usage records for development installs.
 - **L7 DDoS Immunity** — Edge-distributed rate limiter via Upstash prevents "Denial of Wallet" attacks against LLM billing APIs.
 - **Security Hardening** — SSRF webhook protection, Prototype Pollution guards, strict CSP headers, and dynamic SEO no-index tags for data privacy.
 
 ### UI Polish
 - **Dark Mode** — System-aware theme toggle with `next-themes`
-- **Chrome Extension** — Manifest V3 extension to scan any webpage from the browser toolbar
+- **Chrome Extension Local Install** — Manifest V3 extension assets can be loaded locally from `extension/`; no store listing is claimed yet
 
 ## Tech Stack
 
@@ -79,7 +81,7 @@ HireProof is built to be portable. Whether you use the hosted demo or run it you
 | AI SDK | Vercel AI SDK 6 (`ai`, `@ai-sdk/gateway`, `@ai-sdk/openai` fallback) |
 | Animation | Framer Motion 12 |
 | Charts | Recharts |
-| PDF | jsPDF |
+| Export | html2canvas PNG capture, JSON trend export |
 | Search | SerpApi |
 | Database / Cache | Upstash Serverless Redis (Optional) |
 | Protocol | Model Context Protocol (MCP) |
@@ -96,6 +98,9 @@ cp .env.example .env.local
 
 # Run development server
 npm run dev
+
+# Optional: prune local JSON reports and usage records
+npm run cleanup:local-data
 ```
 
 Open [http://localhost:3002](http://localhost:3002) and navigate to `/audit`.
@@ -112,6 +117,9 @@ Open [http://localhost:3002](http://localhost:3002) and navigate to `/audit`.
 | `AGENT_API_KEY` | Optional | API key for headless agent access |
 | `UPSTASH_REDIS_REST_URL` | Optional | Upstash DB URL for global persistence/rate limits |
 | `UPSTASH_REDIS_REST_TOKEN` | Optional | Upstash Token for global persistence/rate limits |
+| `SLACK_BOT_TOKEN` | Optional | Enables live ChatSDK Slack bot replies |
+| `SLACK_SIGNING_SECRET` | Optional | Verifies Slack webhook signatures |
+| `WORKFLOW_SECRET` | Optional | Enables protected WDK workflow starts |
 
 Demo mode works without any API keys.
 
@@ -133,12 +141,12 @@ curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
 ### `POST /api/mcp` — MCP Tool Server
 Execute individual investigation tools. Requires `x-api-key` header.
 
-## Chrome Extension
+## Chrome Extension Local Install
 
 1. Open `chrome://extensions`
 2. Enable "Developer mode"
 3. Click "Load unpacked" → select the `extension/` folder
-4. Navigate to any job post → click HireProof icon → "Scan This Page"
+4. Use the local extension build for demo/testing only until a public store listing is verified
 
 ## Demo Mode
 
@@ -158,6 +166,9 @@ app/
 ├── api/audit/route.ts          SSE streaming endpoint
 ├── api/v1/audit/route.ts       Headless agent API (JSON + webhooks)
 ├── api/mcp/route.ts            MCP tool server
+├── api/chat/hireproof/route.ts ChatSDK status/reply endpoint
+├── api/webhooks/slack/route.ts Slack webhook adapter
+├── api/workflows/audit/route.ts WDK workflow start route
 components/
 ├── audit-form.tsx              Omni-modal input (text + image + voice)
 ├── result-screen.tsx           Animated verdict display
@@ -170,7 +181,7 @@ lib/
 ├── serpapi.ts                  SerpApi wrapper functions
 ├── rate-limit.ts               Hybrid Upstash/In-memory rate limiter
 ├── db.ts                       Hybrid Upstash/JSON file persistence
-├── generate-pdf.ts             PDF dossier generator
+├── generate-pdf.ts             Legacy PDF helpers retained for future dossier work
 extension/
 ├── manifest.json               Chrome Manifest V3
 ├── popup.html/js/css           Extension popup UI

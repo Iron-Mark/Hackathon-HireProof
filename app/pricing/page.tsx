@@ -163,13 +163,13 @@ export default function PricingPage() {
               <tbody className="divide-y divide-border-soft">
                 {[
                   { name: 'Investigation Engine', free: 'Unlimited (BYOK)', pro: 'Unlimited', ent: 'Unlimited' },
-                  { name: 'Access Methods', free: 'Web + Extension', pro: 'Web + Extension + API', ent: 'Full Suite' },
+                  { name: 'Access Methods', free: 'Web + local extension', pro: 'Web + API + local extension', ent: 'Full suite after setup' },
                   { name: 'Headless REST API', free: 'Local Only', pro: '1,000 req/mo', ent: 'Custom' },
                   { name: 'Webhook Callbacks', free: '❌', pro: '✅', ent: '✅' },
                   { name: 'Storage Engine', free: 'Local IndexedDB', pro: 'Upstash Global', ent: 'Dedicated Redis' },
                   { name: 'Audit History', free: '7 Days', pro: '30 Days', ent: 'Unlimited' },
                   { name: 'Human-in-the-loop', free: '❌', pro: '✅', ent: '✅' },
-                  { name: 'Compliance Exports', free: '❌', pro: 'JSON only', ent: 'PDF/CSV/JSON' },
+                  { name: 'Compliance Exports', free: 'None', pro: 'JSON only', ent: 'JSON now; PDF/CSV planned' },
                 ].map((row) => (
                   <tr key={row.name} className="hover:bg-background/30 transition-colors">
                     <td className="px-6 py-4 font-black">{row.name}</td>

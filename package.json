@@ -10,7 +10,8 @@
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "cleanup:local-data": "node scripts/cleanup-local-data.mjs"
   },
   "repository": {
     "type": "git",

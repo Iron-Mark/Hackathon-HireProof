@@ -133,6 +133,40 @@ test('workflow route uses the WDK package and next plugin is enabled', async () 
   assert.match(nextConfig, /withWorkflow/)
 })
 
+test('verified badge requires owned verified domains and public embed tokens', async () => {
+  const badgeRoute = await fs.readFile(new URL('../app/api/verified-badge/route.ts', import.meta.url), 'utf8')
+  const domainRoute = await fs.readFile(new URL('../app/api/developer/domains/route.ts', import.meta.url), 'utf8')
+  const verifyRoute = await fs.readFile(new URL('../app/api/developer/domains/verify/route.ts', import.meta.url), 'utf8')
+  const statusRoute = await fs.readFile(new URL('../app/api/verified-badge/status/route.ts', import.meta.url), 'utf8')
+  const scriptRoute = await fs.readFile(new URL('../app/api/verified-badge/script/route.ts', import.meta.url), 'utf8')
+  const authStore = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(badgeRoute, /Boolean\(auth && domain\)/)
+  assert.match(badgeRoute, /getVerifiedDomainByToken/)
+  assert.match(statusRoute, /getVerifiedDomainByToken/)
+  assert.match(scriptRoute, /application\/javascript/)
+  assert.match(domainRoute, /createVerifiedDomain/)
+  assert.match(verifyRoute, /verifyDomainOwnership/)
+  assert.match(authStore, /VerifiedDomainRecord/)
+  assert.match(authStore, /verificationToken/)
+  assert.match(authStore, /publicToken/)
+  assert.match(authStore, /resolveTxt/)
+})
+
+test('platform proof endpoint exposes credential-aware ChatSDK and WDK e2e state', async () => {
+  const route = await fs.readFile(new URL('../app/api/integrations/proof/route.ts', import.meta.url), 'utf8')
+  const readiness = await fs.readFile(new URL('../lib/platform-readiness.ts', import.meta.url), 'utf8')
+
+  assert.match(route, /getPlatformReadiness/)
+  assert.match(readiness, /SLACK_BOT_TOKEN/)
+  assert.match(readiness, /SLACK_SIGNING_SECRET/)
+  assert.match(readiness, /REDIS_URL/)
+  assert.match(readiness, /WORKFLOW_SECRET/)
+  assert.match(readiness, /AI_GATEWAY_API_KEY/)
+  assert.match(readiness, /credential-gated/)
+  assert.match(readiness, /ready/)
+})
+
 test('lab client streams real audit events instead of simulated telemetry', async () => {
   const source = await fs.readFile(new URL('../app/lab/lab-client.tsx', import.meta.url), 'utf8')
 

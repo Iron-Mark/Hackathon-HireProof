@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SiteHeader } from '@/components/site-header'
-import { TrendingUp, AlertTriangle, ShieldCheck, Zap, Globe, BarChart3, Clock } from 'lucide-react'
+import { TrendingUp, AlertTriangle, ShieldCheck, Zap, Globe, BarChart3, Clock, Download } from 'lucide-react'
 import { buildTrendsViewModel } from '@/lib/trends-view-model.mjs'
+import { buildTrendsJsonExport } from '@/lib/report-actions.mjs'
 
 export function TrendsClient() {
   const [stats, setStats] = useState<any>(null)
@@ -32,6 +33,16 @@ export function TrendsClient() {
     show: { opacity: 1, y: 0 }
   }
   const viewModel = buildTrendsViewModel(stats || {})
+  const handleExportJson = () => {
+    const exportPayload = buildTrendsJsonExport(stats || {})
+    const blob = new Blob([exportPayload.content], { type: exportPayload.mimeType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = exportPayload.filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
   const statIcons: Record<string, { icon: any; color: string }> = {
     reports: { icon: BarChart3, color: 'text-evidence' },
     highRisk: { icon: AlertTriangle, color: 'text-risk-text' },
@@ -55,15 +66,25 @@ export function TrendsClient() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-20">
-        <header className="mb-16">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-safe">
-            <TrendingUp className="h-4 w-4" />
-            Pattern Trends · {viewModel.modeLabel}
+        <header className="mb-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-safe">
+              <TrendingUp className="h-4 w-4" />
+              Pattern Trends · {viewModel.modeLabel}
+            </div>
+            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Recruitment Scam <span className="text-safe">Trends.</span></h1>
+            <p className="mt-6 max-w-2xl text-lg font-medium text-muted leading-relaxed">
+              Recurring risk patterns from job-post checks, saved reports, and live evidence sources.
+            </p>
           </div>
-          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Recruitment Scam <span className="text-safe">Trends.</span></h1>
-          <p className="mt-6 max-w-2xl text-lg font-medium text-muted leading-relaxed">
-            Recurring risk patterns from job-post checks, saved reports, and live evidence sources.
-          </p>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-xl border border-border-soft bg-surface px-4 py-3 text-sm font-black text-foreground transition-colors hover:bg-background"
+          >
+            <Download className="h-4 w-4" />
+            Export trends JSON
+          </button>
         </header>
 
         <motion.div 

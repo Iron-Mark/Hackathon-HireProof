@@ -1,21 +1,24 @@
-# HireProof - Deployment Summary (April 25, 2026)
+# HireProof - Deployment Summary
 
-## ✅ Deployment Status: LIVE ON VERCEL
+Last local verification: April 30, 2026
 
-**App is successfully deployed to production.**
+## Deployment Status
+
+The app has been deployed to production on Vercel. The current local working tree was also verified on April 30, 2026 with tests, TypeScript, and a production build.
 
 ### Production URLs
 
-- **Latest Deployment (Ready)**: https://hireproof-sigma.vercel.app (or https://hireproof-4pifbhowb-iron-marks-projects.vercel.app)
+- **Canonical Demo URL**: https://hireproof-sigma.vercel.app
 - **Project**: iron-marks-projects/hireproof
 - **Vercel Project ID**: prj_8pHu5GQQ0EzG49bgCcMm1QdNK9JB
 
-### Build & Deploy Log
+### Latest Local Verification
 
 ```
-✓ Build: Succeeded (all pages compiled)
-✓ Type Check: Passed (fixed TypeScript errors)
-✓ Static Export: 30+ routes generated
+✓ Tests: 18/18 passed
+✓ Type Check: Passed
+✓ Build: Succeeded
+✓ Static routes: 69 generated
   ├ / (Landing page)
   ├ /audit (Audit workspace)
   ├ /audit/[id] (Shareable permalink)
@@ -27,12 +30,18 @@
   ├ /trends (Investigation trends)
   ├ /api/audit (SSE streaming endpoint - dynamic)
   ├ /api/v1/audit (Headless agent API - dynamic)
-  └ /api/mcp (MCP tools endpoint - dynamic)
-
-### 🚀 Enterprise Upgrades Applied
-- **Global Rate Limiting:** Powered by Upstash Redis (Edge Cache).
-- **Hybrid Database:** Audit reports are now permanently saved to Upstash Redis with a 30-day auto-expiry TTL. Shared links (`/audit/report_xyz`) will now survive serverless cold starts.
+  ├ /api/mcp (MCP tools endpoint - dynamic)
+  ├ /api/chat/hireproof (ChatSDK status/reply endpoint - dynamic)
+  ├ /api/webhooks/slack (Slack webhook endpoint - dynamic)
+  ├ /api/workflows/audit (WDK workflow start endpoint - dynamic)
+  ├ /api/verified-badge/status (Badge status endpoint - dynamic)
+  └ /api/verified-badge/script (Badge embed script - dynamic)
 ```
+
+### Enterprise Upgrades Applied
+- **Global Rate Limiting:** Powered by Upstash Redis when configured.
+- **Hybrid Database:** Audit reports are saved to Upstash Redis with TTL when configured, with local JSON fallback for local development.
+- **Local Maintenance:** `npm run cleanup:local-data` prunes local JSON reports and usage records.
 
 ### What's Live
 
@@ -51,6 +60,9 @@
 ✅ TypeScript type safety across all routes
 ✅ SEO optimized with metadata tags
 ✅ All icons and styling loading correctly
+✅ Trends JSON export
+✅ Local Chrome extension install path
+✅ Credential-gated ChatSDK and WDK endpoints
 
 ### Environment Variables (Optional)
 
@@ -58,17 +70,14 @@ To enable live features, add to Vercel project settings:
 
 ```env
 SERPAPI_API_KEY=your_serpapi_key
-MODEL_PROVIDER_KEY=your_ai_provider_key
+AI_GATEWAY_API_KEY=your_ai_gateway_key
+HIREPROOF_MODEL=openai/gpt-4o-mini
+MODEL_PROVIDER_KEY=your_openai_compatible_fallback_key
+SLACK_BOT_TOKEN=your_slack_bot_token
+SLACK_SIGNING_SECRET=your_slack_signing_secret
+REDIS_URL=your_chat_state_redis_url
+WORKFLOW_SECRET=your_workflow_secret
 ```
-
-### Recent Deployments
-
-| URL | Status | Age | Duration |
-|-----|--------|-----|----------|
-| oclj9um9z | ✅ Ready | 2m | 29s |
-| f9f9zz9na | ❌ Error | 4m | 24s |
-| ix8zf7mwp | ✅ Ready | 13m | 4s |
-| adzplnae3 | ✅ Ready | 24m | 3s |
 
 ### Build Configuration
 
@@ -93,12 +102,13 @@ MODEL_PROVIDER_KEY=your_ai_provider_key
 
 ### Current State (Production)
 
-1. **Live API Keys**: SerpApi and Groq connected for live investigations
-2. **AI Integration**: Vercel AI SDK 6 with Groq (Llama/Gemini)
-3. **Live Mode**: Full agent pipeline operational
+1. **Live API Keys**: SerpApi and model provider keys are required for live investigations
+2. **AI Integration**: Vercel AI SDK 6 with AI Gateway preferred and OpenAI-compatible fallback
+3. **Live Mode**: Full agent pipeline is available when model and search credentials are configured; demo fallback remains available without keys
 4. **Hybrid Storage**: Upstash Redis for global persistence, local fs fallback
 5. **Documentation**: Live docs portal at `/docs`
-6. **Chrome Extension**: Manifest V3 in `/extension`
+6. **Chrome Extension**: Manifest V3 in `/extension`, local install only
+7. **ChatSDK / WDK**: Implemented and credential-gated until real platform credentials are configured
 
 ### Git Status
 

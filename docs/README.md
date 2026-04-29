@@ -10,6 +10,7 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 ### Strategy Reports
 - `deep-research-report-01.md`: Primary consolidated strategy and execution recommendation.
 - `deep-research-report-02.md`: Contrarian strategy report focused on competition positioning.
+- `deep-research-report-03.md`: Final competitive audit, vote-day checklist, and judge-proofing plan.
 - `Contrarian Winning Strategy.pdf`: Supporting research export.
 
 ### Execution Plans
@@ -17,6 +18,7 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 - `triple-track-coverage.md`: Honest track map for v0 + MCPs, ChatSDK Agents, and Vercel Workflow / WDK.
 - `chat-sdk-agents-integration-plan.md`: Draft plan for future multi-platform chat expansion.
 - `next-step-plan.md`: Current ordered plan for stabilizing, finishing, verifying, and syncing the app.
+- `hireproof-action-plan.md`: Active credibility-first execution roadmap distilled from Research 03.
 - `remaining-work.md`: Current punch list for runtime wiring, product gaps, and hardening work.
 - `submission-package.md`: Original submission copy and demo checklists.
 

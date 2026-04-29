@@ -25,7 +25,7 @@ export default function ChromeExtensionPage() {
           <div className="rounded-3xl border border-border-soft bg-surface p-8 shadow-sm">
             <h3 className="mb-2 font-black">1. Install</h3>
             <p className="text-sm font-medium text-muted leading-relaxed">
-              Download the extension from the Chrome Web Store or load it locally from the <code className="bg-background px-1 rounded">/extension</code> directory in the repo.
+              Load it locally from the <code className="bg-background px-1 rounded">/extension</code> directory in the repo.
             </p>
           </div>
           <div className="rounded-3xl border border-border-soft bg-surface p-8 shadow-sm">

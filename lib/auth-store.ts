@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
+import { resolveTxt } from 'dns/promises'
 import { Redis } from '@upstash/redis'
 import {
   createApiKey,
@@ -43,6 +44,18 @@ export interface AuthenticatedApiKey {
   key: ApiKeyRecord
   user: PublicUser | null
   isFallback: boolean
+}
+
+export interface VerifiedDomainRecord {
+  id: string
+  ownerId: string
+  domain: string
+  verificationToken: string
+  publicToken: string
+  status: 'pending' | 'verified'
+  createdAt: string
+  verifiedAt: string | null
+  lastCheckedAt: string | null
 }
 
 const dataDir = path.join(process.cwd(), 'data')
@@ -259,5 +272,99 @@ export async function getUsageSummary(ownerId: string) {
     successfulRequests: successful,
     failedRequests: mine.length - successful,
     recent: mine.slice(0, 20),
+  }
+}
+
+export function normalizeDomain(input: string) {
+  const raw = input.trim().toLowerCase()
+  if (!raw) throw new Error('Domain is required.')
+
+  const hostname = raw.includes('://') ? new URL(raw).hostname : raw.split('/')[0]
+  const normalized = hostname.replace(/^www\./, '').replace(/\.$/, '')
+
+  if (
+    !/^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/.test(normalized) ||
+    normalized.includes('..') ||
+    normalized.endsWith('.local')
+  ) {
+    throw new Error('Enter a valid public domain.')
+  }
+
+  return normalized
+}
+
+export async function listVerifiedDomains(ownerId: string) {
+  const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
+  return Object.values(domains)
+    .filter((domain) => domain.ownerId === ownerId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export async function createVerifiedDomain(ownerId: string, domainInput: string) {
+  const domain = normalizeDomain(domainInput)
+  const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
+  const existing = Object.values(domains).find((record) => record.ownerId === ownerId && record.domain === domain)
+  if (existing) return existing
+
+  const now = new Date().toISOString()
+  const record: VerifiedDomainRecord = {
+    id: `domain_${crypto.randomUUID()}`,
+    ownerId,
+    domain,
+    verificationToken: `hireproof-verify=${crypto.randomBytes(18).toString('hex')}`,
+    publicToken: crypto.randomBytes(24).toString('base64url'),
+    status: 'pending',
+    createdAt: now,
+    verifiedAt: null,
+    lastCheckedAt: null,
+  }
+
+  domains[record.id] = record
+  await writeJson('verified-domains', domains)
+  return record
+}
+
+export async function getVerifiedDomainByToken(domainInput: string, publicToken: string) {
+  let domain: string
+  try {
+    domain = normalizeDomain(domainInput)
+  } catch {
+    return null
+  }
+
+  const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
+  return Object.values(domains).find((record) => record.domain === domain && record.publicToken === publicToken) || null
+}
+
+export async function getVerifiedDomainForOwner(ownerId: string, domainInput: string) {
+  const domain = normalizeDomain(domainInput)
+  const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
+  return Object.values(domains).find((record) => record.ownerId === ownerId && record.domain === domain) || null
+}
+
+export async function verifyDomainOwnership(ownerId: string, domainInput: string) {
+  const domain = normalizeDomain(domainInput)
+  const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
+  const record = Object.values(domains).find((item) => item.ownerId === ownerId && item.domain === domain)
+  if (!record) throw new Error('Domain has not been added to this account.')
+
+  const txtRecords = await resolveTxt(domain).catch(() => [])
+  const flattened = txtRecords.map((entry) => entry.join(''))
+  const verified = flattened.includes(record.verificationToken)
+  const now = new Date().toISOString()
+
+  domains[record.id] = {
+    ...record,
+    status: verified ? 'verified' : record.status,
+    verifiedAt: verified ? now : record.verifiedAt,
+    lastCheckedAt: now,
+  }
+  await writeJson('verified-domains', domains)
+
+  return {
+    record: domains[record.id],
+    verified,
+    expectedTxt: record.verificationToken,
+    checkedRecords: flattened,
   }
 }

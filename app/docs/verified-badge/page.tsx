@@ -14,7 +14,7 @@ export default function VerifiedBadgePage() {
       <section className="space-y-4">
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">Verified Business Badge</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
-          Display a verification seal backed by a HireProof API key and the domain that serves the badge.
+          Display a verification seal backed by DNS TXT ownership and a public token, without exposing API keys on your careers page.
         </p>
       </section>
 
@@ -31,17 +31,19 @@ export default function VerifiedBadgePage() {
       <section className="space-y-6">
         <h2 className="text-2xl font-black">How to Embed</h2>
         <p className="font-medium text-muted">
-          Legitimate companies can validate a badge by posting their API key and domain to <code className="rounded bg-surface px-1.5 py-0.5 text-sm">/api/verified-badge</code>. The sample badge below is a visual preview; production embeds should call the validation endpoint before showing the verified state.
+          Add your domain in the developer portal, publish the provided DNS TXT record, then use the generated script URL. Public embeds use a scoped public token and the badge only shows verified after DNS ownership is confirmed. The embed does not expose API keys.
         </p>
         
         <CodeBlock 
           title="Embed Script"
           language="html"
-          code={`<script 
-  src="https://hireproof.com/js/badge.js" 
-  data-key="hp_live_your_key" 
-  data-company="Acme Corp"
-></script>`}
+          code={`<script src="https://hireproof.com/api/verified-badge/script?domain=careers.example.com&token=PUBLIC_TOKEN" async></script>`}
+        />
+
+        <CodeBlock
+          title="DNS TXT Record"
+          language="text"
+          code={`careers.example.com TXT "hireproof-verify=YOUR_VERIFICATION_TOKEN"`}
         />
       </section>
 
