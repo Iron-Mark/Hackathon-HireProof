@@ -104,7 +104,7 @@ export default function Home() {
       <SiteHeader />
 
       <section ref={heroRef} className="hireproof-grid border-b border-border-soft overflow-hidden">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center lg:py-16">
+        <div className="mx-auto grid max-w-[1600px] gap-10 px-6 md:px-12 lg:px-20 xl:px-32 py-12 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center lg:py-16">
           <motion.div
             initial="hidden"
             animate="show"
@@ -137,13 +137,13 @@ export default function Home() {
             <motion.div variants={fadeUp} custom={4} className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/audit"
-                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-6 py-3 font-bold text-background shadow-lg hover:bg-safe transition-colors"
+                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-5 py-2.5 font-bold text-background shadow-lg hover:bg-safe transition-colors"
               >
                 Start investigation <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/audit?demo=high-risk"
-                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-6 py-3 font-bold hover:bg-background transition-colors"
+                className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-5 py-2.5 font-bold hover:bg-background transition-colors"
               >
                 Quick demo
               </Link>
@@ -245,7 +245,7 @@ export default function Home() {
       {/* The Dead Internet Manifesto */}
       <section className="border-b border-border-soft bg-background py-24 overflow-hidden relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#00ffc310,transparent_50%)]" />
-        <div className="mx-auto max-w-6xl px-4 relative z-10">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 relative z-10">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div className="space-y-8">
               <div className="space-y-4">
@@ -336,7 +336,7 @@ export default function Home() {
 
       {/* How it works */}
       <section className="border-b border-border-soft bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[360px_1fr]">
+        <div className="mx-auto grid max-w-[1600px] gap-8 px-6 md:px-12 lg:px-20 xl:px-32 py-14 lg:grid-cols-[360px_1fr]">
           <div>
             <div className="mb-3 inline-flex rounded-full bg-evidence-bg px-3 py-1 text-xs font-black uppercase tracking-normal text-evidence">
               Example input
@@ -359,7 +359,7 @@ export default function Home() {
       </section>
 
       <section className="border-b border-border-soft">
-        <div className="mx-auto max-w-6xl px-4 py-14">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 py-14">
           <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <p className="text-sm font-black uppercase tracking-normal text-safe">Workflow</p>
@@ -394,7 +394,7 @@ export default function Home() {
       </section>
 
       <section className="border-b border-border-soft bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-14">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 py-14">
           <div className="mb-8 flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-evidence" />
             <h2 className="text-2xl font-black">Evidence signals</h2>
@@ -430,7 +430,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
         </div>
         
-        <div className="mx-auto max-w-6xl px-4 relative z-10">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 relative z-10">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -438,7 +438,7 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-black uppercase tracking-widest text-risk-text">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-black uppercase tracking-widest text-risk-text">
                 <Bot className="h-4 w-4" />
                 The Dead Internet is Real
               </div>
@@ -517,7 +517,7 @@ export default function Home() {
 
       {/* Interactive Spot the Bot Section */}
       <section className="bg-surface border-b border-border-soft py-20">
-        <div className="mx-auto max-w-4xl px-4 text-center">
+        <div className="mx-auto max-w-4xl px-6 lg:px-12 xl:px-16 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-evidence-bg px-3 py-1 text-xs font-black uppercase text-evidence">
             <Sparkles className="h-4 w-4" />
             Interactive Training

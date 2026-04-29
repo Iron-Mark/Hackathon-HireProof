@@ -48,8 +48,7 @@ const resourceGroups: { label: string; links: NavLink[] }[] = [
     label: 'Platform',
     links: [
       { href: '/pricing', label: 'Pricing', description: 'Plans and limits', icon: CreditCard },
-      { href: '/developer', label: 'Developer', description: 'API guide and examples', icon: Code2 },
-      { href: '/settings', label: 'API Portal', description: 'Keys and webhooks', icon: KeyRound },
+      { href: '/developer', label: 'Developer Portal', description: 'API keys and infrastructure', icon: Code2 },
     ],
   },
 ]
@@ -119,7 +118,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border-soft bg-background/92 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-6 md:px-12 lg:px-20 xl:px-32 py-3">
         <Link href="/" className="hireproof-focus flex min-w-0 items-center gap-3 rounded-sm">
           <BrandMark className="h-9 w-9 shrink-0" />
           <div className="min-w-0 leading-tight">

@@ -1,5 +1,5 @@
 {
-  "name": "v0-project",
+  "name": "hireproof",
   "version": "1.0.0",
   "description": "HireProof is a proof-backed AI agent for checking suspicious job posts before someone applies. A user pastes a job post, recruiter message, or job URL, and the app investigates the opportunity with visible evidence before returning a verdict: **Safe**, **Caution**, or **High-Risk**.",
   "main": "index.js",

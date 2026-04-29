@@ -58,7 +58,7 @@ export default function PricingPage() {
               </li>
             </ul>
             <div className="flex flex-col gap-2">
-              <a href="https://github.com/Iron-Mark/hackathon-v0-zero_to_agent" target="_blank" rel="noreferrer" className="hireproof-focus flex w-full items-center justify-center rounded-xl border border-border-soft bg-background px-4 py-3 text-sm font-black text-foreground hover:bg-border-soft transition-colors">
+              <a href={process.env.GITHUB_REPO_URL || "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent"} target="_blank" rel="noreferrer" className="hireproof-focus flex w-full items-center justify-center rounded-xl border border-border-soft bg-background px-4 py-3 text-sm font-black text-foreground hover:bg-border-soft transition-colors">
                 Clone Repository
               </a>
               <Link href="/docs/self-hosting" className="text-center text-xs font-bold text-muted underline hover:text-foreground">
@@ -138,7 +138,7 @@ export default function PricingPage() {
                 Custom Rate Limits & SLA
               </li>
             </ul>
-            <a href="mailto:sales@hireproof.com?subject=HireProof%20Enterprise%20Inquiry" className="hireproof-focus flex w-full items-center justify-center rounded-xl border border-border-soft bg-background px-4 py-3 text-sm font-black text-foreground hover:bg-border-soft transition-colors">
+            <a href={`mailto:${process.env.CONTACT_EMAIL || 'sales@hireproof.com'}?subject=HireProof%20Enterprise%20Inquiry`} className="hireproof-focus flex w-full items-center justify-center rounded-xl border border-border-soft bg-background px-4 py-3 text-sm font-black text-foreground hover:bg-border-soft transition-colors">
               Contact Sales
             </a>
           </div>

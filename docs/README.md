@@ -1,19 +1,26 @@
-# Docs
+# Archived Hackathon Strategy & Planning
 
-This directory contains the repository's research, strategy, and contributor documentation for the Zero to Agent hackathon workstream.
+This directory contains the historical research, strategy, and planning documents generated during the **Zero to Agent** hackathon workstream. These files are preserved for context and process transparency.
 
-## Contents
+## Live Documentation
+For the most up-to-date technical documentation, visit the **[Live Documentation Portal](https://hireproof-sigma.vercel.app/docs)**.
 
-- `deep-research-report-01.md`: primary consolidated strategy report and execution recommendation.
-- `deep-research-report-02.md`: contrarian strategy report focused on competition positioning and vote psychology.
-- `final-presentation-plan.md`: final presentation-ready plan for the selected HireProof project.
-- `prompts/`: copy-ready prompt packs for building the hackathon app, including the v0 build prompt spec.
-- `submission-package.md`: ready-to-copy hackathon submission copy, scripts, social posts, and demo checklist.
-- `Contrarian Winning Strategy for Zero to Agent-02.pdf`: exported supporting report.
-- `AGENTS.md`: contributor and agent guidelines for this repository.
+## Archived Contents
 
-## Maintenance
+### Strategy Reports
+- `deep-research-report-01.md`: Primary consolidated strategy and execution recommendation.
+- `deep-research-report-02.md`: Contrarian strategy report focused on competition positioning.
+- `Contrarian Winning Strategy.pdf`: Supporting research export.
 
-Keep source research in Markdown when possible, and place exported or presentation-ready files beside their source documents. Use lowercase hyphenated filenames for new Markdown files, for example `submission-plan.md`.
+### Execution Plans
+- `final-presentation-plan.md`: The original blueprint for the HireProof MVP.
+- `chat-sdk-agents-integration-plan.md`: Draft plan for future multi-platform chat expansion.
+- `submission-package.md`: Original submission copy and demo checklists.
 
-When adding a new document, update this README with a one-line description so readers can quickly find the right artifact.
+### Guidelines & Security
+- `AGENTS.md`: Contributor and AI Agent guidelines for this repository.
+- `security.md`: Detailed technical breakdown of the platform's security hardening.
+
+### Assets
+- `prompts/`: Historical prompt packs used to generate the initial v0 scaffolds.
+- `demo/`: Seeded investigation fixtures used for the "Demo Mode" fallback.

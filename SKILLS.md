@@ -184,7 +184,7 @@ Add this to your MCP configuration:
 
 ---
 
-## Licensedo 
+## License 
 
 These skills are open-source and free to use under the ISC License.
 Source: [github.com/Iron-Mark/hackathon-v0-zero_to_agent](https://github.com/Iron-Mark/hackathon-v0-zero_to_agent)

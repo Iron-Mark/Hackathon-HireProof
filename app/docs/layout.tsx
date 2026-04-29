@@ -1,10 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
-import { BookOpen, Code2, Package, ChevronRight, FileText } from 'lucide-react'
+import { BookOpen, Code2, Package, ChevronRight, FileText, Menu, X } from 'lucide-react'
 import { showToast } from '@/components/toast'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const docsSidebar = [
   {
@@ -98,80 +100,142 @@ const apiSidebar = [
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const isApiRef = pathname === '/docs/api-reference'
   const isSdk = pathname.startsWith('/docs/sdk')
   const sidebar = isApiRef ? apiSidebar : docsSidebar
   const activeTab = isApiRef ? 'api' : isSdk ? 'sdk' : 'docs'
 
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    setIsMobileSidebarOpen(false)
+  }, [pathname])
+
+  const renderSidebarContent = () => (
+    <nav className="p-4 space-y-6">
+      {sidebar.map((section) => (
+        <div key={section.title}>
+          <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-muted">{section.title}</h3>
+          <ul className="space-y-0.5">
+            {section.items.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`group flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-all duration-200 ${
+                    pathname === item.href
+                      ? 'bg-safe/10 text-safe font-black shadow-sm'
+                      : 'text-muted font-semibold hover:bg-surface hover:text-foreground hover:shadow-sm'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                    pathname === item.href ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-50'
+                  }`} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="border-b border-border-soft">
-        <div className="mx-auto flex max-w-7xl items-center gap-0 px-4">
-          <Link
-            href="/docs"
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
-              activeTab === 'docs' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
-            }`}
+      {/* Sub-header Navigation */}
+      <div className="sticky top-[72px] z-20 border-b border-border-soft bg-background/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 md:px-12 lg:px-20 xl:px-32">
+          <div className="flex items-center gap-0">
+            <Link
+              href="/docs"
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+                activeTab === 'docs' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Docs
+            </Link>
+            <Link
+              href="/docs/api-reference"
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+                activeTab === 'api' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+              }`}
+            >
+              <Code2 className="h-4 w-4" />
+              API Reference
+            </Link>
+            <Link
+              href="/docs/sdk"
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+                activeTab === 'sdk' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              SDK
+            </Link>
+          </div>
+          
+          {/* Mobile Sidebar Toggle */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-foreground lg:hidden"
+            aria-label="Open documentation menu"
           >
-            <BookOpen className="h-4 w-4" />
-            Docs
-          </Link>
-          <Link
-            href="/docs/api-reference"
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
-              activeTab === 'api' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
-            }`}
-          >
-            <Code2 className="h-4 w-4" />
-            API Reference
-          </Link>
-          <Link
-            href="/docs/sdk"
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
-              activeTab === 'sdk' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
-            }`}
-          >
-            <Package className="h-4 w-4" />
-            SDK
-          </Link>
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl">
-        {/* Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-border-soft lg:block">
-          <nav className="sticky top-[120px] max-h-[calc(100vh-120px)] overflow-y-auto p-4 space-y-6">
-            {sidebar.map((section) => (
-              <div key={section.title}>
-                <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-muted">{section.title}</h3>
-                <ul className="space-y-0.5">
-                  {section.items.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-all duration-200 ${
-                          pathname === item.href
-                            ? 'bg-safe/10 text-safe font-black shadow-sm'
-                            : 'text-muted font-semibold hover:bg-surface hover:text-foreground hover:shadow-sm'
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                          pathname === item.href ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-50'
-                        }`} />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+      <div className="mx-auto flex max-w-[1600px]">
+        {/* Desktop Sidebar */}
+        <aside className="hidden w-64 shrink-0 border-r border-border-soft lg:block xl:w-72">
+          <div className="sticky top-[136px] max-h-[calc(100vh-136px)] overflow-y-auto">
+            {renderSidebarContent()}
+          </div>
         </aside>
 
+        {/* Mobile Sidebar Drawer */}
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+              />
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border-soft bg-background lg:hidden"
+              >
+                <div className="flex items-center justify-between border-b border-border-soft p-4">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-safe" />
+                    <span className="text-sm font-black uppercase tracking-widest">Documentation</span>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="max-h-[calc(100vh-65px)] overflow-y-auto">
+                  {renderSidebarContent()}
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
         {/* Main content */}
-        <main className="min-w-0 flex-1 px-6 py-10 lg:px-12">
-          <div className="mx-auto max-w-3xl">
+        <main className="min-w-0 flex-1 px-6 md:px-12 lg:px-20 xl:px-32 py-10">
+          <div className="mx-auto max-w-5xl">
             {children}
           </div>
         </main>

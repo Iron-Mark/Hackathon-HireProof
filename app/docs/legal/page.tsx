@@ -94,11 +94,14 @@ export default function LegalPage() {
         <div className="flex items-start gap-4">
           <Info className="mt-1 h-5 w-5 text-muted" />
           <div className="space-y-4">
-            <p className="text-sm font-medium text-muted leading-relaxed">
+            <p id="privacy-policy" className="text-sm font-medium text-muted leading-relaxed">
               <strong>Privacy Policy:</strong> HireProof does not sell user data. For self-hosted instances, data remains on your infrastructure. For managed instances, we store anonymized audit IDs for 30 days solely for the purpose of improving detection accuracy.
             </p>
+            <p id="terms-of-service" className="text-sm font-medium text-muted leading-relaxed">
+              <strong>Terms of Service:</strong> By using HireProof, you agree to these terms. If you do not agree with our risk assessment model or our limitation of liability, please discontinue use of the platform immediately. 
+            </p>
             <p className="text-sm font-medium text-muted leading-relaxed">
-              By using HireProof, you agree to these terms. If you do not agree with our risk assessment model or our limitation of liability, please discontinue use of the platform immediately.
+              <strong>Governing Law:</strong> These terms are governed by the laws of the jurisdiction in which the core infrastructure is hosted (Vercel Global Edge).
             </p>
           </div>
         </div>

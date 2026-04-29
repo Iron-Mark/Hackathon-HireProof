@@ -2,6 +2,9 @@
 
 > Paste a job post. Know if it's legit before you apply.
 
+**Built for the [Vercel "Zero to Agent" Hackathon](https://community.vercel.com/hackathons/zero-to-agent).**
+Author: [Mark Siazon](https://www.marksiazon.dev/)
+
 HireProof is a proof-backed AI agent that investigates suspicious job posts with live evidence. It extracts claims, checks company web presence, reviews news and reputation signals, compares similar roles, verifies local business footprint, and returns a structured verdict: **Safe**, **Caution**, or **High-Risk** — with receipts.
 
 ## Features
@@ -85,7 +88,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and navigate to `/audit`.
+Open [http://localhost:3002](http://localhost:3002) and navigate to `/audit`.
 
 ## Environment Variables
 
@@ -109,7 +112,7 @@ Streams real-time agent progress via Server-Sent Events. Used by the web UI.
 Returns pure JSON. Requires `x-api-key` header. Supports `webhook_url` for async.
 
 ```bash
-curl -X POST https://yourapp.vercel.app/api/v1/audit \
+curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
   -H "Content-Type: application/json" \
   -H "x-api-key: hireproof_agent_demo_key" \
   -d '{"text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram."}'
@@ -163,8 +166,8 @@ sdk/
 ├── index.ts                    TypeScript SDK logic
 ├── package.json                NPM configuration
 docs/
-├── security.md                 Threat model & defenses
-├── api-reference.md            API schemas
+├── [Live Documentation Portal](https://hireproof-sigma.vercel.app/docs)
+├── security.md                 Threat model & defenses (Legacy)
 ```
 
 ## License
