@@ -15,13 +15,19 @@
 ```
 ✓ Build: Succeeded (all pages compiled)
 ✓ Type Check: Passed (fixed TypeScript errors)
-✓ Static Export: 7 routes generated
-  ├ / (Landing page - static)
-  ├ /audit (Audit workspace - static)  
-  ├ /history (History page - static)
-  ├ /api/audit (API endpoint - dynamic)
+✓ Static Export: 30+ routes generated
+  ├ / (Landing page)
+  ├ /audit (Audit workspace)
+  ├ /audit/[id] (Shareable permalink)
+  ├ /history (History page)
+  ├ /docs (Documentation portal - 15+ pages)
+  ├ /explore (Community showcase)
+  ├ /pricing (Plans & pricing)
+  ├ /settings (User settings)
+  ├ /trends (Investigation trends)
+  ├ /api/audit (SSE streaming endpoint - dynamic)
+  ├ /api/v1/audit (Headless agent API - dynamic)
   └ /api/mcp (MCP tools endpoint - dynamic)
-✓ Deployment: Ready (Status: Ready)
 
 ### 🚀 Enterprise Upgrades Applied
 - **Global Rate Limiting:** Powered by Upstash Redis (Edge Cache).
@@ -85,13 +91,14 @@ MODEL_PROVIDER_KEY=your_ai_provider_key
 3. View history on `/history` page
 4. Call `/api/mcp` for tool definitions
 
-### Next Steps for Production
+### Current State (Production)
 
-1. **Connect API Keys**: Add SERPAPI_API_KEY to Vercel environment
-2. **Add AI Integration**: Wire Claude/OpenAI to `/api/audit` endpoint
-3. **Enable Live Mode**: Implement claim extraction and MCP tool calling
-4. **Custom Domain**: Configure custom domain in Vercel Settings
-5. **Analytics**: Add PostHog or Vercel Analytics
+1. **Live API Keys**: SerpApi and Groq connected for live investigations
+2. **AI Integration**: Vercel AI SDK 6 with Groq (Llama/Gemini)
+3. **Live Mode**: Full agent pipeline operational
+4. **Hybrid Storage**: Upstash Redis for global persistence, local fs fallback
+5. **Documentation**: Live docs portal at `/docs`
+6. **Chrome Extension**: Manifest V3 in `/extension`
 
 ### Git Status
 

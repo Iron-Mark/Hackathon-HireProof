@@ -70,7 +70,7 @@ All 10 phases of the v0-build-prompt-pack have been implemented:
 ## Project Structure
 
 ```
-/vercel/share/v0-project/
+hireproof/
 ├── app/
 │   ├── layout.tsx              # Root layout with metadata
 │   ├── page.tsx                # Landing page
@@ -152,7 +152,7 @@ SERPAPI_API_KEY=your_key_here
 MODEL_PROVIDER_KEY=your_key_here
 
 # Base URL for deployment
-APP_BASE_URL=http://localhost:3000
+APP_BASE_URL=http://localhost:3002
 ```
 
 ## Development
@@ -161,7 +161,7 @@ APP_BASE_URL=http://localhost:3000
 # Install dependencies
 npm install
 
-# Run dev server (port 3000)
+# Run dev server (port 3002)
 npm run dev
 
 # Build for production
@@ -171,25 +171,24 @@ npm run build
 npm start
 ```
 
-## Next Steps for Completion
+## Completion Status
 
-### Phase 8: Live Mode, Demo Mode & Recovery
-- Add `useLiveMode` hook to toggle between demo/live
-- Implement fallback fixture loading on API errors
-- Add retry UI with clear error messages
+### ✓ Phase 8: Live Mode, Demo Mode & Recovery
+- Implemented live/demo mode toggle with automatic fallback
+- Fallback fixture loading on API errors
+- Retry UI with clear error messages
 
-### Phase 9: Export Card, Mobile & Accessibility
-- Create exportable/shareable result card component
-- Optimize mobile stacking for timeline, evidence, alternatives
-- Add keyboard navigation, ARIA labels, focus states
-- Ensure WCAG AA compliance
+### ✓ Phase 9: Export Card, Mobile & Accessibility
+- PDF and PNG export with jsPDF + html2canvas
+- Shareable permalinks via `/audit/[id]`
+- Mobile-optimized responsive layout
+- Keyboard navigation and ARIA labels
 
-### Phase 10: Metadata, Deployment & Submission
-- Update page metadata and OG tags
-- Document env vars in README
-- Build verification
-- Vercel deployment setup
-- Hackathon submission package
+### ✓ Phase 10: Metadata, Deployment & Submission
+- Full SEO metadata and OG tags
+- Complete documentation portal at `/docs`
+- Production deployment on Vercel Edge
+- Chrome Extension (Manifest V3)
 
 ## Testing the App
 
@@ -236,13 +235,13 @@ npm start
 - Result screen: Renders 5+ sections with proper scrolling
 - Bundle size: Minimal (Next.js 16 optimizes automatically)
 
-## Known Limitations & TODOs
+## Current Status
 
-- [ ] AI SDK integration (Phase 6) - currently returns demo fixtures
-- [ ] SerpApi live calls (Phase 5) - wrappers ready, needs API key
-- [ ] Live mode recovery (Phase 8) - demo mode always works
-- [ ] Mobile optimization (Phase 9) - basic responsive, needs refinement
-- [ ] Submission package (Phase 10) - awaiting final polish
+- [x] AI SDK integration — Vercel AI SDK 6 with Groq (Llama/Gemini)
+- [x] SerpApi live calls — All 4 evidence tools operational
+- [x] Live mode with automatic demo fallback
+- [x] Mobile-optimized responsive design
+- [x] Production deployment on Vercel Edge
 
 ## Success Criteria Met
 
