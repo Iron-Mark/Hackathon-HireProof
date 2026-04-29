@@ -70,7 +70,8 @@ test('research 03 action plan exists as active execution roadmap', async () => {
   const index = await fs.readFile(new URL('../docs/README.md', import.meta.url), 'utf8')
 
   assert.match(source, /P0 - Demo Credibility Cleanup/)
-  assert.match(source, /implemented and credential-gated/)
+  assert.match(source, /live-tested in Slack with screenshot evidence/)
+  assert.match(source, /production-accepted/)
   assert.match(index, /hireproof-action-plan\.md/)
 })
 
@@ -108,4 +109,13 @@ test('sandbox webhooks use the same signed headers as production webhooks', asyn
   assert.equal(headers['User-Agent'], 'HireProof-Webhook-Sandbox/1.0')
   assert.match(route, /buildHireProofWebhookHeaders/)
   assert.match(v1Route, /buildHireProofWebhookHeaders/)
+})
+
+test('homepage ticker avoids unsupported hard impact metrics', async () => {
+  const source = await fs.readFile(new URL('../components/impact-ticker.tsx', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(source, /scams identified this week/)
+  assert.doesNotMatch(source, /potential theft prevented/)
+  assert.doesNotMatch(source, /job seekers protected/)
+  assert.match(source, /Live evidence search configured/)
 })

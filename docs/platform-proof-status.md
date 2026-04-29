@@ -4,15 +4,17 @@ Last checked: 2026-04-30
 
 ## Summary
 
-Option C is closed for local platform proof and remains blocked for live Slack/production proof.
+Option C is closed for production credential/readiness proof, WDK accepted-run proof, and Slack screenshot proof.
 
-- Vercel Production now has `WORKFLOW_SECRET` and `HIREPROOF_MODEL` configured.
+- Vercel Production has `WORKFLOW_SECRET`, `HIREPROOF_MODEL`, Redis REST storage, `REDIS_URL`, Slack credentials, AI Gateway credentials, `MODEL_PROVIDER_KEY`, and `SERPAPI_API_KEY` configured.
+- Production is served through the stable alias `https://hireproof-sigma.vercel.app`.
+- Production `/api/integrations/proof` returns `ready`: Slack credentials are present, Workflow is ready, and AI Gateway is ready.
+- Production WDK proof passed: `/api/workflows/audit` accepted a run and returned `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
+- Production ChatSDK reply proof passed through `/api/chat/hireproof` and returned a formatted HireProof verdict plus report link.
 - Local WDK proof passed: `/api/workflows/audit` accepted a run and returned `wrun_01KQD72F2DVABS2KSFKABWAKXR`.
 - Local ChatSDK reply proof passed through `/api/chat/hireproof` and returned a formatted HireProof verdict plus report link.
 - Local platform readiness passed for Workflow and AI Gateway with the local proof environment.
-- Production proof is still blocked until the checkpoint commit is pushed and Vercel redeploys.
-- Real Slack proof is still blocked until `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, and `REDIS_URL` are configured.
-- Production AI Gateway proof is still blocked until `AI_GATEWAY_API_KEY` or `VERCEL_AI_GATEWAY_API_KEY` is configured in Vercel.
+- Slack screenshot proof is captured at `docs/demo/Screenshot 2026-04-30 024756.jpg`. Archive endpoint logs if judge-level proof beyond the screenshot is needed.
 
 ## Vercel Environment State
 
@@ -24,13 +26,56 @@ Configured in Production:
 - `UPSTASH_REDIS_REST_TOKEN`
 - `MODEL_PROVIDER_KEY`
 - `SERPAPI_API_KEY`
-
-Still missing for full live Option C:
-
 - `SLACK_BOT_TOKEN`
 - `SLACK_SIGNING_SECRET`
 - `REDIS_URL`
 - `AI_GATEWAY_API_KEY` or `VERCEL_AI_GATEWAY_API_KEY`
+
+Still useful for full live Option C:
+
+- Archived request logs for the captured Slack event.
+
+## Production Proof Results
+
+Production route checks were run against `https://hireproof-sigma.vercel.app`.
+
+### Readiness
+
+`/api/integrations/proof` returned:
+
+- Overall status: `ready`
+- Slack: `ready`
+- Workflow: `ready`
+- AI Gateway: `ready`
+
+`/api/health` returned:
+
+- Storage: `redis`
+- Live search: `true`
+- Model: `true`
+- AI Gateway: `true`
+- OpenAI-compatible fallback: `true`
+
+### WDK
+
+`POST /api/workflows/audit` with the production workflow secret returned:
+
+- Status: `accepted`
+- Track: `Vercel Workflow`
+- Run ID: `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`
+- Message: `Workflow run accepted by WDK.`
+- Callback URL: `https://example.com/hireproof-callback`
+
+### ChatSDK
+
+`POST /api/chat/hireproof` returned:
+
+- Status: `ChatSDK Agents verdict formatted.`
+- Platform: `local`
+- A formatted verdict reply
+- A production report URL under `/audit/chat_...`
+
+This proves the shared ChatSDK reply path in production. Slack workspace proof is represented by the screenshot in `docs/demo/Screenshot 2026-04-30 024756.jpg`.
 
 ## Local Proof Results
 
@@ -75,22 +120,10 @@ The current working tree passed:
 - `npm run build`
 - `git diff --check` with only CRLF warnings
 
-## Production Proof Blockers
+## Production Proof Follow-Up
 
-1. Create a checkpoint commit using the repository trigger phrase.
-2. Push the checkpoint commit to GitHub.
-3. Let Vercel deploy the commit that contains:
-   - `/api/integrations/proof`
-   - `/api/webhooks/slack`
-   - `/api/workflows/audit`
-4. Add real Slack and Redis credentials:
-   - `SLACK_BOT_TOKEN`
-   - `SLACK_SIGNING_SECRET`
-   - `REDIS_URL`
-5. Add AI Gateway credentials if the submission should claim AI Gateway specifically:
-   - `AI_GATEWAY_API_KEY`
-   - `HIREPROOF_MODEL`
-6. Re-run production smoke checks:
+1. Archive Slack/Vercel request logs for the captured Slack mention.
+2. Re-run production smoke checks before the final submission:
 
 ```powershell
 Invoke-RestMethod https://hireproof-sigma.vercel.app/api/integrations/proof
@@ -98,4 +131,4 @@ Invoke-RestMethod https://hireproof-sigma.vercel.app/api/chat/hireproof
 Invoke-RestMethod https://hireproof-sigma.vercel.app/api/workflows/audit
 ```
 
-For real Slack proof, send an app mention in the configured workspace and capture the bot reply plus report link.
+Slack screenshot proof is already captured. Keep the screenshot with the submission materials and add logs only if needed.

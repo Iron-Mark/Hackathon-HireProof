@@ -28,14 +28,15 @@ Submission line:
 
 ### ChatSDK Agents
 
-Implemented integration path, credential-gated for live proof.
+Implemented and live-tested in Slack with screenshot evidence.
 
 - `chat`, `@chat-adapter/slack`, and `@chat-adapter/state-redis` are installed.
 - `/api/webhooks/slack` handles Slack events through `Chat.webhooks.slack`.
 - `lib/hireproof-bot.ts` registers `onNewMention` and `onSubscribedMessage`, subscribes to threads, runs the HireProof verdict formatter, and replies with a report link.
 - `/api/chat/hireproof` remains a local test endpoint for demoing the chat-native reply shape without Slack credentials.
-- Live Slack proof requires `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, and `REDIS_URL`.
-- A user posts or mentions a suspicious job listing, and the HireProof bot replies with verdict, score, evidence bullets, and a full report link.
+- Production Slack proof was captured on April 30, 2026: a real `@HireProof` mention returned a High-Risk verdict with evidence summary.
+- Proof screenshot: [`docs/demo/Screenshot 2026-04-30 024756.jpg`](demo/Screenshot%202026-04-30%20024756.jpg).
+- A user posts or mentions a suspicious job listing, and the HireProof bot replies with verdict, score, evidence bullets, and a report-ready summary.
 
 Submission line:
 
@@ -43,12 +44,13 @@ Submission line:
 
 ### Vercel Workflow / WDK
 
-Implemented integration path, credential-gated for live durable proof.
+Implemented and accepted in production.
 
 - `workflow` is installed and enabled through `workflow/next` in `next.config.js`.
 - `lib/workflows/audit-workflow.ts` exports `startAuditWorkflow`.
 - `/api/workflows/audit` imports `start` from `workflow/api` and starts the workflow when `WORKFLOW_SECRET` is configured.
 - Without workflow credentials, the route returns an honest `credential-required` response instead of pretending a live WDK run happened.
+- Production WDK proof was captured on April 30, 2026: `/api/workflows/audit` accepted run `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 - The existing `/api/v1/audit` webhook behavior is the natural bridge.
 
 Submission line:
@@ -64,10 +66,10 @@ Lead with the working product:
 3. Open the final Safe, Caution, or High-Risk report.
 4. Explain that MCP/API, ChatSDK, and WDK are three surfaces for the same verification core.
 
-For the final demo, call ChatSDK and WDK "implemented, credential-gated" until Slack and Workflow credentials are configured and live webhook events are captured.
+For the final demo, call ChatSDK "live-tested in Slack with screenshot proof." Show WDK as a production-accepted workflow run using `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 
 ## Guardrails
 
 - Do not describe HireProof as a generic security platform.
-- Do not claim live Slack or live durable Workflow execution until credentials are configured and the deployed endpoint is tested with real platform events.
+- Do not claim more than accepted Workflow execution unless a completed workflow result is captured.
 - Keep the product sentence centered on job posts, recruiter messages, evidence, and apply-before-you-trust decisions.

@@ -18,7 +18,7 @@ HireProof helps job seekers verify whether an opportunity looks legitimate, risk
 
 The result is a structured risk report with a clear Safe, Caution, or High-Risk verdict, a risk score, evidence cards, red flags, green flags, and safer alternatives. Instead of giving vague career advice, HireProof shows proof: what it checked, what it found, and what the user should do next.
 
-HireProof can be presented across the hackathon tracks as one agent with multiple surfaces: a v0-built web app, runtime MCP tools for evidence gathering, a ChatSDK Slack integration path for job communities, and a WDK workflow path for longer-running investigations.
+HireProof can be presented across the hackathon tracks as one agent with multiple surfaces: a v0-built web app, runtime MCP tools for evidence gathering, a live-tested ChatSDK Slack agent for job communities, and a production-accepted WDK workflow path for longer-running investigations.
 
 ## Tags
 
@@ -29,10 +29,10 @@ AI agent, MCP, v0, Vercel, SerpApi, job safety, job scams, verification, trust a
 HireProof can cover all three hackathon tracks as one job-verification agent:
 
 - **v0 + MCPs**: implemented web app plus runtime MCP evidence tools.
-- **ChatSDK Agents**: implemented Slack webhook route and ChatSDK bot wrapper; live proof requires Slack + Redis credentials.
-- **Vercel Workflow / WDK**: implemented workflow entrypoint and WDK start route; live durable proof requires deployed Workflow credentials.
+- **ChatSDK Agents**: live-tested Slack agent using the deployed webhook; proof screenshot at `docs/demo/Screenshot 2026-04-30 024756.jpg`.
+- **Vercel Workflow / WDK**: production-accepted workflow run through `/api/workflows/audit`; run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 
-For submission, lead with the strongest working web flow, then show ChatSDK and WDK as implemented integration paths. Do not call them fully live until real Slack webhook and Vercel Workflow runs are captured.
+For submission, lead with the strongest working web flow, then show ChatSDK screenshot proof and the production WDK run ID as supporting platform coverage.
 
 ## Cover Image Direction
 

@@ -1,22 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Shield, TrendingDown, Users, AlertCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Activity, AlertCircle, SearchCheck, Shield } from 'lucide-react'
 
 export function ImpactTicker() {
-  const [counts, setCounts] = useState({ scams: 2891, theft: 8930000, users: 14200 })
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCounts(prev => ({
-        scams: prev.scams + Math.floor(Math.random() * 2),
-        theft: prev.theft + Math.floor(Math.random() * 500),
-        users: prev.users + Math.floor(Math.random() * 3)
-      }))
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+  const items = [
+    { icon: Shield, text: 'Recruitment scam checks for pasted job posts' },
+    { icon: SearchCheck, text: 'Live evidence search configured' },
+    { icon: Activity, text: 'Demo and live audit modes available' },
+    { icon: AlertCircle, text: 'High-risk signals flagged before you apply' },
+  ]
 
   return (
     <div className="w-full bg-surface/50 dark:bg-[#0c0f14] py-2 overflow-hidden border-y border-border-soft dark:border-white/5 backdrop-blur-sm">
@@ -25,14 +18,13 @@ export function ImpactTicker() {
         transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
         className="flex whitespace-nowrap gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/70 dark:text-white/70"
       >
-        <StatItem icon={Shield} text={`${counts.scams.toLocaleString()} scams identified this week`} />
-        <StatItem icon={TrendingDown} text={`$${(counts.theft / 1000000).toFixed(1)}M in potential theft prevented`} />
-        <StatItem icon={Users} text={`${counts.users.toLocaleString()} job seekers protected`} />
-        <StatItem icon={AlertCircle} text="New high-risk pattern detected in remote Telegram listings" />
+        {items.map((item) => (
+          <StatItem key={item.text} icon={item.icon} text={item.text} />
+        ))}
         {/* Duplicate for seamless loop */}
-        <StatItem icon={Shield} text={`${counts.scams.toLocaleString()} scams identified this week`} />
-        <StatItem icon={TrendingDown} text={`$${(counts.theft / 1000000).toFixed(1)}M in potential theft prevented`} />
-        <StatItem icon={Users} text={`${counts.users.toLocaleString()} job seekers protected`} />
+        {items.map((item) => (
+          <StatItem key={`repeat-${item.text}`} icon={item.icon} text={item.text} />
+        ))}
       </motion.div>
     </div>
   )

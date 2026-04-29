@@ -1,6 +1,6 @@
 # HireProof Remaining Work
 
-Last checked: 2026-04-29
+Last checked: 2026-04-30
 
 The runtime wiring pass is now in place. The remaining items below are the real follow-through work that is still not finished, plus a few docs/hardening items that should be kept honest in the repo.
 
@@ -30,12 +30,12 @@ The April 30 E2E pass closed items 3-4 from the previous list:
 
 - Verified badge now has account-level domain records, DNS TXT ownership checks, public embed tokens, `/api/verified-badge/status`, `/api/verified-badge/script`, and developer portal controls.
 - ChatSDK/WDK proof now has `/api/integrations/proof`, which reports credential-aware E2E status for Slack, Workflow, and AI Gateway.
+- ChatSDK Slack proof has screenshot evidence in production. A real Slack mention returned a High-Risk HireProof verdict with evidence. Screenshot: [`docs/demo/Screenshot 2026-04-30 024756.jpg`](demo/Screenshot%202026-04-30%20024756.jpg).
+- WDK proof is complete in production. `/api/workflows/audit` accepted a deployed workflow run and returned `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 
-External proof still requires real credentials and events:
+External proof still pending:
 
-- Slack: `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `REDIS_URL`, and a real Slack event to `/api/webhooks/slack`.
-- WDK: `WORKFLOW_SECRET` and a deployed Vercel Workflow run through `/api/workflows/audit`.
-- AI Gateway: `AI_GATEWAY_API_KEY` or `VERCEL_AI_GATEWAY_API_KEY`.
+- Archive request logs for the Slack event if a judge asks for endpoint-level proof beyond the screenshot.
 
 ## P2 - Polish, Docs, and Hardening
 

@@ -5,9 +5,10 @@ Last checked: 2026-04-30
 ## P0 - Demo Credibility Cleanup
 
 - Keep the public demo centered on `/audit`, `/lab`, `/trends`, `/developer`, and `/docs/triple-track-coverage`.
-- Describe ChatSDK and WDK as implemented and credential-gated until real Slack events and deployed Workflow run IDs are captured.
+- Describe ChatSDK as live-tested in Slack with screenshot evidence. Describe WDK as production-accepted with run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 - Use `/api/integrations/proof` as the E2E readiness endpoint for Slack, Workflow, and AI Gateway status.
 - Keep the verified badge demo honest: DNS TXT ownership first, public token embed second, no API keys in browser embeds.
+- Use `docs/demo/Screenshot 2026-04-30 024756.jpg` as the Slack proof screenshot.
 
 ## P1 - Remaining Product Gaps
 
