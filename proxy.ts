@@ -14,11 +14,12 @@ const BLOCKED_UA_PATTERNS = [
 const SECURITY_HEADERS = {
   'X-Robots-Tag': 'noindex, nofollow, nosnippet, noarchive',
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
+  'X-Frame-Options': 'SAMEORIGIN', // Changed from DENY to SAMEORIGIN for internal badge demo
   'X-XSS-Protection': '1; mode=block',
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Resource-Policy': 'same-origin',
   'X-Permitted-Cross-Domain-Policies': 'none',
+  'Referrer-Policy': 'strict-origin-when-cross-origin', // Added from previous middleware
 }
 
 export function proxy(request: NextRequest) {
@@ -59,7 +60,7 @@ export function proxy(request: NextRequest) {
   return response
 }
 
-// Apply middleware to all routes except static assets, icons, and next internals
+// Apply proxy to all routes except static assets, icons, and next internals
 export const config = {
   matcher: ['/((?!_next/static|_next/image|icons/|favicon.ico|icon.svg|apple-icon.png|og-image.png).*)'],
 }

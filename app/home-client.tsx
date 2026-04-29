@@ -374,15 +374,15 @@ export function HomeClient() {
       </section>
 
       {/* Spot the Bot Training Section */}
-      <section className="py-32">
+      <section className="py-20 sm:py-32">
         <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32">
-          <div className="mb-20 text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-safe">
+          <div className="mb-12 sm:mb-20 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-safe">
               <ZapIcon className="h-4 w-4" />
               Investigator Academy
             </div>
             <h2 className="text-4xl font-black tracking-tight sm:text-6xl">Sharpen Your <span className="text-safe">Senses.</span></h2>
-            <p className="mx-auto mt-6 max-w-2xl text-xl font-medium text-muted">
+            <p className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl font-medium text-muted">
               Can you tell a human from a bot? Take our interactive training module to recognize the linguistic markers of AI-driven phishing.
             </p>
           </div>
@@ -391,14 +391,14 @@ export function HomeClient() {
       </section>
 
       {/* Community / Collective Defense Section */}
-      <section className="bg-foreground py-32 text-background relative overflow-hidden">
+      <section className="bg-foreground py-20 sm:py-32 text-background relative overflow-hidden">
         <div className="absolute top-0 right-0 p-20 opacity-5">
-          <Users className="h-[400px] w-[400px]" />
+          <Users className="h-[200px] w-[200px] sm:h-[400px] sm:w-[400px]" />
         </div>
         <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 relative z-10">
-          <div className="flex flex-col md:flex-row items-end justify-between gap-12 mb-20">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-12 mb-12 sm:mb-20">
             <div className="max-w-3xl">
-              <h2 className="text-5xl font-black leading-[0.95] tracking-tighter sm:text-7xl lg:text-8xl">
+              <h2 className="text-4xl font-black leading-[0.95] tracking-tighter sm:text-7xl lg:text-8xl">
                 The People vs. <br/> <span className="opacity-40 italic">The Dead Internet.</span>
               </h2>
               <p className="mt-8 text-xl font-black uppercase tracking-tight opacity-70">

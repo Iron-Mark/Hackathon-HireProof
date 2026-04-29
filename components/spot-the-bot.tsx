@@ -184,7 +184,7 @@ export function SpotTheBot() {
                     disabled={isDisabled}
                     whileHover={!isDisabled ? { scale: 1.02, y: -4 } : {}}
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                    className={`relative flex flex-col items-start rounded-[2rem] border-2 p-8 text-left transition-all duration-300 ${
+                    className={`group relative w-full h-full flex flex-col text-left rounded-[2rem] border-2 p-6 sm:p-10 transition-all duration-300 ${
                       isSelected
                         ? isCorrect
                           ? 'border-safe bg-safe/5 shadow-2xl shadow-safe/10'
@@ -326,11 +326,11 @@ export function SpotTheBot() {
                <div className="absolute inset-0 bg-gradient-to-br from-safe/10 to-transparent pointer-events-none" />
                <div className="bot-scan-line opacity-5" />
                <div className="relative z-10">
-                 <div className="mx-auto w-40 h-40 rounded-full bg-[#0c0f14] border-[6px] border-safe flex items-center justify-center mb-8 shadow-[0_0_60px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform duration-500">
-                   <ShieldCheck className="h-20 w-20 text-safe" />
-                 </div>
-                 <div className="text-[10px] font-black uppercase tracking-[0.8em] text-muted opacity-50">HireProof Certified Forensic Analyst</div>
-                 <div className="text-3xl font-black text-white mt-2 uppercase tracking-tighter">Level {score} Intelligence Lead</div>
+                  <div className="mx-auto w-40 h-40 rounded-full bg-surface border-[6px] border-safe flex items-center justify-center mb-8 shadow-[0_0_60px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform duration-500">
+                    <ShieldCheck className="h-20 w-20 text-safe" />
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.8em] text-muted opacity-50">HireProof Certified Forensic Analyst</div>
+                  <div className="text-3xl font-black text-foreground mt-2 uppercase tracking-tighter">Level {score} Intelligence Lead</div>
                </div>
             </div>
 

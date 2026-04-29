@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToastProvider } from '@/components/toast'
@@ -17,17 +17,10 @@ export const metadata: Metadata = {
   keywords: ['job search', 'scam detector', 'hireproof', 'job verification', 'dead internet theory', 'bot detection', 'recruitment fraud'],
   authors: [{ name: 'HireProof Team' }],
   manifest: '/manifest.json',
-  themeColor: '#0c0f14',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'HireProof',
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
   },
   robots: {
     index: true,
@@ -67,6 +60,14 @@ export const metadata: Metadata = {
     site: '@hireproof',
     creator: '@hireproof',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0c0f14',
 }
 
 export default function RootLayout({

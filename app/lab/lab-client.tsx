@@ -90,7 +90,7 @@ export function LabClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080a0d] text-white selection:bg-safe/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-safe/30 hireproof-grid">
       <SiteHeader />
       
       <main className="mx-auto max-w-[1600px] px-6 py-12 md:px-12 lg:px-20 xl:px-32">
@@ -108,19 +108,19 @@ export function LabClient() {
                 </div>
               </div>
             </div>
-            <p className="max-w-xl text-lg font-medium text-white/50 leading-relaxed">
+            <p className="max-w-xl text-lg font-medium text-muted-foreground leading-relaxed">
               Step inside the "Glass Box". Monitor the autonomous agent as it dissects recruitment data and isolates malicious automation markers in real-time.
             </p>
           </div>
           
           <div className="flex gap-4">
-            <div className="rounded-2xl border border-white/5 bg-white/5 p-4 text-center backdrop-blur-md">
+            <div className="rounded-2xl border border-border-soft bg-surface p-4 text-center backdrop-blur-md">
               <div className="text-2xl font-black tabular-nums">{progress}%</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/30">Engine Load</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted">Engine Load</div>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-white/5 p-4 text-center backdrop-blur-md">
+            <div className="rounded-2xl border border-border-soft bg-surface p-4 text-center backdrop-blur-md">
               <div className="text-2xl font-black tabular-nums">0.4ms</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/30">Latency</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted">Latency</div>
             </div>
           </div>
         </div>
@@ -129,8 +129,7 @@ export function LabClient() {
           {/* Main Lab Interface */}
           <div className="space-y-8">
             {/* Input Terminal */}
-            <section className="rounded-[2.5rem] border border-white/10 bg-[#0c0f14] p-10 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-white/5" />
+            <section className="hireproof-card rounded-[2.5rem] p-10 relative overflow-hidden group">
               <div className="bot-scan-line opacity-5" />
               
               <div className="mb-8 flex items-center justify-between">
@@ -138,7 +137,7 @@ export function LabClient() {
                   <Fingerprint className="h-5 w-5 text-safe" />
                   <h2 className="text-xl font-black">Data Acquisition Buffer</h2>
                 </div>
-                <div className="text-[10px] font-mono text-white/30">SECURE CHANNEL // 256-BIT AES</div>
+                <div className="text-[10px] font-mono text-muted uppercase tracking-widest">Secure Channel // 256-BIT AES</div>
               </div>
 
               <div className="relative">
@@ -146,13 +145,13 @@ export function LabClient() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Paste job description, email content, or raw HTML signal here..."
-                  className="h-48 w-full rounded-3xl border border-white/5 bg-black/40 p-8 font-mono text-sm leading-relaxed text-white outline-none focus:border-safe/50 focus:ring-1 focus:ring-safe/20 transition-all placeholder:text-white/10"
+                  className="h-48 w-full rounded-3xl border border-border-soft bg-background/40 p-8 font-mono text-sm leading-relaxed text-foreground outline-none focus:border-safe/50 focus:ring-1 focus:ring-safe/20 transition-all placeholder:text-muted/30"
                 />
                 <div className="absolute bottom-6 right-6">
                   <button 
                     onClick={runInvestigation}
                     disabled={isProcessing}
-                    className={`flex h-14 items-center gap-3 rounded-2xl bg-safe px-8 text-sm font-black text-background transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale ${
+                    className={`flex h-14 items-center gap-3 rounded-2xl bg-foreground px-8 text-sm font-black text-background transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale hover:bg-safe hover:text-background ${
                       isProcessing ? 'shadow-[0_0_40px_rgba(16,185,129,0.4)]' : ''
                     }`}
                   >
@@ -164,7 +163,7 @@ export function LabClient() {
             </section>
 
             {/* Agentic Reasoner Engine */}
-            <section className="rounded-[2.5rem] border border-white/10 bg-[#0c0f14] p-10 shadow-2xl relative overflow-hidden">
+            <section className="hireproof-card rounded-[2.5rem] p-10 relative overflow-hidden">
                <div className="mb-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Layers className="h-5 w-5 text-evidence" />
@@ -188,13 +187,13 @@ export function LabClient() {
                     className={`relative flex items-center gap-6 rounded-3xl border p-6 transition-all ${
                       step.status === 'active' 
                         ? 'border-safe bg-safe/5 shadow-[0_0_30px_rgba(16,185,129,0.1)]' 
-                        : 'border-white/5 bg-white/[0.02]'
+                        : 'border-border-soft bg-surface/50'
                     }`}
                   >
                     <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-black ${
                       step.status === 'complete' ? 'bg-safe text-background' : 
                       step.status === 'active' ? 'bg-safe animate-pulse text-background' : 
-                      'bg-white/10 text-white/40'
+                      'bg-muted/10 text-muted'
                     }`}>
                       {step.status === 'complete' ? <ShieldCheck className="h-6 w-6" /> : i + 1}
                     </div>
@@ -202,18 +201,18 @@ export function LabClient() {
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-black text-sm uppercase tracking-widest">{step.label}</h3>
                         <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${
-                          step.status === 'active' ? 'text-safe' : 'text-white/20'
+                          step.status === 'active' ? 'text-safe' : 'text-muted/40'
                         }`}>
                           {step.status}
                         </span>
                       </div>
-                      <p className={`text-sm font-medium ${step.status === 'active' ? 'text-white' : 'text-white/40'}`}>
+                      <p className={`text-sm font-medium ${step.status === 'active' ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {step.msg}
                       </p>
                     </div>
                     {step.status === 'active' && (
                       <div className="absolute right-6 flex items-center gap-2">
-                         <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
+                         <div className="h-1 w-24 overflow-hidden rounded-full bg-border-soft">
                             <motion.div 
                               initial={{ width: 0 }}
                               animate={{ width: '100%' }}
@@ -232,11 +231,11 @@ export function LabClient() {
           {/* Sidebar Telemetry */}
           <aside className="space-y-8">
             {/* Live Console Output */}
-            <section className="rounded-[2.5rem] border border-white/10 bg-black p-8 shadow-2xl h-[420px] flex flex-col">
+            <section className="rounded-[2.5rem] border border-border-soft bg-foreground p-8 shadow-2xl h-[420px] flex flex-col dark:bg-black">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Terminal className="h-4 w-4 text-white/40" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Raw Telemetry</span>
+                  <Terminal className="h-4 w-4 text-background/40 dark:text-white/40" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-background/40 dark:text-white/40">Raw Telemetry</span>
                 </div>
                 <div className="flex gap-1.5">
                   <div className="h-2 w-2 rounded-full bg-risk-bg" />
@@ -247,16 +246,16 @@ export function LabClient() {
               
               <div className="flex-1 overflow-y-auto space-y-3 font-mono text-[10px] scrollbar-hide">
                 {logs.length === 0 ? (
-                  <div className="text-white/10 italic py-20 text-center">Awaiting signal acquisition...</div>
+                  <div className="text-background/10 dark:text-white/10 italic py-20 text-center">Awaiting signal acquisition...</div>
                 ) : (
                   logs.map((log, i) => (
                     <motion.div 
                       initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
                       key={i} 
-                      className="flex gap-3 text-white/60 leading-relaxed border-l border-white/5 pl-3"
+                      className="flex gap-3 text-background/60 dark:text-white/60 leading-relaxed border-l border-background/5 dark:border-white/5 pl-3"
                     >
-                      <span className="text-white/20 shrink-0">[{i}]</span>
+                      <span className="text-background/20 dark:text-white/20 shrink-0">[{i}]</span>
                       <span className={log.includes('complete') || log.includes('HIGH') ? 'text-safe' : ''}>{log}</span>
                     </motion.div>
                   ))
@@ -266,7 +265,7 @@ export function LabClient() {
             </section>
 
             {/* Neural Probability Ticker */}
-            <section className="rounded-[2.5rem] border border-white/10 bg-[#0c0f14] p-8 shadow-2xl">
+            <section className="hireproof-card rounded-[2.5rem] p-8">
               <div className="mb-8 flex items-center gap-3">
                 <Activity className="h-4 w-4 text-evidence" />
                 <h3 className="text-sm font-black uppercase tracking-[0.2em]">Neural Weights</h3>
@@ -280,10 +279,10 @@ export function LabClient() {
                 ].map((stat) => (
                   <div key={stat.label} className="space-y-2">
                     <div className="flex items-end justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className="text-white/40">{stat.label}</span>
+                      <span className="text-muted">{stat.label}</span>
                       <span className={stat.color}>{stat.value}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted/10">
                       <motion.div 
                         animate={{ width: `${stat.value}%` }}
                         transition={{ duration: 0.5 }}
@@ -297,7 +296,7 @@ export function LabClient() {
 
             {/* Quick Actions */}
             <section className="grid gap-4">
-               <button className="flex items-center justify-between rounded-3xl border border-white/5 bg-white/5 p-6 text-sm font-black transition-all hover:bg-white/10 hover:border-safe/30 group">
+               <button className="flex items-center justify-between rounded-3xl border border-border-soft bg-surface p-6 text-sm font-black transition-all hover:bg-background hover:border-safe/30 group">
                   <div className="flex items-center gap-4">
                     <div className="rounded-xl bg-safe/10 p-2 text-safe">
                       <Database className="h-4 w-4" />
@@ -306,7 +305,7 @@ export function LabClient() {
                   </div>
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                </button>
-               <button className="flex items-center justify-between rounded-3xl border border-white/5 bg-white/5 p-6 text-sm font-black transition-all hover:bg-white/10 hover:border-evidence/30 group">
+               <button className="flex items-center justify-between rounded-3xl border border-border-soft bg-surface p-6 text-sm font-black transition-all hover:bg-background hover:border-evidence/30 group">
                   <div className="flex items-center gap-4">
                     <div className="rounded-xl bg-evidence/10 p-2 text-evidence">
                       <Globe className="h-4 w-4" />
