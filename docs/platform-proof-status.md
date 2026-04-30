@@ -16,6 +16,7 @@ Option C is closed for production credential/readiness proof, WDK accepted-run p
 - Local platform readiness passed for Workflow and AI Gateway with the local proof environment.
 - Slack screenshot proof is captured at `docs/demo/Screenshot 2026-04-30 024756.jpg`. Archive endpoint logs if judge-level proof beyond the screenshot is needed.
 - Production audit API smoke passed after the Redis env hardening fix: `POST /api/v1/audit` returned a High-Risk demo report with score `92`.
+- **Forensic Export Proof**: Verified that `generatePdfDossier` and `buildTrendsCsvExport` are wired to the production UI, allowing for multi-format evidence persistence.
 - Vercel 500-log check after the final smoke returned no new logs.
 
 ## Vercel Environment State
