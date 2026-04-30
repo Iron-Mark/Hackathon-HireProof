@@ -60,6 +60,7 @@ const docsSidebar = [
       { label: 'n8n & Automations', href: '/docs/automations' },
       { label: 'Email Forwarding', href: '/docs/email-forwarding' },
       { label: 'LangChain & Agents', href: '/docs/langchain' },
+      { label: 'ChatSDK Agents', href: '/docs/chat-sdk-agents' },
       { label: 'Discord / Slack Bots', href: '/docs/discord-bot' },
       { label: 'Cursor / IDE Skills', href: '/docs/ide-skills' },
     ],

@@ -18,6 +18,48 @@ export function getPlatformReadiness() {
     },
   }
 
+  const discord = {
+    track: 'ChatSDK Agents',
+    state: (present(process.env.DISCORD_BOT_TOKEN) && present(process.env.DISCORD_PUBLIC_KEY) && present(process.env.DISCORD_APPLICATION_ID) && present(process.env.REDIS_URL)
+      ? 'ready'
+      : 'credential-gated') as ReadinessState,
+    endpoint: '/api/webhooks/discord',
+    required: {
+      DISCORD_BOT_TOKEN: present(process.env.DISCORD_BOT_TOKEN),
+      DISCORD_PUBLIC_KEY: present(process.env.DISCORD_PUBLIC_KEY),
+      DISCORD_APPLICATION_ID: present(process.env.DISCORD_APPLICATION_ID),
+      REDIS_URL: present(process.env.REDIS_URL),
+    },
+  }
+
+  const telegram = {
+    track: 'ChatSDK Agents',
+    state: (present(process.env.TELEGRAM_BOT_TOKEN) && present(process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN) && present(process.env.TELEGRAM_BOT_USERNAME) && present(process.env.REDIS_URL)
+      ? 'ready'
+      : 'credential-gated') as ReadinessState,
+    endpoint: '/api/webhooks/telegram',
+    required: {
+      TELEGRAM_BOT_TOKEN: present(process.env.TELEGRAM_BOT_TOKEN),
+      TELEGRAM_WEBHOOK_SECRET_TOKEN: present(process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN),
+      TELEGRAM_BOT_USERNAME: present(process.env.TELEGRAM_BOT_USERNAME),
+      REDIS_URL: present(process.env.REDIS_URL),
+    },
+  }
+
+  const whatsapp = {
+    track: 'ChatSDK Agents',
+    state: (present(process.env.ZERNIO_API_KEY) && present(process.env.ZERNIO_WEBHOOK_SECRET) && present(process.env.REDIS_URL)
+      ? 'ready'
+      : 'credential-gated') as ReadinessState,
+    endpoint: '/api/webhooks/zernio',
+    adapter: 'Zernio ChatSDK adapter for WhatsApp',
+    required: {
+      ZERNIO_API_KEY: present(process.env.ZERNIO_API_KEY),
+      ZERNIO_WEBHOOK_SECRET: present(process.env.ZERNIO_WEBHOOK_SECRET),
+      REDIS_URL: present(process.env.REDIS_URL),
+    },
+  }
+
   const workflow = {
     track: 'Vercel Workflow / WDK',
     state: (present(process.env.WORKFLOW_SECRET) ? 'ready' : 'credential-gated') as ReadinessState,
@@ -37,8 +79,8 @@ export function getPlatformReadiness() {
   }
 
   return {
-    status: [slack.state, workflow.state, gateway.state].every((state) => state === 'ready') ? 'ready' : 'credential-gated',
+    status: [slack.state, discord.state, telegram.state, whatsapp.state, workflow.state, gateway.state].every((state) => state === 'ready') ? 'ready' : 'credential-gated',
     checkedAt: new Date().toISOString(),
-    surfaces: { slack, workflow, gateway },
+    surfaces: { slack, discord, telegram, whatsapp, workflow, gateway },
   }
 }

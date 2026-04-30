@@ -1,16 +1,28 @@
 import { NextResponse } from 'next/server'
-import { createChatReply, getSlackCredentialStatus } from '@/lib/hireproof-bot'
+import { createChatReply, getChatCredentialStatus, type ChatPlatform } from '@/lib/hireproof-bot'
 
 export const runtime = 'nodejs'
 
+const supportedPlatforms = ['slack', 'discord', 'telegram', 'whatsapp', 'local'] as const
+
+function normalizePlatform(platform: unknown): ChatPlatform {
+  return supportedPlatforms.includes(platform as ChatPlatform) ? platform as ChatPlatform : 'local'
+}
+
 export async function GET() {
   return NextResponse.json({
-    status: 'ChatSDK Agents local test endpoint with Slack webhook wiring.',
-    platformWebhook: '/api/webhooks/slack',
-    credentialStatus: getSlackCredentialStatus(),
+    status: 'ChatSDK Agents local test endpoint with multi-platform webhook wiring.',
+    platformWebhooks: {
+      slack: '/api/webhooks/slack',
+      discord: '/api/webhooks/discord',
+      telegram: '/api/webhooks/telegram',
+      whatsapp: '/api/webhooks/zernio',
+    },
+    supportedPlatforms,
+    credentialStatus: getChatCredentialStatus(),
     usage: {
       method: 'POST',
-      body: { text: 'Suspicious job post text', platform: 'slack', channel: 'demo' },
+      body: { text: 'Suspicious job post text', platform: 'discord', channel: 'demo' },
     },
   })
 }
@@ -24,11 +36,15 @@ export async function POST(request: Request) {
   }
 
   const baseUrl = process.env.APP_BASE_URL || new URL(request.url).origin
-  const { report, verdict } = await createChatReply(text, baseUrl)
+  const platform = normalizePlatform(body.platform)
+  const { report, verdict } = await createChatReply(text, baseUrl, platform, {
+    channelId: typeof body.channel === 'string' ? body.channel : undefined,
+    threadId: typeof body.thread === 'string' ? body.thread : undefined,
+  })
 
   return NextResponse.json({
     status: verdict.status,
-    platform: body.platform || 'local',
+    platform,
     channel: body.channel || null,
     reply: verdict.text,
     reportUrl: verdict.reportUrl,

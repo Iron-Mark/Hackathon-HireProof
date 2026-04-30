@@ -12,6 +12,9 @@ Short answer: mostly yes for a hackathon demo, with limits.
 |---|---|---|---|
 | `SLACK_BOT_TOKEN` | Slack app dashboard | Yes, if your Slack workspace allows apps | Slack free workspaces can install custom/third-party apps, but app limits apply. |
 | `SLACK_SIGNING_SECRET` | Slack app dashboard | Yes | Comes with the Slack app. |
+| `DISCORD_BOT_TOKEN` / `DISCORD_PUBLIC_KEY` / `DISCORD_APPLICATION_ID` | Discord Developer Portal | Yes | Enables the official ChatSDK Discord adapter. |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET_TOKEN` / `TELEGRAM_BOT_USERNAME` | Telegram BotFather and webhook setup | Yes | Enables the official ChatSDK Telegram adapter in webhook mode. |
+| `ZERNIO_API_KEY` / `ZERNIO_WEBHOOK_SECRET` | Zernio account | Depends on Zernio plan | Enables WhatsApp-backed messages through Zernio's ChatSDK adapter. |
 | `REDIS_URL` | Upstash Redis or another Redis host | Yes on Upstash free tier | Upstash free tier is enough for demo ChatSDK thread state. |
 | `WORKFLOW_SECRET` | You generate it | Yes | This is our app-level protection secret, not a paid vendor credential. |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway | Free monthly credits, then paid usage | Vercel lists a free monthly AI Gateway credit tier. |
@@ -93,7 +96,37 @@ https://YOUR_NGROK_DOMAIN/api/webhooks/slack
 
 ## 2. Redis URL
 
-Use Redis for ChatSDK persistent thread state.
+Use Redis for ChatSDK persistent thread state. Slack, Discord, Telegram, and WhatsApp/Zernio all require `REDIS_URL` before their live webhook routes are marked ready.
+
+## Multi-Platform ChatSDK Credentials
+
+Slack remains the proven platform path. Discord and Telegram use first-party ChatSDK adapters. WhatsApp is routed through Zernio's ChatSDK adapter, so it requires a connected Zernio WhatsApp inbox instead of direct Meta Cloud API credentials in this app.
+
+Webhook endpoints after deploy:
+
+```text
+https://YOUR_DEPLOYED_DOMAIN/api/webhooks/slack
+https://YOUR_DEPLOYED_DOMAIN/api/webhooks/discord
+https://YOUR_DEPLOYED_DOMAIN/api/webhooks/telegram
+https://YOUR_DEPLOYED_DOMAIN/api/webhooks/zernio
+```
+
+Environment variables:
+
+```env
+SLACK_BOT_TOKEN=
+SLACK_SIGNING_SECRET=
+DISCORD_BOT_TOKEN=
+DISCORD_PUBLIC_KEY=
+DISCORD_APPLICATION_ID=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET_TOKEN=
+TELEGRAM_BOT_USERNAME=
+ZERNIO_API_KEY=
+ZERNIO_WEBHOOK_SECRET=
+ZERNIO_BOT_NAME=HireProof
+REDIS_URL=
+```
 
 ### Upstash free Redis
 

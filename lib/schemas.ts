@@ -65,7 +65,10 @@ export const AuditReportSchema = z.object({
   mode: z.enum(['demo', 'live']).optional(),
   ownerId: z.string().max(100).optional(),
   apiKeyId: z.string().max(100).optional(),
-  source: z.enum(['web', 'api', 'mcp', 'demo']).optional(),
+  source: z.enum(['web', 'api', 'mcp', 'demo', 'chat']).optional(),
+  chatPlatform: z.enum(['slack', 'discord', 'telegram', 'whatsapp', 'local']).optional(),
+  chatThreadId: z.string().max(300).optional(),
+  chatChannelId: z.string().max(300).optional(),
   publiclyListed: z.boolean().optional(),
   userFeedback: z.enum(['helpful', 'incorrect']).optional(),
 })

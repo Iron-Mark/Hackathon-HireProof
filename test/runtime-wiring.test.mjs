@@ -97,6 +97,47 @@ test('slack webhook is wired through ChatSDK instead of a local-only simulator',
   assert.match(webhook, /waitUntil/)
 })
 
+test('multi-platform chat agents are wired through ChatSDK adapters', async () => {
+  const packageJson = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const bot = await fs.readFile(new URL('../lib/hireproof-bot.ts', import.meta.url), 'utf8')
+  const schemas = await fs.readFile(new URL('../lib/schemas.ts', import.meta.url), 'utf8')
+  const discordWebhook = await fs.readFile(new URL('../app/api/webhooks/discord/route.ts', import.meta.url), 'utf8')
+  const telegramWebhook = await fs.readFile(new URL('../app/api/webhooks/telegram/route.ts', import.meta.url), 'utf8')
+  const zernioWebhook = await fs.readFile(new URL('../app/api/webhooks/zernio/route.ts', import.meta.url), 'utf8')
+  const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
+
+  assert.equal(packageJson.dependencies['@chat-adapter/discord'], '^4.26.0')
+  assert.equal(packageJson.dependencies['@chat-adapter/telegram'], '^4.26.0')
+  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.2.3')
+  assert.match(bot, /from '@chat-adapter\/discord'/)
+  assert.match(bot, /from '@chat-adapter\/telegram'/)
+  assert.match(bot, /from '@zernio\/chat-sdk-adapter'/)
+  assert.match(bot, /createDiscordAdapter/)
+  assert.match(bot, /createTelegramAdapter/)
+  assert.match(bot, /createZernioAdapter/)
+  assert.match(bot, /getDiscordCredentialStatus/)
+  assert.match(bot, /getTelegramCredentialStatus/)
+  assert.match(bot, /getWhatsAppCredentialStatus/)
+  assert.match(bot, /CHAT_TEXT_LIMIT = 10_000/)
+  assert.match(bot, /createCredentialGateResponse/)
+  assert.match(bot, /getChatConfigFingerprint/)
+  assert.match(bot, /botFingerprint/)
+  assert.match(bot, /platform: chatPlatform/)
+  assert.match(bot, /required: requiredEnvironmentByPlatform/)
+  assert.match(discordWebhook, /handleDiscordWebhook/)
+  assert.match(discordWebhook, /waitUntil/)
+  assert.match(telegramWebhook, /handleTelegramWebhook/)
+  assert.match(telegramWebhook, /waitUntil/)
+  assert.match(zernioWebhook, /handleZernioWebhook/)
+  assert.match(zernioWebhook, /waitUntil/)
+  assert.match(chatRoute, /supportedPlatforms/)
+  assert.match(chatRoute, /'discord'/)
+  assert.match(chatRoute, /'telegram'/)
+  assert.match(chatRoute, /'whatsapp'/)
+  assert.match(chatRoute, /Job post text must be 10,000 characters or fewer/)
+  assert.match(schemas, /'chat'/)
+})
+
 test('ai gateway is the primary model provider when configured', async () => {
   const model = await fs.readFile(new URL('../lib/ai-model.ts', import.meta.url), 'utf8')
   const auditRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
@@ -133,6 +174,16 @@ test('workflow route uses the WDK package and next plugin is enabled', async () 
   assert.match(nextConfig, /withWorkflow/)
 })
 
+test('next config stubs optional discord zlib dependency for server builds', async () => {
+  const nextConfig = await fs.readFile(new URL('../next.config.js', import.meta.url), 'utf8')
+  const stub = await fs.readFile(new URL('../lib/optional-zlib-sync-stub.js', import.meta.url), 'utf8')
+
+  assert.match(nextConfig, /optional-zlib-sync-stub\.js/)
+  assert.match(nextConfig, /resolveAlias/)
+  assert.match(nextConfig, /'zlib-sync'/)
+  assert.match(stub, /module\.exports = null/)
+})
+
 test('verified badge requires owned verified domains and public embed tokens', async () => {
   const badgeRoute = await fs.readFile(new URL('../app/api/verified-badge/route.ts', import.meta.url), 'utf8')
   const domainRoute = await fs.readFile(new URL('../app/api/developer/domains/route.ts', import.meta.url), 'utf8')
@@ -165,6 +216,22 @@ test('platform proof endpoint exposes credential-aware ChatSDK and WDK e2e state
   assert.match(readiness, /AI_GATEWAY_API_KEY/)
   assert.match(readiness, /credential-gated/)
   assert.match(readiness, /ready/)
+})
+
+test('platform proof endpoint exposes readiness for all chat platforms', async () => {
+  const readiness = await fs.readFile(new URL('../lib/platform-readiness.ts', import.meta.url), 'utf8')
+
+  assert.match(readiness, /DISCORD_BOT_TOKEN/)
+  assert.match(readiness, /DISCORD_PUBLIC_KEY/)
+  assert.match(readiness, /DISCORD_APPLICATION_ID/)
+  assert.match(readiness, /TELEGRAM_BOT_TOKEN/)
+  assert.match(readiness, /TELEGRAM_WEBHOOK_SECRET_TOKEN/)
+  assert.match(readiness, /TELEGRAM_BOT_USERNAME/)
+  assert.match(readiness, /ZERNIO_API_KEY/)
+  assert.match(readiness, /ZERNIO_WEBHOOK_SECRET/)
+  assert.match(readiness, /discord/)
+  assert.match(readiness, /telegram/)
+  assert.match(readiness, /whatsapp/)
 })
 
 test('lab client streams real audit events instead of simulated telemetry', async () => {

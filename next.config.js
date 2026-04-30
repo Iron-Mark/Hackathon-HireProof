@@ -1,5 +1,8 @@
 const { withWorkflow } = require('workflow/next')
 
+const optionalZlibSyncStub = './lib/optional-zlib-sync-stub.js'
+const optionalZlibSyncWebpackStub = require.resolve('./lib/optional-zlib-sync-stub.js')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Prevent information disclosure about the tech stack
@@ -42,6 +45,18 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Optimized output for Docker self-hosting
   output: 'standalone',
+  turbopack: {
+    resolveAlias: {
+      'zlib-sync': optionalZlibSyncStub,
+    },
+  },
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'zlib-sync': optionalZlibSyncWebpackStub,
+    }
+    return config
+  },
 }
 
 module.exports = withWorkflow(nextConfig, {

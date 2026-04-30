@@ -12,7 +12,7 @@ HireProof is a proof-backed AI agent that investigates suspicious job posts with
 HireProof is one job-verification agent with multiple surfaces:
 
 - **v0 + MCPs** — implemented as the primary web app and runtime MCP investigation tools.
-- **ChatSDK Agents** — implemented Slack webhook route and ChatSDK bot wrapper; live proof requires Slack + Redis credentials.
+- **ChatSDK Agents** — implemented Slack, Discord, Telegram, and WhatsApp-via-Zernio webhook routes through one ChatSDK bot wrapper; live proof requires platform credentials + Redis.
 - **Vercel Workflow / WDK** — implemented WDK workflow entrypoint and start route; live durable proof requires deployed Workflow credentials.
 
 See [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md) for the honest track map and demo framing.
@@ -122,6 +122,14 @@ Open [http://localhost:3002](http://localhost:3002) and navigate to `/audit`.
 | `UPSTASH_REDIS_REST_TOKEN` | Optional | Upstash Token for global persistence/rate limits |
 | `SLACK_BOT_TOKEN` | Optional | Enables live ChatSDK Slack bot replies |
 | `SLACK_SIGNING_SECRET` | Optional | Verifies Slack webhook signatures |
+| `DISCORD_BOT_TOKEN` | Optional | Enables live ChatSDK Discord bot replies |
+| `DISCORD_PUBLIC_KEY` | Optional | Verifies Discord interaction signatures |
+| `DISCORD_APPLICATION_ID` | Optional | Identifies the Discord application |
+| `TELEGRAM_BOT_TOKEN` | Optional | Enables live ChatSDK Telegram bot replies |
+| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Optional | Verifies Telegram webhook requests |
+| `TELEGRAM_BOT_USERNAME` | Optional | Identifies the Telegram bot for mention handling |
+| `ZERNIO_API_KEY` | Optional | Enables WhatsApp-backed replies through Zernio's ChatSDK adapter |
+| `ZERNIO_WEBHOOK_SECRET` | Optional | Verifies Zernio webhook requests |
 | `WORKFLOW_SECRET` | Optional | Enables protected WDK workflow starts |
 
 Demo mode works without any API keys.
@@ -171,6 +179,9 @@ app/
 ├── api/mcp/route.ts            MCP tool server
 ├── api/chat/hireproof/route.ts ChatSDK status/reply endpoint
 ├── api/webhooks/slack/route.ts Slack webhook adapter
+├── api/webhooks/discord/route.ts Discord webhook adapter
+├── api/webhooks/telegram/route.ts Telegram webhook adapter
+├── api/webhooks/zernio/route.ts WhatsApp/Zernio webhook adapter
 ├── api/workflows/audit/route.ts WDK workflow start route
 components/
 ├── audit-form.tsx              Omni-modal input (text + image + voice)
