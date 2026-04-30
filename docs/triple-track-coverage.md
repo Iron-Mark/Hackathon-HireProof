@@ -21,6 +21,7 @@ Current strongest implemented track.
 - Runtime MCP tools for company presence, news reputation, job comparison, and local presence.
 - Live evidence via SerpApi when configured.
 - Shareable report UI and deterministic demo scenarios.
+- **Compliance & Evidence Layer:** Forensic PDF Dossier, Verified Safety Certificates, and CSV/JSON trend exports for taking evidence off-platform.
 
 Submission line:
 

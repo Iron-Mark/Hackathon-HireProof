@@ -31,10 +31,10 @@ The headless API implements multi-layer SSRF protection for outgoing webhooks:
 - **Hostname Blacklisting:** Blocks literal requests to `localhost`, `127.0.0.1`, and `.local` domains.
 - **DNS Resolution Check:** Before every webhook call, we resolve the target hostname to its IP address and verify it against private/local IP ranges (`10.x`, `192.168.x`, etc.). This prevents DNS Rebinding and obfuscated IP encoding bypasses.
 
-### 🚦 Advanced Rate Limiting
-We implement IP-based rate limiting with protection against `X-Forwarded-For` spoofing.
-> [!NOTE]
-> In our current serverless deployment (Vercel), rate-limiting state is stored in-memory. While highly effective against transient bursts, it may reset during serverless "cold starts." For global persistence, we recommend upgrading to Vercel KV/Redis.
+### 🚦 Hybrid Distributed Rate Limiting
+We implement a multi-layer rate limiting strategy to protect against "Denial of Wallet" and credential stuffing attacks.
+- **Enterprise Layer (Upstash Redis):** If configured, HireProof uses distributed sliding-window rate limiting via Upstash Redis. This ensures that limits are synchronized across all serverless edge instances, providing global protection.
+- **Portability Layer (In-Memory):** If Redis is not configured, the app gracefully degrades to an in-memory token bucket. This maintains the "zero-cost" portability model for local developers while still providing per-instance protection.
 
 ---
 
