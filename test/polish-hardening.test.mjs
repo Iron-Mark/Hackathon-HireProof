@@ -39,6 +39,15 @@ test('trends export offers JSON and CSV while returning serializable JSON conten
   assert.equal(JSON.parse(exportPayload.content).totalReports, 1)
 })
 
+test('trends live evidence card stays theme-friendly instead of inverted', async () => {
+  const source = await fs.readFile(new URL('../app/trends/trends-client.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /Live Evidence Signals/)
+  assert.match(source, /border-evidence-bg/)
+  assert.match(source, /bg-surface/)
+  assert.doesNotMatch(source, /bg-foreground p-8 text-background/)
+})
+
 test('trends CSV export escapes values and uses a clear CSV filename', () => {
   const exportPayload = buildTrendsCsvExport({
     topLocations: [{ label: 'Manila, PH', count: 2 }],
@@ -167,4 +176,62 @@ test('homepage ticker avoids unsupported hard impact metrics', async () => {
   assert.doesNotMatch(source, /potential theft prevented/)
   assert.doesNotMatch(source, /job seekers protected/)
   assert.match(source, /Live evidence search configured/)
+})
+
+test('first-place sprint surfaces demo clarity and public proof from the homepage', async () => {
+  const source = await fs.readFile(new URL('../app/home-client.tsx', import.meta.url), 'utf8')
+  const header = await fs.readFile(new URL('../components/site-header.tsx', import.meta.url), 'utf8')
+  const proofPage = await fs.readFile(new URL('../app/proof/page.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /Paste a job post\. See if it/)
+  assert.match(source, /safe, suspicious, or high-risk/)
+  assert.match(source, /freelance gig/)
+  assert.match(source, /scholarship or training offer/)
+  assert.match(source, /\/audit\?demo=high-risk/)
+  assert.match(source, /\/audit\?demo=caution/)
+  assert.match(source, /\/audit\?demo=safe/)
+  assert.match(source, /\/proof/)
+  assert.match(header, /\/proof/)
+  assert.match(proofPage, /production-deployed/)
+  assert.match(proofPage, /Slack screenshot proof/)
+  assert.match(proofPage, /wrun_01KQD9H6AND3W7YZBHHKAH2KV5/)
+  assert.match(proofPage, /credential-gated/)
+  assert.match(proofPage, /Proof at a glance/)
+  assert.match(proofPage, /Server/)
+  assert.match(proofPage, /MessageSquare/)
+  assert.match(proofPage, /FileArchive/)
+  assert.match(proofPage, /Store/)
+  assert.match(proofPage, /cdn\.jsdelivr\.net\/npm\/simple-icons@latest\/icons\/slack\.svg/)
+  assert.match(proofPage, /cdn\.simpleicons\.org\/discord/)
+  assert.match(proofPage, /cdn\.simpleicons\.org\/telegram/)
+  assert.match(proofPage, /cdn\.simpleicons\.org\/whatsapp/)
+  assert.match(proofPage, /upload\.wikimedia\.org\/wikipedia\/commons\/0\/0c\/Google_Chrome_Web_Store_icon_2022\.svg/)
+  assert.match(proofPage, /border-\[#4A154B\]\/25/)
+  assert.match(proofPage, /bg-\[#4A154B\]\/10/)
+  assert.match(proofPage, /brandIconColor: '#4A154B'/)
+  assert.match(proofPage, /WebkitMaskImage/)
+})
+
+test('pricing and audit copy keep business and privacy claims honest', async () => {
+  const pricing = await fs.readFile(new URL('../app/pricing/page.tsx', import.meta.url), 'utf8')
+  const auditForm = await fs.readFile(new URL('../components/audit-form.tsx', import.meta.url), 'utf8')
+
+  assert.match(pricing, /Free individual checks/)
+  assert.match(pricing, /job boards, schools, recruiters, and community groups/)
+  assert.match(pricing, /Bulk verification/)
+  assert.doesNotMatch(pricing, /Automated Domain Takedowns/)
+  assert.doesNotMatch(pricing, /100% uptime/)
+  assert.match(auditForm, /Do not paste passwords, IDs, bank details, or verification codes/)
+  assert.match(auditForm, /Reports may be saved for history or share links/)
+  assert.doesNotMatch(auditForm, /not stored permanently/)
+})
+
+test('final submission pack includes localized voting and short-form campaign copy', async () => {
+  const source = await fs.readFile(new URL('../docs/final-submission-pack.md', import.meta.url), 'utf8')
+
+  assert.match(source, /15-Second Vertical Video/)
+  assert.match(source, /30-Second Vertical Video/)
+  assert.match(source, /Paste mo muna/)
+  assert.match(source, /Pégalo primero/)
+  assert.match(source, /Voting-Day Mobilization/)
 })

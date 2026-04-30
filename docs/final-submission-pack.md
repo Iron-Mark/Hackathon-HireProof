@@ -28,6 +28,32 @@ HireProof turns that manual investigation into one proof-backed workflow. A user
 
 The product is built as a Vercel-hosted Next.js app with runtime MCP investigation tools, AI SDK model routing, SerpApi evidence search, a ChatSDK Slack surface, and a production-accepted Vercel Workflow path for longer-running investigations.
 
+### Before / After Story
+
+Before HireProof, a job seeker has to manually search the company, recruiter, salary range, contact method, news, job-board footprint, and scam patterns before deciding whether to apply.
+
+After HireProof, the same check becomes one agent workflow: paste the suspicious post, let the agent collect evidence, and get a clear Safe, Caution, or High-Risk report with the reasoning visible.
+
+### Why This Is A Real Agent
+
+HireProof is not a generic chatbot. It performs a multi-step investigation:
+
+- Extracts structured claims from the job post.
+- Calls runtime investigation tools for company, news, job-market, and local footprint checks.
+- Uses live SerpApi-backed evidence when production credentials are configured.
+- Scores risk with deterministic red-flag and green-flag logic.
+- Persists a report that can be opened, shared, exported, or called from API/chat/workflow surfaces.
+
+### Live-Proven Boundary
+
+Safe claim:
+
+> HireProof is production-deployed, API-smoke-tested, Slack-screenshot-proven, and WDK accepted-run proven.
+
+Careful boundary:
+
+> Discord, Telegram, and WhatsApp/Zernio adapters are implemented and credential-gated. They should not be described as live-proven until real external provider events, screenshots, and logs are captured.
+
 ## Links
 
 - Demo: `https://hireproof-sigma.vercel.app`
@@ -63,10 +89,13 @@ Proof points:
 - ChatSDK packages and Redis state adapter are installed.
 - `lib/hireproof-bot.ts` handles mentions and subscribed messages.
 - Slack screenshot proof is captured at `docs/demo/Screenshot 2026-04-30 024756.jpg`.
+- Discord, Telegram, and WhatsApp/Zernio routes are implemented behind credential gates.
 
 Safe boundary:
 
 - Say "live-tested in Slack with screenshot proof."
+- Say "Discord, Telegram, and WhatsApp/Zernio are implemented and credential-gated."
+- Do not say "live-tested on Discord/Telegram/WhatsApp" until `npm run proof:chat-live:strict` passes and screenshots/logs are archived.
 - Do not over-explain request logs unless asked.
 
 ### Vercel Workflow / WDK
@@ -104,6 +133,14 @@ Job scams can look normal until you notice the gaps: unrealistic pay, no intervi
 HireProof investigates those gaps for you. Paste a job post, recruiter pitch, or apply URL. The agent extracts the role, company, salary, location, and contact method, then checks live evidence across search, news, jobs, and local business signals. It returns a clear verdict, a risk score, evidence cards, red flags, green flags, and safer next steps.
 
 This is not another generic chatbot. It is a job-post investigator built with v0, deployed on Vercel, powered by runtime MCP tools, and extended through ChatSDK and Vercel Workflow surfaces.
+
+### 15-Second Vertical Video
+
+Open on a Telegram-style scam pitch: "Remote intern, PHP 80,000/week, no interview." Cut to HireProof running the High-Risk demo, then zoom on the verdict and red flags. End card: "Paste before you apply. Vote HireProof."
+
+### 30-Second Vertical Video
+
+Show the suspicious offer, paste it into HireProof, and let the timeline show claim extraction, evidence checks, and the High-Risk verdict. Keep the narration direct: "Too-good-to-be-true work offers can cost people money and identity documents. HireProof checks the evidence first." End with the live URL and voting reminder.
 
 ### 5-Minute Walkthrough
 
@@ -170,6 +207,24 @@ Demo: https://hireproof-sigma.vercel.app
 Hey, I built HireProof for Zero to Agent. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
 
 Demo: https://hireproof-sigma.vercel.app
+
+### Localized Voting Copy
+
+Filipino/Tagalog-style:
+
+> May nakita kang job post na parang too good to be true? Paste mo muna sa HireProof bago ka mag-apply. It checks the evidence and shows if it is Safe, Caution, or High-Risk.
+
+Spanish:
+
+> ¿Una oferta parece demasiado buena para ser verdad? Pégalo primero en HireProof antes de postular. Revisa evidencia y te muestra si es segura, dudosa o de alto riesgo.
+
+### Voting-Day Mobilization
+
+1. Share the 15-second vertical clip first, then the live demo link.
+2. Post in university, remote-work, career, and local tech groups with the Filipino/Tagalog-style copy where appropriate.
+3. Pin the High-Risk result screenshot and the production URL.
+4. Reply with the `/proof` page when someone asks whether the platform proof is real.
+5. Remind voters near the close of the 24-hour voting window.
 
 ### Fallback Demo Wording
 

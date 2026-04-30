@@ -17,6 +17,7 @@ import {
   KeyRound,
   Menu,
   SearchCheck,
+  ShieldCheck,
   ToggleLeft,
   ToggleRight,
   Cpu,
@@ -43,6 +44,7 @@ const resourceGroups: { label: string; links: NavLink[] }[] = [
     links: [
       { href: '/explore', label: 'Explore', description: 'Recent audit reports', icon: Compass },
       { href: '/trends', label: 'Trends', description: 'Saved-report patterns', icon: ChartNoAxesColumnIncreasing },
+      { href: '/proof', label: 'Proof', description: 'Submission-ready proof pack', icon: ShieldCheck },
     ],
   },
   {

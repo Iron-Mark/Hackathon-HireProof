@@ -27,6 +27,7 @@ import {
 import { checkRateLimit } from '@/lib/rate-limit'
 import { saveReport } from '@/lib/db'
 import { getHireProofModel, getModelProviderStatus, hasHireProofModelProvider } from '@/lib/ai-model'
+import { recoverObviousClaims } from '@/lib/claim-extraction.mjs'
 
 export const runtime = 'nodejs'
 
@@ -93,14 +94,14 @@ async function extractClaims(input: AuditRequest): Promise<ExtractedClaims> {
             ? 'Official careers channel'
             : 'Not specified'
   
-    return {
+    return recoverObviousClaims(input, {
       company,
       role,
       salary,
       location: input.location || 'Not specified',
       contactMethod,
       applicationPath,
-    }
+    })
   }
 
   const delimiter = `---USER_INPUT_${Math.random().toString(36).substring(2, 12).toUpperCase()}---`
@@ -132,17 +133,17 @@ async function extractClaims(input: AuditRequest): Promise<ExtractedClaims> {
       ] as any,
     })
 
-    return object as ExtractedClaims
+    return recoverObviousClaims(input, object as ExtractedClaims)
   } catch (err) {
     console.error('[AI SDK Error]', err)
-    return {
+    return recoverObviousClaims(input, {
       company: 'Unknown / Not Verifiable',
       role: 'Unspecified role',
       salary: 'Not specified',
       location: input.location || 'Not specified',
       contactMethod: 'Not specified',
       applicationPath: 'Not specified',
-    }
+    })
   }
 }
 
@@ -271,7 +272,7 @@ export async function POST(request: Request) {
     try {
       sendEvent('log', { message: 'Extracting role, pay, company, and contact claims...' })
 
-      if (validated.mode === 'live' || (isSerpApiConfigured() && validated.mode !== 'demo')) {
+      if (true) {
         const extractedClaims = await extractClaims(validated)
         const hasCompany = !extractedClaims.company.toLowerCase().includes('unknown')
         let evidence: EvidenceItem[] = []
@@ -450,50 +451,7 @@ export async function POST(request: Request) {
         return
       }
 
-      // Fallback to demo fixtures
-      const textLower = validated.text.toLowerCase()
-      sendEvent('log', { message: 'Loading demo scenario...' })
-      await new Promise(r => setTimeout(r, 800))
-      sendEvent('log', { message: 'Retrieving historical case files...' })
-      await new Promise(r => setTimeout(r, 600))
-      sendEvent('log', { message: 'Finalizing report...' })
-      await new Promise(r => setTimeout(r, 400))
-      
-      let fixture: AuditReport
-      if (textLower.includes('80000') || textLower.includes('telegram')) {
-        fixture = {
-          id: `report_${Date.now()}`,
-          ...DEMO_FIXTURES.highRisk,
-          timestamp: new Date().toISOString(),
-          mode: 'demo',
-          ownerId: 'web',
-          source: 'demo',
-          publiclyListed: true,
-        }
-      } else if (textLower.includes('unclear') || textLower.includes('caution')) {
-        fixture = {
-          id: `report_${Date.now()}`,
-          ...DEMO_FIXTURES.caution,
-          timestamp: new Date().toISOString(),
-          mode: 'demo',
-          ownerId: 'web',
-          source: 'demo',
-          publiclyListed: true,
-        }
-      } else {
-        fixture = {
-          id: `report_${Date.now()}`,
-          ...DEMO_FIXTURES.safe,
-          timestamp: new Date().toISOString(),
-          mode: 'demo',
-          ownerId: 'web',
-          source: 'demo',
-          publiclyListed: true,
-        }
-      }
 
-      await persistReportSafely(fixture)
-      sendEvent('result', { data: fixture })
     } catch (error) {
       console.error('[Audit API] Error:', error instanceof Error ? error.message : 'Unknown execution error')
       sendEvent('error', { message: 'Failed to complete audit' })

@@ -28,13 +28,71 @@ import { SiteHeader } from '@/components/site-header'
 export default function ExtensionDemo() {
   const [isExtensionOpen, setIsExtensionOpen] = useState(true)
   const [activeStage, setActiveStage] = useState<'scanning' | 'result'>('scanning')
+  const [report, setReport] = useState<any>(null)
+  const [streamLogs, setStreamLogs] = useState<string[]>([])
   
   useEffect(() => {
-    if (activeStage === 'scanning') {
-      const timer = setTimeout(() => setActiveStage('result'), 2500)
-      return () => clearTimeout(timer)
+    if (activeStage === 'scanning' && isExtensionOpen) {
+      let isMounted = true
+      setStreamLogs(['Extracting linguistic and contextual signals...'])
+      setReport(null)
+
+      const runAudit = async () => {
+        try {
+          const res = await fetch('/api/audit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: 'Remote Frontend Intern - PHP 80,000/week. To apply, message our manager on Telegram: @ApexHiringManager. Do not apply through LinkedIn. Instant start, no interview required.',
+              location: 'Remote',
+              mode: 'live' // Force live pipeline
+            })
+          })
+
+          if (!res.ok) {
+             if (isMounted) setStreamLogs(prev => [...prev, `Error: API returned ${res.status}`])
+             return
+          }
+          if (!res.body) return
+
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder()
+          let buffer = ''
+
+          while (isMounted) {
+            const { done, value } = await reader.read()
+            buffer += decoder.decode(value, { stream: !done })
+            const chunks = buffer.split('\n\n')
+            buffer = chunks.pop() ?? ''
+
+            for (const chunk of chunks) {
+              const dataLine = chunk.split('\n').find((line) => line.startsWith('data:'))
+              if (!dataLine) continue
+              const parsed = JSON.parse(dataLine.slice(5).trim())
+              
+              if (parsed.type === 'log') {
+                setStreamLogs(prev => [...prev.slice(-3), parsed.message])
+              } else if (parsed.type === 'result') {
+                if (isMounted) {
+                  setReport(parsed.data)
+                  setActiveStage('result')
+                }
+              } else if (parsed.type === 'error') {
+                setStreamLogs(prev => [...prev, `Error: ${parsed.message}`])
+              }
+            }
+            if (done) break
+          }
+        } catch (e) {
+          if (isMounted) setStreamLogs(prev => [...prev, 'Network error occurred'])
+        }
+      }
+
+      runAudit()
+
+      return () => { isMounted = false }
     }
-  }, [activeStage])
+  }, [activeStage, isExtensionOpen])
 
   return (
     <div className="min-h-screen bg-[#f3f2ef] dark:bg-[#121212] transition-colors">
@@ -197,7 +255,7 @@ export default function ExtensionDemo() {
                              </div>
                              <div className="flex justify-between text-[8px] font-black uppercase tracking-tighter text-muted">
                                 <span>Linguistic Extraction</span>
-                                <span>94%</span>
+                                <span>{streamLogs.length > 0 ? streamLogs[streamLogs.length - 1] : 'Scanning'}</span>
                              </div>
                           </div>
                         </div>
@@ -207,33 +265,48 @@ export default function ExtensionDemo() {
                           animate={{ opacity: 1, scale: 1 }}
                           className="space-y-6"
                         >
-                          <div className="rounded-3xl border border-risk-bg/30 bg-risk-bg/5 p-6 text-center shadow-inner relative overflow-hidden">
+                          <div className={`rounded-3xl border ${report?.verdict === 'high-risk' ? 'border-risk-bg/30 bg-risk-bg/5' : report?.verdict === 'caution' ? 'border-caution/30 bg-caution/5' : 'border-safe/30 bg-safe/5'} p-6 text-center shadow-inner relative overflow-hidden`}>
                              <div className="bot-scan-line opacity-10" />
-                             <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-risk-bg text-risk-text shadow-lg shadow-risk-bg/20">
-                                <ShieldAlert className="h-7 w-7" />
+                             <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${report?.verdict === 'high-risk' ? 'bg-risk-bg text-risk-text shadow-risk-bg/20' : report?.verdict === 'caution' ? 'bg-caution/20 text-caution shadow-caution/20' : 'bg-safe/20 text-safe shadow-safe/20'} shadow-lg`}>
+                                {report?.verdict === 'safe' ? <CheckCircle2 className="h-7 w-7" /> : <ShieldAlert className="h-7 w-7" />}
                              </div>
-                             <h4 className="text-2xl font-black text-risk-text tracking-tight uppercase">High Risk Detected</h4>
-                             <p className="mt-2 text-xs font-black uppercase tracking-widest text-risk-text/60">Evidence Confidence: High</p>
+                             <h4 className={`text-2xl font-black ${report?.verdict === 'high-risk' ? 'text-risk-text' : report?.verdict === 'caution' ? 'text-caution' : 'text-safe'} tracking-tight uppercase`}>
+                               {report?.verdict === 'high-risk' ? 'High Risk Detected' : report?.verdict === 'caution' ? 'Caution Advised' : 'Safe Opportunity'}
+                             </h4>
+                             <p className={`mt-2 text-xs font-black uppercase tracking-widest ${report?.verdict === 'high-risk' ? 'text-risk-text/60' : report?.verdict === 'caution' ? 'text-caution/60' : 'text-safe/60'}`}>
+                               Risk Score: {report?.riskScore}/100
+                             </p>
                           </div>
 
-                          <div className="space-y-3">
-                             {[
-                                { icon: AlertCircle, label: 'Unrealistic Compensation', desc: 'Pay is 400% above market index.', color: 'text-risk-text' },
-                                { icon: MessageSquare, label: 'Telegram Redirection', desc: 'Off-platform contact path found.', color: 'text-risk-text' },
-                                { icon: Zap, label: 'LLM Signature Found', desc: 'GPT-4 linguistic patterns detected.', color: 'text-risk-text' },
-                             ].map((risk, i) => (
+                          <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-hide">
+                             {report?.redFlags?.slice(0, 3).map((flag: string, i: number) => (
                                <motion.div 
                                  initial={{ opacity: 0, x: 20 }}
                                  animate={{ opacity: 1, x: 0 }}
                                  transition={{ delay: i * 0.1 }}
-                                 key={risk.label} 
+                                 key={i} 
                                  className="rounded-2xl border border-border-soft bg-background p-4 shadow-sm"
                                >
                                  <div className="flex items-start gap-3">
-                                   <risk.icon className={`h-4 w-4 shrink-0 mt-0.5 ${risk.color}`} />
+                                   <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 text-risk-text`} />
                                    <div>
-                                     <div className="text-xs font-black leading-tight">{risk.label}</div>
-                                     <div className="text-[10px] font-medium text-muted mt-0.5">{risk.desc}</div>
+                                     <div className="text-[10px] font-medium text-muted mt-0.5">{flag}</div>
+                                   </div>
+                                 </div>
+                               </motion.div>
+                             ))}
+                             {report?.greenFlags?.slice(0, 2).map((flag: string, i: number) => (
+                               <motion.div 
+                                 initial={{ opacity: 0, x: 20 }}
+                                 animate={{ opacity: 1, x: 0 }}
+                                 transition={{ delay: i * 0.1 }}
+                                 key={`g-${i}`} 
+                                 className="rounded-2xl border border-border-soft bg-background p-4 shadow-sm"
+                               >
+                                 <div className="flex items-start gap-3">
+                                   <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 text-safe`} />
+                                   <div>
+                                     <div className="text-[10px] font-medium text-muted mt-0.5">{flag}</div>
                                    </div>
                                  </div>
                                </motion.div>

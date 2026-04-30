@@ -24,6 +24,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { saveReport } from '@/lib/db'
 import { authenticateApiKey, getOwnerProviderCredentials, recordUsage } from '@/lib/auth-store'
 import { getHireProofModel, hasHireProofModelProvider } from '@/lib/ai-model'
+import { recoverObviousClaims } from '@/lib/claim-extraction.mjs'
 import { buildHireProofWebhookHeaders } from '@/lib/webhook-signing.mjs'
 
 export const runtime = 'nodejs'
@@ -91,14 +92,14 @@ async function extractClaims(input: AuditRequest, modelProviderKey?: string): Pr
             ? 'Official careers channel'
             : 'Not specified'
   
-    return {
+    return recoverObviousClaims(input, {
       company,
       role,
       salary,
       location: input.location || 'Not specified',
       contactMethod,
       applicationPath,
-    }
+    })
   }
 
   const delimiter = `---USER_INPUT_${Math.random().toString(36).substring(2, 12).toUpperCase()}---`
@@ -130,17 +131,17 @@ async function extractClaims(input: AuditRequest, modelProviderKey?: string): Pr
       ] as any,
     })
 
-    return object as ExtractedClaims
+    return recoverObviousClaims(input, object as ExtractedClaims)
   } catch (err) {
     console.error('[AI SDK Error]', err)
-    return {
+    return recoverObviousClaims(input, {
       company: 'Unknown / Not Verifiable',
       role: 'Unspecified role',
       salary: 'Not specified',
       location: input.location || 'Not specified',
       contactMethod: 'Not specified',
       applicationPath: 'Not specified',
-    }
+    })
   }
 }
 

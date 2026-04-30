@@ -6,6 +6,13 @@ Last checked: 2026-04-30
 
 Option C is closed for production credential/readiness proof, WDK accepted-run proof, Slack screenshot proof, and production audit API smoke proof.
 
+Final submission status:
+
+- Ready to claim: production web audit flow, API smoke proof, Slack ChatSDK screenshot proof, AI Gateway readiness, and WDK accepted-run proof.
+- Ready to describe as implemented: Discord, Telegram, and WhatsApp/Zernio ChatSDK adapters and webhook routes.
+- Not ready to claim as live-proven: Discord, Telegram, and WhatsApp/Zernio external provider delivery.
+- Next blocker: configure the missing provider credentials, register the external webhooks, send one real message per platform, and archive screenshots/logs.
+
 - Vercel Production has `WORKFLOW_SECRET`, `HIREPROOF_MODEL`, Redis REST storage, `REDIS_URL`, Slack credentials, AI Gateway credentials, `MODEL_PROVIDER_KEY`, and `SERPAPI_API_KEY` configured.
 - Production is served through the stable alias `https://hireproof-sigma.vercel.app`.
 - Production `/api/integrations/proof` returns `ready`: Slack credentials are present, Workflow is ready, and AI Gateway is ready.
@@ -151,7 +158,8 @@ The current working tree passed:
 ## Production Proof Follow-Up
 
 1. Capture a fresh Slack/Vercel request log only if endpoint-level Slack proof is required beyond the screenshot.
-2. Re-run production smoke checks before the final submission:
+2. For Discord, Telegram, and WhatsApp/Zernio live proof, follow `docs/live-chat-platform-proof-plan.md`.
+3. Re-run production smoke checks before the final submission:
 
 ```powershell
 Invoke-RestMethod https://hireproof-sigma.vercel.app/api/integrations/proof
@@ -160,3 +168,5 @@ Invoke-RestMethod https://hireproof-sigma.vercel.app/api/workflows/audit
 ```
 
 Slack screenshot proof is already captured. Keep the screenshot with the submission materials and add logs only if needed.
+
+Use `npm run proof:chat-live` for the controlled ChatSDK proof check. Use `npm run proof:chat-live:strict` only after all Discord, Telegram, and WhatsApp/Zernio credentials and provider webhooks are configured.

@@ -270,6 +270,24 @@ test('lab client streams real audit events instead of simulated telemetry', asyn
   assert.doesNotMatch(source, /Math\.random/)
 })
 
+test('audit page consumes the live audit sse stream instead of parsing it as json', async () => {
+  const source = await fs.readFile(new URL('../app/audit/audit-client.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /type StreamEvent/)
+  assert.match(source, /setLiveMode/)
+  assert.match(source, /streamLogs/)
+  assert.match(source, /response\.body\.getReader\(\)/)
+  assert.match(source, /new TextDecoder\(\)/)
+  assert.match(source, /line\.startsWith\('data:'\)/)
+  assert.match(source, /parsed\.type === 'log'/)
+  assert.match(source, /parsed\.type === 'result'/)
+  assert.match(source, /parsed\.type === 'error'/)
+  assert.match(source, /Live evidence/)
+  assert.match(source, /Demo fixtures/)
+  assert.doesNotMatch(source, /await res\.json\(\)/)
+  assert.doesNotMatch(source, /Math\.random\(\)/)
+})
+
 test('audit APIs do not fail the response when report persistence fails', async () => {
   const uiRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
   const v1Route = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')

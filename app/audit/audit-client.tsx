@@ -15,6 +15,10 @@ import { useLiveMode } from '@/hooks/useLiveMode'
 import type { AuditReport, AuditRequest } from '@/lib/schemas'
 
 type DemoScenario = 'high-risk' | 'caution' | 'safe'
+type StreamEvent =
+  | { type: 'log'; message: string }
+  | { type: 'result'; data: AuditReport }
+  | { type: 'error'; message: string }
 
 const sampleRequests: Record<DemoScenario, AuditRequest> = {
   'high-risk': {
@@ -34,16 +38,78 @@ const sampleRequests: Record<DemoScenario, AuditRequest> = {
   }
 }
 
+function pickDemoFixture(text: string) {
+  const lowerText = text.toLowerCase()
+  if (lowerText.includes('80,000') || lowerText.includes('80000') || lowerText.includes('telegram')) {
+    return DEMO_FIXTURES.highRisk
+  }
+  if (lowerText.includes('vercel') || lowerText.includes('official careers')) {
+    return DEMO_FIXTURES.safe
+  }
+  return DEMO_FIXTURES.caution
+}
+
+async function readAuditStream(response: Response, onEvent: (event: StreamEvent) => void) {
+  if (!response.body) throw new Error('Audit stream did not return a readable body.')
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      buffer += decoder.decode(value, { stream: !done })
+      const chunks = buffer.split('\n\n')
+      buffer = chunks.pop() ?? ''
+
+      for (const chunk of chunks) {
+        const dataLine = chunk
+          .split('\n')
+          .find((line) => line.startsWith('data:'))
+
+        if (!dataLine) continue
+        const parsed = JSON.parse(dataLine.slice(5).trim()) as StreamEvent
+        onEvent(parsed)
+
+        if (parsed.type === 'log') continue
+        if (parsed.type === 'result') return parsed.data
+        if (parsed.type === 'error') throw new Error(parsed.message)
+      }
+
+      if (done) break
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  throw new Error('Audit stream ended without a report.')
+}
+
+async function readErrorMessage(response: Response) {
+  const fallback = `Audit failed with HTTP ${response.status}.`
+  const text = await response.text().catch(() => '')
+  if (!text) return fallback
+
+  try {
+    const parsed = JSON.parse(text) as { error?: string; message?: string }
+    return parsed.error || parsed.message || fallback
+  } catch {
+    return text.slice(0, 200) || fallback
+  }
+}
+
 function AuditContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { addReport } = useAuditHistory()
-  const { isLiveMode } = useLiveMode()
+  const { isLiveMode, setLiveMode } = useLiveMode()
   
   const [report, setReport] = useState<AuditReport | null>(null)
   const [isAuditing, setIsAuditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [demoTriggered, setDemoTriggered] = useState(false)
+  const [streamLogs, setStreamLogs] = useState<string[]>([])
 
   // Handle demo scenario from query param
   useEffect(() => {
@@ -58,31 +124,23 @@ function AuditContent() {
     setIsAuditing(true)
     setReport(null)
     setError(null)
+    setStreamLogs([])
 
     try {
       // In demo mode or if live mode is off, we use mock results after a delay
       if (!isLiveMode || request.mode === 'demo') {
+        setStreamLogs([
+          'Loading demo fixture...',
+          'Mapping sample evidence to the selected scenario...',
+          'Preparing deterministic report...',
+        ])
         await new Promise(resolve => setTimeout(resolve, 3000))
-        
-        // Match demo scenarios or fall back to a random one
-        let mockResult: AuditReport
-        const lowerText = (request.text || '').toLowerCase()
-        if (lowerText.includes('80,000') || lowerText.includes('telegram')) {
-          mockResult = JSON.parse(JSON.stringify(DEMO_FIXTURES.highRisk))
-        } else if (lowerText.includes('vercel')) {
-          mockResult = JSON.parse(JSON.stringify(DEMO_FIXTURES.safe))
-        } else {
-          // Semi-random logic for generic inputs
-          const random = Math.random()
-          if (random > 0.7) mockResult = JSON.parse(JSON.stringify(DEMO_FIXTURES.highRisk))
-          else if (random > 0.4) mockResult = JSON.parse(JSON.stringify(DEMO_FIXTURES.caution))
-          else mockResult = JSON.parse(JSON.stringify(DEMO_FIXTURES.safe))
-        }
+        const mockResult: AuditReport = JSON.parse(JSON.stringify(pickDemoFixture(request.text || '')))
         
         // Customize the mock result to match input slightly
         const finalReport: AuditReport = {
           ...mockResult,
-          id: `report_${Math.random().toString(36).substring(2, 10)}`,
+          id: `report_${Date.now()}`,
           timestamp: new Date().toISOString(),
           mode: 'demo'
         }
@@ -94,15 +152,18 @@ function AuditContent() {
         const res = await fetch('/api/audit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(request)
+          body: JSON.stringify({ ...request, mode: 'live' })
         })
         
         if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.error || 'Audit failed')
+          throw new Error(await readErrorMessage(res))
         }
         
-        const finalReport = await res.json()
+        const finalReport = await readAuditStream(res, (event) => {
+          if (event.type === 'log') {
+            setStreamLogs((logs) => [...logs, event.message].slice(-8))
+          }
+        })
         setReport(finalReport)
         addReport(finalReport)
       }
@@ -117,6 +178,7 @@ function AuditContent() {
     setReport(null)
     setError(null)
     setDemoTriggered(false)
+    setStreamLogs([])
     router.push('/audit')
   }
 
@@ -142,6 +204,33 @@ function AuditContent() {
               </p>
             </div>
             
+            <div className="mb-6 rounded-2xl border border-border-soft bg-surface p-2">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setLiveMode(false)}
+                  disabled={isAuditing}
+                  className={`rounded-xl px-4 py-3 text-left transition ${
+                    !isLiveMode ? 'bg-foreground text-background' : 'hover:bg-background'
+                  }`}
+                >
+                  <span className="block text-xs font-black uppercase tracking-widest">Demo fixtures</span>
+                  <span className="mt-1 block text-xs font-semibold opacity-75">Fast seeded reports for reliable walkthroughs.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLiveMode(true)}
+                  disabled={isAuditing}
+                  className={`rounded-xl px-4 py-3 text-left transition ${
+                    isLiveMode ? 'bg-safe text-background' : 'hover:bg-background'
+                  }`}
+                >
+                  <span className="block text-xs font-black uppercase tracking-widest">Live evidence</span>
+                  <span className="mt-1 block text-xs font-semibold opacity-75">Streams `/api/audit` events from live search and scoring.</span>
+                </button>
+              </div>
+            </div>
+
             <AuditForm onInvestigate={handleAudit} loading={isAuditing} />
             
             {error && (
@@ -184,6 +273,25 @@ function AuditContent() {
             exit={{ opacity: 0 }}
           >
             <AuditSkeleton />
+            <div className="mx-auto -mt-4 max-w-4xl rounded-2xl border border-border-soft bg-surface p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="text-xs font-black uppercase tracking-widest text-safe">
+                  {isLiveMode ? 'Live audit stream' : 'Demo audit stream'}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted">
+                  {streamLogs.length} events
+                </span>
+              </div>
+              <div className="space-y-2 font-mono text-xs text-muted">
+                {streamLogs.length > 0 ? streamLogs.map((log, index) => (
+                  <div key={`${log}-${index}`} className="rounded-lg bg-background px-3 py-2">
+                    {log}
+                  </div>
+                )) : (
+                  <div className="rounded-lg bg-background px-3 py-2">Submitting audit request...</div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
 

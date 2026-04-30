@@ -1,234 +1,421 @@
-# HireProof — AI-Powered Job Post Verification Agent
+# HireProof
 
-> Paste a job post. Know if it's legit before you apply.
+AI-powered job post verification for spotting suspicious listings before someone applies.
 
-**Built for the [Vercel "Zero to Agent" Hackathon](https://community.vercel.com/hackathons/zero-to-agent).**
-Author: [Mark Siazon](https://www.marksiazon.dev/)
+HireProof takes a pasted job post, recruiter message, screenshot, or job URL and returns a structured verdict: `safe`, `caution`, or `high-risk`. The agent extracts claims, checks company presence, searches reputation signals, compares similar jobs, verifies local footprint, and shows the evidence behind the score.
 
-HireProof is a proof-backed AI agent that investigates suspicious job posts with live evidence. It extracts claims, checks company web presence, reviews news and reputation signals, compares similar roles, verifies local business footprint, and returns a structured verdict: **Safe**, **Caution**, or **High-Risk** — with receipts.
+- Production demo: <https://hireproof-sigma.vercel.app>
+- Live docs: <https://hireproof-sigma.vercel.app/docs>
+- Author: [Mark Siazon](https://www.marksiazon.dev/)
+- Built for the [Vercel Zero to Agent Hackathon](https://community.vercel.com/hackathons/zero-to-agent)
+
+## At A Glance
+
+| Area | Status | Where to verify |
+| --- | --- | --- |
+| Hosted app | Live on Vercel | <https://hireproof-sigma.vercel.app> |
+| Main audit flow | Implemented | `/audit` |
+| Headless API | Implemented | `POST /api/v1/audit` |
+| MCP tools | Implemented | `POST /api/mcp` |
+| ChatSDK | Implemented; Slack live-tested, other adapters credential-gated | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
+| Vercel Workflow / WDK | Implemented; production accepted-run proof captured | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
+| Chrome extension | Store-ready package and upload assets generated | [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md) |
+| Docker | Production image/Compose scripts implemented | `Dockerfile`, `docker-compose.yml` |
+
+## Contents
+
+- [Current Status](#current-status)
+- [Hackathon Track Coverage](#hackathon-track-coverage)
+- [Quick Start](#quick-start)
+- [Recommended Demo Script](#recommended-demo-script)
+- [Core Workflows](#core-workflows)
+- [Packaging And Distribution](#packaging-and-distribution)
+- [Environment Variables](#environment-variables)
+- [Verification](#verification)
+- [Architecture](#architecture)
+- [Project Map](#project-map)
+- [Documentation](#documentation)
+
+## Current Status
+
+HireProof is implemented as a production Next.js app with web UI, headless API, MCP tools, ChatSDK routes, WDK workflow entrypoint, Docker packaging, and a Chrome extension package workflow.
+
+What is complete in this repo:
+
+- Web audit flow with text, image, and voice input.
+- Demo-mode seeded scenarios that work without API keys.
+- Live-mode investigation path using model and search provider credentials.
+- Headless `/api/v1/audit` endpoint with API-key auth and webhook support.
+- MCP endpoint and investigation tools.
+- ChatSDK webhook adapters for Slack, Discord, Telegram, and WhatsApp-via-Zernio.
+- Vercel Workflow / WDK audit start route.
+- Shareable audit reports, history, trends, PDF dossier, CSV export, PNG export, and safe-report certificate.
+- Verified badge API and developer portal controls.
+- Dockerfile, Compose service, healthcheck, and smoke script for self-hosting.
+- Manifest V3 Chrome extension with store-ready ZIP, screenshots, promo image, listing copy, and privacy notes.
+
+Output and sharing capabilities:
+
+- **PNG Screenshot Export**: capture the visible report for demos and quick sharing.
+- **Forensic PDF Dossier**: download a structured investigation dossier.
+- **Report CSV Export**: export verdict, claims, signals, evidence, and next steps for review.
+
+Honest external boundaries:
+
+- Chrome Web Store publication requires the Chrome Web Store developer dashboard, privacy form, uploaded screenshots, and Google review. This repo prepares the upload package and assets; it cannot publish the listing by itself.
+- Docker smoke testing requires Docker Desktop or another Docker runtime. The scripts are present, but the local machine must have Docker available.
+- Live ChatSDK platform proof requires real platform credentials and Redis-backed chat state.
+- Live WDK proof requires deployed Workflow credentials and a completed workflow run.
 
 ## Hackathon Track Coverage
 
-HireProof is one job-verification agent with multiple surfaces:
+HireProof is one verification agent exposed through multiple delivery surfaces.
 
-- **v0 + MCPs** — implemented as the primary web app and runtime MCP investigation tools.
-- **ChatSDK Agents** — implemented Slack, Discord, Telegram, and WhatsApp-via-Zernio webhook routes through one ChatSDK bot wrapper; live proof requires platform credentials + Redis.
-- **Vercel Workflow / WDK** — implemented WDK workflow entrypoint and start route; live durable proof requires deployed Workflow credentials.
+| Track | What is implemented | Proof notes |
+| --- | --- | --- |
+| v0 + MCPs | Next.js app, audit workspace, evidence tools, and MCP endpoint. | Strongest primary product flow. |
+| ChatSDK Agents | Shared ChatSDK bot wrapper plus Slack, Discord, Telegram, and Zernio webhook routes. | Slack has screenshot proof; other platforms are code-ready behind credentials. |
+| Vercel Workflow / WDK | Workflow package enabled, `startAuditWorkflow`, and `/api/workflows/audit` start route. | Production accepted run captured in proof docs. |
 
-See [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md) for the honest track map and demo framing.
-
-## Features
-
-### Core Investigation Engine
-- **AI Claims Extraction** — Extracts company, role, salary, contact method from text or screenshots using GPT-4o-mini
-- **Autonomous Agentic Loop** — Multi-step tool orchestration via Vercel AI SDK `generateText` with `stopWhen`
-- **Deterministic Risk Scoring** — Weighted red/green flag analysis producing a 0-100 risk score
-- **4 MCP Investigation Tools** — Company presence, news reputation, job comparison, local presence
-
-### Omni-Modal Input
-- **Text** — Paste any job post, recruiter message, or email
-- **Image** — Upload screenshots of WhatsApp chats, PDF offer letters, or social media posts
-- **Voice** — Dictate job descriptions using browser Speech-to-Text (Chrome/Edge)
-
-### Real-Time Experience
-- **Server-Sent Events (SSE)** — Watch the Agent think and call tools in real-time
-- **Framer Motion Animations** — Staggered reveal of verdict, flags, and evidence cards
-- **Interactive Radar Chart** — 5-axis risk breakdown (Company, Reputation, Salary, Local, Contact)
-
-### Agent-to-Agent (A2A) & Integrations
-- **Job-Safety Checkpoint for AI Pipelines** — Plug HireProof into **n8n**, **Make.com**, or **LangChain** workflows so automated job-hunting agents can verify a post before submitting resumes or personal data.
-- **Headless REST API** (`/api/v1/audit`) — Authenticated JSON endpoint for external AI agents.
-- **TypeScript SDK** — Programmatic Node.js library (`hireproof-sdk`) for deep integrations.
-- **MCP Server** (`/api/mcp`) — Model Context Protocol for direct tool access.
-- **Async Webhooks** — Fire-and-forget with `webhook_url` for background processing.
-- **Verified Badge API** — Domain-scoped badge status and script endpoints for approved career pages.
-- **Self-Hostable** — 100% portable Next.js architecture with a **Bring Your Own Key (BYOK)** model.
-- **Rate Limiting** — In-memory token bucket (5/min UI, 20/min API).
-- **Agent-Friendly DOM** — `data-testid` and `aria-label` on all interactive elements.
-
-## 🚀 Self-Hosting & Portability
-
-HireProof is built to be portable. Whether you use the hosted demo or run it yourself, the core job-verification flow stays the same.
-
-- **Vercel Native**: One-click deployment to Vercel with Edge Function support.
-- **BYOK (Bring Your Own Key)**: Use your own OpenAI and SerpApi keys to bypass our managed limits.
-- **Hybrid Storage Engine**: The app automatically detects if Upstash Redis is configured. If not, it gracefully degrades to local `localStorage` and local `fs` storage, making it cost $0.00 to run.
-- **Production Docker Distribution** — Standalone Next.js image, Compose orchestration, healthcheck, and smoke scripts included.
-
-### Output & Sharing
-- **PNG Screenshot Export** — Full result capture via html2canvas from the report screen.
-- **Forensic PDF Dossier** — Multi-page investigation report with executive summary and evidence receipts.
-- **Report CSV Export** — Download verdict, claims, signals, evidence, and next steps as a portable CSV.
-- **Trends CSV & JSON Exports** — Download aggregate trend data in standard portable formats.
-- **Safety Certificate** — Downloadable certificate for reports that receive a Safe verdict.
-- **Shareable Permalinks** — Every audit is persisted and accessible via `/audit/[id]`
-- **Copy Link Button** — One-click permalink sharing
-
-### Infrastructure & Security
-- **Hybrid Database Architecture** — Uses Upstash Redis for permanent, globally distributed storage of shareable links, gracefully degrading to local ephemeral `fs` if keys are missing (zero-cost Hackathon mode).
-- **Local Data Cleanup** — `npm run cleanup:local-data` prunes local JSON reports and usage records for development installs.
-- **L7 DDoS Immunity** — Edge-distributed rate limiter via Upstash prevents "Denial of Wallet" attacks against LLM billing APIs.
-- **Security Hardening** — SSRF webhook protection, Prototype Pollution guards, strict CSP headers, and dynamic SEO no-index tags for data privacy.
-
-### UI Polish
-- **Dark Mode** — System-aware theme toggle with `next-themes`
-- **Chrome Extension Package** — Manifest V3 extension assets can be loaded locally or packaged into a Chrome Web Store-ready ZIP.
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 6 |
-| Styling | Tailwind CSS 4 + Custom Design Tokens |
-| AI SDK | Vercel AI SDK 6 (`ai`, `@ai-sdk/gateway`, `@ai-sdk/openai` fallback) |
-| Animation | Framer Motion 12 |
-| Charts | Recharts |
-| Export | PDF dossier, report CSV, trends CSV/JSON, safe-report certificate, html2canvas PNG |
-| Search | SerpApi |
-| Database / Cache | Upstash Serverless Redis (Optional) |
-| Protocol | Model Context Protocol (MCP) |
+More detail: [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md).
 
 ## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Copy env vars
 cp .env.example .env.local
-# Fill in your keys in .env.local
-
-# Run development server
 npm run dev
-
-# Optional: prune local JSON reports and usage records
-npm run cleanup:local-data
 ```
 
-Open [http://localhost:3002](http://localhost:3002) and navigate to `/audit`.
+Open <http://localhost:3002> and go to `/audit`.
 
-## Environment Variables
+Demo mode works without keys. For live evidence, configure model and search credentials in `.env.local`.
 
-| Variable | Required | Description |
-|---|---|---|
-| `AI_GATEWAY_API_KEY` | Preferred for AI model calls | Vercel AI Gateway key |
-| `HIREPROOF_MODEL` | Optional | AI Gateway model path, defaults to `openai/gpt-4o-mini` |
-| `MODEL_PROVIDER_KEY` | Fallback for live mode | OpenAI-compatible API key |
-| `SERPAPI_API_KEY` | For live mode | SerpApi key for web evidence |
-| `APP_BASE_URL` | For agent loop | Base URL for internal MCP calls |
-| `AGENT_API_KEY` | Optional | API key for headless agent access |
-| `UPSTASH_REDIS_REST_URL` | Optional | Upstash DB URL for global persistence/rate limits |
-| `UPSTASH_REDIS_REST_TOKEN` | Optional | Upstash Token for global persistence/rate limits |
-| `SLACK_BOT_TOKEN` | Optional | Enables live ChatSDK Slack bot replies |
-| `SLACK_SIGNING_SECRET` | Optional | Verifies Slack webhook signatures |
-| `DISCORD_BOT_TOKEN` | Optional | Enables live ChatSDK Discord bot replies |
-| `DISCORD_PUBLIC_KEY` | Optional | Verifies Discord interaction signatures |
-| `DISCORD_APPLICATION_ID` | Optional | Identifies the Discord application |
-| `TELEGRAM_BOT_TOKEN` | Optional | Enables live ChatSDK Telegram bot replies |
-| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Optional | Verifies Telegram webhook requests |
-| `TELEGRAM_BOT_USERNAME` | Optional | Identifies the Telegram bot for mention handling |
-| `ZERNIO_API_KEY` | Optional | Enables WhatsApp-backed replies through Zernio's ChatSDK adapter |
-| `ZERNIO_WEBHOOK_SECRET` | Optional | Verifies Zernio webhook requests |
-| `WORKFLOW_SECRET` | Optional | Enables protected WDK workflow starts |
+## Recommended Demo Script
 
-Demo mode works without any API keys.
+Use this path when showing the project to a judge, reviewer, or stakeholder:
 
-## API Reference
+1. Open <https://hireproof-sigma.vercel.app/audit>.
+2. Select or paste the high-risk demo text:
 
-### `POST /api/audit` — Frontend SSE Stream
-Streams real-time agent progress via Server-Sent Events. Used by the web UI.
+```text
+Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.
+```
 
-### `POST /api/v1/audit` — Headless Agent API
-Returns pure JSON. Requires `x-api-key` header. Supports `webhook_url` for async.
+3. Run the audit and show the streamed investigation steps.
+4. Open the final report and point out the verdict, score, evidence, flags, and next steps.
+5. Show the same core agent through the API:
 
 ```bash
 curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
   -H "Content-Type: application/json" \
   -H "x-api-key: hireproof_agent_demo_key" \
-  -d '{"text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram."}'
+  -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'
 ```
 
-### `POST /api/mcp` — MCP Tool Server
-Execute individual investigation tools. Requires `x-api-key` header.
+6. Mention the distribution surfaces: MCP tools, ChatSDK agents, WDK workflow, Docker self-hosting, and Chrome extension package.
+7. Be explicit about boundaries: Chrome Store publication and Docker runtime verification depend on external account/runtime access.
 
-## Chrome Extension Local Install
+## Core Workflows
 
-1. Open `chrome://extensions`
-2. Enable "Developer mode"
-3. Click "Load unpacked" → select the `extension/` folder
-4. Use the local extension build for demo/testing
+### Web Audit
 
-## Chrome Web Store Package
+The main workflow lives at `/audit`.
+
+- Paste a job listing or recruiter message.
+- Upload a screenshot.
+- Use browser speech-to-text for voice input.
+- Watch the Server-Sent Events stream as the agent extracts claims and calls tools.
+- Review the verdict, risk score, flags, evidence, and recommended next steps.
+
+### Headless API
+
+`POST /api/v1/audit` returns JSON for external agents and automation tools.
+
+```bash
+curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: hireproof_agent_demo_key" \
+  -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'
+```
+
+### MCP Tools
+
+`POST /api/mcp` exposes investigation tools for agent runtimes:
+
+- Company presence search.
+- News and reputation search.
+- Comparable job search.
+- Local business footprint search.
+
+### Developer Portal
+
+The `/developer` page supports:
+
+- Account login and API key management.
+- Domain verification for badge embeds.
+- Webhook sandbox testing.
+- BYOK provider credential storage for authenticated audits.
+
+Provider credentials are verified before storage and encrypted server-side. Secrets are not returned to the browser after save.
+
+## What Makes It Agentic
+
+HireProof is not a single prompt wrapper. The app runs a structured investigation loop:
+
+- Extracts normalized claims from messy human job text.
+- Chooses evidence tools based on the claims it finds.
+- Calls company, reputation, comparable-role, and local-footprint tools.
+- Combines tool output with deterministic risk scoring.
+- Returns a report designed for human decisions and downstream agents.
+
+The same investigation core is reused by the web app, API, MCP endpoint, ChatSDK reply path, and workflow entrypoint.
+
+## Packaging And Distribution
+
+### Chrome Extension
+
+Local install:
+
+1. Open `chrome://extensions`.
+2. Enable Developer mode.
+3. Click "Load unpacked".
+4. Select the `extension/` folder.
+
+Create the Chrome Web Store upload package:
 
 ```bash
 npm run package:extension
 ```
 
-The command validates the Manifest V3 extension, generates the required PNG icon sizes, stages distributable files, and creates `dist/chrome/hireproof-extension.zip`. Listing copy and reviewer notes live in [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md). A public store listing still requires a Chrome Web Store developer account and Google review approval.
+Output:
 
-## Docker Self-Hosting
+```text
+dist/chrome/hireproof-extension.zip
+```
+
+Generate store screenshots and promo image:
+
+```bash
+npm run store:assets
+```
+
+Generated assets:
+
+```text
+docs/chrome-web-store-assets/
++-- screenshot-01-popup-idle-1280x800.png
++-- screenshot-02-popup-result-1280x800.png
++-- screenshot-03-supported-job-page-1280x800.png
++-- screenshot-04-context-menu-1280x800.png
+`-- promo-small-440x280.png
+```
+
+Listing copy, reviewer notes, privacy practices, and publication boundary are in [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md). Extension privacy details are in [`extension/PRIVACY.md`](extension/PRIVACY.md).
+
+### Docker Self-Hosting
+
+Build and run the production image:
 
 ```bash
 npm run docker:build
 npm run docker:run
 ```
 
-In another terminal:
+In a second terminal:
 
 ```bash
 npm run docker:smoke
 ```
 
-The Docker image uses the Next.js standalone output, runs as a non-root user, exposes port `3002`, and includes a container healthcheck for `/api/health`.
+Docker behavior:
 
-## Demo Mode
+- Uses Next.js standalone output.
+- Runs as a non-root user.
+- Exposes port `3002`.
+- Includes a `/api/health` container healthcheck.
+- Uses environment variables for live model, search, Redis, and workflow credentials.
 
-Three seeded scenarios work without any API keys:
-- **High-Risk** — Telegram-based PHP 80k/week internship scam
-- **Caution** — Ambiguous listing with incomplete company signals
-- **Safe** — Credible listing with matching company, role, and evidence
+Compose:
+
+```bash
+docker compose up --build
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill only what you need.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `APP_BASE_URL` | Recommended | Base URL for internal links and callbacks. |
+| `AGENT_API_KEY` | Recommended | API key accepted by `/api/v1/audit` and `/api/mcp`. |
+| `SESSION_SECRET` | Recommended | Session signing secret for auth. |
+| `AI_GATEWAY_API_KEY` | Live mode preferred | Vercel AI Gateway key. |
+| `VERCEL_AI_GATEWAY_API_KEY` | Live mode optional | Alias accepted for AI Gateway. |
+| `HIREPROOF_MODEL` | Optional | Model path, defaults to `openai/gpt-4o-mini`. |
+| `MODEL_PROVIDER_KEY` | Live mode fallback | OpenAI-compatible fallback provider key. |
+| `SERPAPI_API_KEY` | Live evidence | SerpApi key for search-backed evidence. |
+| `UPSTASH_REDIS_REST_URL` | Optional | Upstash REST URL for persistence and rate limits. |
+| `UPSTASH_REDIS_REST_TOKEN` | Optional | Upstash REST token. |
+| `REDIS_URL` | ChatSDK | Redis URL for ChatSDK thread state. |
+| `BYOK_ENCRYPTION_KEY` | Hosted BYOK | Encrypts saved provider credentials in production. |
+| `SLACK_BOT_TOKEN` | Slack | Enables Slack bot replies. |
+| `SLACK_SIGNING_SECRET` | Slack | Verifies Slack webhook signatures. |
+| `DISCORD_BOT_TOKEN` | Discord | Enables Discord replies. |
+| `DISCORD_PUBLIC_KEY` | Discord | Verifies Discord interactions. |
+| `DISCORD_APPLICATION_ID` | Discord | Discord application ID. |
+| `TELEGRAM_BOT_TOKEN` | Telegram | Enables Telegram replies. |
+| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | Telegram | Verifies Telegram webhooks. |
+| `TELEGRAM_BOT_USERNAME` | Telegram | Bot username without `@`. |
+| `ZERNIO_API_KEY` | WhatsApp/Zernio | Enables Zernio-backed replies. |
+| `ZERNIO_WEBHOOK_SECRET` | WhatsApp/Zernio | Verifies Zernio webhooks. |
+| `WORKFLOW_SECRET` | WDK | Protects workflow start routes. |
+
+## Verification
+
+Run the main local quality gates before handing off:
+
+```bash
+npm run lint
+npm run build
+node test/runtime-wiring.test.mjs
+node test/byok-credentials.test.mjs
+npm run package:extension
+npm run store:assets
+```
+
+What those gates prove:
+
+| Command | Proves |
+| --- | --- |
+| `npm run lint` | TypeScript contracts are valid outside generated Next build output. |
+| `npm run build` | Production Next.js build succeeds. |
+| `node test/runtime-wiring.test.mjs` | Runtime surfaces are wired to real endpoints and honest readiness states. |
+| `node test/byok-credentials.test.mjs` | BYOK encryption, CSRF, and credential routing checks pass. |
+| `npm run package:extension` | Chrome extension manifest/assets package into a clean upload ZIP. |
+| `npm run store:assets` | Chrome Web Store screenshots and promo image are regenerated. |
+
+Optional Docker verification when Docker is available:
+
+```bash
+npm run docker:build
+npm run docker:run
+npm run docker:smoke
+```
+
+Production smoke commands:
+
+```powershell
+$base='https://hireproof-sigma.vercel.app'
+Invoke-RestMethod -Uri "$base/api/health"
+Invoke-RestMethod -Uri "$base/api/integrations/proof"
+Invoke-RestMethod -Uri "$base/api/v1/audit" `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Headers @{'x-api-key'='hireproof_agent_demo_key'} `
+  -Body (@{
+    text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'
+    mode='demo'
+  } | ConvertTo-Json)
+```
+
+## Demo Scenarios
+
+Three seeded audit scenarios are available without external keys:
+
+- **High-Risk**: Telegram-based PHP 80,000/week internship scam.
+- **Caution**: Ambiguous listing with incomplete company signals.
+- **Safe**: Credible listing with matching company, role, and evidence.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  User[Job seeker or agent] --> Input[Web, API, MCP, chat, or workflow]
+  Input --> Claims[Claim extraction]
+  Claims --> Tools[MCP investigation tools]
+  Tools --> Evidence[Search and local footprint evidence]
+  Evidence --> Score[Risk scoring]
+  Score --> Report[Verdict, report, exports, and callbacks]
+  Report --> Surfaces[UI, API JSON, chat reply, webhook, badge, or extension]
 ```
+
+Runtime surfaces:
+
+- Web UI uses `/api/audit` for streamed Server-Sent Events.
+- External agents use `/api/v1/audit` for JSON responses and webhook callbacks.
+- MCP-compatible clients use `/api/mcp` for direct tool execution.
+- Chat platforms use `/api/webhooks/*` and the shared ChatSDK reply formatter.
+- Durable background jobs start through `/api/workflows/audit`.
+- Browser users can scan selected text or supported job pages through the Chrome extension.
+
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 App Router |
+| Language | TypeScript 6 |
+| UI | React 19, Tailwind CSS 4, Framer Motion |
+| Charts | Recharts |
+| AI | Vercel AI SDK 6, AI Gateway, OpenAI-compatible fallback |
+| Search | SerpApi |
+| Storage | Upstash Redis when configured, local JSON fallback for development |
+| Protocols | REST, SSE, MCP, ChatSDK adapters, Vercel Workflow / WDK |
+| Extension | Chrome Manifest V3 |
+| Packaging | Docker standalone image, Compose, Chrome Web Store ZIP |
+
+## Project Map
+
+```text
 app/
-├── page.tsx                    Landing page
-├── audit/page.tsx              Investigation workspace (SSE consumer)
-├── audit/[id]/page.tsx         Shareable permalink view
-├── history/page.tsx            Local report history
-├── api/audit/route.ts          SSE streaming endpoint
-├── api/v1/audit/route.ts       Headless agent API (JSON + webhooks)
-├── api/mcp/route.ts            MCP tool server
-├── api/chat/hireproof/route.ts ChatSDK status/reply endpoint
-├── api/webhooks/slack/route.ts Slack webhook adapter
-├── api/webhooks/discord/route.ts Discord webhook adapter
-├── api/webhooks/telegram/route.ts Telegram webhook adapter
-├── api/webhooks/zernio/route.ts WhatsApp/Zernio webhook adapter
-├── api/workflows/audit/route.ts WDK workflow start route
++-- audit/                         Web audit flow and report pages
++-- api/audit/                     SSE audit endpoint
++-- api/v1/audit/                  Headless JSON audit endpoint
++-- api/mcp/                       MCP tool endpoint
++-- api/chat/hireproof/            ChatSDK status/reply endpoint
++-- api/webhooks/                  Slack, Discord, Telegram, Zernio adapters
++-- api/workflows/audit/           WDK workflow start route
++-- developer/                     Developer portal
+`-- docs/                          In-app documentation portal
+
 components/
-├── audit-form.tsx              Omni-modal input (text + image + voice)
-├── result-screen.tsx           Animated verdict display
-├── risk-radar-chart.tsx        5-axis Recharts radar
-├── voice-input-button.tsx      Web Speech API input
-├── theme-toggle.tsx            Dark mode switch
++-- audit-form.tsx
++-- result-screen.tsx
++-- risk-radar-chart.tsx
+`-- site/header and UI components
+
 lib/
-├── schemas.ts                  Zod schemas and types
-├── risk-scorer.ts              Deterministic scoring engine
-├── serpapi.ts                  SerpApi wrapper functions
-├── rate-limit.ts               Hybrid Upstash/In-memory rate limiter
-├── db.ts                       Hybrid Upstash/JSON file persistence
-├── generate-pdf.ts             Production PDF engine (Dossiers + Certificates)
++-- schemas.ts                     Shared Zod contracts
++-- risk-scorer.ts                 Deterministic risk scoring
++-- serpapi.ts                     Search provider integration
++-- mcp-tools.ts                   MCP investigation tools
++-- db.ts                          Hybrid persistence
++-- auth-store.ts                  Auth, API keys, BYOK credentials
+`-- generate-pdf.ts                PDF dossier and certificate output
+
 extension/
-├── manifest.json               Chrome Manifest V3
-├── popup.html/js/css           Extension popup UI
-sdk/
-├── index.ts                    TypeScript SDK logic
-├── package.json                NPM configuration
-docs/
-├── [Live Documentation Portal](https://hireproof-sigma.vercel.app/docs)
-├── security.md                 Threat model & defenses (Legacy)
++-- manifest.json
++-- popup.html / popup.js / styles.css
++-- content.js / content.css
++-- background.js
+`-- icons/
+
+scripts/
++-- package-extension.mjs
++-- generate-extension-icons.mjs
++-- generate-chrome-store-assets.mjs
+`-- smoke-docker.mjs
 ```
+
+## Documentation
+
+- [`DEPLOYMENT.md`](DEPLOYMENT.md): deployment and production status.
+- [`docs/remaining-work.md`](docs/remaining-work.md): current proof status and honest boundaries.
+- [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md): Chrome listing copy and upload assets.
+- [`docs/credentials-setup.md`](docs/credentials-setup.md): platform credential setup notes.
+- [`docs/platform-proof-status.md`](docs/platform-proof-status.md): platform readiness status.
+- [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md): hackathon track mapping.
 
 ## License
 

@@ -130,7 +130,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste the job post, recruiter message, or email here..."
+          placeholder="Paste the job post, recruiter message, freelance gig, or scholarship/work offer here..."
           data-testid="job-input-text"
           aria-label="Job Description"
           className="hireproof-focus w-full resize-none rounded-xl border border-border bg-background p-4 text-sm font-medium leading-6 placeholder:text-muted/70 focus:border-evidence focus:bg-surface focus:outline-none focus:ring-4 focus:ring-evidence-bg"
@@ -149,6 +149,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          placeholder="Optional. Some job boards may block automated fetches, so paste the post text too."
           data-testid="job-input-url"
           aria-label="Job URL"
           className="hireproof-focus w-full rounded-xl border border-border bg-background p-3 text-sm font-medium placeholder:text-muted/70 focus:border-evidence focus:bg-surface focus:outline-none focus:ring-4 focus:ring-evidence-bg"
@@ -186,7 +187,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
       </button>
 
       <p className="text-center text-xs font-semibold text-muted">
-        Your data is processed securely and not stored permanently.
+        Do not paste passwords, IDs, bank details, or verification codes. Reports may be saved for history or share links.
       </p>
     </form>
   )

@@ -188,17 +188,17 @@ export function TrendsClient() {
 
           {/* Live Alerts Sidebar */}
           <motion.div variants={itemVariants} className="space-y-6">
-            <div className="rounded-[2.5rem] border border-border-soft bg-foreground p-8 text-background shadow-xl">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-safe text-background shadow-lg shadow-safe/20">
+            <div className="rounded-[2.5rem] border border-evidence-bg bg-surface p-8 text-foreground shadow-sm">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-evidence-bg bg-evidence-bg text-evidence">
                 <Zap className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-black leading-tight">Live Evidence Signals</h3>
-              <p className="mt-4 text-sm font-bold opacity-70">
+              <p className="mt-4 text-sm font-semibold leading-6 text-muted">
                 {viewModel.externalSignalCount > 0
                   ? `${viewModel.externalSignalCount} external reputation signals are available from the live evidence layer.`
                   : 'Live evidence is not configured yet, so this page is using saved audit reports only.'}
               </p>
-              <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+              <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border-soft bg-background px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted">
                 <Clock className="h-3 w-3" />
                 {viewModel.modeLabel}
               </div>

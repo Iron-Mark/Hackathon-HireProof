@@ -201,15 +201,15 @@ export function HomeClient() {
 
             <motion.div variants={fadeUp} custom={1} className="mb-5 inline-flex items-center gap-2 rounded-full border border-risk-bg bg-risk-bg px-3 py-1 text-sm font-bold text-risk-text">
               <ShieldAlert className="h-4 w-4" />
-              Built for suspicious job posts
+              Built for suspicious work offers
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={2} className="text-4xl font-black leading-tight text-balance sm:text-5xl lg:text-6xl">
-              Know if a job post is legit before you apply.
+              Paste a job post. See if it&apos;s safe, suspicious, or high-risk, with receipts.
             </motion.h1>
 
             <motion.div variants={fadeUp} custom={3} className="mt-5 max-w-xl text-lg font-medium leading-8 text-muted">
-              <p>Paste a recruiter message, job listing, or apply URL.</p>
+              <p>Check a recruiter message, job listing, freelance gig, internship, or scholarship or training offer before you share personal details.</p>
               <div className="mt-3 rounded-xl border border-border-soft bg-surface/80 dark:bg-black p-4 font-mono text-xs shadow-2xl relative overflow-hidden group backdrop-blur-md">
                 <div className="absolute top-0 left-0 h-full w-1 bg-safe/50" />
                 <div className="flex items-center gap-2 mb-2 opacity-80">
@@ -231,6 +231,9 @@ export function HomeClient() {
               </Link>
               <Link href="/audit?demo=high-risk" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-5 py-2.5 font-bold transition-colors hover:bg-background">
                 Quick demo
+              </Link>
+              <Link href="/proof" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-evidence-bg bg-evidence-bg px-5 py-2.5 font-bold text-evidence transition-colors hover:bg-background">
+                Proof pack
               </Link>
             </motion.div>
 
@@ -366,7 +369,7 @@ export function HomeClient() {
             <div className="mb-3 inline-flex rounded-full bg-evidence-bg px-3 py-1 text-xs font-black uppercase tracking-normal text-evidence">
               Example input
             </div>
-            <h2 className="text-2xl font-black">Suspicious opportunity</h2>
+              <h2 className="text-2xl font-black">Suspicious work offer</h2>
           </div>
           <div className="rounded-2xl border border-border bg-background p-6">
             <div className="grid gap-3 text-sm sm:grid-cols-2">
@@ -477,7 +480,7 @@ export function HomeClient() {
                 Job posts can be real, fake, or <span className="text-risk-text">AI-shaped bait.</span>
               </h2>
               <p className="mt-6 text-lg font-medium leading-relaxed text-muted">
-                The job market is becoming a target for automated phishing. HireProof helps candidates slow down, inspect the evidence, and avoid sharing personal details with suspicious recruiters.
+              The job market is becoming a target for automated phishing. HireProof helps candidates, students, and freelancers slow down, inspect the evidence, and avoid sharing personal details with suspicious contacts.
               </p>
               
               <div className="mt-10 grid gap-6 sm:grid-cols-2">
@@ -566,7 +569,7 @@ export function HomeClient() {
             Check the post before you apply.
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-relaxed text-muted dark:text-white/70 md:text-xl">
-            Paste the listing, recruiter message, or application URL. HireProof turns suspicious claims into an evidence-backed verdict.
+            Paste the listing, recruiter message, freelance gig, scholarship pitch, or application URL. HireProof turns suspicious claims into an evidence-backed verdict.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

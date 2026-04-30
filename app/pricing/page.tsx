@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Pricing | HireProof',
-  description: 'Flexible pricing for individuals, teams, and self-hosted job-verification workflows. Bring your own keys for a generous free tier.',
+  description: 'Free individual job-scam checks plus API and enterprise tiers for job boards, schools, recruiters, and community groups.',
 }
 
 export default function PricingPage() {
@@ -16,10 +16,10 @@ export default function PricingPage() {
       <main className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
         <div className="mb-16 text-center">
           <h1 className="mb-6 text-5xl font-black tracking-tight lg:text-7xl">
-            Security that scales with you.
+            Free checks for applicants. Paid proof for teams.
           </h1>
           <p className="mx-auto max-w-2xl text-xl font-medium leading-relaxed text-muted">
-            We believe everyone deserves protection from recruitment fraud. That's why our core engine is <strong className="text-foreground">free forever</strong> when you bring your own API keys.
+            HireProof starts with Free individual checks, then scales into managed API access for job boards, schools, recruiters, and community groups that need bulk verification.
           </p>
         </div>
 
@@ -37,24 +37,24 @@ export default function PricingPage() {
               <span className="font-bold text-muted">/ forever</span>
             </div>
             <p className="mb-8 text-sm font-medium text-muted">
-              Perfect for developers and job seekers. Bring your own OpenAI & SerpApi keys.
+              Perfect for individual job seekers and developers who want local control with their own model and search credentials.
             </p>
             <ul className="mb-8 flex-1 space-y-4">
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Unlimited local scans
+                Free individual checks
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Chrome Extension access
+                Local extension package
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Local storage history
+                Local report history
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Run local MCP Server
+                Runtime MCP tools
               </li>
             </ul>
             <div className="flex flex-col gap-2">
@@ -82,28 +82,28 @@ export default function PricingPage() {
               <span className="font-bold text-muted">/ month</span>
             </div>
             <p className="mb-8 text-sm font-medium text-muted">
-              We handle the LLM inference and web scraping. Perfect for automation agents.
+              Managed audit API for automation agents, student groups, career centers, and small recruiting teams.
             </p>
             <ul className="mb-8 flex-1 space-y-4">
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-safe" />
-                1,000 Headless API calls / mo
+                1,000 headless API checks / mo
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-safe" />
-                Async Webhook Support (n8n/Make)
+                Async webhook delivery for n8n/Make
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-safe" />
-                Upstash Global Sync & Permalinks
+                Shareable reports and 30-day retention
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-safe" />
-                Discord / Slack Bot Integrations
+                Slack-ready chat workflow
               </li>
             </ul>
             <Link href="/audit" className="hireproof-focus flex w-full items-center justify-center rounded-xl bg-foreground px-4 py-3 text-sm font-black text-background hover:bg-safe transition-colors">
-              Start Free Trial
+              Start with demo
             </Link>
           </div>
 
@@ -118,24 +118,24 @@ export default function PricingPage() {
               <span className="text-5xl font-black">Custom</span>
             </div>
             <p className="mb-8 text-sm font-medium text-muted">
-              High-volume protection for recruiting agencies and job boards.
+              Bulk verification and trust tooling for job boards, schools, recruiters, and community groups.
             </p>
             <ul className="mb-8 flex-1 space-y-4">
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Unlimited ATS integrations
+                Bulk verification workflows
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Automated Domain Takedowns
+                Verified badge and domain ownership checks
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Dedicated Account Manager
+                Custom API volume and onboarding
               </li>
               <li className="flex items-start gap-3 text-sm font-semibold">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
-                Custom Rate Limits & SLA
+                Exportable audit evidence for review teams
               </li>
             </ul>
             <a href={`mailto:${process.env.CONTACT_EMAIL || 'sales@hireproof.com'}?subject=HireProof%20Enterprise%20Inquiry`} className="hireproof-focus flex w-full items-center justify-center rounded-xl border border-border-soft bg-background px-4 py-3 text-sm font-black text-foreground hover:bg-border-soft transition-colors">
@@ -148,7 +148,7 @@ export default function PricingPage() {
         <div className="mt-24 space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-black">Compare Features</h2>
-            <p className="text-muted font-medium mt-2">Deep dive into our tiered capabilities.</p>
+            <p className="text-muted font-medium mt-2">Simple tiers for individual safety checks and high-volume verification.</p>
           </div>
           <div className="overflow-hidden rounded-3xl border border-border-soft bg-surface">
             <table className="w-full text-left text-sm">
@@ -163,12 +163,12 @@ export default function PricingPage() {
               <tbody className="divide-y divide-border-soft">
                 {[
                   { name: 'Investigation Engine', free: 'Unlimited (BYOK)', pro: 'Unlimited', ent: 'Unlimited' },
-                  { name: 'Access Methods', free: 'Web + local extension', pro: 'Web + API + local extension', ent: 'Full suite after setup' },
-                  { name: 'Headless REST API', free: 'Local Only', pro: '1,000 req/mo', ent: 'Custom' },
-                  { name: 'Webhook Callbacks', free: '❌', pro: '✅', ent: '✅' },
-                  { name: 'Storage Engine', free: 'Local IndexedDB', pro: 'Upstash Global', ent: 'Dedicated Redis' },
+                  { name: 'Access Methods', free: 'Web + local extension', pro: 'Web + API + local extension', ent: 'Web + API + badge' },
+                  { name: 'Headless REST API', free: 'Local only', pro: '1,000 req/mo', ent: 'Custom' },
+                  { name: 'Webhook Callbacks', free: 'No', pro: 'Yes', ent: 'Yes' },
+                  { name: 'Storage Engine', free: 'Local browser or JSON fallback', pro: 'Upstash-backed reports', ent: 'Dedicated retention policy' },
                   { name: 'Audit History', free: '7 Days', pro: '30 Days', ent: 'Unlimited' },
-                  { name: 'Human-in-the-loop', free: '❌', pro: '✅', ent: '✅' },
+                  { name: 'Bulk verification', free: 'No', pro: 'Limited', ent: 'Custom' },
                   { name: 'Compliance Exports', free: 'JSON only', pro: 'JSON + PDF', ent: 'PDF + CSV + Certificate' },
                 ].map((row) => (
                   <tr key={row.name} className="hover:bg-background/30 transition-colors">
@@ -196,11 +196,11 @@ export default function PricingPage() {
               },
               {
                 q: "Is my data stored on your servers?",
-                a: "In the Self-Hosted/BYOK tier, all investigation data stays in your browser's local storage (IndexedDB). For Pro and Enterprise users, we use Upstash Redis for global sync, but we enforce a strict data retention policy (30 days by default)."
+                a: "Demo checks can run without an account. Reports may be saved for history or share links. Managed deployments use Redis-backed storage with a default 30-day retention policy."
               },
               {
                 q: "Can I use the API for free?",
-                a: "Yes! If you run HireProof locally (self-hosted), the /api/v1 endpoints are available to your local scripts. The Developer Pro tier provides a managed, high-availability API endpoint hosted by us."
+                a: "Yes. If you run HireProof locally, the /api/v1 endpoints are available to your scripts. The Developer Pro tier provides managed API access for hosted automation."
               },
               {
                 q: "How does HireProof assess suspicious posts?",
@@ -221,10 +221,10 @@ export default function PricingPage() {
             <div className="flex-1 space-y-6">
               <h2 className="text-3xl font-black">Infrastructure Integrity</h2>
               <p className="font-medium leading-relaxed text-muted">
-                Our core architecture is designed to be completely Serverless and Edge-compatible. When you bring your own keys, your requests are processed directly from your local client to the LLMs.
+                HireProof is designed for portable deployment: hosted on Vercel for the public demo, self-hostable with Docker, and usable locally with your own model and search credentials.
               </p>
               <p className="font-medium leading-relaxed text-muted">
-                Because we utilize a <strong>Hybrid Database Architecture</strong>, HireProof gracefully degrades to local storage if our Upstash Redis instance is disconnected. This ensure 100% uptime for safety-critical investigations.
+                The app uses a <strong>Hybrid Database Architecture</strong>: Redis-backed persistence when configured, with local fallbacks for development and demo mode. Seeded demos keep the judging flow reliable even if live providers are slow.
               </p>
             </div>
             <div className="flex flex-1 flex-col gap-4 sm:flex-row">
