@@ -7,8 +7,8 @@ This file keeps the judge-facing proof artifacts in one place. It intentionally 
 ## Production URL
 
 - Stable demo: `https://hireproof-sigma.vercel.app`
-- Latest production deployment checked in this pass: `https://hireproof-rcl83qwoo-iron-marks-projects.vercel.app`
-- Vercel inspector: `https://vercel.com/iron-marks-projects/hireproof/8rcX1EPKySBDtPTFBCtUS8cEEFaL`
+- Latest production deployment checked in this pass: `https://hireproof-2ka3peb8q-iron-marks-projects.vercel.app`
+- Vercel inspector: `https://vercel.com/iron-marks-projects/hireproof/2LA8q5x18qKfiqXLp17gFgzdaUta`
 
 ## Readiness Proof
 
@@ -26,6 +26,15 @@ Production `GET /api/health` returned:
 - Model configured: `true`
 - AI Gateway provider: `true`
 
+Production `POST /api/v1/audit` with the public demo key returned:
+
+- Verdict: `high-risk`
+- Risk score: `92`
+- Mode: `demo`
+- Source: `api`
+
+Production `POST /api/audit` returned an SSE result event containing the High-Risk demo report.
+
 ## ChatSDK Slack Proof
 
 - Proof type: real Slack mention to `@HireProof`
@@ -33,6 +42,7 @@ Production `GET /api/health` returned:
 - Screenshot: [`Screenshot 2026-04-30 024756.jpg`](Screenshot%202026-04-30%20024756.jpg)
 - Public webhook route: `POST /api/webhooks/slack`
 - Local formatted-reply route for demos: `POST /api/chat/hireproof`
+- Log archive status: recent Vercel searches for `/api/webhooks/slack` and `Slack` returned no matching archived logs for the original screenshot event. Keep the screenshot as the proof artifact unless a fresh Slack mention is captured.
 
 Use this claim in the submission:
 
@@ -79,4 +89,5 @@ Do not claim a completed durable report callback unless a callback result is cap
 $base='https://hireproof-sigma.vercel.app'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
 ```

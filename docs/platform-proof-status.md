@@ -4,7 +4,7 @@ Last checked: 2026-04-30
 
 ## Summary
 
-Option C is closed for production credential/readiness proof, WDK accepted-run proof, and Slack screenshot proof.
+Option C is closed for production credential/readiness proof, WDK accepted-run proof, Slack screenshot proof, and production audit API smoke proof.
 
 - Vercel Production has `WORKFLOW_SECRET`, `HIREPROOF_MODEL`, Redis REST storage, `REDIS_URL`, Slack credentials, AI Gateway credentials, `MODEL_PROVIDER_KEY`, and `SERPAPI_API_KEY` configured.
 - Production is served through the stable alias `https://hireproof-sigma.vercel.app`.
@@ -15,6 +15,8 @@ Option C is closed for production credential/readiness proof, WDK accepted-run p
 - Local ChatSDK reply proof passed through `/api/chat/hireproof` and returned a formatted HireProof verdict plus report link.
 - Local platform readiness passed for Workflow and AI Gateway with the local proof environment.
 - Slack screenshot proof is captured at `docs/demo/Screenshot 2026-04-30 024756.jpg`. Archive endpoint logs if judge-level proof beyond the screenshot is needed.
+- Production audit API smoke passed after the Redis env hardening fix: `POST /api/v1/audit` returned a High-Risk demo report with score `92`.
+- Vercel 500-log check after the final smoke returned no new logs.
 
 ## Vercel Environment State
 
@@ -33,7 +35,7 @@ Configured in Production:
 
 Still useful for full live Option C:
 
-- Archived request logs for the captured Slack event.
+- A fresh Slack event log capture if judges require endpoint-level proof beyond the existing screenshot. Recent Vercel log searches did not return the original Slack webhook request.
 
 ## Production Proof Results
 
@@ -55,6 +57,17 @@ Production route checks were run against `https://hireproof-sigma.vercel.app`.
 - Model: `true`
 - AI Gateway: `true`
 - OpenAI-compatible fallback: `true`
+
+### Audit API
+
+`POST /api/v1/audit` with the public demo key returned:
+
+- Verdict: `high-risk`
+- Risk score: `92`
+- Mode: `demo`
+- Source: `api`
+
+`POST /api/audit` returned an SSE result event containing the High-Risk demo report.
 
 ### WDK
 
@@ -122,7 +135,7 @@ The current working tree passed:
 
 ## Production Proof Follow-Up
 
-1. Archive Slack/Vercel request logs for the captured Slack mention.
+1. Capture a fresh Slack/Vercel request log only if endpoint-level Slack proof is required beyond the screenshot.
 2. Re-run production smoke checks before the final submission:
 
 ```powershell

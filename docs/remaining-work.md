@@ -1,72 +1,53 @@
-# HireProof Remaining Work
+# HireProof Current Status
 
 Last checked: 2026-04-30
 
-The runtime wiring pass is now in place. The remaining items below are the real follow-through work that is still not finished, plus a few docs/hardening items that should be kept honest in the repo.
+HireProof is demo-ready on the stable production URL:
 
-## Verified Runtime Wiring
+- Production URL: `https://hireproof-sigma.vercel.app`
+- Latest verified production deployment: `https://hireproof-2ka3peb8q-iron-marks-projects.vercel.app`
+- Latest checkpoint commit: `0a2698b` (`fix(runtime): stabilize production audit checkpoint`)
 
-- `explore` now reads from the intelligence reports path used by the API.
-- `trends` now maps the stored report shape into the UI sections it renders.
-- Missing-user auth now uses a valid dummy `scrypt` hash path.
-- `/lab` now streams real `/api/audit` SSE events instead of timed fake telemetry.
+## Closed Runtime Work
+
+- `explore` reads from the intelligence reports path used by the API.
+- `trends` maps the stored report shape into the UI sections it renders.
+- Missing-user auth uses a valid dummy `scrypt` hash path.
+- `/lab` streams real `/api/audit` SSE events instead of timed fake telemetry.
 - ChatSDK package wiring exists for Slack mentions and subscribed messages.
 - WDK package wiring exists for `startAuditWorkflow` through `/api/workflows/audit`.
+- BYOK settings are relabelled as local verification only and do not imply hosted audits use browser-stored keys.
+- Webhook sandbox payloads use the same `buildHireProofWebhookHeaders` HMAC helper as production webhooks.
+- Verified badge flow has account-level domains, DNS TXT ownership checks, public embed tokens, status/script endpoints, and developer portal controls.
+- Production audit failures from whitespace-padded Redis env values are fixed by trimming Redis env values before client creation.
+- Audit and ChatSDK responses no longer fail solely because report persistence has a transient storage issue.
 
-## P1 - Product Wiring Still Incomplete
+## Production Proof
 
-- **BYOK settings are verified locally but do not power hosted audits**
-  - Closed by relabelled as local verification only in the developer panel.
-  - Current UI stores OpenAI/SerpApi keys in `localStorage` and verifies connectivity through `/api/developer/verify-infrastructure`.
-  - Current server audits intentionally use server environment keys.
-  - Acceptance: the UI no longer implies browser-provided keys power hosted server audits.
+- `GET /api/health` returns `status: ok`, Redis storage, live search, model, AI Gateway, and OpenAI-compatible fallback ready.
+- `GET /api/integrations/proof` returns `status: ready` for Slack, Workflow, and AI Gateway.
+- `POST /api/v1/audit` with the public demo key returns a High-Risk demo report with score `92`.
+- `POST /api/audit` SSE returns a result event for the High-Risk demo.
+- `POST /api/chat/hireproof` returns a formatted ChatSDK verdict.
+- Vercel production 500-log check after the final smoke returned no new logs.
 
-- **Webhook sandbox sends production-parity signed payloads**
-  - Closed by sharing the same `buildHireProofWebhookHeaders` HMAC helper between `/api/v1/audit` and `/api/developer/webhook-test`.
-  - Sandbox response includes exact headers/body preview.
-  - Acceptance: receivers can validate sandbox and production signatures with the same header shape.
+## Honest Boundaries
 
-The April 30 E2E pass closed items 3-4 from the previous list:
+- Slack proof is represented by the captured screenshot at [`docs/demo/Screenshot 2026-04-30 024756.jpg`](demo/Screenshot%202026-04-30%20024756.jpg). Recent Vercel log searches for the original Slack webhook request returned no matching archived logs, so do not claim endpoint-level Slack logs unless a fresh Slack event is captured.
+- WDK proof is an accepted production workflow run, not a completed callback result. Use run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
+- The Chrome extension is local-install only; no public store listing is claimed.
+- Docker remains a future packaging item.
 
-- Verified badge now has account-level domain records, DNS TXT ownership checks, public embed tokens, `/api/verified-badge/status`, `/api/verified-badge/script`, and developer portal controls.
-- ChatSDK/WDK proof now has `/api/integrations/proof`, which reports credential-aware E2E status for Slack, Workflow, and AI Gateway.
-- ChatSDK Slack proof has screenshot evidence in production. A real Slack mention returned a High-Risk HireProof verdict with evidence. Screenshot: [`docs/demo/Screenshot 2026-04-30 024756.jpg`](demo/Screenshot%202026-04-30%20024756.jpg).
-- WDK proof is complete in production. `/api/workflows/audit` accepted a deployed workflow run and returned `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
+## Final Submission Checklist
 
-External proof still pending:
-
-- Archive request logs for the Slack event if a judge asks for endpoint-level proof beyond the screenshot.
-
-## P2 - Polish, Docs, and Hardening
-
-The April 30 polish pass closed the previously open P2 cleanup items:
-
-- Chrome extension docs now only claim local install from `/extension` until a real store listing exists.
-- The legal abuse mailto helper reads lowercase schema keys such as `company` and `role`.
-- The trends page now exports a clearly labeled JSON file instead of implying PDF output.
-- Local JSON maintenance now has a `npm run cleanup:local-data` command that prunes reports and usage records.
-
-## Verification Checklist
-
-Before closing this punch list, run:
+Run these immediately before submitting:
 
 ```powershell
-node --test test/auth-core.test.mjs
-node --test test/runtime-wiring.test.mjs
-node --test test/polish-hardening.test.mjs
 npm run lint
 npm run build
-```
 
-Then smoke test:
-
-```powershell
-$base='http://localhost:3002'
-$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-Invoke-RestMethod -Uri "$base/api/auth/register" -Method Post -ContentType 'application/json' -Body (@{email='smoke@example.test'; password='Password123!'; name='Smoke'} | ConvertTo-Json) -WebSession $session
-$key = Invoke-RestMethod -Uri "$base/api/developer/keys" -Method Post -ContentType 'application/json' -Body (@{name='Smoke Key'} | ConvertTo-Json) -WebSession $session
-Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'=$key.rawKey} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
-Invoke-RestMethod -Uri "$base/api/intelligence/reports" -Method Get
-Invoke-RestMethod -Uri "$base/api/intelligence/trends" -Method Get
-Invoke-RestMethod -Uri "$base/api/integrations/proof" -Method Get
+$base='https://hireproof-sigma.vercel.app'
+Invoke-RestMethod -Uri "$base/api/health"
+Invoke-RestMethod -Uri "$base/api/integrations/proof"
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
 ```
