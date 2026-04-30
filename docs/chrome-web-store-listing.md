@@ -44,10 +44,16 @@ Expected result: High Risk verdict with a visible risk score and red flags.
 
 ## Screenshot Checklist
 
-- Popup idle state with server URL and API key fields.
-- Popup result state after the sample high-risk scan.
-- Context menu entry on selected job text.
-- Supported job listing page with the HireProof scan control visible.
+- `docs/chrome-web-store-assets/screenshot-01-popup-idle-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-02-popup-result-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-03-supported-job-page-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-04-context-menu-1280x800.png`
+
+Chrome's image guidance allows 1280x800 screenshots or 640x400 when the larger size is not suitable. The repository assets use 1280x800 for sharp listing previews.
+
+## Promotional Image
+
+- `docs/chrome-web-store-assets/promo-small-440x280.png`
 
 ## Publication Boundary
 

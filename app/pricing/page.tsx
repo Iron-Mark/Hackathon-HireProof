@@ -163,7 +163,7 @@ export default function PricingPage() {
               <tbody className="divide-y divide-border-soft">
                 {[
                   { name: 'Investigation Engine', free: 'Unlimited (BYOK)', pro: 'Unlimited', ent: 'Unlimited' },
-                  { name: 'Access Methods', free: 'Web + packaged extension', pro: 'Web + API + packaged extension', ent: 'Full suite after setup' },
+                  { name: 'Access Methods', free: 'Web + local extension', pro: 'Web + API + local extension', ent: 'Full suite after setup' },
                   { name: 'Headless REST API', free: 'Local Only', pro: '1,000 req/mo', ent: 'Custom' },
                   { name: 'Webhook Callbacks', free: '❌', pro: '✅', ent: '✅' },
                   { name: 'Storage Engine', free: 'Local IndexedDB', pro: 'Upstash Global', ent: 'Dedicated Redis' },

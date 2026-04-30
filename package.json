@@ -14,6 +14,7 @@
     "cleanup:local-data": "node scripts/cleanup-local-data.mjs",
     "icons:extension": "node scripts/generate-extension-icons.mjs",
     "package:extension": "node scripts/package-extension.mjs",
+    "store:assets": "node scripts/generate-chrome-store-assets.mjs",
     "docker:build": "docker build -t hireproof:local .",
     "docker:run": "docker run --rm -p 3002:3002 --env APP_BASE_URL=http://localhost:3002 --env AGENT_API_KEY=hireproof_agent_demo_key hireproof:local",
     "docker:smoke": "node scripts/smoke-docker.mjs",
@@ -70,6 +71,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.5.0",
+    "playwright": "^1.59.1",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4"
   }

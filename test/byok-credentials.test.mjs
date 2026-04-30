@@ -36,6 +36,49 @@ test('developer portal does not persist hosted provider secrets to localStorage'
   assert.match(source, /\/api\/developer\/provider-credentials/)
 })
 
+test('byok credential mutation routes enforce same-origin csrf headers', async () => {
+  const source = await import('node:fs/promises').then((fs) =>
+    fs.readFile(new URL('../app/api/developer/provider-credentials/route.ts', import.meta.url), 'utf8')
+  )
+
+  assert.match(source, /validateMutationOrigin/)
+  assert.match(source, /request\.headers\.get\('origin'\)/)
+  assert.match(source, /request\.headers\.get\('referer'\)/)
+  assert.match(source, /new URL\(request\.url\)\.origin/)
+  assert.match(source, /CSRF validation failed/)
+  assert.match(source, /export async function PATCH\(request: Request\)/)
+  assert.match(source, /export async function DELETE\(request: Request\)/)
+})
+
+test('byok credential routes rate-limit save attempts and keep verification errors generic', async () => {
+  const fs = await import('node:fs/promises')
+  const route = await fs.readFile(new URL('../app/api/developer/provider-credentials/route.ts', import.meta.url), 'utf8')
+  const verifier = await fs.readFile(new URL('../lib/provider-verification.ts', import.meta.url), 'utf8')
+
+  assert.match(route, /checkRateLimit/)
+  assert.match(route, /byok_provider_credentials/)
+  assert.match(route, /Rate limit exceeded/)
+  assert.match(route, /Provider key could not be verified\./)
+  assert.doesNotMatch(route, /verification\.error/)
+  assert.match(verifier, /Invalid provider key\./)
+  assert.doesNotMatch(verifier, /json\.error\?\.message/)
+})
+
+test('byok credential APIs expose only redacted owner-scoped records', async () => {
+  const fs = await import('node:fs/promises')
+  const authStore = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+  const route = await fs.readFile(new URL('../app/api/developer/provider-credentials/route.ts', import.meta.url), 'utf8')
+
+  assert.match(authStore, /function redactProviderCredential/)
+  assert.match(authStore, /lastFour/)
+  assert.doesNotMatch(authStore.match(/function redactProviderCredential[\s\S]*?}\n}/)?.[0] || '', /encryptedSecret/)
+  assert.match(authStore, /credential\.ownerId === ownerId && !credential\.revokedAt/)
+  assert.match(authStore, /revokeProviderCredential\(ownerId: string/)
+  assert.match(route, /credentials: await listProviderCredentials\(user\.id\)/)
+  assert.match(route, /saveProviderCredential\(user\.id, provider, key\)/)
+  assert.match(route, /revokeProviderCredential\(user\.id, provider\)/)
+})
+
 test('authenticated audit and mcp routes load owner byok credentials', async () => {
   const fs = await import('node:fs/promises')
   const v1AuditRoute = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')

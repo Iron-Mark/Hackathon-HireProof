@@ -11,8 +11,8 @@ export async function verifyProviderCredential(provider: ProviderCredentialKind,
     })
 
     if (res.ok) return { valid: true }
-    const json = await res.json().catch(() => ({}))
-    return { valid: false, error: json.error?.message || 'Invalid OpenAI-compatible key.' }
+    await res.arrayBuffer().catch(() => null)
+    return { valid: false, error: 'Invalid provider key.' }
   }
 
   const url = new URL('https://serpapi.com/search.json')
@@ -22,8 +22,8 @@ export async function verifyProviderCredential(provider: ProviderCredentialKind,
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
   if (res.ok) return { valid: true }
-  const json = await res.json().catch(() => ({}))
-  return { valid: false, error: json.error || 'Invalid SerpApi key.' }
+  await res.arrayBuffer().catch(() => null)
+  return { valid: false, error: 'Invalid provider key.' }
 }
 
 export function normalizeProviderInput(provider: unknown): ProviderCredentialKind | null {

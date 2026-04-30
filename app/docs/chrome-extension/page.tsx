@@ -1,4 +1,4 @@
-import { Puzzle, Zap, ShieldCheck, ArrowRight, Info, MousePointer2 } from 'lucide-react'
+import { Puzzle, Zap, ShieldCheck, Info, MousePointer2 } from 'lucide-react'
 
 export const metadata = { 
   title: 'Chrome Extension — HireProof Docs',
@@ -81,9 +81,9 @@ export default function ChromeExtensionPage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-border-soft bg-surface p-6">
-        <h2 className="text-2xl font-black">Chrome Web Store Package</h2>
+        <h2 className="text-2xl font-black">Local Package</h2>
         <p className="font-medium text-muted leading-relaxed">
-          HireProof now ships a validated Chrome Web Store-ready ZIP at <code className="bg-background px-1 rounded">dist/chrome/hireproof-extension.zip</code>. Public publication still depends on the Chrome Web Store developer account, privacy form, screenshots, and Google review.
+          HireProof now ships a validated browser-extension ZIP at <code className="bg-background px-1 rounded">dist/chrome/hireproof-extension.zip</code>. Public publication still depends on a developer account, privacy form, screenshots, and review.
         </p>
       </section>
     </div>
