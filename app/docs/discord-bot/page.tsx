@@ -13,7 +13,7 @@ export default function DiscordBotPage() {
       <section className="space-y-4">
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">ChatSDK Community Bots</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
-          HireProof routes community checks through the shared ChatSDK adapter surface. Slack has screenshot proof; Discord, Telegram, and WhatsApp remain credential-gated until fresh provider events are captured.
+          HireProof routes community checks through the shared ChatSDK adapter surface. Slack has screenshot proof, Telegram has live delivery proof, Discord is credential-ready pending a real event capture, and WhatsApp/Zernio remains credential-gated.
         </p>
       </section>
 
@@ -58,7 +58,7 @@ const result = await response.json();`}
             <strong className="text-sm font-black uppercase tracking-wider text-safe">Verified Status</strong>
           </div>
           <p className="text-sm font-semibold leading-6 text-muted">
-            The proof page separates Slack screenshot evidence from credential-gated providers so judges can see what is live-tested and what still requires provider credentials.
+            The proof page separates Slack and Telegram evidence from remaining provider boundaries so judges can see what is live-tested and what still needs captures or credentials.
           </p>
         </div>
 

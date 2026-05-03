@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-05-02T17:23:24.584Z",
+  "checkedAt": "2026-05-03T04:34:24.854Z",
   "base": "https://hireproof-sigma.vercel.app",
   "status": "ready",
   "coreStatus": "ready",
@@ -18,22 +18,14 @@
       "missing": []
     },
     "discord": {
-      "state": "credential-gated",
+      "state": "ready",
       "endpoint": "/api/webhooks/discord",
-      "missing": [
-        "DISCORD_BOT_TOKEN",
-        "DISCORD_PUBLIC_KEY",
-        "DISCORD_APPLICATION_ID"
-      ]
+      "missing": []
     },
     "telegram": {
-      "state": "credential-gated",
+      "state": "ready",
       "endpoint": "/api/webhooks/telegram",
-      "missing": [
-        "TELEGRAM_BOT_TOKEN",
-        "TELEGRAM_WEBHOOK_SECRET_TOKEN",
-        "TELEGRAM_BOT_USERNAME"
-      ]
+      "missing": []
     },
     "whatsapp": {
       "state": "credential-gated",
@@ -48,31 +40,31 @@
     "httpStatus": 200,
     "status": "ChatSDK Agents verdict formatted.",
     "platform": "discord",
-    "reportUrl": "https://hireproof-sigma.vercel.app/audit/chat_1777742606344",
+    "reportUrl": "https://hireproof-sigma.vercel.app/audit/chat_1777782865809",
     "verdict": "high-risk",
     "riskScore": 92
   },
   "webhookGetChecks": {
     "discord": {
       "httpStatus": 200,
-      "ready": false,
+      "ready": true,
       "credentialStatus": {
-        "botToken": false,
-        "publicKey": false,
-        "applicationId": false,
+        "botToken": true,
+        "publicKey": true,
+        "applicationId": true,
         "redis": true,
-        "ready": false
+        "ready": true
       }
     },
     "telegram": {
       "httpStatus": 200,
-      "ready": false,
+      "ready": true,
       "credentialStatus": {
-        "botToken": false,
-        "webhookSecretToken": false,
-        "botUsername": false,
+        "botToken": true,
+        "webhookSecretToken": true,
+        "botUsername": true,
         "redis": true,
-        "ready": false
+        "ready": true
       }
     },
     "whatsapp": {

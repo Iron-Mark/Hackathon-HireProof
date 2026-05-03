@@ -1,6 +1,6 @@
 # HireProof Demo Proof Archive
 
-Last checked: 2026-05-01
+Last checked: 2026-05-03
 
 This file keeps the judge-facing proof artifacts in one place. It intentionally avoids secrets, request headers, tokens, and private Slack workspace identifiers.
 
@@ -12,13 +12,13 @@ This file keeps the judge-facing proof artifacts in one place. It intentionally 
 | Web audit live mode | Live-proven | Production `/api/v1/audit` live mode returns a credential-backed High-Risk report. | N/A |
 | Slack ChatSDK | Live-proven | Real Slack mention screenshot plus production Slack route readiness. | Fresh Slack logs unless a new mention is captured. |
 | Vercel Workflow / WDK | Accepted-run proven | Production workflow route returned accepted run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`. | Completed durable callback report. |
-| Discord ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; provider credentials are missing. | Live Discord bot delivery. |
-| Telegram ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; provider credentials are missing. | Live Telegram bot delivery. |
-| WhatsApp/Zernio ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; provider credentials are missing. | Live WhatsApp delivery. |
+| Discord ChatSDK | Credential-ready | Production credentials and webhook readiness pass; shared reply path passes. | Live Discord bot delivery until screenshots/logs are captured. |
+| Telegram ChatSDK | Live delivery proven | Real Telegram message screenshot plus matching production webhook log. | Report-link screenshot until the platform reply base-URL fallback is re-tested live. |
+| WhatsApp/Zernio ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; Zernio credentials are missing. | Live WhatsApp delivery. |
 
 Use this one-line status in public/demo materials:
 
-> HireProof is production-verified for the web audit flow and Slack proof. Discord, Telegram, and WhatsApp/Zernio are implemented behind credential gates and still need live provider event proof.
+> HireProof is production-verified for the web audit flow, Slack proof, and Telegram live delivery proof. Discord real message proof and WhatsApp/Zernio credential setup are still pending.
 
 ## Production URL
 
@@ -74,6 +74,24 @@ Use this claim in the submission:
 
 > ChatSDK is live-tested in Slack with screenshot proof. A real `@HireProof` mention returned a High-Risk job-scam verdict.
 
+## ChatSDK Telegram Proof
+
+- Proof type: real Telegram message to `@HireProof_Bot`
+- Test time: `2026-05-03 12:04:35 +08:00`
+- Result: HireProof returned a High-Risk fake-check job scam verdict with score `92/100`.
+- Screenshot: [`telegram-live-proof-2026-05-03-1204.jpg`](telegram-live-proof-2026-05-03-1204.jpg)
+- Public webhook route: `POST /api/webhooks/telegram`
+- Vercel log ID: `2hsl6-1777781075271-b6a2a1aed71e`
+- Deployment ID: `dpl_6TjhCCdSocm1raRNas7vhJEXCVSy`
+- Domain: `hireproof-sigma.vercel.app`
+- Response: `200`
+- Log evidence: production request reached `/api/webhooks/telegram`, initialized the Telegram adapter for `HireProof_Bot`, and returned HTTP `200`.
+- Report link status: the captured Telegram reply did not include the `/audit/chat_...` link because the platform webhook path needed a base-URL fallback. The fallback is now patched; capture one more Telegram screenshot after deployment to close the report-link proof item.
+
+Use this claim in the submission after the report-link retest is captured:
+
+> Telegram is live-tested with screenshot and Vercel webhook log proof. A real `@HireProof_Bot` message returned a High-Risk fake-check job-scam verdict and a saved report link.
+
 ## Multi-Platform ChatSDK Controlled Check
 
 Latest controlled check artifact:
@@ -86,10 +104,10 @@ Latest controlled check artifact:
 Result:
 
 - Core status: `ready` when Slack, Workflow, and AI Gateway are ready.
-- Optional platform status: `credential-gated` until Discord, Telegram, and WhatsApp/Zernio provider credentials are added.
+- Optional platform status: `credential-gated` because WhatsApp/Zernio provider credentials are still missing.
 - Slack: `ready`
-- Discord: `credential-gated`
-- Telegram: `credential-gated`
+- Discord: `ready`
+- Telegram: `ready`
 - WhatsApp/Zernio: `credential-gated`
 - Production health: `ok`
 - Shared ChatSDK reply path: returned `200`, verdict `high-risk`
@@ -97,37 +115,35 @@ Result:
 
 Missing production provider credentials:
 
-- Discord: `DISCORD_BOT_TOKEN`, `DISCORD_PUBLIC_KEY`, `DISCORD_APPLICATION_ID`
-- Telegram: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `TELEGRAM_BOT_USERNAME`
 - WhatsApp/Zernio: `ZERNIO_API_KEY`, `ZERNIO_WEBHOOK_SECRET`
 
-Use this claim until provider credentials and real message screenshots are captured:
+Use this claim until Discord real message screenshots are captured, Telegram report-link proof is re-tested, and WhatsApp/Zernio credentials are added:
 
-> Discord, Telegram, and WhatsApp/Zernio are implemented and production-reachable behind credential gates. The shared ChatSDK reply path is production-verified, but external provider event delivery is still pending live credentials and real message captures.
+> Telegram live delivery is screenshot/log-proven. Discord is production credential-ready and webhook-configured, but still needs real message screenshots and matching logs. WhatsApp/Zernio remains credential-gated.
 
 Strict live platform proof status:
 
 - Command: `npm run proof:chat-live:strict`
-- Latest result: failed as expected because Discord, Telegram, and WhatsApp/Zernio have no production provider credentials yet.
-- Honest status: implemented, build-verified, and production-reachable; not end-to-end live-proven on those external platforms.
+- Latest result: not passing yet because WhatsApp/Zernio remains credential-gated, Discord real event evidence is still pending, and Telegram still needs a report-link retest screenshot.
+- Honest status: Telegram live delivery is proven by screenshot/log; Discord is credential-ready; WhatsApp/Zernio is credential-gated.
 
 ## Live Platform Proof Runbook
 
-Run this only after the missing provider credentials are added to production.
+Run this for Discord and Telegram now; run the WhatsApp/Zernio steps only after Zernio credentials are added to production.
 
 1. Deploy the latest `main` build to production.
 2. Confirm `https://hireproof-sigma.vercel.app/api/health` returns `ok`.
-3. Add the Discord app credentials in Vercel production env.
+3. Confirm the Discord app credentials in Vercel production env.
 4. Send one real Discord message or interaction to the bot.
 5. Capture the Discord client screenshot and the matching production webhook log.
-6. Add the Telegram bot credentials in Vercel production env.
+6. Confirm the Telegram bot credentials in Vercel production env.
 7. Send one real Telegram message to the bot.
 8. Capture the Telegram client screenshot and the matching production webhook log.
 9. Add the WhatsApp/Zernio credentials in Vercel production env.
 10. Send one real WhatsApp/Zernio event.
 11. Capture the WhatsApp/Zernio client screenshot and the matching production webhook log.
 12. Run `npm run proof:chat-live`.
-13. Run `npm run proof:chat-live:strict`.
+13. Run `npm run proof:chat-live:strict` after all three providers have credentials and event proof.
 14. Update this archive with the new screenshots, log IDs, deployment ID, and strict proof result.
 
 Pass criteria:
@@ -185,10 +201,10 @@ Do not claim a completed durable report callback unless a callback result is cap
 - [x] `npm run build` passes before final submission.
 - [ ] Chrome extension ZIP/listing assets are available if extension packaging is mentioned.
 - [ ] Real Discord message/event is sent and captured with webhook logs/screenshots.
-- [ ] Real Telegram message/event is sent and captured with webhook logs/screenshots.
+- [x] Real Telegram message/event is sent and captured with webhook logs/screenshots.
 - [ ] Real WhatsApp/Zernio message/event is sent and captured with webhook logs/screenshots.
 - [ ] `npm run proof:chat-live:strict` passes after Discord/Telegram/WhatsApp credentials and live event proof exist.
-- [ ] Final copy avoids claiming live Discord, Telegram, or WhatsApp proof before real platform captures exist.
+- [ ] Final copy avoids claiming live Discord or WhatsApp proof before real platform captures exist, and avoids claiming Telegram report-link proof until the follow-up screenshot includes the link.
 
 ## Demo Failure Backup
 
@@ -196,15 +212,18 @@ Do not claim a completed durable report callback unless a callback result is cap
 - If the live audit stream stalls, open a saved `/audit/chat_...` or previous High-Risk report link.
 - If Slack cannot be shown live, use the archived Slack screenshot proof.
 - If WDK cannot be re-run, cite the production accepted run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
-- If Discord, Telegram, or WhatsApp credentials are unavailable, use the exact phrase: "implemented and credential-gated, not live-proven yet."
+- If Discord screenshots/logs are unavailable, use the exact phrase: "credential-ready, not live-proven yet."
+- If Telegram report-link proof is unavailable, use the exact phrase: "live delivery proven, report link retest pending."
+- If WhatsApp credentials are unavailable, use the exact phrase: "implemented and credential-gated, not live-proven yet."
 
 ## Claim Language
 
 Use these claims:
 
-- Live-proven: production web audit flow, public API smoke, Slack screenshot proof, and WDK accepted run.
+- Live-proven: production web audit flow, public API smoke, Slack screenshot proof, Telegram delivery proof, and WDK accepted run.
 - Build-verified: multi-platform ChatSDK routes, Chrome extension packaging, BYOK route hardening, and export paths.
-- Credential-gated: Discord, Telegram, and WhatsApp/Zernio until real provider events are captured.
+- Credential-ready: Discord until a real provider event is captured.
+- Credential-gated: WhatsApp/Zernio until Zernio credentials and real provider events are captured.
 
 Avoid these claims until evidence exists:
 

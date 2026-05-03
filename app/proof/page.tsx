@@ -43,8 +43,8 @@ const readyProof = [
     brandIcon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/slack.svg',
     brandName: 'Slack',
     title: 'ChatSDK Slack',
-    status: 'Slack screenshot proof',
-    body: 'Slack has screenshot proof through the ChatSDK surface. Other chat providers remain credential-gated until live events are captured.',
+    status: 'Slack + Telegram proof',
+    body: 'Slack has screenshot proof. Telegram now has live delivery screenshot and webhook log proof; Discord is credential-ready but still needs a real event capture.',
     href: '/docs/triple-track-coverage',
   },
   {
@@ -80,10 +80,10 @@ const packagedSurfaces = [
 ]
 
 const gatedSurfaces = [
-  { brandIcon: 'https://cdn.simpleicons.org/discord/5865F2', brandName: 'Discord', brandColor: '#5865F2', text: 'Discord ChatSDK delivery is implemented but credential-gated until a real provider event is captured.' },
-  { brandIcon: 'https://cdn.simpleicons.org/telegram/26A5E4', brandName: 'Telegram', brandColor: '#26A5E4', text: 'Telegram ChatSDK delivery is implemented but credential-gated until a real provider event is captured.' },
-  { brandIcon: 'https://cdn.simpleicons.org/whatsapp/25D366', brandName: 'WhatsApp', brandColor: '#25D366', text: 'WhatsApp/Zernio delivery is implemented but credential-gated until a real provider event is captured.' },
-  { brandIcon: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Google_Chrome_Web_Store_icon_2022.svg', brandName: 'Chrome Web Store', brandColor: '#4285F4', text: 'Chrome Web Store publication still requires developer-account submission and Google review.' },
+  { brandIcon: 'https://cdn.simpleicons.org/discord/5865F2', brandName: 'Discord', brandColor: '#5865F2', status: 'Credential-ready', text: 'Discord ChatSDK delivery is configured and webhook-ready, but not claimed as live until a real Discord event is captured.' },
+  { brandIcon: 'https://cdn.simpleicons.org/telegram/26A5E4', brandName: 'Telegram', brandColor: '#26A5E4', status: 'Live delivery proven', text: 'Telegram ChatSDK delivery has a real message screenshot and matching Vercel webhook log; one follow-up screenshot should capture the full report link.' },
+  { brandIcon: 'https://cdn.simpleicons.org/whatsapp/25D366', brandName: 'WhatsApp', brandColor: '#25D366', status: 'Credential-gated', text: 'WhatsApp/Zernio delivery is implemented but credential-gated until Zernio credentials and a real provider event are captured.' },
+  { brandIcon: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Google_Chrome_Web_Store_icon_2022.svg', brandName: 'Chrome Web Store', brandColor: '#4285F4', status: 'Store review pending', text: 'Chrome Web Store publication still requires developer-account submission and Google review.' },
 ]
 
 function BrandIcon({
@@ -222,9 +222,9 @@ export default function ProofPage() {
           <div className="rounded-2xl border border-caution-bg bg-caution-bg/40 p-6">
             <div className="mb-4 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-caution-text" />
-              <h2 className="text-xl font-black">Credential-gated, not live proof</h2>
+              <h2 className="text-xl font-black">Remaining proof boundaries</h2>
             </div>
-            <p className="mb-4 text-sm font-semibold leading-6 text-muted">Core production proof is ready; these optional provider expansions are not claimed as live until real provider events and screenshots are captured.</p>
+            <p className="mb-4 text-sm font-semibold leading-6 text-muted">Core production proof is ready. Telegram delivery is captured; Discord and WhatsApp still need the remaining provider evidence below.</p>
             <ul className="space-y-3">
               {gatedSurfaces.map((item) => (
                 <li key={item.text} className="flex gap-3 rounded-xl border border-caution-bg bg-background/40 p-3 text-sm font-semibold leading-6 text-muted">
@@ -236,7 +236,7 @@ export default function ProofPage() {
                   </span>
                   <span>
                     <span className="mb-1 inline-flex rounded-full bg-caution-bg px-2 py-0.5 text-[10px] font-black uppercase tracking-normal text-caution-text">
-                      Not claimed as live
+                      {item.status}
                     </span>
                     <span className="block">{item.text}</span>
                   </span>

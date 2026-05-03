@@ -354,9 +354,10 @@ test('history, result, and proof pages keep the audit journey polished', async (
   assert.match(resultScreen, /Next step/)
   assert.match(resultScreen, /data-testid="audit-result-verdict"/)
 
-  assert.match(proofPage, /Credential-gated, not live proof/)
+  assert.match(proofPage, /Remaining proof boundaries/)
   assert.match(proofPage, /brandColor/)
-  assert.match(proofPage, /Not claimed as live/)
+  assert.match(proofPage, /Live delivery proven/)
+  assert.match(proofPage, /Credential-ready/)
   assert.match(proofPage, /Chrome Web Store/)
 
   assert.match(siteHeader, /z-50/)

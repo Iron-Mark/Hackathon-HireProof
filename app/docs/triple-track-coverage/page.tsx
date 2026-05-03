@@ -16,9 +16,9 @@ const tracks = [
   },
   {
     title: 'ChatSDK Agents',
-    status: 'Slack live-tested',
+    status: 'Slack + Telegram live-tested',
     icon: MessageSquare,
-    body: 'The ChatSDK bot wrapper now supports Slack, Discord, Telegram, and WhatsApp via Zernio. Slack has screenshot proof; the other platforms are credential-gated until live events are captured.',
+    body: 'The ChatSDK bot wrapper now supports Slack, Discord, Telegram, and WhatsApp via Zernio. Slack has screenshot proof, Telegram has live delivery proof, Discord is credential-ready pending a real event capture, and WhatsApp/Zernio remains credential-gated.',
   },
   {
     title: 'Vercel Workflow / WDK',
@@ -67,7 +67,7 @@ export default function TripleTrackCoveragePage() {
         <ol className="list-inside list-decimal space-y-2 text-sm font-semibold leading-6 text-muted">
           <li>Start with the working `/audit` flow and show a Safe, Caution, or High-Risk report.</li>
           <li>Show that MCP tools power the evidence checks behind the web app.</li>
-          <li>Show the Slack proof screenshot from `docs/demo/Screenshot 2026-04-30 024756.jpg`, then show the Discord, Telegram, and WhatsApp/Zernio webhook readiness in `/api/integrations/proof`.</li>
+          <li>Show the Slack proof screenshot, the Telegram delivery screenshot, then show Discord, Telegram, and WhatsApp/Zernio readiness in `/api/integrations/proof`.</li>
           <li>Use `/api/workflows/audit` to show the WDK workflow handoff and accepted production run ID.</li>
         </ol>
       </section>
@@ -75,7 +75,7 @@ export default function TripleTrackCoveragePage() {
       <section className="rounded-2xl border border-caution/30 bg-caution/5 p-6">
         <h2 className="text-2xl font-black">Honest Submission Boundary</h2>
         <p className="mt-3 text-sm font-medium leading-6 text-muted">
-          Submit under the strongest working demo path. ChatSDK is live-tested in Slack with screenshot proof, while Discord, Telegram, and WhatsApp/Zernio are implemented behind credential gates. WDK has an accepted production run ID; frame it as accepted workflow execution unless a completed workflow result is captured.
+          Submit under the strongest working demo path. ChatSDK is live-tested in Slack and Telegram with screenshot/log proof, while Discord still needs a real event capture and WhatsApp/Zernio remains credential-gated. WDK has an accepted production run ID; frame it as accepted workflow execution unless a completed workflow result is captured.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/docs/mcp" className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-black text-background hover:bg-safe">

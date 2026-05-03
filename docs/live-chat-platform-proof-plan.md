@@ -2,18 +2,18 @@
 
 ## Current Status
 
-Discord, Telegram, and WhatsApp/Zernio are implemented and build-verified, but they are not end-to-end live-proven yet.
+Telegram live delivery is proven by screenshot and matching Vercel webhook log. Discord is implemented, build-verified, production credential-ready, and webhook-configured. WhatsApp/Zernio is implemented and build-verified, but still credential-gated.
 
 The next milestone is live platform proof:
 
-1. Deploy the current multi-platform ChatSDK implementation.
-2. Add the platform credentials in production.
-3. Send one real message or event from each platform.
-4. Capture webhook logs and screenshots for evidence.
+1. Send one real Discord message/event to production.
+2. Re-test one real Telegram message after the report-link fallback deployment and capture the reply with `/audit/chat_...`.
+3. Capture webhook logs and screenshots for Discord and the Telegram report-link retest.
+4. Add Zernio credentials if WhatsApp proof is still in scope, then send and capture one real WhatsApp/Zernio event.
 
 Until those steps are complete, the honest status is:
 
-> Implemented and build-verified, not end-to-end live on external chat platforms.
+> Telegram delivery is screenshot/log-proven but still needs a report-link retest screenshot. Discord is credential-ready but still needs real message proof. WhatsApp/Zernio is implemented and credential-gated.
 
 ## Proof Standard
 
@@ -38,7 +38,7 @@ The repo includes a sanitized proof checker for the parts we can verify without 
 npm run proof:chat-live
 ```
 
-This checks production readiness, health, webhook credential gates, and the shared ChatSDK reply path. It writes the latest snapshot to:
+This checks production readiness, health, webhook readiness gates, and the shared ChatSDK reply path. It writes the latest snapshot to:
 
 ```text
 docs/demo/live-chat-proof-check-latest.json
@@ -56,15 +56,15 @@ Strict mode writes its own latest snapshot:
 docs/demo/live-chat-proof-check-strict-latest.json
 ```
 
-Expected current result before external provider setup:
+Expected current result now:
 
 - Slack: `ready`
-- Discord: `credential-gated`
-- Telegram: `credential-gated`
+- Discord: `ready`
+- Telegram: `ready`
 - WhatsApp/Zernio: `credential-gated`
 - Shared chat reply path: `200` with a saved `/audit/chat_...` report URL
 
-The controlled command fails if production health, readiness shape, webhook metadata routes, or the shared reply path regress. The strict command additionally fails while any of Discord, Telegram, or WhatsApp/Zernio remain credential-gated.
+The controlled command fails if production health, readiness shape, webhook metadata routes, or the shared reply path regress. The strict command additionally fails while any of Discord, Telegram, or WhatsApp/Zernio remain credential-gated; it does not replace screenshot/log capture for real event proof.
 
 ### 1. Confirm Deployment Target
 
@@ -100,8 +100,8 @@ Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proo
 
 Expected before live proof:
 
-- Discord changes from `credential-gated` to `ready` after Discord envs are added.
-- Telegram changes from `credential-gated` to `ready` after Telegram envs are added.
+- Discord is already `ready`.
+- Telegram is already `ready`.
 - WhatsApp changes from `credential-gated` to `ready` after Zernio envs are added.
 
 ### 3. Capture Evidence Consistently
@@ -141,35 +141,30 @@ APP_BASE_URL=https://hireproof-sigma.vercel.app
 ### Steps
 
 1. Open the Discord Developer Portal.
-2. Create or open the HireProof application.
-3. Add a bot user if one does not already exist.
-4. Copy the bot token into `DISCORD_BOT_TOKEN`.
-5. Copy the application public key into `DISCORD_PUBLIC_KEY`.
-6. Copy the application ID into `DISCORD_APPLICATION_ID`.
-7. Register the interaction or webhook endpoint:
+2. Confirm the HireProof application credentials are still present in Vercel production.
+3. Confirm the interaction endpoint is registered:
 
 ```text
 https://hireproof-sigma.vercel.app/api/webhooks/discord
 ```
 
-8. Deploy or redeploy after setting env vars.
-9. Check readiness:
+4. Check readiness:
 
 ```powershell
 Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
-10. Send a real Discord event to HireProof, preferably from a test server job channel.
-11. Use this message:
+5. Send a real Discord event to HireProof, preferably from a test server job channel.
+6. Use this message:
 
 ```text
 Can you verify this job? Remote frontend intern, PHP 80,000 per week, recruiter only wants Telegram contact and says no interview is needed.
 ```
 
-12. Confirm HireProof replies with a high-risk verdict.
-13. Open the returned `/audit/chat_...` report link.
-14. Capture screenshots and logs.
-15. Update `docs/demo/proof-archive.md` with the Discord proof details.
+7. Confirm HireProof replies with a high-risk verdict.
+8. Open the returned `/audit/chat_...` report link.
+9. Capture screenshots and logs.
+10. Update `docs/demo/proof-archive.md` with the Discord proof details.
 
 ### Pass Criteria
 
@@ -194,11 +189,9 @@ APP_BASE_URL=https://hireproof-sigma.vercel.app
 ### Steps
 
 1. Open BotFather in Telegram.
-2. Create or open the HireProof bot.
-3. Copy the bot token into `TELEGRAM_BOT_TOKEN`.
-4. Set a strong random value for `TELEGRAM_WEBHOOK_SECRET_TOKEN`.
-5. Set `TELEGRAM_BOT_USERNAME` to the bot username without `@`.
-6. Register the production webhook with Telegram:
+2. Confirm the HireProof bot is `@HireProof_Bot`.
+3. Confirm the production env vars are still present in Vercel production.
+4. Confirm the production webhook with Telegram:
 
 ```powershell
 $token = "<TELEGRAM_BOT_TOKEN>"
@@ -207,23 +200,22 @@ $url = "https://hireproof-sigma.vercel.app/api/webhooks/telegram"
 Invoke-WebRequest -Method Post -Uri "https://api.telegram.org/bot$token/setWebhook" -Body @{ url = $url; secret_token = $secret }
 ```
 
-7. Deploy or redeploy after setting env vars.
-8. Check readiness:
+5. Check readiness:
 
 ```powershell
 Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
-9. Send the bot a real Telegram message:
+6. Send the bot a real Telegram message:
 
 ```text
 Please check this offer: frontend intern, PHP 80,000 weekly, no interview, recruiter wants me to move to Telegram only.
 ```
 
-10. Confirm HireProof replies with a high-risk verdict.
-11. Open the returned `/audit/chat_...` report link.
-12. Capture Telegram chat screenshots and Vercel webhook logs.
-13. Update `docs/demo/proof-archive.md` with the Telegram proof details.
+7. Confirm HireProof replies with a high-risk verdict.
+8. Open the returned `/audit/chat_...` report link.
+9. Capture Telegram chat screenshots and Vercel webhook logs.
+10. Update `docs/demo/proof-archive.md` with the Telegram proof details.
 
 ### Pass Criteria
 
@@ -286,18 +278,19 @@ Can HireProof check this? Remote job, huge weekly pay, recruiter refuses email a
 
 ## Final Verification Checklist
 
-- [ ] Production build is deployed.
-- [ ] `REDIS_URL` is configured in production.
-- [ ] Discord credentials are configured.
-- [ ] Telegram credentials are configured.
+- [x] Production build is deployed.
+- [x] `REDIS_URL` is configured in production.
+- [x] Discord credentials are configured.
+- [x] Telegram credentials are configured.
 - [ ] WhatsApp/Zernio credentials are configured.
-- [ ] `/api/integrations/proof` reports Discord as `ready`.
-- [ ] `/api/integrations/proof` reports Telegram as `ready`.
+- [x] `/api/integrations/proof` reports Discord as `ready`.
+- [x] `/api/integrations/proof` reports Telegram as `ready`.
 - [ ] `/api/integrations/proof` reports WhatsApp as `ready`.
 - [ ] Discord real-event screenshot is captured.
-- [ ] Telegram real-event screenshot is captured.
+- [x] Telegram real-event screenshot is captured.
 - [ ] WhatsApp/Zernio real-event screenshot is captured.
-- [ ] Vercel webhook logs are captured for all three platforms.
+- [ ] Vercel webhook logs are captured for Discord and WhatsApp/Zernio.
+- [x] Vercel webhook log is captured for Telegram.
 - [ ] Saved report links are captured for all three platforms.
 - [ ] `docs/demo/proof-archive.md` is updated.
 - [ ] `docs/platform-proof-status.md` is updated from pending to live-proven.
@@ -310,4 +303,4 @@ Use this only after all final checklist items pass:
 
 Until then, use:
 
-> Discord, Telegram, and WhatsApp/Zernio are implemented and build-verified, but live external platform proof is still pending.
+> Telegram delivery is screenshot/log-proven but still needs a report-link retest screenshot. Discord is credential-ready but still needs real message proof. WhatsApp/Zernio is implemented and credential-gated.
