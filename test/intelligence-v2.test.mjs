@@ -332,6 +332,37 @@ test('v2 salary benchmark falls back to seeded country band when live comparable
   assert.ok(report.intelligence.signals.some((signal) => signal.id === 'salary_anomaly'))
 })
 
+test('v2 intelligence explains sparse evidence coverage instead of looking fully verified', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_sparse_coverage',
+    extractedClaims: {
+      company: 'TELUS Digital AI Data Solutions',
+      role: 'Online Data Analyst',
+      salary: 'Not specified',
+      location: 'Remote',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn Easy Apply',
+    },
+    evidence: [
+      {
+        source: 'LinkedIn',
+        type: 'Resolved Job Page',
+        url: 'https://www.linkedin.com/jobs/view/4409014711/',
+        snippet: 'Resolved LinkedIn public job page content: Online Data Analyst TELUS Digital AI Data Solutions Application Process Easy Apply on LinkedIn',
+      },
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.equal(report.intelligence.coverage.company, 'missing')
+  assert.equal(report.intelligence.applyPath.status, 'trusted-board')
+  assert.equal(report.operations?.coverageBackfill?.status, 'degraded')
+  assert.match(report.operations?.coverageBackfill?.message || '', /limited evidence/i)
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'limited_evidence_coverage'))
+})
+
 test('remote recruiter free-mail identity remains risky even with a real company footprint', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({

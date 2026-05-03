@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/layout/site-header'
 import { redirect } from 'next/navigation'
 import { ErrorBoundary } from '@/components/system/error-boundary'
 import type { Metadata } from 'next'
+import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
 
 export const runtime = 'nodejs'
 
@@ -52,17 +53,19 @@ export default async function AuditPermalinkPage({ params }: { params: Promise<{
     redirect('/audit')
   }
 
+  const repaired = repairAuditReportForDisplay(report).report
+
   return (
     <div className="bg-background min-h-screen">
       <SiteHeader />
       <div className="mt-6 mb-2 mx-auto max-w-4xl px-4 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 rounded-md bg-muted/10 px-2.5 py-1 text-xs font-semibold text-muted">
-          Archived Report • {new Date(report.timestamp || Date.now()).toLocaleDateString()}
+          Archived Report • {new Date(repaired.timestamp || Date.now()).toLocaleDateString()}
         </span>
       </div>
       <ErrorBoundary fallbackMessage="Failed to render the archived report.">
         <ResultScreen 
-          result={report} 
+          result={repaired} 
         />
       </ErrorBoundary>
     </div>

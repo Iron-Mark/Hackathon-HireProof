@@ -74,6 +74,7 @@ interface Result {
   }
   operations?: {
     liveSearch?: { status?: string; message?: string; retryAfterSec?: number }
+    coverageBackfill?: { status?: string; message?: string; retryAfterSec?: number }
     salaryBenchmark?: { source?: string; country?: string; currency?: string; message?: string }
     falsePositiveControl?: { profileModeExplanation?: string }
   }
@@ -784,7 +785,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
         )}
 
         <motion.section variants={itemVariants} className="rounded-[2.5rem] border border-border-soft bg-surface p-5 shadow-sm sm:p-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div>
               <div className="mb-6">
                 <h2 className="mb-2 text-2xl font-black">Risk Breakdown</h2>
@@ -864,6 +865,11 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 {result.operations?.liveSearch?.status && result.operations.liveSearch.status !== 'ok' && result.operations.liveSearch.status !== 'not-live' && (
                   <div className="rounded-xl border border-caution/30 bg-caution/10 p-4 text-xs font-bold leading-6 text-caution-text">
                     {result.operations.liveSearch.message}
+                  </div>
+                )}
+                {result.operations?.coverageBackfill?.message && (
+                  <div className="rounded-xl border border-caution/30 bg-caution/10 p-4 text-xs font-bold leading-6 text-caution-text">
+                    {result.operations.coverageBackfill.message}
                   </div>
                 )}
                 {result.operations?.falsePositiveControl?.profileModeExplanation && (

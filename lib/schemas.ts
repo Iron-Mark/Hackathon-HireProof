@@ -98,6 +98,7 @@ export type IntelligenceSummary = z.infer<typeof IntelligenceSummarySchema>
 
 export const AuditOperationsSchema = z.object({
   liveSearch: OperationalStatusSchema.optional(),
+  coverageBackfill: OperationalStatusSchema.optional(),
   salaryBenchmark: z.object({
     source: SalaryBenchmarkSourceSchema,
     country: z.string().max(30).optional(),

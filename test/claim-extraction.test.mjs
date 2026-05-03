@@ -108,6 +108,47 @@ test('recoverObviousClaims strips LinkedIn UI text from company and role claims'
   assert.equal(claims.role, 'Online Data Analyst')
 })
 
+test('recoverObviousClaims upgrades LinkedIn apply paths when resolved page evidence is stronger than pasted chat text', () => {
+  const claims = recoverObviousClaims({
+    text: [
+      'Resolved LinkedIn public job page content:',
+      'Online Data Analyst',
+      'TELUS Digital AI Data Solutions',
+      'Application Process Easy Apply on LinkedIn',
+      'Applicants continue through LinkedIn and normal screening steps.',
+    ].join('\n'),
+    url: 'https://www.linkedin.com/jobs/view/4409014711/',
+  }, {
+    company: 'TELUS Digital AI Data Solutions 35,000 followers Promoted',
+    role: 'At TELUS Digital',
+    salary: 'Not specified',
+    location: 'Remote',
+    contactMethod: 'LinkedIn',
+    applicationPath: 'Direct message',
+  })
+
+  assert.equal(claims.company, 'TELUS Digital AI Data Solutions')
+  assert.equal(claims.role, 'Online Data Analyst')
+  assert.equal(claims.applicationPath, 'LinkedIn Easy Apply')
+})
+
+test('recoverObviousClaims strips common job-board chrome from company names', () => {
+  const claims = recoverObviousClaims({
+    text: 'Senior Data Analyst at Acme Analytics. Apply through official careers.',
+    url: 'https://boards.greenhouse.io/acme/jobs/123',
+  }, {
+    company: 'Acme Analytics 12,341 followers Actively hiring',
+    role: 'Senior Data Analyst',
+    salary: 'Not specified',
+    location: 'Remote',
+    contactMethod: 'Email',
+    applicationPath: 'Not specified',
+  })
+
+  assert.equal(claims.company, 'Acme Analytics')
+  assert.equal(claims.applicationPath, 'Greenhouse job page')
+})
+
 test('enrichJobUrlInput expands LinkedIn collection URLs through the guest job endpoint', async () => {
   let requestedUrl = ''
   const enrichment = await enrichJobUrlInput(

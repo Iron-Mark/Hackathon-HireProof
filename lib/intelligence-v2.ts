@@ -620,20 +620,51 @@ function deriveIntelligence(
   score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
 
   const submittedHost = hostnameFromUrl(mismatchEvidence.find(item => item.url)?.url)
+  const companyCoverage: IntelligenceSummary['coverage']['company'] = officialEvidence.length > 0 ? 'verified' : byType('Company Check').length > 0 ? 'partial' : 'missing'
+  const localCoverage: IntelligenceSummary['coverage']['local'] = verifiedLocalEvidence.length > 0 ? 'verified' : localEvidence.length > 0 ? 'partial' : 'missing'
+  const reputationCoverage: IntelligenceSummary['coverage']['reputation'] = reputationRiskEvidence.length > 0 ? 'risk' : byType('Reputation').length > 0 ? 'clear' : 'missing'
+  const marketCoverage: IntelligenceSummary['coverage']['market'] = salaryAnomalous ? 'anomalous' : comparableEvidence.length > 0 ? 'normal' : 'missing'
   const applyPathStatus: IntelligenceSummary['applyPath']['status'] = mismatchEvidence.length > 0
     ? 'mismatch'
     : /official|careers/i.test(extractedClaims.applicationPath)
       ? 'official'
-      : /linkedin|indeed|jobstreet/i.test(extractedClaims.applicationPath)
+      : /linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath)
         ? 'trusted-board'
         : 'unknown'
+  const missingCoverageCount = [companyCoverage, localCoverage, reputationCoverage, marketCoverage, applyPathStatus]
+    .filter(status => status === 'missing' || status === 'unknown').length
+  const hasNamedCompany = !normalizeText(extractedClaims.company).includes('unknown') && normalizeText(extractedClaims.company).length > 2
+  const coverageBackfill: NonNullable<AuditOperations>['coverageBackfill'] = hasNamedCompany && (evidence.length < 3 || missingCoverageCount >= 3)
+    ? {
+        status: 'degraded',
+        message: 'Limited evidence coverage: HireProof identified the job page, but company identity, reputation, local footprint, or market comparables need more receipts before treating the result as fully verified.',
+      }
+    : undefined
+
+  if (coverageBackfill) {
+    addSignal(signals, {
+      id: 'limited_evidence_coverage',
+      label: 'Evidence coverage is limited',
+      direction: 'neutral',
+      severity: 'medium',
+      weight: 0,
+      evidenceIds: evidence.map(item => item.id || '').filter(Boolean).slice(0, 5),
+      rationale: 'The report has too few independent receipts to present missing dimensions as verified.',
+    })
+    scoreTrace.push({
+      step: 'Evidence coverage',
+      delta: 0,
+      scoreAfter: clampScore(score),
+      reason: 'Sparse coverage is disclosed to the user and treated as a confidence limitation.',
+    })
+  }
 
   return {
     riskScore: clampScore(Math.max(baseScore, score)),
     intelligence: {
       coverage: {
-        company: officialEvidence.length > 0 ? 'verified' : byType('Company Check').length > 0 ? 'partial' : 'missing',
-        local: verifiedLocalEvidence.length > 0 ? 'verified' : localEvidence.length > 0 ? 'partial' : 'missing',
+        company: companyCoverage,
+        local: localCoverage,
         recruiter: recruiterIdentity.status === 'verified' || recruiterIdentity.status === 'domain-match'
           ? 'verified'
           : recruiterIdentity.status === 'risky'
@@ -641,8 +672,8 @@ function deriveIntelligence(
             : recruiterIdentity.status === 'platform-match' || recruiterIdentity.status === 'unverified'
               ? 'partial'
               : 'missing',
-        reputation: reputationRiskEvidence.length > 0 ? 'risk' : byType('Reputation').length > 0 ? 'clear' : 'missing',
-        market: salaryAnomalous ? 'anomalous' : comparableEvidence.length > 0 ? 'normal' : 'missing',
+        reputation: reputationCoverage,
+        market: marketCoverage,
         applyPath: applyPathStatus,
       },
       companyProfileMode,
@@ -677,6 +708,7 @@ function deriveIntelligence(
       scoreTrace,
     },
     operations: {
+      coverageBackfill,
       salaryBenchmark: {
         source: benchmark.source,
         country: benchmark.country,
