@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText, Bot, UserCheck, ShieldCheck, SearchCheck, Table, Camera, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText, Bot, UserCheck, ShieldCheck, SearchCheck, Table, Camera, Eye, EyeOff, ChevronDown, ListTree } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import html2canvas from 'html2canvas'
@@ -92,6 +92,15 @@ type TimelineEvent = string | {
   message?: string
   phase?: string
   label?: string
+  status?: string
+}
+
+type NormalizedTimelineEvent = {
+  step: string
+  detail: string
+  time: string
+  phase?: string
+  status?: string
 }
 
 function sanitizeUrl(url?: string): string | undefined {
@@ -171,7 +180,42 @@ function getEvidenceDisplaySnippet(item: ResultEvidence) {
   return `${getOcrSummary(item)} Preview: ${getOcrPreview(item)}`
 }
 
-function normalizeTimelineEvents(result: Result, timelineEvents: TimelineEvent[]) {
+type EvidenceStatusTone = 'safe' | 'risk' | 'caution' | 'neutral'
+
+function formatEvidenceLabel(value: string) {
+  return String(value || 'Unknown')
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+function formatEvidenceStatus(value?: string) {
+  return String(value || 'unknown').replace(/[_-]+/g, ' ')
+}
+
+function getEvidenceStatusTone(value?: string): EvidenceStatusTone {
+  const normalized = String(value || '').toLowerCase()
+  if (['verified', 'clear', 'normal', 'official', 'matched', 'platform-match'].includes(normalized)) return 'safe'
+  if (['risk', 'risky', 'anomalous', 'mismatch', 'blocked'].includes(normalized)) return 'risk'
+  if (['missing', 'unknown', 'partial', 'not-live', 'sparse'].includes(normalized)) return 'caution'
+  return 'neutral'
+}
+
+function getEvidenceToneClasses(tone: EvidenceStatusTone) {
+  switch (tone) {
+    case 'safe':
+      return 'border-safe/25 bg-safe/10 text-safe-text'
+    case 'risk':
+      return 'border-risk-bg/35 bg-risk-bg/10 text-risk-text'
+    case 'caution':
+      return 'border-caution/30 bg-caution/10 text-caution-text'
+    default:
+      return 'border-border-soft bg-surface-elevated text-muted'
+  }
+}
+
+function normalizeTimelineEvents(result: Result, timelineEvents: TimelineEvent[]): NormalizedTimelineEvent[] {
   const isDemo = result.mode === 'demo' || result.credentialMode === 'demo' || result.source === 'demo'
   const provided = timelineEvents
     .map((event, index) => {
@@ -180,14 +224,16 @@ function normalizeTimelineEvents(result: Result, timelineEvents: TimelineEvent[]
           step: isDemo ? 'Demo fixture' : `Live event ${index + 1}`,
           detail: event,
           time: `Event ${index + 1}`,
-        }
+        } satisfies NormalizedTimelineEvent
       }
 
       return {
         step: event.step || event.label || event.phase || (isDemo ? 'Demo fixture' : `Live event ${index + 1}`),
         detail: event.detail || event.message || 'Audit event recorded.',
         time: event.time || `Event ${index + 1}`,
-      }
+        phase: event.phase,
+        status: event.status,
+      } satisfies NormalizedTimelineEvent
     })
     .filter(event => event.detail.trim().length > 0)
 
@@ -198,6 +244,7 @@ function normalizeTimelineEvents(result: Result, timelineEvents: TimelineEvent[]
       step: 'Demo fixture',
       detail: 'Prebuilt example report loaded. No live source checks, recruiter checks, or fresh job searches were run.',
       time: 'Demo',
+      status: 'complete',
     }]
   }
 
@@ -206,11 +253,13 @@ function normalizeTimelineEvents(result: Result, timelineEvents: TimelineEvent[]
       step: 'Report generated',
       detail: `Review completed with ${result.evidence.length} evidence receipt${result.evidence.length === 1 ? '' : 's'} and ${result.redFlags.length + result.greenFlags.length} scored signal${result.redFlags.length + result.greenFlags.length === 1 ? '' : 's'}.`,
       time: 'Report',
+      status: 'complete',
     },
     {
       step: 'Final verdict',
       detail: `Risk score assigned: ${result.riskScore}/100.`,
       time: 'Verdict',
+      status: 'complete',
     },
   ]
 }
@@ -350,6 +399,25 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
   const [expandedOcr, setExpandedOcr] = useState(false)
   const isDemoReport = result.mode === 'demo' || result.credentialMode === 'demo' || result.source === 'demo'
   const normalizedTimelineEvents = normalizeTimelineEvents(result, timelineEvents)
+  const [expandedTimelineSteps, setExpandedTimelineSteps] = useState<Set<number>>(() => new Set([0, Math.max(0, normalizedTimelineEvents.length - 1)]))
+  const allTimelineExpanded = expandedTimelineSteps.size >= normalizedTimelineEvents.length
+  const toggleTimelineStep = (index: number) => {
+    setExpandedTimelineSteps((current) => {
+      const next = new Set(current)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
+  }
+  const toggleAllTimelineSteps = () => {
+    setExpandedTimelineSteps((current) => {
+      if (current.size >= normalizedTimelineEvents.length) return new Set([0, Math.max(0, normalizedTimelineEvents.length - 1)])
+      return new Set(normalizedTimelineEvents.map((_, index) => index))
+    })
+  }
 
   const [feedbackGiven, setFeedbackGiven] = useState<boolean>(Boolean(result.userFeedback))
   const { resolvedTheme } = useTheme()
@@ -445,6 +513,43 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
     if (typeof amount !== 'number') return 'Not enough data'
     return `${currency ? `${currency} ` : ''}${amount.toLocaleString()} / month`
   }
+  const coverageRows = coverageEntries.map(([key, value]) => ({
+    label: formatEvidenceLabel(key),
+    value: formatEvidenceStatus(value),
+    tone: getEvidenceStatusTone(value),
+  }))
+  const identityRows = [
+    {
+      label: 'Profile Mode',
+      value: formatEvidenceStatus(intelligence?.companyProfileMode || 'legacy'),
+      detail: 'Scoring profile',
+      tone: getEvidenceStatusTone('neutral'),
+    },
+    {
+      label: 'Company Identity',
+      value: formatEvidenceStatus(intelligence?.companyIdentity?.status || 'legacy'),
+      detail: intelligence?.companyIdentity?.officialDomain || 'No official domain linked',
+      tone: getEvidenceStatusTone(intelligence?.companyIdentity?.status),
+    },
+    {
+      label: 'Recruiter Identity',
+      value: formatEvidenceStatus(intelligence?.recruiterIdentity?.status || 'legacy'),
+      detail: intelligence?.recruiterIdentity?.recruiterEmailDomain || 'No recruiter domain linked',
+      tone: getEvidenceStatusTone(intelligence?.recruiterIdentity?.status),
+    },
+    {
+      label: 'Apply Path',
+      value: formatEvidenceStatus(intelligence?.applyPath?.status || 'legacy'),
+      detail: intelligence?.applyPath?.submittedHost || intelligence?.applyPath?.officialHost || 'No apply host linked',
+      tone: getEvidenceStatusTone(intelligence?.applyPath?.status),
+    },
+    {
+      label: 'Market Salary',
+      value: formatEvidenceStatus(intelligence?.marketBenchmark?.status || 'legacy'),
+      detail: formatMoney(intelligence?.marketBenchmark?.claimedMonthlyAmount, intelligence?.marketBenchmark?.currency),
+      tone: getEvidenceStatusTone(intelligence?.marketBenchmark?.status),
+    },
+  ]
 
   const submitFeedback = async (vote: 'helpful' | 'incorrect') => {
     if (feedbackGiven || !result.id) return
@@ -466,7 +571,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
     <div className="min-h-screen bg-background">
       {result.verdict === 'safe' && result.riskScore < 15 && <Confetti />}
       <div className="sticky top-[73px] z-10 border-b border-border-soft bg-background/95 backdrop-blur-sm print:hidden">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           {onBackToAudit ? (
             <button onClick={onBackToAudit} className="hireproof-focus flex items-center gap-2 rounded-lg text-sm font-black hover:text-safe">
               <ArrowLeft className="w-4 h-4" /> Back to Audit
@@ -532,7 +637,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
         </div>
       </div>
 
-      <motion.div variants={containerVariants} initial="hidden" animate="show" ref={contentRef} id="result-content" className="mx-auto max-w-4xl space-y-10 px-4 py-10 relative">
+      <motion.div variants={containerVariants} initial="hidden" animate="show" ref={contentRef} id="result-content" className="relative mx-auto max-w-7xl space-y-10 px-4 py-10 lg:px-6 xl:px-8">
         <motion.section variants={itemVariants} data-testid="audit-result-verdict" className="relative z-10 rounded-2xl border p-6 shadow-sm sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-border-soft bg-surface/50 p-8 shadow-sm backdrop-blur-sm relative overflow-hidden">
             <div className="bot-scan-line opacity-10" />
@@ -678,134 +783,177 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
           </motion.section>
         )}
 
-        <motion.section variants={itemVariants} className="rounded-[2.5rem] border border-border-soft bg-surface p-8 shadow-sm">
-          <div className="mb-8">
-            <h2 className="text-2xl font-black mb-2">Risk Breakdown</h2>
-            <p className="text-sm font-semibold text-muted">How the AI scored each dimension of this opportunity.</p>
-          </div>
-          <RiskRadarChart
-            extractedClaims={result.extractedClaims as any}
-            redFlags={result.redFlags}
-            greenFlags={result.greenFlags}
-            evidence={result.evidence}
-            verdict={result.verdict}
-          />
-        </motion.section>
+        <motion.section variants={itemVariants} className="rounded-[2.5rem] border border-border-soft bg-surface p-5 shadow-sm sm:p-8">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div>
+              <div className="mb-6">
+                <h2 className="mb-2 text-2xl font-black">Risk Breakdown</h2>
+                <p className="text-sm font-semibold text-muted">How the AI scored each dimension of this opportunity.</p>
+              </div>
+              <RiskRadarChart
+                extractedClaims={result.extractedClaims as any}
+                redFlags={result.redFlags}
+                greenFlags={result.greenFlags}
+                evidence={result.evidence}
+                verdict={result.verdict}
+                intelligence={result.intelligence}
+              />
+            </div>
 
-        <motion.section variants={itemVariants} className="overflow-hidden rounded-[2.5rem] border border-border-soft bg-background shadow-2xl relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.05),transparent_50%)]" />
-          <div className="flex flex-col md:flex-row relative z-10">
-            <div className="flex-1 p-8 lg:p-10">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-evidence-bg text-evidence flex items-center justify-center">
-                  <SearchCheck className="h-5 w-5" />
-                </div>
+            <aside className="rounded-[2rem] border border-border-soft bg-background/70 p-5">
+              <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-black">Evidence Coverage</h2>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">V2 intelligence report</p>
+                  <div className="text-[10px] font-black uppercase tracking-[0.24em] text-muted">Score Trace</div>
+                  <div className={`mt-2 text-4xl font-black leading-none tabular-nums ${result.riskScore > 60 ? 'text-risk-text' : result.riskScore > 35 ? 'text-caution-text' : 'text-safe'}`}>
+                    {result.riskScore}<span className="text-lg text-muted">/100</span>
+                  </div>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border-soft bg-surface">
+                  {result.riskScore > 60 ? <AlertTriangle className="h-6 w-6 text-risk-text" /> : <ShieldCheck className="h-6 w-6 text-safe" />}
                 </div>
               </div>
-              <p className="mb-8 text-base font-medium leading-relaxed text-muted">
-                HireProof checks company identity, apply path, local footprint, reputation, and market salary against visible evidence. The verdict is based on these receipts, not hidden model guesses.
-              </p>
-              {result.operations?.liveSearch?.status && result.operations.liveSearch.status !== 'ok' && result.operations.liveSearch.status !== 'not-live' && (
-                <div className="mb-4 rounded-xl border border-caution/30 bg-caution/10 p-4 text-xs font-bold leading-6 text-caution-text">
-                  {result.operations.liveSearch.message}
-                </div>
-              )}
-              {result.operations?.falsePositiveControl?.profileModeExplanation && (
-                <div className="mb-4 rounded-xl border border-safe/25 bg-safe/10 p-4 text-xs font-bold leading-6 text-safe-text">
-                  {result.operations.falsePositiveControl.profileModeExplanation}
-                </div>
-              )}
-              {result.operations?.salaryBenchmark?.message && (
-                <div className="mb-4 rounded-xl border border-border-soft bg-background p-4 text-xs font-bold leading-6 text-muted">
-                  {result.operations.salaryBenchmark.message}
-                </div>
-              )}
-              
-              <div className="grid gap-3 sm:grid-cols-2">
-                {coverageEntries.length > 0 ? coverageEntries.map(([key, value]) => (
-                  <div key={key} className="rounded-xl border border-border-soft bg-surface p-4">
-                    <div className="text-[10px] font-black uppercase tracking-normal text-muted">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
+              <div className="space-y-3">
+                {(intelligence?.scoreTrace || []).slice(-4).map((trace, index) => (
+                  <div key={`${trace.step}-${index}`} className="rounded-xl border border-border-soft bg-surface p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs font-black uppercase tracking-wide text-foreground">{trace.step}</span>
+                      <span className={`rounded-md px-2 py-0.5 text-xs font-black tabular-nums ${trace.delta > 0 ? 'bg-risk-bg/10 text-risk-text' : trace.delta < 0 ? 'bg-safe/10 text-safe-text' : 'bg-background text-muted'}`}>
+                        {trace.delta > 0 ? '+' : ''}{trace.delta}
+                      </span>
                     </div>
-                    <div className={`mt-1 text-sm font-black capitalize ${
-                      value === 'verified' || value === 'clear' || value === 'normal' || value === 'official'
-                        ? 'text-safe-text'
-                        : value === 'risk' || value === 'anomalous' || value === 'mismatch'
-                          ? 'text-risk-text'
-                          : 'text-caution-text'
-                    }`}>
-                      {value.replace('-', ' ')}
-                    </div>
+                    <div className="mt-2 text-xs font-semibold leading-5 text-muted">{trace.reason}</div>
                   </div>
-                )) : (
-                  <div className="rounded-xl border border-border-soft bg-surface p-4 sm:col-span-2">
-                    <div className="text-sm font-bold text-muted">Legacy report: structured v2 coverage was not included in this result.</div>
+                ))}
+                {(intelligence?.scoreTrace || []).length === 0 && (
+                  <div className="rounded-xl border border-border-soft bg-surface p-3 text-sm font-semibold text-muted">
+                    No v2 score trace was included in this result.
+                  </div>
+                )}
+              </div>
+            </aside>
+          </div>
+        </motion.section>
+
+        <motion.section variants={itemVariants} className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-sm">
+          <div className="grid" aria-label="Analyst coverage matrix">
+            <div className="p-5 sm:p-6 lg:p-8">
+              <div className="mb-6 flex flex-col gap-4 border-b border-border-soft pb-5 md:flex-row md:items-start md:justify-between">
+                <div className="flex gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-evidence/25 bg-evidence-bg text-evidence">
+                    <SearchCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-xl font-black">Evidence Coverage</h2>
+                      <span className="rounded-md border border-border-soft bg-surface px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted">
+                        V2 intelligence report
+                      </span>
+                    </div>
+                    <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-muted">
+                      Company identity, apply path, local footprint, reputation, and market salary are checked against visible receipts.
+                    </p>
+                  </div>
+                </div>
+                <div className={`flex min-w-[8rem] items-center justify-between gap-3 rounded-xl border px-4 py-3 ${getEvidenceToneClasses(getEvidenceStatusTone(result.verdict === 'high-risk' ? 'risk' : result.verdict === 'safe' ? 'verified' : 'partial'))}`}>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Risk</span>
+                  <span className="text-2xl font-black tabular-nums">{result.riskScore}</span>
+                </div>
+              </div>
+
+              <div className="mb-5 grid gap-3 md:grid-cols-2">
+                {result.operations?.liveSearch?.status && result.operations.liveSearch.status !== 'ok' && result.operations.liveSearch.status !== 'not-live' && (
+                  <div className="rounded-xl border border-caution/30 bg-caution/10 p-4 text-xs font-bold leading-6 text-caution-text">
+                    {result.operations.liveSearch.message}
+                  </div>
+                )}
+                {result.operations?.falsePositiveControl?.profileModeExplanation && (
+                  <div className="rounded-xl border border-safe/25 bg-safe/10 p-4 text-xs font-bold leading-6 text-safe-text">
+                    {result.operations.falsePositiveControl.profileModeExplanation}
+                  </div>
+                )}
+                {result.operations?.salaryBenchmark?.message && (
+                  <div className="rounded-xl border border-border-soft bg-surface p-4 text-xs font-bold leading-6 text-muted md:col-span-2">
+                    {result.operations.salaryBenchmark.message}
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 grid gap-3 border-t border-border-soft pt-6 sm:grid-cols-4">
-                <div className="rounded-xl border border-border-soft bg-surface p-4">
-                  <div className="text-[10px] font-black uppercase tracking-normal text-muted">Profile Mode</div>
-                  <div className="mt-1 text-sm font-black capitalize">{(intelligence?.companyProfileMode || 'Legacy').replace('_', ' ')}</div>
-                </div>
-                <div className="rounded-xl border border-border-soft bg-surface p-4">
-                  <div className="text-[10px] font-black uppercase tracking-normal text-muted">Company Identity</div>
-                  <div className="mt-1 text-sm font-black capitalize">{intelligence?.companyIdentity.status || 'Legacy'}</div>
-                  {intelligence?.companyIdentity.officialDomain && <div className="mt-1 truncate text-xs font-semibold text-muted">{intelligence.companyIdentity.officialDomain}</div>}
-                </div>
-                <div className="rounded-xl border border-border-soft bg-surface p-4">
-                  <div className="text-[10px] font-black uppercase tracking-normal text-muted">Recruiter Identity</div>
-                  <div className={`mt-1 text-sm font-black capitalize ${intelligence?.recruiterIdentity?.status === 'risky' ? 'text-risk-text' : ''}`}>
-                    {intelligence?.recruiterIdentity?.status || 'Legacy'}
+              {coverageRows.length > 0 ? (
+                <div className="overflow-hidden rounded-xl border border-border-soft">
+                  <div className="grid grid-cols-[minmax(8rem,0.9fr)_minmax(7rem,0.55fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted sm:grid-cols-[minmax(10rem,0.9fr)_minmax(7rem,0.45fr)_minmax(0,1fr)]">
+                    <div>Coverage</div>
+                    <div>Status</div>
+                    <div className="hidden sm:block">Meaning</div>
                   </div>
-                  {intelligence?.recruiterIdentity?.recruiterEmailDomain && <div className="mt-1 truncate text-xs font-semibold text-muted">{intelligence.recruiterIdentity.recruiterEmailDomain}</div>}
+                  {coverageRows.map((row) => (
+                    <div key={row.label} className="grid grid-cols-[minmax(8rem,0.9fr)_minmax(7rem,0.55fr)] items-center gap-3 border-t border-border-soft px-4 py-3 sm:grid-cols-[minmax(10rem,0.9fr)_minmax(7rem,0.45fr)_minmax(0,1fr)]">
+                      <div className="text-sm font-black">{row.label}</div>
+                      <div>
+                        <span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                          {row.value}
+                        </span>
+                      </div>
+                      <div className="hidden text-xs font-semibold leading-5 text-muted sm:block">
+                        {row.tone === 'safe' ? 'Evidence supports this dimension.' : row.tone === 'risk' ? 'This dimension pushed risk upward.' : row.tone === 'caution' ? 'Evidence is incomplete or unresolved.' : 'Recorded for reviewer context.'}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : (
                 <div className="rounded-xl border border-border-soft bg-surface p-4">
-                  <div className="text-[10px] font-black uppercase tracking-normal text-muted">Apply Path</div>
-                  <div className={`mt-1 text-sm font-black capitalize ${intelligence?.applyPath.status === 'mismatch' ? 'text-risk-text' : ''}`}>
-                    {intelligence?.applyPath.status || 'Legacy'}
-                  </div>
-                  {intelligence?.applyPath.submittedHost && <div className="mt-1 truncate text-xs font-semibold text-muted">{intelligence.applyPath.submittedHost}</div>}
+                  <div className="text-sm font-bold text-muted">Legacy report: structured v2 coverage was not included in this result.</div>
                 </div>
-                <div className="rounded-xl border border-border-soft bg-surface p-4 sm:col-span-2">
-                  <div className="text-[10px] font-black uppercase tracking-normal text-muted">Market Salary</div>
-                  <div className={`mt-1 text-sm font-black capitalize ${intelligence?.marketBenchmark.status === 'anomalous' ? 'text-risk-text' : ''}`}>
-                    {intelligence?.marketBenchmark.status || 'Legacy'}
-                  </div>
-                  <div className="mt-1 text-xs font-semibold text-muted">
-                    {formatMoney(intelligence?.marketBenchmark.claimedMonthlyAmount, intelligence?.marketBenchmark.currency)}
-                  </div>
+              )}
+
+              <div className="mt-5 overflow-hidden rounded-xl border border-border-soft">
+                <div className="bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted">Identity and market context</div>
+                <div className="divide-y divide-border-soft">
+                  {identityRows.map((row) => (
+                    <div key={row.label} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(10rem,0.7fr)_minmax(8rem,0.5fr)_minmax(0,1fr)] sm:items-center">
+                      <div className="text-xs font-black uppercase tracking-wide text-muted">{row.label}</div>
+                      <div>
+                        <span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                          {row.value}
+                        </span>
+                      </div>
+                      <div className="truncate text-sm font-semibold text-muted">{row.detail}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-            
-            <div className={`flex w-full flex-col items-center justify-center p-10 md:w-80 relative overflow-hidden border-t md:border-t-0 md:border-l border-border-soft ${result.riskScore > 60 ? 'bg-risk-bg/5' : 'bg-safe/5'}`}>
-              <div className="bot-scan-line opacity-20" />
-              <div className="mb-4 font-mono text-[10px] font-black uppercase tracking-[0.3em] text-muted">Score Trace</div>
-              <div className={`text-center text-3xl font-black leading-tight tracking-tighter ${result.riskScore > 60 ? 'text-risk-text' : 'text-safe'}`}>
-                {result.riskScore}/100
+
+            <aside className="hidden border-t border-border-soft bg-surface p-5 sm:p-6 lg:border-l lg:border-t-0 lg:p-6">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.24em] text-muted">Score Trace</div>
+                  <div className={`mt-2 text-4xl font-black leading-none tabular-nums ${result.riskScore > 60 ? 'text-risk-text' : result.riskScore > 35 ? 'text-caution-text' : 'text-safe'}`}>
+                    {result.riskScore}<span className="text-lg text-muted">/100</span>
+                  </div>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border-soft bg-background">
+                  {result.riskScore > 60 ? <AlertTriangle className="h-6 w-6 text-risk-text" /> : <ShieldCheck className="h-6 w-6 text-safe" />}
+                </div>
               </div>
-              <div className="mt-6 w-full space-y-2">
+              <div className="space-y-3">
                 {(intelligence?.scoreTrace || []).slice(-4).map((trace, index) => (
-                  <div key={`${trace.step}-${index}`} className="rounded-xl border border-border-soft bg-background p-3 text-left">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-normal text-muted">{trace.step}</span>
-                      <span className={`text-xs font-black ${trace.delta > 0 ? 'text-risk-text' : trace.delta < 0 ? 'text-safe-text' : 'text-muted'}`}>
+                  <div key={`${trace.step}-${index}`} className="rounded-xl border border-border-soft bg-background p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs font-black uppercase tracking-wide text-foreground">{trace.step}</span>
+                      <span className={`rounded-md px-2 py-0.5 text-xs font-black tabular-nums ${trace.delta > 0 ? 'bg-risk-bg/10 text-risk-text' : trace.delta < 0 ? 'bg-safe/10 text-safe-text' : 'bg-surface text-muted'}`}>
                         {trace.delta > 0 ? '+' : ''}{trace.delta}
                       </span>
                     </div>
-                    <div className="mt-1 text-xs font-semibold leading-5 text-muted">{trace.reason}</div>
+                    <div className="mt-2 text-xs font-semibold leading-5 text-muted">{trace.reason}</div>
                   </div>
                 ))}
+                {(intelligence?.scoreTrace || []).length === 0 && (
+                  <div className="rounded-xl border border-border-soft bg-background p-3 text-sm font-semibold text-muted">
+                    No v2 score trace was included in this result.
+                  </div>
+                )}
               </div>
-              <div className="mt-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-background border border-border-soft shadow-inner">
-                {result.riskScore > 60 ? <AlertTriangle className="h-8 w-8 text-risk-text" /> : <ShieldCheck className="h-8 w-8 text-safe" />}
-              </div>
-            </div>
+            </aside>
           </div>
         </motion.section>
 
@@ -814,28 +962,97 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
           <div className="absolute top-0 right-0 p-8 opacity-5">
             <Clock className="h-32 w-32" />
           </div>
-          <h2 className="text-2xl font-black mb-8 flex items-center gap-3">
-            <Zap className="h-6 w-6 text-safe" />
-            Investigation Timeline
-          </h2>
-          <div className="relative space-y-8 before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[2px] before:bg-border-soft">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-3 text-2xl font-black">
+                <Zap className="h-6 w-6 text-safe" />
+                Investigation Timeline
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+                Expand each step to inspect what HireProof checked. The entries come from the audit stream or the demo fixture disclosure.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleAllTimelineSteps}
+              className="hireproof-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border-soft bg-background px-4 py-2 text-sm font-black text-foreground transition-colors hover:bg-surface-elevated"
+            >
+              <ListTree className="h-4 w-4" />
+              {allTimelineExpanded ? 'Collapse timeline' : 'Expand timeline'}
+            </button>
+          </div>
+          <div className="relative space-y-3 before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[2px] before:bg-border-soft">
             {normalizedTimelineEvents.map((step, i) => {
               const Icon = i === 0 ? Bot : i === normalizedTimelineEvents.length - 1 ? UserCheck : SearchCheck
               const color = i === 0 ? 'text-muted' : i === normalizedTimelineEvents.length - 1 ? 'text-safe' : 'text-evidence'
+              const isExpanded = expandedTimelineSteps.has(i)
+              const detailId = `timeline-step-${i}-detail`
+              const statusLabel = step.status ? step.status.replace(/-/g, ' ') : i === normalizedTimelineEvents.length - 1 ? 'complete' : 'recorded'
               return (
-              <div key={i} className="relative pl-12 group">
-                <div className={`absolute left-0 top-1 h-9 w-9 rounded-full bg-background border border-border-soft flex items-center justify-center z-10 transition-colors group-hover:border-safe/50 ${color}`}>
+              <div key={i} className="relative pl-12">
+                <div className={`absolute left-0 top-1 h-9 w-9 rounded-full bg-background border border-border-soft flex items-center justify-center z-10 transition-colors ${isExpanded ? 'border-safe/50' : ''} ${color}`}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                  <div>
-                    <h4 className="text-sm font-black uppercase tracking-widest">{step.step}</h4>
-                    <p className="text-sm font-medium text-muted mt-1 leading-relaxed">{step.detail}</p>
-                  </div>
-                  <div className="font-mono text-[10px] font-bold text-muted bg-surface px-2 py-1 rounded-md border border-border-soft">{step.time}</div>
+                <div className={`rounded-2xl border transition-colors ${isExpanded ? 'border-safe/25 bg-background shadow-sm' : 'border-border-soft bg-background/45 hover:border-border'}`}>
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={detailId}
+                    onClick={() => toggleTimelineStep(i)}
+                    className="hireproof-focus flex min-h-14 w-full items-center justify-between gap-4 rounded-2xl px-4 py-3 text-left"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black uppercase tracking-widest">{step.step}</span>
+                      <span className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted">
+                        <span>{step.time}</span>
+                        <span className="h-1 w-1 rounded-full bg-border" />
+                        <span>{statusLabel}</span>
+                        {step.phase && (
+                          <>
+                            <span className="h-1 w-1 rounded-full bg-border" />
+                            <span>{step.phase}</span>
+                          </>
+                        )}
+                      </span>
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${isExpanded ? 'rotate-180 text-safe' : ''}`} />
+                  </button>
+                  {isExpanded && (
+                    <motion.div
+                      id={detailId}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      transition={{ duration: 0.18 }}
+                      className="border-t border-border-soft px-4 pb-4 pt-3"
+                    >
+                      <p className="text-sm font-medium leading-relaxed text-muted">{step.detail}</p>
+                      <div className="mt-3 grid gap-2 text-xs font-semibold text-muted sm:grid-cols-3">
+                        <div className="rounded-xl border border-border-soft bg-surface px-3 py-2">
+                          <span className="block text-[10px] font-black uppercase tracking-wider text-foreground">Sequence</span>
+                          Step {i + 1} of {normalizedTimelineEvents.length}
+                        </div>
+                        <div className="rounded-xl border border-border-soft bg-surface px-3 py-2">
+                          <span className="block text-[10px] font-black uppercase tracking-wider text-foreground">Source</span>
+                          {isDemoReport ? 'Demo fixture' : 'Audit stream'}
+                        </div>
+                        <div className="rounded-xl border border-border-soft bg-surface px-3 py-2">
+                          <span className="block text-[10px] font-black uppercase tracking-wider text-foreground">Status</span>
+                          {statusLabel}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             )})}
+          </div>
+          <div className="mt-5 rounded-2xl border border-border-soft bg-background/70 p-4 text-sm font-semibold leading-6 text-muted">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-evidence" />
+              <p>
+                Timeline details explain the audit process. They are not standalone proof; rely on evidence receipts, source quality, and scoring trace for the final trust decision.
+              </p>
+            </div>
           </div>
         </motion.section>
 
@@ -853,47 +1070,49 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
           </div>
         </motion.section>
 
-        {(result.redFlags || []).length > 0 && (
-          <motion.section variants={itemVariants}>
-            <h2 className="mb-5 flex items-center gap-2 text-2xl font-black text-risk-text">
-              <AlertTriangle className="w-5 h-5" />
-              Red Flags
-            </h2>
-            <div className="space-y-2">
-              {(result.redFlags || []).map((flag, i) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + (i * 0.1) }}
-                  key={i} 
-                  className="flex gap-3 rounded-xl border border-risk-bg bg-risk-bg p-3 text-risk-text"
-                >
-                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                  <div className="font-semibold">{flag}</div>
-                </motion.div>
-              ))}
+        {((result.redFlags || []).length > 0 || (result.greenFlags || []).length > 0) && (
+          <motion.section variants={itemVariants} className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-sm">
+            <div className="grid border-b border-border-soft bg-surface/60 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-3 border-b border-border-soft px-5 py-4 sm:border-b-0 sm:border-r">
+                <div className="flex items-center gap-2 text-risk-text">
+                  <AlertTriangle className="h-4 w-4" />
+                  <h2 className="text-sm font-black uppercase tracking-[0.16em]">Red Flags</h2>
+                </div>
+                <span className="rounded-full bg-risk-bg px-2.5 py-1 text-xs font-black text-risk-text">{(result.redFlags || []).length}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-5 py-4">
+                <div className="flex items-center gap-2 text-safe-text">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <h2 className="text-sm font-black uppercase tracking-[0.16em]">Green Flags</h2>
+                </div>
+                <span className="rounded-full bg-safe-bg px-2.5 py-1 text-xs font-black text-safe-text">{(result.greenFlags || []).length}</span>
+              </div>
             </div>
-          </motion.section>
-        )}
 
-        {result.greenFlags.length > 0 && (
-          <motion.section variants={itemVariants}>
-            <h2 className="mb-5 flex items-center gap-2 text-2xl font-black text-safe-text">
-              <CheckCircle2 className="w-5 h-5" />
-              Green Flags
-            </h2>
-            <div className="space-y-2">
-              {result.greenFlags.map((flag, i) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + (i * 0.1) }}
-                  key={i} 
-                  className="flex gap-3 rounded-xl border border-safe-bg bg-safe-bg p-3 text-safe-text"
-                >
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                  <div className="font-semibold">{flag}</div>
-                </motion.div>
+            <div className="divide-y divide-border-soft">
+              {Array.from({ length: Math.max((result.redFlags || []).length, (result.greenFlags || []).length) }).map((_, i) => (
+                <div key={i} className="grid sm:grid-cols-2">
+                  <div className="border-b border-border-soft p-4 sm:border-b-0 sm:border-r sm:p-5">
+                    {(result.redFlags || [])[i] ? (
+                      <div className="flex gap-3 text-risk-text">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <p className="text-sm font-semibold leading-relaxed">{(result.redFlags || [])[i]}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-semibold text-muted/60">No matching concern.</p>
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    {(result.greenFlags || [])[i] ? (
+                      <div className="flex gap-3 text-safe-text">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <p className="text-sm font-semibold leading-relaxed">{(result.greenFlags || [])[i]}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-semibold text-muted/60">No matching positive signal.</p>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </motion.section>

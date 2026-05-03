@@ -15,6 +15,7 @@ This file keeps the judge-facing proof artifacts in one place. It intentionally 
 | Discord ChatSDK | Credential-ready | Production credentials and webhook readiness pass; shared reply path passes. | Live Discord bot delivery until screenshots/logs are captured. |
 | Telegram ChatSDK | Live delivery proven | Real Telegram message screenshot plus matching production webhook log. | Report-link screenshot until the platform reply base-URL fallback is re-tested live. |
 | WhatsApp/Zernio ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; Zernio credentials are missing. | Live WhatsApp delivery. |
+| HireProof CLI TUI | Repo-rendered proof | Light and dark terminal UI screenshots are generated from the repo-shipped Ink TUI. | npm-published package until owner publishes from npm account. |
 
 Use this one-line status in public/demo materials:
 
@@ -180,13 +181,29 @@ Use this claim in the submission:
 
 Do not claim a completed durable report callback unless a callback result is captured separately.
 
+## HireProof CLI TUI Proof
+
+- Proof type: repo-rendered terminal UI screenshots.
+- CLI source: `packages/hireproof-cli`.
+- Public docs: `https://hireproof-sigma.vercel.app/docs/cli`.
+- Light screenshot: `public/cli-tui-screenshot.png`.
+- Dark screenshot: `public/cli-tui-screenshot-dark.png`.
+- Verified commands: `npm run cli:test`, `npm run lint`, `npm run build`, and `npm pack --workspace @hireproof/cli --dry-run`.
+
+Use this claim in the submission:
+
+> HireProof also ships as a local terminal product surface: a tested CLI with rich audit reports, an Ink-based Shield Sentinel TUI, Tab autocomplete, health/config tools, recent report summaries, and clean JSON for automations.
+
+Do not claim the CLI is published to npm until the owner completes the external npm publish step.
+
 ## Final Demo Order
 
 1. Open `https://hireproof-sigma.vercel.app/audit`.
 2. Paste the suspicious remote frontend internship sample.
 3. Show the High-Risk report, red flags, and evidence sections.
 4. Show the Slack screenshot proof.
-5. Mention the WDK accepted run ID and the `/api/workflows/audit` proof route.
+5. Show `/proof` or `/docs/cli` for the CLI TUI screenshot proof.
+6. Mention the WDK accepted run ID and the `/api/workflows/audit` proof route.
 
 ## Submission Readiness Checklist
 
@@ -196,6 +213,7 @@ Do not claim a completed durable report callback unless a callback result is cap
 - [x] Production live-mode `/api/v1/audit` returns a credential-backed High-Risk report.
 - [x] `POST /api/workflows/audit` accepts a run or the archived accepted run is cited.
 - [x] Slack screenshot proof is included: `docs/demo/Screenshot 2026-04-30 024756.jpg`.
+- [x] CLI TUI light/dark screenshot proof is included: `public/cli-tui-screenshot.png`, `public/cli-tui-screenshot-dark.png`.
 - [x] BYOK credential route hardening is verified by `test/byok-credentials.test.mjs`.
 - [x] `npm run proof:chat-live` passes for controlled chat proof.
 - [x] `npm run build` passes before final submission.

@@ -381,6 +381,11 @@ test('result screen replaces pseudo bot claims with evidence-backed v2 panels', 
   assert.match(source, /Market Salary/)
   assert.match(source, /Profile Mode/)
   assert.match(source, /Recruiter Identity/)
+  assert.match(source, /max-w-7xl/)
+  assert.match(source, /Analyst coverage matrix/)
+  assert.match(source, /lg:grid-cols-\[minmax\(0,1fr\)_360px\]/)
+  assert.doesNotMatch(source, /md:w-80/)
+  assert.doesNotMatch(source, /bot-scan-line opacity-20/)
 })
 
 test('v2 route exists and returns an AuditReportV2 contract', async () => {

@@ -121,10 +121,23 @@ function CommandConsole({ value }) {
   ])
 }
 
+function StatusBar({ health, mode, keyStatus, report }) {
+  const muted = useInkColor('gray')
+  const latest = report ? `${normalizeVerdict(report.verdict)} ${Number(report.riskScore ?? 0)}/100` : 'none'
+  const api = health?.status === 'ok' ? 'API ok' : health?.status === 'error' ? 'API error' : 'API not checked'
+  return React.createElement(Text, { color: muted }, `${api} | mode ${mode} | key ${keyStatus} | latest ${latest} | / commands | Tab complete | ? help`)
+}
+
 function HelpScreen() {
   return React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Help'),
+    React.createElement(Text, { key: 'shortcuts', bold: true }, 'Keyboard shortcuts'),
     React.createElement(Text, { key: 'nav' }, 'ArrowUp/ArrowDown moves. Enter opens. Esc goes back. Ctrl+C exits.'),
+    React.createElement(Text, { key: 'slash' }, '/ focus command palette'),
+    React.createElement(Text, { key: 'a' }, 'a audit'),
+    React.createElement(Text, { key: 'h' }, 'h health'),
+    React.createElement(Text, { key: 'r' }, 'r reports'),
+    React.createElement(Text, { key: 'question' }, '? help'),
     React.createElement(Text, { key: 'audit' }, 'Direct command: hireproof audit --text "Suspicious job..." --mode demo'),
     React.createElement(Text, { key: 'json' }, 'Automation mode: hireproof audit --file ./job.txt --json'),
   ])
@@ -175,6 +188,7 @@ function ReportScreen({ report, reports = [] }) {
 function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileText, onReport }) {
   const [input, setInput] = useState('')
   const [status, setStatus] = useState('idle')
+  const [progressSteps, setProgressSteps] = useState([])
   const [report, setReport] = useState(null)
   const [error, setError] = useState('')
   const inputRef = useRef('')
@@ -193,6 +207,7 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
     const rawInput = inputRef.current.trim()
     if (!rawInput || status === 'running') return
     setStatus('running')
+    setProgressSteps(['Reading input...', 'Calling HireProof API...', 'Extracting claims...', 'Rendering evidence...'])
     setError('')
     try {
       let text = rawInput
@@ -229,6 +244,7 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
   if (report) {
     return React.createElement(Box, { flexDirection: 'column' }, [
       React.createElement(ScreenTitle, { key: 'title' }, 'Audit result'),
+      ...progressSteps.map(step => React.createElement(Text, { key: step, color: muted }, step)),
       React.createElement(Text, { key: 'verdict' }, `Verdict: ${normalizeVerdict(report.verdict)}  Score: ${Number(report.riskScore ?? 0)}/100 ${riskBar(report.riskScore)}`),
       React.createElement(Text, { key: 'summary' }, report.summary || 'No summary returned.'),
       React.createElement(Text, { key: 'claims', color: lime }, 'Claims'),
@@ -250,6 +266,7 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
     React.createElement(Text, { key: 'prompt' }, `${prompt}: ${input}`),
     status === 'running' ? React.createElement(Text, { key: 'running', color: lime }, 'Running HireProof audit...') : null,
     error ? React.createElement(Text, { key: 'error', color: risk }, error) : null,
+    ...progressSteps.map(step => React.createElement(Text, { key: step, color: muted }, step)),
     React.createElement(Text, { key: 'hint', color: muted }, 'Enter submits. Esc returns home. Direct hireproof audit commands remain unchanged.'),
   ])
 }
@@ -347,6 +364,7 @@ export function HireProofTuiApp({
   const keyStatus = apiKey ? 'configured' : 'missing'
   const muted = color ? 'gray' : undefined
   const activeReport = useMemo(() => selectedReport || reports[0] || null, [selectedReport, reports])
+  const shortcutScreens = { a: 'audit', h: 'health', r: 'reports' }
   const runAuditClient = auditClient || (async payload => {
     const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/api/v1/audit`, {
       method: 'POST',
@@ -420,6 +438,10 @@ export function HireProofTuiApp({
       return
     }
     if (screen !== 'home') return
+    if (input === '/' && !commandInputRef.current) {
+      updateCommandInput('/')
+      return
+    }
     if (key.tab || input === '\t') {
       const completion = commandCompletion(commandInputRef.current)
       if (completion) updateCommandInput(completion)
@@ -453,11 +475,20 @@ export function HireProofTuiApp({
       app.exit()
       return
     }
+    if (!commandInputRef.current && shortcutScreens[input]) {
+      openScreen(shortcutScreens[input])
+      return
+    }
+    if (!commandInputRef.current && input === '?') {
+      openScreen('help')
+      return
+    }
     if (input && !key.ctrl && !key.meta) updateCommandInput(`${commandInputRef.current}${input}`)
   })
 
   return React.createElement(ColorContext.Provider, { value: color }, React.createElement(Box, { flexDirection: 'column', paddingX: 1 }, [
     React.createElement(Header, { key: 'header', baseUrl, mode, keyStatus }),
+    React.createElement(StatusBar, { key: 'status', health, mode, keyStatus, report: activeReport }),
     screen === 'home'
       ? React.createElement(Box, { key: 'home' }, [
         React.createElement(Mascot, { key: 'mascot' }),

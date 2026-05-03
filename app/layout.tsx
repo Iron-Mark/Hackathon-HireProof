@@ -7,7 +7,6 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { ThemeScanner } from '@/components/system/theme-scanner'
 import { DemoLoginSnackbar } from '@/components/system/demo-login-snackbar'
 import { Analytics } from '@vercel/analytics/next'
-import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: {
@@ -90,7 +89,7 @@ export default function RootLayout({
             <ThemeScanner />
             <CommandMenu />
             <DemoLoginSnackbar />
-            <Script
+            <script
               id="json-ld"
               type="application/ld+json"
               dangerouslySetInnerHTML={{
@@ -109,7 +108,7 @@ export default function RootLayout({
                 }),
               }}
             />
-            <Script
+            <script
               id="breadcrumb-json-ld"
               type="application/ld+json"
               dangerouslySetInnerHTML={{

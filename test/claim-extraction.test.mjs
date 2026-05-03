@@ -86,6 +86,28 @@ test('recoverObviousClaims extracts recruiter identity fields from pasted posts'
   assert.equal(claims.recruiterPhone, '+63 917 123 4567')
 })
 
+test('recoverObviousClaims strips LinkedIn UI text from company and role claims', () => {
+  const claims = recoverObviousClaims({
+    text: [
+      'Resolved LinkedIn public job page content:',
+      'Online Data Analyst',
+      'TELUS Digital AI Data Solutions',
+      'Application Process Easy Apply on LinkedIn',
+    ].join('\n'),
+    url: 'https://www.linkedin.com/jobs/view/4409014711/',
+  }, {
+    company: 'TELUS Digital AI Data Solutions By 2x See Who You Know',
+    role: 'At TELUS Digital',
+    salary: 'Not specified',
+    location: 'Not specified',
+    contactMethod: 'LinkedIn',
+    applicationPath: 'Direct message',
+  })
+
+  assert.equal(claims.company, 'TELUS Digital AI Data Solutions')
+  assert.equal(claims.role, 'Online Data Analyst')
+})
+
 test('enrichJobUrlInput expands LinkedIn collection URLs through the guest job endpoint', async () => {
   let requestedUrl = ''
   const enrichment = await enrichJobUrlInput(

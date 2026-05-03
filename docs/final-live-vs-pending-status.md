@@ -21,6 +21,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | Telegram proof | Live delivery proven | `docs/platform-proof-status.md` |
 | WDK route | Production accepted-run proven | run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5` |
 | Native automation packs | Repo-shipped and validated | `integrations/`, `packages/hireproof-langchain`, `/docs/automations` |
+| HireProof CLI | Repo-shipped, tested, and screenshot-proven | `packages/hireproof-cli`, `/docs/cli`, `public/cli-tui-screenshot*.png` |
 | Native integrations ZIP | Live download | `/downloads/hireproof-native-integrations.zip` |
 | Chrome extension ZIP | Live download fallback | `/downloads/hireproof-extension.zip` |
 | Docker packaging | Implemented | `Dockerfile`, `docker-compose.yml`, `npm run docker:*` |
@@ -37,6 +38,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | Discord | Real message screenshot and matching webhook log | Credentials/webhook are ready, but live event proof is still needed |
 | WhatsApp/Zernio | Credentials plus real event proof | Requires Zernio account credentials and provider event |
 | npm package | Publish `@hireproof/langchain` | Requires npm account ownership and publish action |
+| npm package | Publish `@hireproof/cli` | Requires npm account ownership and publish action |
 | n8n community node | Community listing approval | Requires n8n review after local install screenshots |
 | Make Custom App | Make review approval | Requires Make developer account and review flow |
 | WDK completed transcript | Completed durable run with callback proof | Current proof is accepted-run only |

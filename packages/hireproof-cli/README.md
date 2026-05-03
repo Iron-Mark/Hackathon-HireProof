@@ -29,11 +29,18 @@ hireproof
 hireproof tui
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../public/cli-tui-screenshot-dark.png">
+  <img alt="HireProof CLI interactive TUI" src="../../public/cli-tui-screenshot.png">
+</picture>
+
 The interactive console includes:
 
 - Shield Sentinel ASCII mascot.
 - HireProof green and lime terminal accents.
 - Command console with Tab autocomplete.
+- Slash commands and one-key shortcuts.
+- Persistent status bar with API/mode/key/latest-report context.
 - Audit, paste-message, file, and URL workflows.
 - Health, config, help, recent reports, and local Ask HireProof screens.
 - Sanitized local report summaries saved at `~/.hireproof/reports.jsonl`.
@@ -62,6 +69,21 @@ Command console  Tab autocomplete  Enter run
 Tab -> health
 ```
 
+The console also supports slash commands and shortcuts:
+
+```text
+/health
+/reports
+/ask
+
+a audit
+h health
+r reports
+? help
+Esc back
+q exit from home
+```
+
 Console commands and aliases:
 
 ```text
@@ -75,6 +97,15 @@ health, status, ready
 config, settings, key
 help, ?
 exit, quit
+```
+
+During TUI audits, HireProof shows staged progress states before rendering the result:
+
+```text
+Reading input...
+Calling HireProof API...
+Extracting claims...
+Rendering evidence...
 ```
 
 ### Audit Inline Text

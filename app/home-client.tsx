@@ -235,7 +235,7 @@ export function HomeClient() {
               <Link href="/audit" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-5 py-2.5 font-bold text-background shadow-lg transition-colors hover:bg-safe">
                 Start investigation <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/audit" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-5 py-2.5 font-bold transition-colors hover:bg-background">
+              <Link href="/audit?demo=high-risk" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface/85 px-5 py-2.5 font-bold transition-colors hover:bg-background">
                 Quick demo
               </Link>
               <Link href="/proof" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-evidence-bg bg-evidence-bg px-5 py-2.5 font-bold text-evidence transition-colors hover:bg-background">

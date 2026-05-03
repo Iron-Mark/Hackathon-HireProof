@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { CodeBlock } from '@/components/ui/code-block'
 import Link from 'next/link'
-import { MessageSquareWarning, ShieldCheck, Webhook } from 'lucide-react'
+import { ArrowRight, ExternalLink, MessageSquareWarning, ShieldCheck, Webhook } from 'lucide-react'
 
 const DISCORD_INSTALL_URL = 'https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0'
 
@@ -21,17 +21,19 @@ export default function DiscordBotPage() {
         <div className="flex flex-wrap gap-3">
           <a
             href={DISCORD_INSTALL_URL}
-            className="inline-flex w-fit rounded-full border border-evidence/30 bg-evidence/10 px-4 py-2 text-sm font-black text-evidence transition hover:-translate-y-0.5 hover:bg-evidence/15"
+            className="hireproof-focus inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-evidence px-5 py-3 text-sm font-black text-background shadow-lg shadow-evidence/20 transition hover:-translate-y-0.5 hover:bg-evidence-text sm:w-auto"
             target="_blank"
             rel="noreferrer"
           >
             Install HireProof on Discord
+            <ExternalLink className="h-4 w-4" />
           </a>
           <Link
             href="/docs/chat-sdk-agents"
-            className="inline-flex w-fit rounded-full border border-border-soft bg-surface px-4 py-2 text-sm font-black text-foreground transition hover:-translate-y-0.5 hover:bg-surface-elevated"
+            className="hireproof-focus inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border-soft bg-surface px-5 py-3 text-sm font-black text-foreground transition hover:-translate-y-0.5 hover:bg-surface-elevated sm:w-auto"
           >
             View all ChatSDK agents
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <p className="max-w-2xl text-sm font-semibold leading-6 text-muted">

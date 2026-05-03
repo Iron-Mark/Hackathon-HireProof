@@ -455,6 +455,11 @@ test('demo reports disclose fixture mode and timeline avoids fake timings', asyn
   assert.match(auditClient, /Demo fixture/)
   assert.match(resultScreen, /Demo fixture/)
   assert.match(resultScreen, /timelineEvents/)
+  assert.match(resultScreen, /expandedTimelineSteps/)
+  assert.match(resultScreen, /aria-expanded=\{isExpanded\}/)
+  assert.match(resultScreen, /Expand timeline/)
+  assert.match(resultScreen, /Collapse timeline/)
+  assert.match(resultScreen, /Timeline details explain the audit process/)
   assert.match(resultScreen, /Use live evidence mode for fresh source checks/)
   assert.doesNotMatch(resultScreen, /T\+0\.4s/)
   assert.doesNotMatch(resultScreen, /T\+1\.2s/)
@@ -654,6 +659,23 @@ test('redis-backed services trim production environment variables before client 
   }
   assert.match(bot, /REDIS_URL\?\.trim\(\)/)
   assert.match(bot, /REDIS_URL!\.trim\(\)/)
+})
+
+test('robots and proxy discourage common AI crawlers from scraping public pages', async () => {
+  const robots = await fs.readFile(new URL('../app/robots.ts', import.meta.url), 'utf8')
+  const proxy = await fs.readFile(new URL('../proxy.ts', import.meta.url), 'utf8')
+
+  for (const crawler of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'CCBot', 'Bytespider', 'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent']) {
+    assert.match(robots, new RegExp(crawler.replace('-', '[-]'), 'i'))
+    assert.match(proxy, new RegExp(crawler.replace('-', '[-]'), 'i'))
+  }
+
+  assert.match(robots, /disallow:\s*'\/'/)
+  assert.match(robots, /hireproof-sigma\.vercel\.app\/sitemap\.xml/)
+  assert.match(proxy, /noai, noimageai/)
+  assert.match(proxy, /isApiOrIntegrationRoute/)
+  assert.match(proxy, /API, MCP, webhook, and headless agent routes stay reachable/)
+  assert.match(proxy, /Access Denied/)
 })
 
 test('feedback endpoint accepts structured reason metadata', async () => {

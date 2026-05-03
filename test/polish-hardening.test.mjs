@@ -48,6 +48,20 @@ test('trends live evidence card stays theme-friendly instead of inverted', async
   assert.doesNotMatch(source, /bg-foreground p-8 text-background/)
 })
 
+test('developer SDK install card stays theme-friendly instead of inverted', async () => {
+  const source = await fs.readFile(new URL('../app/developer/developer-client.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /Install the SDK/)
+  assert.match(source, /Build agentic integrations in minutes/)
+  assert.match(source, /npm install hireproof-sdk/)
+  assert.match(source, /Copy SDK install command/)
+  assert.match(source, /border-safe\/20 bg-surface/)
+  assert.match(source, /bg-safe\/10 text-safe/)
+  assert.match(source, /hover:bg-safe\/10/)
+  assert.doesNotMatch(source, /rounded-3xl border border-border-soft bg-foreground p-8 text-background/)
+  assert.doesNotMatch(source, /bg-white\/10/)
+})
+
 test('trends CSV export escapes values and uses a clear CSV filename', () => {
   const exportPayload = buildTrendsCsvExport({
     topLocations: [{ label: 'Manila, PH', count: 2 }],
@@ -103,7 +117,10 @@ test('chrome extension docs distinguish ZIP install from pending store review', 
 
 test('docs reflect current scoring and chat platform proof status', async () => {
   const riskScoring = await fs.readFile(new URL('../app/docs/risk-scoring/page.tsx', import.meta.url), 'utf8')
+  const docsLayout = await fs.readFile(new URL('../app/docs/layout.tsx', import.meta.url), 'utf8')
   const discordBot = await fs.readFile(new URL('../app/docs/discord-bot/page.tsx', import.meta.url), 'utf8')
+  const slackBot = await fs.readFile(new URL('../app/docs/slack-bot/page.tsx', import.meta.url), 'utf8')
+  const telegramBot = await fs.readFile(new URL('../app/docs/telegram-bot/page.tsx', import.meta.url), 'utf8')
   const security = await fs.readFile(new URL('../app/docs/security/page.tsx', import.meta.url), 'utf8')
 
   assert.match(riskScoring, /capped green-credit/)
@@ -114,12 +131,39 @@ test('docs reflect current scoring and chat platform proof status', async () => 
   assert.doesNotMatch(riskScoring, /Verified Domain/)
   assert.doesNotMatch(riskScoring, /LinkedIn Footprint/)
 
+  assert.match(docsLayout, /Slack Bot/)
+  assert.match(docsLayout, /\/docs\/slack-bot/)
+  assert.match(docsLayout, /Discord Bot/)
+  assert.match(docsLayout, /\/docs\/discord-bot/)
+  assert.match(docsLayout, /Telegram Bot/)
+  assert.match(docsLayout, /\/docs\/telegram-bot/)
+  assert.doesNotMatch(docsLayout, /Discord \/ Slack Bots/)
+
   assert.match(discordBot, /ChatSDK/)
-  assert.match(discordBot, /credential-gated/)
-  assert.match(discordBot, /Discord, Telegram, and WhatsApp/)
+  assert.match(discordBot, /Discord Bot/)
+  assert.match(discordBot, /credential-ready/)
+  assert.match(discordBot, /Install HireProof on Discord/)
+  assert.match(discordBot, /ExternalLink/)
   assert.match(discordBot, /\/api\/webhooks\/discord/)
+  assert.doesNotMatch(discordBot, /Discord \/ Slack Bots/)
   assert.doesNotMatch(discordBot, /discord\.js/)
   assert.doesNotMatch(discordBot, /client\.login/)
+
+  assert.match(slackBot, /Slack Bot/)
+  assert.match(slackBot, /Configure Slack webhook/)
+  assert.match(slackBot, /href="#slack-webhook"/)
+  assert.match(slackBot, /View Slack proof/)
+  assert.match(slackBot, /\/api\/webhooks\/slack/)
+  assert.match(slackBot, /SLACK_BOT_TOKEN/)
+  assert.match(slackBot, /live-tested with screenshot proof/i)
+
+  assert.match(telegramBot, /Telegram Bot/)
+  assert.match(telegramBot, /Configure Telegram webhook/)
+  assert.match(telegramBot, /href="#telegram-webhook"/)
+  assert.match(telegramBot, /View Telegram proof/)
+  assert.match(telegramBot, /\/api\/webhooks\/telegram/)
+  assert.match(telegramBot, /TELEGRAM_BOT_TOKEN/)
+  assert.match(telegramBot, /live-tested with screenshot and matching Vercel webhook log proof/i)
 
   assert.match(security, /System Data Flow/)
   assert.match(security, /Hosted BYOK Vault/)
@@ -254,6 +298,9 @@ test('first-place sprint surfaces demo clarity and public proof from the homepag
   assert.match(source, /text-center xl:mx-0 xl:max-w-2xl xl:text-left/)
   assert.match(source, /hidden xl:block/)
   assert.doesNotMatch(source, /lg:grid-cols-\[minmax\(0,1fr\)_460px\]/)
+  assert.match(source, /Start investigation/)
+  assert.match(source, /Quick demo/)
+  assert.match(source, /href="\/audit\?demo=high-risk"/)
   assert.match(source, /\/audit\?demo=high-risk/)
   assert.match(source, /\/audit\?demo=caution/)
   assert.match(source, /\/audit\?demo=safe/)
@@ -381,6 +428,10 @@ test('history, result, and proof pages keep the audit journey polished', async (
   assert.match(proofPage, /Live delivery proven/)
   assert.match(proofPage, /Credential-ready/)
   assert.match(proofPage, /Chrome Web Store/)
+  assert.match(proofPage, /Telegram has live delivery screenshot/)
+  assert.doesNotMatch(proofPage, /Telegram now has/)
+  assert.doesNotMatch(proofPage, /\bupdated\b/i)
+  assert.doesNotMatch(proofPage, /\breleased\b/i)
 
   assert.match(siteHeader, /z-50/)
   assert.match(siteHeader, /z-\[60\]/)

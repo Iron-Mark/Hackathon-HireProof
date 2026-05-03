@@ -11,9 +11,15 @@ HireProof now ships repo-owned native integration source packs for automation bu
 | n8n community node | `integrations/n8n-nodes-hireproof` | Implemented and build-validated | Package metadata, credential class, node operation shape, sync and async request construction |
 | Make Custom App source | `integrations/make-hireproof` | Implemented and static-validated | App metadata, API-key connection, audit modules, async module, health module, output fields |
 | LangChain package | `packages/hireproof-langchain` | Implemented and smoke-tested | Zod schema, `createHireProofAuditTool`, typed helpers, demo API request returning High-Risk result |
-| HireProof CLI | `packages/hireproof-cli` | Implemented and locally tested | `health`, `audit`, file input, JSON output, local config, and API request construction |
+| HireProof CLI | `packages/hireproof-cli` | Implemented, locally tested, and screenshot-proven | `health`, `audit`, file input, JSON output, local config, rich terminal output, Ink TUI launcher, and API request construction |
 | Portable HTTP templates | `public/downloads/*` | Implemented and served by the app | n8n workflow JSON, Make HTTP config, LangChain standalone TS tool, curl smoke script |
 | Source bundle download | `public/downloads/hireproof-native-integrations.zip` | Generated | Includes the n8n, Make, and LangChain source packs |
+
+CLI visual proof assets:
+
+- Light screenshot: `public/cli-tui-screenshot.png`
+- Dark screenshot: `public/cli-tui-screenshot-dark.png`
+- Public docs page: `/docs/cli`
 
 ## Runtime Contract
 

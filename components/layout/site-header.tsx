@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 import {
   Activity,
@@ -18,8 +18,6 @@ import {
   Network,
   SearchCheck,
   ShieldCheck,
-  ToggleLeft,
-  ToggleRight,
   Cpu,
   type LucideIcon,
 } from 'lucide-react'
@@ -32,15 +30,21 @@ type NavLink = {
   icon: LucideIcon
 }
 
+type ResourceGroup = {
+  label: string
+  accent: string
+  links: NavLink[]
+}
+
 const primaryLinks: NavLink[] = [
-  { href: '/audit', label: 'Audit', icon: SearchCheck },
   { href: '/history', label: 'History', icon: History },
   { href: '/docs', label: 'Docs', icon: BookOpen },
 ]
 
-const resourceGroups: { label: string; links: NavLink[] }[] = [
+const resourceGroups: ResourceGroup[] = [
   {
     label: 'Evidence',
+    accent: 'bg-safe',
     links: [
       { href: '/explore', label: 'Explore', description: 'Recent audit reports', icon: Compass },
       { href: '/trends', label: 'Trends', description: 'Saved-report patterns', icon: ChartNoAxesColumnIncreasing },
@@ -49,6 +53,7 @@ const resourceGroups: { label: string; links: NavLink[] }[] = [
   },
   {
     label: 'For builders',
+    accent: 'bg-evidence',
     links: [
       { href: '/developer', label: 'Developer Portal', description: 'API keys and webhooks', icon: Code2 },
       { href: '/docs/api-reference', label: 'API Docs', description: 'Headless audit API', icon: KeyRound },
@@ -58,6 +63,7 @@ const resourceGroups: { label: string; links: NavLink[] }[] = [
   },
   {
     label: 'Advanced',
+    accent: 'bg-caution',
     links: [
       { href: '/lab', label: 'Agent Lab', description: 'Agent reasoning demo', icon: Cpu },
       { href: '/pricing', label: 'Self-hosting / Plans', description: 'BYOK and hosting options', icon: CreditCard },
@@ -67,14 +73,8 @@ const resourceGroups: { label: string; links: NavLink[] }[] = [
 
 export function SiteHeader() {
   const pathname = usePathname()
-  const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  const handleQuickDemoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push('/audit');
-  };
 
   const isActive = (href: string) => href === '/docs' ? pathname.startsWith('/docs') : pathname === href
   const resourceLinks = resourceGroups.flatMap((group) => group.links)
@@ -119,7 +119,7 @@ export function SiteHeader() {
         className={`hireproof-focus flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
           isActive(link.href)
             ? 'bg-foreground text-background'
-            : 'text-muted hover:bg-background hover:text-foreground'
+            : 'text-muted hover:bg-safe/10 hover:text-foreground'
         }`}
       >
         <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -158,7 +158,7 @@ export function SiteHeader() {
                   className={`hireproof-focus flex min-h-[38px] items-center gap-2 rounded-full px-4 transition-colors ${
                     isActive(link.href)
                       ? 'bg-foreground text-background shadow-sm'
-                      : 'text-muted hover:bg-background hover:text-foreground'
+                      : 'text-muted hover:bg-safe/10 hover:text-foreground'
                   }`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -174,8 +174,8 @@ export function SiteHeader() {
                 onClick={() => setIsMenuOpen((open) => !open)}
                 className={`hireproof-focus flex min-h-[38px] items-center gap-2 rounded-full px-3 transition-colors ${
                   hasActiveResource
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted hover:bg-background hover:text-foreground'
+                    ? 'bg-safe/10 text-foreground shadow-sm'
+                    : 'text-muted hover:bg-safe/10 hover:text-foreground'
                 }`}
               >
                 <Activity className="h-4 w-4" aria-hidden="true" />
@@ -189,8 +189,11 @@ export function SiteHeader() {
                 >
                   {resourceGroups.map((group) => (
                     <div key={group.label} className="mb-3 last:mb-0">
-                      <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-normal text-muted">
-                        {group.label}
+                      <div className="px-2 pb-1">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-safe/25 bg-safe/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-foreground">
+                          <span className={`h-1.5 w-1.5 rounded-full ${group.accent}`} aria-hidden="true" />
+                          {group.label}
+                        </span>
                       </div>
                       <div className="space-y-1">
                         {group.links.map((link) => renderMenuLink(link))}
@@ -209,7 +212,7 @@ export function SiteHeader() {
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
                 onClick={() => setIsMenuOpen((open) => !open)}
-                className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-background hover:text-foreground"
+                className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-safe/10 hover:text-foreground"
               >
                 <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -228,8 +231,11 @@ export function SiteHeader() {
                   </div>
                   {resourceGroups.map((group) => (
                     <div key={group.label} className="mb-3 last:mb-0">
-                      <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-normal text-muted">
-                        {group.label}
+                      <div className="px-2 pb-1">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-safe/25 bg-safe/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-foreground">
+                          <span className={`h-1.5 w-1.5 rounded-full ${group.accent}`} aria-hidden="true" />
+                          {group.label}
+                        </span>
                       </div>
                       <div className="space-y-1">
                         {group.links.map((link) => renderMenuLink(link))}
@@ -240,10 +246,14 @@ export function SiteHeader() {
               )}
             </div>
             <ThemeToggle />
-            <button onClick={handleQuickDemoClick} className="hireproof-focus ml-1 flex min-h-[38px] items-center rounded-full bg-foreground px-3 text-sm font-black text-background hover:bg-safe sm:px-4">
-              <span className="sm:hidden">Demo</span>
-              <span className="hidden sm:inline">Quick demo</span>
-            </button>
+            <Link href="/audit" className={`hireproof-focus ml-1 flex min-h-[38px] items-center gap-2 rounded-full px-3 text-sm font-black transition-colors sm:px-4 ${
+              isActive('/audit')
+                ? 'bg-foreground text-background shadow-sm'
+                : 'text-muted hover:bg-safe/10 hover:text-foreground'
+            }`}>
+              <SearchCheck className="h-4 w-4" aria-hidden="true" />
+              <span>Audit</span>
+            </Link>
           </div>
         </div>
       </div>

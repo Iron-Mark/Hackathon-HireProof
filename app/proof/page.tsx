@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   AlertTriangle,
@@ -16,13 +17,14 @@ import {
   ShieldCheck,
   Store,
   Target,
+  Terminal,
   Workflow,
 } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 
 export const metadata: Metadata = {
   title: 'Proof Pack | HireProof',
-  description: 'Submission-ready proof that HireProof is production-deployed, API-smoke-tested, Slack-screenshot-proven, and WDK accepted-run proven.',
+  description: 'Submission-ready proof that HireProof is production-deployed, API-smoke-tested, CLI-screenshot-proven, Slack-screenshot-proven, and WDK accepted-run proven.',
 }
 
 const readyProof = [
@@ -46,7 +48,7 @@ const readyProof = [
     brandName: 'Slack',
     title: 'ChatSDK Slack',
     status: 'Slack + Telegram proof',
-    body: 'Slack has screenshot proof. Telegram now has live delivery screenshot and webhook log proof; Discord is credential-ready but still needs a real event capture.',
+    body: 'Slack has screenshot proof. Telegram has live delivery screenshot and webhook log proof; Discord is credential-ready but still needs a real event capture.',
     href: '/docs/triple-track-coverage',
   },
   {
@@ -62,6 +64,13 @@ const readyProof = [
     status: 'repo-shipped',
     body: 'n8n, Make, and LangChain source packs are implemented, validated, and downloadable. Marketplace approval remains external.',
     href: '/docs/automations',
+  },
+  {
+    icon: Terminal,
+    title: 'HireProof CLI TUI',
+    status: 'repo-rendered screenshot',
+    body: 'The repo ships a branded Ink terminal console with Shield Sentinel, Tab autocomplete, guided audits, health/config tools, and local report history.',
+    href: '/docs/cli',
   },
 ]
 
@@ -79,6 +88,7 @@ const proofStats = [
   },
   { icon: Workflow, label: 'Workflow', value: 'WDK accepted run' },
   { icon: FileArchive, label: 'Exports', value: 'PDF, PNG, CSV' },
+  { icon: Terminal, label: 'CLI', value: 'TUI screenshot' },
 ]
 
 const packagedSurfaces = [
@@ -143,7 +153,7 @@ export default function ProofPage() {
               Submission proof
             </div>
             <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-              HireProof is live, proven, and clearly bounded.
+              HireProof proof, clearly bounded.
             </h1>
             <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-muted">
               Use this page to show the strongest working evidence: production deployment, audit API smoke proof, Slack screenshot proof, and the accepted WDK workflow run.
@@ -162,7 +172,7 @@ export default function ProofPage() {
             <Clock3 className="h-5 w-5 text-evidence" />
             <h2 className="text-lg font-black">Proof at a glance</h2>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {proofStats.map((item) => {
               const Icon = item.icon
               const brandIcon = 'brandIcon' in item && typeof item.brandIcon === 'string' ? item.brandIcon : null
@@ -184,6 +194,45 @@ export default function ProofPage() {
           </div>
         </section>
 
+        <section className="mb-8 overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,0.72fr)_minmax(340px,1fr)] lg:items-stretch">
+            <div className="flex flex-col justify-between gap-6 p-6 lg:p-8">
+              <div>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-safe-bg bg-safe-bg px-3 py-1 text-[10px] font-black uppercase tracking-normal text-safe-text">
+                  <Terminal className="h-3.5 w-3.5" />
+                  CLI product surface
+                </div>
+                <h2 className="max-w-xl text-2xl font-black tracking-tight sm:text-3xl">
+                  The terminal experience is visible proof, not just a package claim.
+                </h2>
+                <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-muted">
+                  This screenshot is rendered from the repo-shipped CLI TUI. It shows the branded Shield Sentinel launcher, command console, Tab autocomplete affordance, proof-safe mode/key status, and the audit workflow menu.
+                </p>
+              </div>
+              <Link href="/docs/cli" className="hireproof-focus inline-flex w-fit items-center gap-2 rounded-xl bg-safe px-4 py-3 text-sm font-black text-safe-foreground transition hover:bg-safe-hover">
+                View CLI docs <ExternalLink className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="border-t border-border-soft bg-background p-3 lg:border-l lg:border-t-0">
+              <Image
+                src="/cli-tui-screenshot.png"
+                alt="HireProof CLI interactive terminal UI with Shield Sentinel mascot and command console"
+                width={1248}
+                height={930}
+                className="h-full w-full rounded-xl object-cover object-left-top dark:hidden"
+                priority
+              />
+              <Image
+                src="/cli-tui-screenshot-dark.png"
+                alt="HireProof CLI dark-theme interactive terminal UI with Shield Sentinel mascot and command console"
+                width={1248}
+                height={930}
+                className="hidden h-full w-full rounded-xl object-cover object-left-top dark:block"
+              />
+            </div>
+          </div>
+        </section>
+
         <section className="mb-8 rounded-2xl border border-border-soft bg-surface p-6">
           <div className="mb-4 flex items-center gap-2">
             <Target className="h-5 w-5 text-safe" />
@@ -199,13 +248,13 @@ export default function ProofPage() {
             <div className="rounded-xl border border-border-soft bg-background p-4">
               <div className="text-[10px] font-black uppercase tracking-normal text-muted">Transparent model</div>
               <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-                The current scorer is a transparent evidence-weighted safety policy, not a claimed continuous-learning model.
+                The scorer is a transparent evidence-weighted safety policy, not a claimed continuous-learning model.
               </p>
             </div>
             <div className="rounded-xl border border-border-soft bg-background p-4">
               <div className="text-[10px] font-black uppercase tracking-normal text-muted">WDK roadmap</div>
               <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-                Current proof is a production-accepted workflow run. The next step is a durable timeline with checkpoints, retries, callbacks, and completed-result proof.
+                Workflow proof is a production-accepted run. The next step is a durable timeline with checkpoints, retries, callbacks, and completed-result proof.
               </p>
             </div>
           </div>

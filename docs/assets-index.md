@@ -34,6 +34,13 @@ Use this file as the source of truth for current launch, store, and social asset
 | Story/Reel cover | `public/social/hireproof-story-1080x1920.png` |
 | Product Hunt thumbnail | `public/social/product-hunt-thumbnail-1080.png` |
 
+## CLI and terminal proof
+
+| Use | File |
+| --- | --- |
+| CLI TUI proof screenshot, light surface | `public/cli-tui-screenshot.png` |
+| CLI TUI proof screenshot, dark surface | `public/cli-tui-screenshot-dark.png` |
+
 ## Chrome Web Store
 
 | Use | File |

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Terminal, FileText, HeartPulse, Settings, Braces, Package, Gauge } from 'lucide-react'
 import { CodeBlock } from '@/components/ui/code-block'
 
@@ -52,13 +53,34 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit --text "Remote frontend i
           <h2 className="text-2xl font-black">Interactive Console</h2>
         </div>
         <p className="max-w-3xl text-sm font-semibold leading-relaxed text-muted">
-          In a real terminal, <code className="rounded bg-background px-1.5 py-0.5">hireproof</code> opens a full-screen-style Ink TUI with the Shield Sentinel mascot, menu navigation, command-console input with Tab autocomplete, audit flows, health/config tools, recent report summaries, and a local Ask HireProof panel.
+          In a real terminal, <code className="rounded bg-background px-1.5 py-0.5">hireproof</code> opens a full-screen-style Ink TUI with the Shield Sentinel mascot, menu navigation, command-console input with Tab autocomplete, slash commands, status context, audit flows, health/config tools, recent report summaries, and a local Ask HireProof panel.
         </p>
+        <figure className="overflow-hidden rounded-[28px] border border-border-soft bg-surface shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+          <Image
+            src="/cli-tui-screenshot.png"
+            alt="HireProof CLI interactive terminal UI with Shield Sentinel mascot, command console, and docs-style menu"
+            width={1248}
+            height={930}
+            className="block h-auto w-full dark:hidden"
+            priority
+          />
+          <Image
+            src="/cli-tui-screenshot-dark.png"
+            alt="HireProof CLI dark-theme interactive terminal UI with Shield Sentinel mascot, command console, and docs-style menu"
+            width={1248}
+            height={930}
+            className="hidden h-auto w-full dark:block"
+          />
+          <figcaption className="border-t border-border-soft bg-muted/35 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">
+            Actual repo-rendered CLI TUI screenshot, theme-aware
+          </figcaption>
+        </figure>
         <CodeBlock
           title="Terminal"
           code={`HIREPROOF
 Shield Sentinel terminal console
 Target https://hireproof-sigma.vercel.app  Mode demo  Key configured
+API ok | mode demo | key configured | latest High-Risk 92/100 | / commands | Tab complete | ? help
 
 Shield Sentinel        > Audit - Run the guided audit workflow
     .-=========-.        Paste message - Paste a recruiter message or job post
@@ -74,6 +96,8 @@ Command console  Tab autocomplete  Enter run
 > hea
 Tab -> health
 
+Slash commands: /health /reports /ask
+Shortcuts: a audit, h health, r reports, ? help
 Esc back/exit  q exit  Direct JSON commands remain unchanged.`}
         />
       </section>
@@ -177,6 +201,7 @@ hireproof config list`}
           title="Terminal"
           code={`hireproof
 hireproof tui
+Inside the TUI: /health, /reports, /ask, Tab autocomplete
 hireproof audit --file .\\job-post.txt --plain
 hireproof audit --file .\\job-post.txt --no-color
 hireproof audit --file .\\job-post.txt --verbose`}

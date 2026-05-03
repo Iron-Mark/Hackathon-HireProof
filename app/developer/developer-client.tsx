@@ -565,18 +565,25 @@ export function DeveloperClient() {
           {/* Side Info / Resources */}
           <aside className="space-y-8">
             {/* Quick Setup Card */}
-            <section className="rounded-3xl border border-border-soft bg-foreground p-8 text-background shadow-xl">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-safe text-background">
+            <section className="rounded-3xl border border-safe/20 bg-surface p-8 text-foreground shadow-sm">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-safe/25 bg-safe/10 text-safe">
                 <Code2 className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-black leading-tight">Install the SDK</h3>
-              <p className="mt-2 text-sm font-bold opacity-70">Build agentic integrations in minutes.</p>
+              <p className="mt-2 text-sm font-bold text-muted">Build agentic integrations in minutes.</p>
               <div className="mt-6 space-y-4">
-                <div className="rounded-xl bg-background/10 p-4 font-mono text-xs font-bold flex items-center justify-between group">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-border-soft bg-background p-4 font-mono text-xs font-bold text-foreground">
                   <span className="truncate">npm install hireproof-sdk</span>
-                  <button onClick={() => copy('npm install hireproof-sdk')} className="opacity-0 group-hover:opacity-100 transition-opacity"><Copy className="h-3 w-3" /></button>
+                  <button
+                    type="button"
+                    onClick={() => copy('npm install hireproof-sdk')}
+                    aria-label="Copy SDK install command"
+                    className="hireproof-focus flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-safe/10 hover:text-foreground"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                <Link href="/docs/sdk" className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-xs font-black transition-all hover:bg-white/20">
+                <Link href="/docs/sdk" className="hireproof-focus flex min-h-11 items-center justify-between rounded-xl border border-border-soft bg-background px-4 py-3 text-xs font-black text-foreground transition-colors hover:border-safe/30 hover:bg-safe/10">
                   View SDK Docs
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>

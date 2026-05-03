@@ -330,7 +330,7 @@ export function SiteFooter() {
               </div>
             </Tooltip>
           </div>
-          <p className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-center text-[10px] font-black text-muted uppercase tracking-widest">
+          <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-center text-[10px] font-black text-muted uppercase tracking-widest">
             <span>© 2026 HireProof.</span>
             <span>Developed by</span>
             <a
@@ -354,7 +354,7 @@ export function SiteFooter() {
               Submitted showcase
             </a>
             .
-          </p>
+          </div>
         </div>
       </div>
     </footer>

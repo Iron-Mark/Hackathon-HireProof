@@ -10,6 +10,11 @@ HireProof takes a pasted job post, recruiter message, screenshot, or job URL and
 - Author: [Mark Siazon](https://www.marksiazon.dev/)
 - Built for the [Vercel Zero to Agent Hackathon](https://community.vercel.com/hackathons/zero-to-agent)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/cli-tui-screenshot-dark.png">
+  <img alt="HireProof CLI interactive terminal UI with Shield Sentinel mascot" src="public/cli-tui-screenshot.png">
+</picture>
+
 ## At A Glance
 
 | Area | Status | Where to verify |
@@ -21,6 +26,7 @@ HireProof takes a pasted job post, recruiter message, screenshot, or job URL and
 | ChatSDK | Implemented; Slack and Telegram live-tested, Discord ready, WhatsApp/Zernio credential-gated | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
 | Vercel Workflow / WDK | Implemented; production accepted-run proof captured | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
 | Automation integrations | Repo-shipped n8n, Make, and LangChain packs plus HTTP templates | [`docs/automation-integrations.md`](docs/automation-integrations.md) |
+| HireProof CLI | Repo-shipped rich terminal UI with light/dark proof screenshots | [`packages/hireproof-cli`](packages/hireproof-cli), [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli) |
 | Chrome extension | Store-ready package and current upload assets generated | [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md), [`docs/assets-index.md`](docs/assets-index.md) |
 | Docker | Production image/Compose scripts implemented | `Dockerfile`, `docker-compose.yml` |
 
@@ -59,6 +65,7 @@ What is complete in this repo:
 - Discord slash commands: `/verify job_post:<text-or-link>` checks a suspicious job post, expands supported public job URLs, and `/help` explains how to use HireProof in Discord.
 - Vercel Workflow / WDK audit start route.
 - Native automation packs for n8n, Make, and LangChain, plus portable HTTP templates.
+- HireProof CLI with rich terminal reports, an Ink-based Shield Sentinel TUI, Tab autocomplete, local report history, and theme-aware proof screenshots.
 - Shareable audit reports, history, trends, PDF dossier, CSV export, PNG export, and safe-report certificate.
 - Verified badge API and developer portal controls.
 - Dockerfile, Compose service, healthcheck, and smoke script for self-hosting.
@@ -210,6 +217,7 @@ HireProof is useful as a user-facing app, but the stronger technical story is th
 - **MCP tools** for evidence-gathering runtimes.
 - **n8n and Make source packs** for no-code and operations workflows.
 - **LangChain package source** for agent pipelines using structured tools.
+- **HireProof CLI** for terminal audits, scripted JSON output, health checks, and a branded interactive TUI.
 - **ChatSDK adapters** for job-seeker communities in Slack, Telegram, Discord, and WhatsApp-backed channels.
 - **WDK route** for durable investigation handoff when workflow credentials are configured.
 
@@ -306,6 +314,28 @@ packages/hireproof-langchain/
 ```
 
 Marketplace submission steps are in [`docs/automation-marketplace-submission.md`](docs/automation-marketplace-submission.md). Screenshot proof requirements are in [`docs/evidence-screenshot-checklist.md`](docs/evidence-screenshot-checklist.md).
+
+### HireProof CLI
+
+Run the local terminal product surface from the repo:
+
+```bash
+npm run cli -- --help
+npm run cli -- tui
+npm run cli -- health
+npm run cli -- audit --text "Remote frontend intern. PHP 80,000/week. No interview. Telegram only." --mode demo
+```
+
+The CLI keeps direct commands automation-safe while `hireproof`/`hireproof tui` opens a branded terminal console with the Shield Sentinel mascot, guided audit flows, command autocomplete, health/config tools, recent report summaries, and local Ask HireProof answers from the selected report.
+
+Theme-aware CLI proof screenshots:
+
+```text
+public/cli-tui-screenshot.png
+public/cli-tui-screenshot-dark.png
+```
+
+CLI package details are in [`packages/hireproof-cli/README.md`](packages/hireproof-cli/README.md). Public docs are at [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli).
 
 ### Docker Self-Hosting
 
