@@ -15,6 +15,7 @@ test('audit report permalinks await dynamic params before lookup', async () => {
 
   assert.match(source, /params:\s*Promise<\{\s*id:\s*string\s*\}>/)
   assert.match(source, /const\s+\{\s*id\s*\}\s*=\s*await\s+params/)
+  assert.match(source, /\^\(report\|chat\)_\[a-zA-Z0-9_-\]\+\$/)
   assert.doesNotMatch(source, /params\.id/)
 })
 

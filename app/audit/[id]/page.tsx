@@ -42,7 +42,7 @@ export default async function AuditPermalinkPage({ params }: { params: Promise<{
   const { id } = await params
   // Input validation: ensure ID only contains valid characters to guard against path traversal or injections
   const safeId = typeof id === 'string' ? id.trim() : ''
-  if (!safeId || !/^report_[a-zA-Z0-9_-]+$/.test(safeId) || safeId.length > 100) {
+  if (!safeId || !/^(report|chat)_[a-zA-Z0-9_-]+$/.test(safeId) || safeId.length > 100) {
     redirect('/audit')
   }
 
