@@ -779,19 +779,23 @@ function deriveIntelligence(
 
 export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   const evidence = attachEvidenceMetadata([...(input.enrichmentEvidence || []), ...(input.evidence || [])])
-  const trustedJobPageEvidence = hasTrustedJobPageEvidence(evidence)
+  const reportOfficialHost = hostnameFromUrl(evidence.find(item => item.type === 'Official Company Presence')?.url)
+  const reportEvidence = evidence.filter(item =>
+    item.type !== 'Apply Path Mismatch' || isActionableApplyPathMismatch(item, reportOfficialHost)
+  )
+  const trustedJobPageEvidence = hasTrustedJobPageEvidence(reportEvidence)
   let redFlags = [
-    ...extractRedFlags(input.extractedClaims, evidence),
+    ...extractRedFlags(input.extractedClaims, reportEvidence),
     ...(input.enrichmentRedFlags || []),
   ]
   if (trustedJobPageEvidence) {
     redFlags = redFlags.filter(flag => !/no supporting evidence/i.test(flag))
   }
-  const greenFlags = extractGreenFlags(input.extractedClaims, evidence)
+  const greenFlags = extractGreenFlags(input.extractedClaims, reportEvidence)
   const preliminaryProfileMode = inferCompanyProfileMode(
     input.extractedClaims,
-    evidence,
-    evidence.filter(item => item.type === 'Verified Local Presence'),
+    reportEvidence,
+    reportEvidence.filter(item => item.type === 'Verified Local Presence'),
   )
 
   if (preliminaryProfileMode === 'startup_remote' || preliminaryProfileMode === 'established_remote') {
@@ -803,10 +807,10 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   }
 
   const baseScore = Math.max(
-    calculateRiskScore(input.extractedClaims, redFlags, greenFlags, evidence),
+    calculateRiskScore(input.extractedClaims, redFlags, greenFlags, reportEvidence),
     (input.enrichmentRedFlags || []).length > 0 ? 45 : 0,
   )
-  const { intelligence, riskScore, operations } = deriveIntelligence(input.extractedClaims, evidence, redFlags, greenFlags, baseScore)
+  const { intelligence, riskScore, operations } = deriveIntelligence(input.extractedClaims, reportEvidence, redFlags, greenFlags, baseScore)
   const verdict = determineVerdict(riskScore)
   const salaryBenchmarkOperation = operations?.salaryBenchmark
     ? {
@@ -825,8 +829,8 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
     extractedClaims: input.extractedClaims,
     redFlags,
     greenFlags,
-    evidence,
-    alternatives: buildVerifiedAlternativeJobs(evidence),
+    evidence: reportEvidence,
+    alternatives: buildVerifiedAlternativeJobs(reportEvidence),
     nextSteps: buildNextSteps(verdict, input.extractedClaims.company),
     timestamp: new Date().toISOString(),
     mode: 'live',

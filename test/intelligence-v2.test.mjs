@@ -436,6 +436,8 @@ test('v2 intelligence ignores stale comparable-host apply mismatch for trusted L
   })
 
   assert.equal(report.intelligence.applyPath.status, 'trusted-board')
+  assert.ok(report.redFlags.every((flag) => !/apply path/i.test(flag)))
+  assert.ok(report.evidence.every((item) => item.type !== 'Apply Path Mismatch'))
   assert.ok(report.intelligence.signals.every((signal) => signal.id !== 'apply_path_mismatch'))
   assert.ok(report.intelligence.scoreTrace.every((item) => item.step !== 'Apply path' || item.delta !== 18))
 })
