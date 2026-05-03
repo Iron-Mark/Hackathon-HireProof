@@ -5,11 +5,11 @@ import Script from 'next/script'
 import { useEffect, useState } from 'react'
 import { ArrowRight, CheckCircle2, AlertCircle, Globe, TrendingUp, MapPin, ShieldAlert, SearchCheck, FileText, Sparkles, Zap, Bot, Terminal, Cpu, Zap as ZapIcon, Network, Download, Workflow } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 
-import { SpotTheBot } from '@/components/spot-the-bot'
-import { BrandMark } from '@/components/brand-mark'
-import { ImpactTicker } from '@/components/impact-ticker'
+import { SpotTheBot } from '@/components/marketing/spot-the-bot'
+import { BrandMark } from '@/components/brand/brand-mark'
+import { ImpactTicker } from '@/components/marketing/impact-ticker'
 
 const flags = [
   'PHP 80,000/week for an internship',

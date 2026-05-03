@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import { CheckCircle2, Key, Zap, ShieldCheck, Server, Database } from 'lucide-react'
 import Link from 'next/link'
 

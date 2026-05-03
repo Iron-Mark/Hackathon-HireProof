@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ClipboardPaste, FileText, Link2, Loader2, MapPin, Image as ImageIcon, X } from 'lucide-react'
-import VoiceInputButton from '@/components/voice-input-button'
+import VoiceInputButton from '@/components/audit/voice-input-button'
 
 interface AuditFormProps {
   onInvestigate: (data: { text: string; url?: string; location?: string; image?: string }) => void

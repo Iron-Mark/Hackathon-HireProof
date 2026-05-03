@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
 import { motion } from 'framer-motion'
 import {
@@ -20,7 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { showToast } from '@/components/toast'
+import { showToast } from '@/components/system/toast'
 
 function SettingRow({
   icon: Icon,

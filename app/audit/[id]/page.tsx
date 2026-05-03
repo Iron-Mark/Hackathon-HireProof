@@ -1,8 +1,8 @@
 import { getReport } from '@/lib/db'
-import ResultScreen from '@/components/result-screen'
-import { SiteHeader } from '@/components/site-header'
+import ResultScreen from '@/components/audit/result-screen'
+import { SiteHeader } from '@/components/layout/site-header'
 import { redirect } from 'next/navigation'
-import { ErrorBoundary } from '@/components/error-boundary'
+import { ErrorBoundary } from '@/components/system/error-boundary'
 import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'

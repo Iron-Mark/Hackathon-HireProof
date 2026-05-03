@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { VerifiedBadge } from '@/components/verified-badge'
+import { VerifiedBadge } from '@/components/brand/verified-badge'
 import { CodeBlock } from '@/components/ui/code-block'
 import { ShieldCheck, Info } from 'lucide-react'
 

@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, FileSearch } from 'lucide-react'
-import { SiteHeader } from '@/components/site-header'
-import ResultScreen from '@/components/result-screen'
+import { SiteHeader } from '@/components/layout/site-header'
+import ResultScreen from '@/components/audit/result-screen'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
 
 export default function LocalHistoryReportPage() {

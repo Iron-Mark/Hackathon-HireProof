@@ -1,5 +1,5 @@
 import { CodeBlock } from '@/components/ui/code-block'
-import { ApiPlayground } from '@/components/api-playground'
+import { ApiPlayground } from '@/components/docs/api-playground'
 
 export const metadata = { title: 'API Reference — HireProof' }
 

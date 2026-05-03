@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import { History, FileSearch, ArrowRight, ShieldCheck, AlertTriangle, Zap, Calendar, Download } from 'lucide-react'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
 import Link from 'next/link'

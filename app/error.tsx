@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, RotateCw, ArrowLeft, ShieldAlert, Cpu } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 
 export default function ErrorPage({
   error,

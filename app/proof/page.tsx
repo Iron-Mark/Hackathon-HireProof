@@ -17,7 +17,7 @@ import {
   Target,
   Workflow,
 } from 'lucide-react'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 
 export const metadata: Metadata = {
   title: 'Proof Pack | HireProof',

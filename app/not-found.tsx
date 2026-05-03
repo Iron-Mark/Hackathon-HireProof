@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FileQuestion, Home, Search, ShieldAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 
 export default function NotFoundPage() {
   return (

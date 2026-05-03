@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import { TrendingUp, AlertTriangle, ShieldCheck, Zap, Globe, BarChart3, Clock, Download } from 'lucide-react'
 import { buildTrendsViewModel } from '@/lib/trends-view-model.mjs'
 import { buildTrendsJsonExport, buildTrendsCsvExport } from '@/lib/report-actions.mjs'

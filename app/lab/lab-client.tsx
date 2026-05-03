@@ -16,8 +16,8 @@ import {
   Terminal,
   Zap,
 } from 'lucide-react'
-import { SiteHeader } from '@/components/site-header'
-import { showToast } from '@/components/toast'
+import { SiteHeader } from '@/components/layout/site-header'
+import { showToast } from '@/components/system/toast'
 import type { AuditReport, AuditRequest } from '@/lib/schemas'
 
 type LabStepId = 'intake' | 'claims' | 'evidence' | 'risk' | 'report'

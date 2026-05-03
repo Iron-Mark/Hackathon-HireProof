@@ -22,8 +22,8 @@ import {
   RefreshCcw,
   Globe
 } from 'lucide-react'
-import { BrandMark } from '@/components/brand-mark'
-import { SiteHeader } from '@/components/site-header'
+import { BrandMark } from '@/components/brand/brand-mark'
+import { SiteHeader } from '@/components/layout/site-header'
 
 export default function ExtensionDemo() {
   const [isExtensionOpen, setIsExtensionOpen] = useState(true)

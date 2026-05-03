@@ -6,10 +6,10 @@ import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, A
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import html2canvas from 'html2canvas'
-import RiskRadarChart from '@/components/risk-radar-chart'
+import RiskRadarChart from '@/components/audit/risk-radar-chart'
 import { generatePdfDossier, generateCertificate } from '@/lib/generate-pdf'
-import { showToast } from '@/components/toast'
-import { Confetti } from '@/components/confetti'
+import { showToast } from '@/components/system/toast'
+import { Confetti } from '@/components/system/confetti'
 import { buildLegalAbuseReportMailto, buildReportCsvExport } from '@/lib/report-actions.mjs'
 
 interface Result {

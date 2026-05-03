@@ -18,8 +18,8 @@ import {
   Webhook,
   ArrowUpRight
 } from 'lucide-react'
-import { SiteHeader } from '@/components/site-header'
-import { showToast } from '@/components/toast'
+import { SiteHeader } from '@/components/layout/site-header'
+import { showToast } from '@/components/system/toast'
 
 type User = { id: string; email: string; name: string }
 type ApiKey = { id: string; name: string; lastFour: string; createdAt: string; lastUsedAt: string | null }

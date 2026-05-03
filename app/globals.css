@@ -129,3 +129,36 @@ textarea {
   animation: glitch 0.2s cubic-bezier(.25,.46,.45,.94) both infinite;
   text-shadow: 2px 0 #ff003c, -2px 0 #00e5ff;
 }
+
+.bot-scan-line {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    transparent 46%,
+    color-mix(in srgb, var(--hireproof-evidence) 38%, transparent) 50%,
+    transparent 54%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: bot-scan-line 3.5s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes bot-scan-line {
+  0% {
+    transform: translateX(-80%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(80%);
+    opacity: 0;
+  }
+}

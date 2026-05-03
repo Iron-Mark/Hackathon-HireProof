@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Terminal, X, Zap, Loader2 } from 'lucide-react'
-import { showToast } from '@/components/toast'
+import { showToast } from '@/components/system/toast'
 
 const SHOW_DELAY_MS = 1800
 const AUTO_DISMISS_MS = 18000 // 18 seconds before it decays away

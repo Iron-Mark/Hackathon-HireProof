@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import { BookOpen, Code2, Package, ChevronRight, FileText, Menu, X } from 'lucide-react'
-import { showToast } from '@/components/toast'
+import { showToast } from '@/components/system/toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const docsSidebar = [

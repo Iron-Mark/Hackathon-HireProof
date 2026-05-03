@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BrandMark } from '@/components/brand-mark'
+import { BrandMark } from '@/components/brand/brand-mark'
 import {
   Activity,
   BookOpen,
@@ -23,7 +23,7 @@ import {
   Cpu,
   type LucideIcon,
 } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeToggle } from '@/components/system/theme-toggle'
 
 type NavLink = {
   href: string

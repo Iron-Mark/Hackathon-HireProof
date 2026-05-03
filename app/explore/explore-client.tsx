@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { Search, Globe, ShieldAlert, Sparkles, TrendingUp, Cpu, Terminal, ArrowRight, BookOpen, Compass } from 'lucide-react'
 import Link from 'next/link'
-import { SiteHeader } from '@/components/site-header'
+import { SiteHeader } from '@/components/layout/site-header'
 import type { AuditReport } from '@/lib/schemas'
 
 export function ExploreClient() {
