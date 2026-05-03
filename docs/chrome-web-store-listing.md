@@ -1,6 +1,6 @@
 # Chrome Web Store Listing Draft
 
-Use this copy when submitting `dist/chrome/hireproof-extension.zip` to the Chrome Web Store. The site also serves a manual-install fallback at `/downloads/hireproof-extension.zip` while the public listing is pending review.
+Use this copy when submitting `public/downloads/hireproof-extension.zip` to the Chrome Web Store. `dist/chrome/hireproof-extension.zip` is the local build output, and the site serves the same package as a manual-install fallback at `/downloads/hireproof-extension.zip` while the public listing is pending review. Current upload assets are indexed in [`docs/assets-index.md`](assets-index.md).
 
 ## Listing
 
@@ -44,16 +44,16 @@ Expected result: High Risk verdict with a visible risk score and red flags.
 
 ## Screenshot Checklist
 
-- `docs/chrome-web-store-assets/screenshot-01-popup-idle-1280x800.png`
-- `docs/chrome-web-store-assets/screenshot-02-popup-result-1280x800.png`
-- `docs/chrome-web-store-assets/screenshot-03-supported-job-page-1280x800.png`
-- `docs/chrome-web-store-assets/screenshot-04-context-menu-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-popup-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-context-menu-1280x800.png`
+- `docs/chrome-web-store-assets/screenshot-verdict-1280x800.png`
 
 Chrome's image guidance allows 1280x800 screenshots or 640x400 when the larger size is not suitable. The repository assets use 1280x800 for sharp listing previews.
 
-## Promotional Image
+## Promotional Images
 
 - `docs/chrome-web-store-assets/promo-small-440x280.png`
+- `docs/chrome-web-store-assets/marquee-1400x560.png`
 
 ## Publication Boundary
 

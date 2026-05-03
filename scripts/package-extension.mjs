@@ -12,7 +12,7 @@ const packageDir = path.join(outDir, 'hireproof-extension')
 const zipPath = path.join(outDir, 'hireproof-extension.zip')
 const publicDownloadsDir = path.join(root, 'public', 'downloads')
 const publicZipPath = path.join(publicDownloadsDir, 'hireproof-extension.zip')
-const requiredIcons = ['16', '32', '48', '128']
+const requiredIcons = ['16', '32', '48', '128', '512']
 const requiredFiles = [
   'manifest.json',
   'background.js',

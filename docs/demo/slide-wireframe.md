@@ -344,7 +344,7 @@ Visual notes:
 
 ## Asset Checklist
 
-- Product logo or wordmark: `HireProof`
+- Product logo or wordmark: use the current lockups in `assets/brand/current/`; see `docs/assets-index.md`
 - Suspicious job post sample card
 - High-Risk verdict card mock
 - Risk score ring or badge

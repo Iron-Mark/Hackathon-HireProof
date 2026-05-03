@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BrandMark } from '@/components/brand/brand-mark'
+import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 import {
   Activity,
   BookOpen,
@@ -140,7 +140,7 @@ export function SiteHeader() {
           <BrandMark className="h-9 w-9 shrink-0 transition-transform group-hover:scale-110 glitch-hover" />
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-2">
-              <div className="text-lg font-black tracking-normal">HireProof</div>
+              <BrandWordmark className="text-lg" />
 
             </div>
           </div>

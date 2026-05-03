@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { Code2, Globe, MessageSquare, ShieldCheck } from "lucide-react";
 
 const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -186,7 +186,7 @@ export function SiteFooter() {
               className="group flex items-center gap-2 mb-6 transition-transform hover:scale-105 active:scale-95 origin-left"
             >
               <BrandMark className="h-8 w-8 transition-transform group-hover:rotate-12" />
-              <span className="text-xl font-black">HireProof</span>
+              <BrandWordmark className="text-xl" />
             </Link>
             <p className="text-sm font-medium text-muted leading-relaxed mb-6">
               Verify suspicious job posts and recruiter messages with live

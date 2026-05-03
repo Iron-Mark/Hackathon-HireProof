@@ -22,7 +22,7 @@ import {
   RefreshCcw,
   Globe
 } from 'lucide-react'
-import { BrandMark } from '@/components/brand/brand-mark'
+import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 import { SiteHeader } from '@/components/layout/site-header'
 
 export default function ExtensionDemo() {
@@ -227,7 +227,7 @@ export default function ExtensionDemo() {
                       <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-2">
                           <BrandMark className="h-8 w-8" />
-                          <span className="font-black tracking-tight text-lg">HireProof <span className="text-[10px] text-muted ml-1">v1.2.4</span></span>
+                          <span className="flex items-baseline gap-1"><BrandWordmark className="text-lg" /> <span className="text-[10px] text-muted">v1.2.4</span></span>
                         </div>
                         <button onClick={() => setIsExtensionOpen(false)} className="rounded-full p-2 hover:bg-surface transition-colors">
                            <MoreHorizontal className="h-5 w-5 text-muted" />

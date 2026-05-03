@@ -22,10 +22,21 @@
   --color-muted: var(--hireproof-muted);
   --color-surface: var(--hireproof-surface);
   --color-white: #ffffff;
+  --color-brand-lime: var(--hireproof-brand-lime);
 }
 
 :root {
   color-scheme: light dark;
+  --hireproof-brand-lime: #55f06f;
+  --hireproof-wordmark-proof: #12864f;
+  --hireproof-wordmark-glow: 0 0 0 rgba(18, 134, 79, 0);
+}
+
+.dark {
+  --hireproof-wordmark-proof: #55f06f;
+  --hireproof-wordmark-glow:
+    0 0 7px rgba(85, 240, 111, 0.42),
+    0 0 14px rgba(85, 240, 111, 0.16);
 }
 
 html {

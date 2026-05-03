@@ -21,7 +21,7 @@ HireProof takes a pasted job post, recruiter message, screenshot, or job URL and
 | ChatSDK | Implemented; Slack and Telegram live-tested, Discord ready, WhatsApp/Zernio credential-gated | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
 | Vercel Workflow / WDK | Implemented; production accepted-run proof captured | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
 | Automation integrations | Repo-shipped n8n, Make, and LangChain packs plus HTTP templates | [`docs/automation-integrations.md`](docs/automation-integrations.md) |
-| Chrome extension | Store-ready package and upload assets generated | [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md) |
+| Chrome extension | Store-ready package and current upload assets generated | [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md), [`docs/assets-index.md`](docs/assets-index.md) |
 | Docker | Production image/Compose scripts implemented | `Dockerfile`, `docker-compose.yml` |
 
 ## Contents
@@ -59,7 +59,7 @@ What is complete in this repo:
 - Shareable audit reports, history, trends, PDF dossier, CSV export, PNG export, and safe-report certificate.
 - Verified badge API and developer portal controls.
 - Dockerfile, Compose service, healthcheck, and smoke script for self-hosting.
-- Manifest V3 Chrome extension with store-ready ZIP, screenshots, promo image, listing copy, and privacy notes.
+- Manifest V3 Chrome extension with store-ready ZIP, current screenshots, promo assets, listing copy, and privacy notes.
 
 Output and sharing capabilities:
 
@@ -69,7 +69,7 @@ Output and sharing capabilities:
 
 Honest external boundaries:
 
-- Chrome Web Store publication requires the Chrome Web Store developer dashboard, privacy form, uploaded screenshots, and Google review. This repo prepares the upload package and assets; it cannot publish the listing by itself.
+- Chrome Web Store publication requires the Chrome Web Store developer dashboard, privacy form, uploaded screenshots, and Google review. This repo prepares the upload package and assets listed in [`docs/assets-index.md`](docs/assets-index.md); it cannot publish the listing by itself.
 - n8n, Make, and npm marketplace publication require external accounts and review/publish steps. This repo ships validated source packs and checklists, not approved listings.
 - Docker smoke testing requires Docker Desktop or another Docker runtime. The scripts are present, but the local machine must have Docker available.
 - Live ChatSDK proof is captured for Slack and Telegram. Discord is credential-ready but still needs a real provider-event screenshot/log, and WhatsApp/Zernio needs provider credentials before proof can be claimed.
@@ -239,14 +239,14 @@ Generated assets:
 
 ```text
 docs/chrome-web-store-assets/
-+-- screenshot-01-popup-idle-1280x800.png
-+-- screenshot-02-popup-result-1280x800.png
-+-- screenshot-03-supported-job-page-1280x800.png
-+-- screenshot-04-context-menu-1280x800.png
-`-- promo-small-440x280.png
++-- promo-small-440x280.png
++-- marquee-1400x560.png
++-- screenshot-popup-1280x800.png
++-- screenshot-context-menu-1280x800.png
+`-- screenshot-verdict-1280x800.png
 ```
 
-Listing copy, reviewer notes, privacy practices, and publication boundary are in [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md). Extension privacy details are in [`extension/PRIVACY.md`](extension/PRIVACY.md).
+Listing copy, reviewer notes, privacy practices, and publication boundary are in [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md). The full brand, social, platform, and store asset map is in [`docs/assets-index.md`](docs/assets-index.md). Extension privacy details are in [`extension/PRIVACY.md`](extension/PRIVACY.md).
 
 ### Native Automation Integrations
 
@@ -371,7 +371,7 @@ What those gates prove:
 | `node test/runtime-wiring.test.mjs` | Runtime surfaces are wired to real endpoints and honest readiness states. |
 | `node test/byok-credentials.test.mjs` | BYOK encryption, CSRF, and credential routing checks pass. |
 | `npm run package:extension` | Chrome extension manifest/assets package into a clean upload ZIP. |
-| `npm run store:assets` | Chrome Web Store screenshots and promo image are regenerated. |
+| `npm run store:assets` | Current Chrome Web Store screenshots and promotional assets are regenerated. |
 | `pnpm integrations:build` | n8n, Make, LangChain, and download-template metadata validate. |
 | `pnpm integrations:test` | Integration validators plus demo API smoke pass. |
 | `pnpm integrations:package` | Native integration source bundle is regenerated. |
@@ -495,7 +495,7 @@ scripts/
 
 ## Documentation
 
-- [`DEPLOYMENT.md`](DEPLOYMENT.md): deployment and production status.
+- [`DEPLOYMENT.md`](DEPLOYMENT.md): deployment and production status.`n- [`docs/assets-index.md`](docs/assets-index.md): current logo, social, platform, Chrome Web Store, and review asset index.
 - [`docs/remaining-work.md`](docs/remaining-work.md): current proof status and honest boundaries.
 - [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md): Chrome listing copy and upload assets.
 - [`docs/credentials-setup.md`](docs/credentials-setup.md): platform credential setup notes.
