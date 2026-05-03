@@ -1,4 +1,4 @@
-import type { EvidenceItem } from '@/lib/schemas'
+import type { EvidenceItem, ExtractedClaims } from '@/lib/schemas'
 
 const SERPAPI_KEY = process.env.SERPAPI_API_KEY
 const API_BASE = 'https://serpapi.com/search.json'
@@ -45,6 +45,61 @@ export function hasSerpApiKey(serpapiKey?: string) {
 function sanitizeQuery(query: string, maxLength: number = 200): string {
   if (!query) return ''
   return String(query).trim().slice(0, maxLength)
+}
+
+function normalizeSearchText(value: string): string {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function companyTokens(companyName: string): string[] {
+  const genericTokens = new Set([
+    'the',
+    'and',
+    'company',
+    'corp',
+    'corporation',
+    'inc',
+    'llc',
+    'ltd',
+    'limited',
+    'co',
+    'group',
+  ])
+
+  return normalizeSearchText(companyName)
+    .split(' ')
+    .filter(token => token.length >= 3 && !genericTokens.has(token))
+}
+
+function isCompanySpecificNewsResult(
+  result: NonNullable<SerpApiResponse['news_results']>[number],
+  companyName: string
+): boolean {
+  const source = typeof result.source === 'string'
+    ? result.source
+    : result.source?.name
+  const haystack = normalizeSearchText(`${result.title || ''} ${result.link || ''} ${source || ''}`)
+  const tokens = companyTokens(companyName)
+
+  return tokens.length > 0 && tokens.some(token => haystack.includes(token))
+}
+
+function isKnownCompany(companyName: string): boolean {
+  const normalized = normalizeSearchText(companyName)
+  return Boolean(normalized) && !normalized.includes('unknown') && !normalized.includes('not verifiable')
+}
+
+function evidenceKey(item: EvidenceItem) {
+  return [
+    item.type || '',
+    item.source || '',
+    item.snippet || '',
+    item.url || '',
+  ].join('|')
 }
 
 async function fetchSerpApi(params: Record<string, any>, serpapiKey?: string): Promise<SerpApiResponse | null> {
@@ -142,7 +197,11 @@ export async function searchNewsReputation(companyName: string, serpapiKey?: str
     }, serpapiKey)
 
     if (data?.news_results) {
-      data.news_results.slice(0, 3).forEach((result) => {
+      const companySpecificNewsResults = data.news_results.filter(result =>
+        isCompanySpecificNewsResult(result, safeCompany)
+      )
+
+      companySpecificNewsResults.slice(0, 3).forEach((result) => {
         const source = typeof result.source === 'string'
           ? result.source
           : result.source?.name
@@ -160,6 +219,47 @@ export async function searchNewsReputation(companyName: string, serpapiKey?: str
   }
 
   return evidence
+}
+
+export async function ensureSerpApiEvidenceCoverage(
+  evidence: EvidenceItem[],
+  claims: Pick<ExtractedClaims, 'company' | 'role' | 'location'>,
+  serpapiKey?: string
+): Promise<EvidenceItem[]> {
+  if (!hasSerpApiKey(serpapiKey)) return Array.isArray(evidence) ? evidence : []
+
+  const existingEvidence = Array.isArray(evidence) ? evidence : []
+  const hasCompany = isKnownCompany(claims.company)
+  const hasEvidenceType = (type: string) => existingEvidence.some(item => item?.type === type)
+
+  const [companyEvidence, newsEvidence, jobsEvidence, localEvidence] = await Promise.all([
+    hasCompany && !hasEvidenceType('Company Check')
+      ? searchCompanyPresence(claims.company, claims.role, serpapiKey)
+      : Promise.resolve([]),
+    hasCompany && !hasEvidenceType('Reputation')
+      ? searchNewsReputation(claims.company, serpapiKey)
+      : Promise.resolve([]),
+    !hasEvidenceType('Comparable Jobs')
+      ? searchComparableJobs(claims.role, claims.location, serpapiKey)
+      : Promise.resolve([]),
+    hasCompany && !hasEvidenceType('Local Presence')
+      ? searchLocalPresence(claims.company, claims.location, serpapiKey)
+      : Promise.resolve([]),
+  ])
+
+  const seen = new Set<string>()
+  return [
+    ...existingEvidence,
+    ...companyEvidence,
+    ...newsEvidence,
+    ...jobsEvidence,
+    ...localEvidence,
+  ].filter(item => {
+    const key = evidenceKey(item)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 /**

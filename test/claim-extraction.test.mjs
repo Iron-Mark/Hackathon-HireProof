@@ -42,3 +42,21 @@ test('recoverObviousClaims preserves credible extracted values', () => {
   assert.equal(claims.contactMethod, 'Email')
   assert.equal(claims.applicationPath, 'Official careers channel')
 })
+
+test('recoverObviousClaims stops explicit company extraction at the next field label', () => {
+  const claims = recoverObviousClaims({
+    text: 'Company: Canva. Role: Product Designer. Salary: $120,000/year. Location: Sydney. Apply through official careers website.',
+    url: 'https://www.canva.com/careers/',
+    location: 'Sydney, Australia',
+  }, {
+    company: 'Unknown / Not Verifiable',
+    role: 'Product Designer',
+    salary: '$120,000/year',
+    location: 'Sydney, Australia',
+    contactMethod: 'Not specified',
+    applicationPath: 'Official careers channel',
+  })
+
+  assert.equal(claims.company, 'Canva')
+  assert.equal(claims.role, 'Product Designer')
+})

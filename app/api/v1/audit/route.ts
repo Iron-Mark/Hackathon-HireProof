@@ -19,7 +19,14 @@ import {
   extractGreenFlags,
   generateSummary,
 } from '@/lib/risk-scorer'
-import { hasSerpApiKey, searchCompanyPresence, searchComparableJobs, searchLocalPresence, searchNewsReputation } from '@/lib/serpapi'
+import {
+  ensureSerpApiEvidenceCoverage,
+  hasSerpApiKey,
+  searchCompanyPresence,
+  searchComparableJobs,
+  searchLocalPresence,
+  searchNewsReputation,
+} from '@/lib/serpapi'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { saveReport } from '@/lib/db'
 import { authenticateApiKey, getOwnerProviderCredentials, recordUsage } from '@/lib/auth-store'
@@ -414,6 +421,8 @@ export async function POST(request: Request) {
             ])
             evidence = [...companyEvidence, ...newsEvidence, ...jobsEvidence, ...localEvidence]
           }
+
+          evidence = await ensureSerpApiEvidenceCoverage(evidence, extractedClaims, ownerCredentials.serpapiKey)
 
           let redFlags = extractRedFlags(extractedClaims, evidence)
           const greenFlags = extractGreenFlags(extractedClaims, evidence)

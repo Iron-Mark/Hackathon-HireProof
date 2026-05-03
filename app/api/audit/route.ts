@@ -18,6 +18,7 @@ import {
   generateSummary,
 } from '@/lib/risk-scorer'
 import {
+  ensureSerpApiEvidenceCoverage,
   isSerpApiConfigured,
   searchCompanyPresence,
   searchComparableJobs,
@@ -408,6 +409,8 @@ export async function POST(request: Request) {
             ...localEvidence,
           ]
         }
+
+        evidence = await ensureSerpApiEvidenceCoverage(evidence, extractedClaims)
 
         sendEvent('log', { message: 'Calculating deterministic risk score...' })
 
