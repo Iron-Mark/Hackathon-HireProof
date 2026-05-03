@@ -9,5 +9,5 @@
 - [ ] Screenshot captured for `Run Audit`.
 - [ ] Screenshot captured for `Run Async Audit`.
 - [ ] README describes demo key and live credential boundaries.
-- [ ] npm publish completed with the maintainer account.
+- [x] npm publish completed with the maintainer account: `https://www.npmjs.com/package/n8n-nodes-hireproof`.
 - [ ] n8n community verification submitted after npm publish.

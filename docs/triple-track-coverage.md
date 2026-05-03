@@ -12,7 +12,7 @@ The tracks are delivery layers for the same agent, not separate product directio
 - Other agents call the same checks through MCP or API.
 - Chat communities can ask the same agent to review suspicious posts in Slack, Telegram, Discord, or WhatsApp-backed channels.
 - Longer investigations can run asynchronously and notify users when the report is ready.
-- Automation builders can install or adapt repo-shipped n8n, Make, and LangChain integration packs around the same audit API.
+- Automation builders can install published npm packages for the CLI, SDK, LangChain, and n8n, or adapt the Make source pack and HTTP templates around the same audit API.
 
 ## Track Map
 
@@ -66,14 +66,16 @@ Submission line:
 
 ### Native Automation Integrations
 
-Implemented and source-packaged in the repo.
+Implemented, source-packaged, and npm-published where npm is the right distribution channel.
 
-- `integrations/n8n-nodes-hireproof` provides a community-node package named `n8n-nodes-hireproof` with `Run audit` and `Run async audit` operations.
+- `integrations/n8n-nodes-hireproof` provides the published package `n8n-nodes-hireproof` with `Run audit` and `Run async audit` operations.
 - `integrations/make-hireproof` provides Make Custom App source with API-key connection, sync audit, async audit, and health modules.
-- `packages/hireproof-langchain` provides `@hireproof/langchain` source with `createHireProofAuditTool`, schema validation, and typed result helpers.
+- `packages/hireproof-langchain` provides the published package `@hireproof/langchain` with `createHireProofAuditTool`, schema validation, and typed result helpers.
+- `packages/hireproof-cli` provides the published package `@hireproof/cli` with rich terminal reports, JSON mode, health/config tools, and the Shield Sentinel TUI.
+- `sdk` provides the published package `hireproof-sdk` for typed API clients.
 - `public/downloads/hireproof-native-integrations.zip` bundles the source packs for download.
 - Portable HTTP templates remain available for n8n workflow import, Make HTTP setup, LangChain standalone use, and curl smoke checks.
-- Marketplace publication is not claimed yet; npm publish, n8n approval, and Make review require external account actions.
+- npm publication is complete for the CLI, SDK, LangChain package, and n8n node. Make review and any separate n8n directory/community verification still require external account actions.
 
 ## Demo Strategy
 

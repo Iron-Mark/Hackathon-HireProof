@@ -30,8 +30,8 @@ hireproof tui
 ```
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../../public/cli-tui-screenshot-dark.png">
-  <img alt="HireProof CLI interactive TUI" src="../../public/cli-tui-screenshot.png">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/cli-tui-screenshot-dark.png">
+  <img alt="HireProof CLI interactive TUI" src="assets/cli-tui-screenshot.png">
 </picture>
 
 The interactive console includes:
@@ -201,4 +201,4 @@ Audit:
 
 ## Honest Status
 
-This package is repo-shipped, TUI-enabled, and tested. It is not published to npm until the package owner runs the external publish flow.
+This package is published on npm as `@hireproof/cli` and remains repo-shipped, TUI-enabled, and tested.

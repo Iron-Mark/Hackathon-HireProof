@@ -13,56 +13,43 @@ export default function LangchainPage() {
       <section className="space-y-4">
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">LangChain & Custom Agents</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
-          Turn HireProof into a <strong className="text-foreground">Primitive Tool</strong> for your own AI Agents. Allow your LLMs to autonomously verify job descriptions before taking actions.
+          Turn HireProof into a published <strong className="text-foreground">LangChain tool</strong> for your own AI agents. Let application or sourcing agents verify a job post before they draft, apply, message, or continue an automation.
         </p>
       </section>
 
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-border-soft pb-2">
           <Bot className="h-6 w-6 text-foreground" />
-          <h2 className="text-2xl font-black">Building a HireProof Tool</h2>
+          <h2 className="text-2xl font-black">Install the Published Tool</h2>
         </div>
         <p className="font-medium leading-relaxed text-muted">
-          If you are building an AI agent using LangChain, you can wrap the <code className="rounded bg-surface px-1.5 py-0.5 text-sm text-foreground">hireproof-sdk</code> into a Custom Tool. When your agent is asked to apply to a job, it can first use this tool to investigate the listing.
+          The official package is live on npm as <a href="https://www.npmjs.com/package/@hireproof/langchain" className="font-black text-safe hover:underline">@hireproof/langchain</a>. It exports a ready-to-use DynamicStructuredTool helper, input schema, audit runner, and threshold helper.
         </p>
+        <CodeBlock title="Terminal" code="npm install @hireproof/langchain @langchain/core zod" />
 
         <div className="hireproof-card space-y-6 rounded-3xl border border-border-soft p-8">
           <h3 className="text-lg font-black">TypeScript Implementation</h3>
-          <p className="text-sm font-medium text-muted">Here is how to create a custom LangChain DynamicStructuredTool for HireProof:</p>
+          <p className="text-sm font-medium text-muted">Create a HireProof audit tool and call it directly, or pass it into a LangChain agent.</p>
           
           <CodeBlock
             language="typescript"
-            code={`import { DynamicStructuredTool } from "@langchain/core/tools";
-import { z } from "zod";
-import HireProof from "hireproof-sdk";
+            code={`import { createHireProofAuditTool, isSafeEnough } from '@hireproof/langchain'
 
-const hireproof = new HireProof({ apiKey: process.env.HIREPROOF_API_KEY });
+const hireProofTool = createHireProofAuditTool({
+  apiKey: process.env.HIREPROOF_API_KEY,
+  baseUrl: 'https://hireproof-sigma.vercel.app',
+  safeRiskThreshold: 40,
+})
 
-export const HireProofTool = new DynamicStructuredTool({
-  name: "verify_job_post",
-  description: "Investigates a job description or URL to determine if it is a scam or a legitimate opportunity. Always use this BEFORE applying to a job.",
-  schema: z.object({
-    jobText: z.string().describe("The full text of the job description or a URL"),
-    location: z.string().optional().describe("The location of the job, if known"),
-  }),
-  func: async ({ jobText, location }) => {
-    try {
-      const report = await hireproof.audit.investigate({
-        text: jobText,
-        location: location
-      });
-      
-      return JSON.stringify({
-        verdict: report.verdict, // 'safe', 'caution', or 'high-risk'
-        riskScore: report.riskScore,
-        redFlags: report.redFlags,
-        summary: report.summary
-      });
-    } catch (error) {
-      return "Failed to verify the job post.";
-    }
-  },
-});`}
+const report = await hireProofTool.func({
+  text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+  location: 'Philippines',
+  mode: 'demo',
+})
+
+if (!isSafeEnough(report)) {
+  console.log('Stop the workflow and show the user the evidence.')
+}`}
           />
         </div>
       </section>

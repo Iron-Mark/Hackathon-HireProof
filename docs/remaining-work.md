@@ -58,7 +58,7 @@ HireProof is core production-ready on the stable production URL:
 - WhatsApp/Zernio is implemented and production-reachable, but remains credential-gated until `ZERNIO_API_KEY` and `ZERNIO_WEBHOOK_SECRET` are configured.
 - The Chrome extension has a store-ready package workflow, privacy disclosure, and listing draft. No public Chrome Web Store listing is claimed until Google review publishes one.
 - **Dockerized Packaging**: Fully implemented for production standalone deployment, with Compose orchestration, healthcheck, and local smoke script.
-- n8n, Make, and LangChain are implemented as repo-shipped integration packs, not approved marketplace listings. npm publish, n8n community approval, and Make review still require external account actions.
+- npm packages are published for the CLI, LangChain tool, TypeScript SDK, and n8n node. Make review and any separate n8n directory/community verification still require external account actions.
 
 ## Final Submission Checklist
 

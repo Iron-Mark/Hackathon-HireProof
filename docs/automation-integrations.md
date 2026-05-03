@@ -8,10 +8,11 @@ HireProof now ships repo-owned native integration source packs for automation bu
 
 | Surface | Repo path | Status | What is verified |
 | --- | --- | --- | --- |
-| n8n community node | `integrations/n8n-nodes-hireproof` | Implemented and build-validated | Package metadata, credential class, node operation shape, sync and async request construction |
+| n8n community node | `integrations/n8n-nodes-hireproof` | Published on npm and build-validated | `n8n-nodes-hireproof@1.0.0`, package metadata, credential class, node operation shape, sync and async request construction |
 | Make Custom App source | `integrations/make-hireproof` | Implemented and static-validated | App metadata, API-key connection, audit modules, async module, health module, output fields |
-| LangChain package | `packages/hireproof-langchain` | Implemented and smoke-tested | Zod schema, `createHireProofAuditTool`, typed helpers, demo API request returning High-Risk result |
-| HireProof CLI | `packages/hireproof-cli` | Implemented, locally tested, and screenshot-proven | `health`, `audit`, file input, JSON output, local config, rich terminal output, Ink TUI launcher, and API request construction |
+| LangChain package | `packages/hireproof-langchain` | Published on npm and smoke-tested | `@hireproof/langchain@1.0.0`, Zod schema, `createHireProofAuditTool`, typed helpers, demo API request returning High-Risk result |
+| TypeScript SDK | `sdk` | Published on npm | `hireproof-sdk@1.0.0`, typed API client, AuditReport types, MCP helper types |
+| HireProof CLI | `packages/hireproof-cli` | Published on npm, locally tested, and screenshot-proven | `@hireproof/cli@1.0.0`, `health`, `audit`, file input, JSON output, local config, rich terminal output, Ink TUI launcher, and API request construction |
 | Portable HTTP templates | `public/downloads/*` | Implemented and served by the app | n8n workflow JSON, Make HTTP config, LangChain standalone TS tool, curl smoke script |
 | Source bundle download | `public/downloads/hireproof-native-integrations.zip` | Generated | Includes the n8n, Make, and LangChain source packs |
 
@@ -20,6 +21,13 @@ CLI visual proof assets:
 - Light screenshot: `public/cli-tui-screenshot.png`
 - Dark screenshot: `public/cli-tui-screenshot-dark.png`
 - Public docs page: `/docs/cli`
+
+Published npm package URLs:
+
+- `https://www.npmjs.com/package/@hireproof/cli`
+- `https://www.npmjs.com/package/@hireproof/langchain`
+- `https://www.npmjs.com/package/hireproof-sdk`
+- `https://www.npmjs.com/package/n8n-nodes-hireproof`
 
 ## Runtime Contract
 
@@ -63,14 +71,12 @@ Browser proof for `/docs/automations` should verify:
 
 ## External Publishing Gates
 
-Do not claim these as complete until account-backed publishing/review is done:
+Do not claim these as complete until account-backed review is done:
 
-- npm publish for `@hireproof/langchain`
-- npm publish for `@hireproof/cli`
-- n8n community-node listing approval
+- n8n community-node directory/community verification beyond npm publication
 - Make Custom App review/approval
 - Marketplace screenshots and submitted-review evidence
 
 See `docs/automation-marketplace-submission.md` for the account-backed submission sequence and screenshot checklist.
 
-The correct current wording is: implemented, build-verified, and source-packaged in the repo; marketplace publication is pending external account actions.
+The correct current wording is: npm packages are published for the CLI, SDK, LangChain package, and n8n node; Make remains source-packaged; n8n directory/community verification and Make review remain external follow-ups.

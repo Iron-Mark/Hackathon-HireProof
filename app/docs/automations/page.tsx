@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 const nativeIntegrations = [
   {
     title: 'n8n community node',
-    desc: 'Installable node package with HireProof API credentials and sync or async audit operations.',
+    desc: 'Published npm package with HireProof API credentials and sync or async audit operations.',
     path: 'integrations/n8n-nodes-hireproof',
-    href: '/api/downloads/hireproof-native-integrations.zip',
-    cta: 'Download source pack',
+    href: 'https://www.npmjs.com/package/n8n-nodes-hireproof',
+    cta: 'View npm package',
   },
   {
     title: 'Make Custom App',
@@ -24,10 +24,17 @@ const nativeIntegrations = [
   },
   {
     title: 'LangChain package',
-    desc: 'Tool package source exporting a DynamicStructuredTool helper, Zod schema, and typed helpers.',
+    desc: 'Published npm package exporting a DynamicStructuredTool helper, Zod schema, and typed helpers.',
     path: 'packages/hireproof-langchain',
-    href: '/api/downloads/hireproof-native-integrations.zip',
-    cta: 'Download source pack',
+    href: 'https://www.npmjs.com/package/@hireproof/langchain',
+    cta: 'View npm package',
+  },
+  {
+    title: 'HireProof CLI',
+    desc: 'Published npm package for rich terminal audits, JSON automation output, and the Shield Sentinel TUI.',
+    path: 'packages/hireproof-cli',
+    href: 'https://www.npmjs.com/package/@hireproof/cli',
+    cta: 'View npm package',
   },
 ]
 
@@ -73,12 +80,11 @@ export default function AutomationsPage() {
           <FileCode2 className="h-6 w-6 text-safe" />
           <h2 className="text-2xl font-black">Native Integration Packs</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {nativeIntegrations.map((integration) => (
             <a
               key={integration.path}
               href={integration.href}
-              download
               className="group rounded-2xl border border-border-soft bg-surface p-5 shadow-sm transition-all hover:border-safe/50 hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <div className="mb-3 flex items-center justify-between gap-4">
@@ -93,9 +99,16 @@ export default function AutomationsPage() {
         </div>
         <div className="rounded-2xl border border-caution/30 bg-caution/5 p-5">
           <p className="text-sm font-semibold leading-relaxed text-caution-text">
-            These are first-class repo artifacts, not marketplace-approved listings yet. npm publish, n8n community node approval, and Make app review still require external account access and manual submission.
+            n8n, LangChain, the TypeScript SDK, and the CLI are published on npm. Make remains a Custom App source pack because Make review happens in Make's builder, not npm. Separate n8n directory/community verification may still require account-backed screenshots after npm publish.
           </p>
         </div>
+        <CodeBlock
+          title="Published npm packages"
+          code={`npm install hireproof-sdk
+npm install @hireproof/langchain @langchain/core zod
+npm install n8n-nodes-hireproof
+npx @hireproof/cli --help`}
+        />
       </section>
 
       <section className="space-y-4">
@@ -349,7 +362,7 @@ export default function AutomationsPage() {
           <div className="rounded-2xl border border-border-soft bg-surface p-5">
             <h3 className="mb-2 text-sm font-black">LangChain</h3>
             <p className="mb-4 text-xs font-semibold leading-relaxed text-muted">
-              Use the package source for <code className="rounded bg-background px-1 py-0.5">@hireproof/langchain</code>, including schema validation, result helpers, and DynamicStructuredTool support.
+              Install <code className="rounded bg-background px-1 py-0.5">@hireproof/langchain</code> from npm for schema validation, result helpers, and DynamicStructuredTool support.
             </p>
             <div className="space-y-2">
               <a href="/api/downloads/hireproof-native-integrations.zip" download className="block text-xs font-black uppercase tracking-widest text-safe hover:underline">Download source pack</a>

@@ -61,15 +61,15 @@ const readyProof = [
   {
     icon: Network,
     title: 'Automation integrations',
-    status: 'repo-shipped',
-    body: 'n8n, Make, and LangChain source packs are implemented, validated, and downloadable. Marketplace approval remains external.',
+    status: 'npm-published',
+    body: 'CLI, SDK, LangChain, and n8n packages are public on npm. Make remains a validated source pack because Make review happens externally.',
     href: '/docs/automations',
   },
   {
     icon: Terminal,
     title: 'HireProof CLI TUI',
-    status: 'repo-rendered screenshot',
-    body: 'The repo ships a branded Ink terminal console with Shield Sentinel, Tab autocomplete, guided audits, health/config tools, and local report history.',
+    status: 'published + screenshot',
+    body: '@hireproof/cli is public on npm and ships a branded Ink terminal console with Shield Sentinel, Tab autocomplete, guided audits, health/config tools, and local report history.',
     href: '/docs/cli',
   },
 ]
@@ -93,7 +93,7 @@ const proofStats = [
 
 const packagedSurfaces = [
   { icon: PlugZap, text: 'Runtime MCP tools for company, news, jobs, and local footprint evidence.' },
-  { icon: Network, text: 'Repo-shipped n8n, Make, and LangChain integration packs plus portable HTTP templates.' },
+  { icon: Network, text: 'Published npm packages for CLI, SDK, LangChain, and n8n; Make source pack plus portable HTTP templates.' },
   { icon: PackageCheck, text: 'Chrome extension package workflow with upload ZIP and listing notes.' },
   { icon: Container, text: 'Docker standalone image, Compose service, healthcheck, and smoke script.' },
   { icon: FileArchive, text: 'PDF dossier, PNG screenshot, report CSV, and safe-report certificate exports.' },
@@ -206,7 +206,7 @@ export default function ProofPage() {
                   The terminal experience is visible proof, not just a package claim.
                 </h2>
                 <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-muted">
-                  This screenshot is rendered from the repo-shipped CLI TUI. It shows the branded Shield Sentinel launcher, command console, Tab autocomplete affordance, proof-safe mode/key status, and the audit workflow menu.
+                  This screenshot is rendered from the published CLI TUI source. It shows the branded Shield Sentinel launcher, command console, Tab autocomplete affordance, proof-safe mode/key status, and the audit workflow menu.
                 </p>
               </div>
               <Link href="/docs/cli" className="hireproof-focus inline-flex w-fit items-center gap-2 rounded-xl bg-safe px-4 py-3 text-sm font-black text-safe-foreground transition hover:bg-safe-hover">

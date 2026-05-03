@@ -25,8 +25,8 @@ HireProof takes a pasted job post, recruiter message, screenshot, or job URL and
 | MCP tools | Implemented | `POST /api/mcp` |
 | ChatSDK | Implemented; Slack and Telegram live-tested, Discord ready, WhatsApp/Zernio credential-gated | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
 | Vercel Workflow / WDK | Implemented; production accepted-run proof captured | [`docs/platform-proof-status.md`](docs/platform-proof-status.md) |
-| Automation integrations | Repo-shipped n8n, Make, and LangChain packs plus HTTP templates | [`docs/automation-integrations.md`](docs/automation-integrations.md) |
-| HireProof CLI | Repo-shipped rich terminal UI with light/dark proof screenshots | [`packages/hireproof-cli`](packages/hireproof-cli), [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli) |
+| Automation integrations | npm-published n8n, LangChain, SDK, and CLI packages plus Make source pack and HTTP templates | [`docs/automation-integrations.md`](docs/automation-integrations.md) |
+| HireProof CLI | Published rich terminal UI with light/dark proof screenshots | [`@hireproof/cli`](https://www.npmjs.com/package/@hireproof/cli), [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli) |
 | Chrome extension | Store-ready package and current upload assets generated | [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md), [`docs/assets-index.md`](docs/assets-index.md) |
 | Docker | Production image/Compose scripts implemented | `Dockerfile`, `docker-compose.yml` |
 
@@ -64,7 +64,7 @@ What is complete in this repo:
 - Public Discord server install link for adding the HireProof app: <https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0>.
 - Discord slash commands: `/verify job_post:<text-or-link>` checks a suspicious job post, expands supported public job URLs, and `/help` explains how to use HireProof in Discord.
 - Vercel Workflow / WDK audit start route.
-- Native automation packs for n8n, Make, and LangChain, plus portable HTTP templates.
+- Published npm packages for the CLI, LangChain tool, TypeScript SDK, and n8n node; Make Custom App source pack; plus portable HTTP templates.
 - HireProof CLI with rich terminal reports, an Ink-based Shield Sentinel TUI, Tab autocomplete, local report history, and theme-aware proof screenshots.
 - Shareable audit reports, history, trends, PDF dossier, CSV export, PNG export, and safe-report certificate.
 - Verified badge API and developer portal controls.
@@ -80,7 +80,7 @@ Output and sharing capabilities:
 Honest external boundaries:
 
 - Chrome Web Store publication requires the Chrome Web Store developer dashboard, privacy form, uploaded screenshots, and Google review. This repo prepares the upload package and assets listed in [`docs/assets-index.md`](docs/assets-index.md); it cannot publish the listing by itself.
-- n8n, Make, and npm marketplace publication require external accounts and review/publish steps. This repo ships validated source packs and checklists, not approved listings.
+- npm packages are published for the CLI, LangChain tool, TypeScript SDK, and n8n node. Make Custom App review and any n8n directory/community verification remain external account-backed steps.
 - Docker smoke testing requires Docker Desktop or another Docker runtime. The scripts are present, but the local machine must have Docker available.
 - Live ChatSDK proof is captured for Slack and Telegram. Discord is credential-ready but still needs a real provider-event screenshot/log, and WhatsApp/Zernio needs provider credentials before proof can be claimed.
 - WDK proof is currently an accepted production workflow run. Do not claim a completed long-running workflow result until a completed result and callback proof are captured.
@@ -215,9 +215,9 @@ HireProof is useful as a user-facing app, but the stronger technical story is th
 - **Web app** for job seekers who want a verdict before applying.
 - **Headless API** for agents that need a structured job-safety gate.
 - **MCP tools** for evidence-gathering runtimes.
-- **n8n and Make source packs** for no-code and operations workflows.
-- **LangChain package source** for agent pipelines using structured tools.
-- **HireProof CLI** for terminal audits, scripted JSON output, health checks, and a branded interactive TUI.
+- **n8n npm package and Make source pack** for no-code and operations workflows.
+- **LangChain npm package** for agent pipelines using structured tools.
+- **HireProof CLI npm package** for terminal audits, scripted JSON output, health checks, and a branded interactive TUI.
 - **ChatSDK adapters** for job-seeker communities in Slack, Telegram, Discord, and WhatsApp-backed channels.
 - **WDK route** for durable investigation handoff when workflow credentials are configured.
 
@@ -313,9 +313,27 @@ integrations/make-hireproof/
 packages/hireproof-langchain/
 ```
 
+Published npm packages:
+
+```bash
+npm install hireproof-sdk
+npm install @hireproof/langchain @langchain/core zod
+npm install n8n-nodes-hireproof
+npx @hireproof/cli --help
+```
+
 Marketplace submission steps are in [`docs/automation-marketplace-submission.md`](docs/automation-marketplace-submission.md). Screenshot proof requirements are in [`docs/evidence-screenshot-checklist.md`](docs/evidence-screenshot-checklist.md).
 
 ### HireProof CLI
+
+Run the published terminal product surface:
+
+```bash
+npx @hireproof/cli --help
+npx @hireproof/cli tui
+npx @hireproof/cli health
+npx @hireproof/cli audit --text "Remote frontend intern. PHP 80,000/week. No interview. Telegram only." --mode demo
+```
 
 Run the local terminal product surface from the repo:
 
@@ -335,7 +353,9 @@ public/cli-tui-screenshot.png
 public/cli-tui-screenshot-dark.png
 ```
 
-CLI package details are in [`packages/hireproof-cli/README.md`](packages/hireproof-cli/README.md). Public docs are at [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli).
+CLI package details are in [`packages/hireproof-cli/README.md`](packages/hireproof-cli/README.md). Public docs are at [`/docs/cli`](https://hireproof-sigma.vercel.app/docs/cli). npm package page: [`@hireproof/cli`](https://www.npmjs.com/package/@hireproof/cli).
+
+Publishing note: do not run `npm publish` from the repo root. The root app is private and has a `prepublishOnly` blocker. For future package releases, bump the workspace version first, then publish that workspace only.
 
 ### Docker Self-Hosting
 

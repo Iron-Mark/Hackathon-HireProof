@@ -1,8 +1,14 @@
-# LangChain Package Publishing Checklist
+# LangChain Package Publishing Record
 
 Package name: `@hireproof/langchain`
 
-Before publishing:
+Current status: published on npm as `@hireproof/langchain@1.0.0`.
+
+Package URL: `https://www.npmjs.com/package/@hireproof/langchain`
+
+Registry tarball: `https://registry.npmjs.org/@hireproof/langchain/-/langchain-1.0.0.tgz`
+
+Pre-publish checks used:
 
 1. Run from the repo root:
 
@@ -21,9 +27,7 @@ npm pack --workspace @hireproof/langchain
 4. Import `createHireProofAuditTool`.
 5. Run the demo API request and confirm a High-Risk fixture result.
 6. Publish only from the npm account that should own the package scope.
-7. Add the npm package URL to public docs only after publish succeeds.
-
-Current status: source implemented and smoke-tested, not published to npm.
+7. Add the npm package URL to public docs after publish succeeds.
 
 Dry-run command:
 
@@ -31,7 +35,7 @@ Dry-run command:
 npm pack --workspace @hireproof/langchain --dry-run
 ```
 
-Publish command after account ownership is confirmed:
+Publish command used after account ownership is confirmed:
 
 ```powershell
 npm login

@@ -20,6 +20,7 @@ Use this checklist when collecting proof for the hackathon submission, marketpla
 | Screenshot | Route or file | Must show | Status |
 | --- | --- | --- | --- |
 | Native integrations ZIP | `/downloads/hireproof-native-integrations.zip` | successful download or browser/network `200` | Repo-shipped, not marketplace-approved |
+| npm package pages | npmjs.com | `@hireproof/cli`, `@hireproof/langchain`, `hireproof-sdk`, and `n8n-nodes-hireproof` public package pages | Published |
 | Chrome extension ZIP | `/downloads/hireproof-extension.zip` | successful download or browser/network `200` | Store-ready fallback while Chrome review is pending |
 | Extension listing assets | `docs/assets-index.md` and `docs/chrome-web-store-assets/` | current screenshots, promo tile, and marquee image | Needed for Chrome submission |
 | Integration source folders | repo file tree | `integrations/n8n-nodes-hireproof`, `integrations/make-hireproof`, `packages/hireproof-langchain` | Needed for source proof |

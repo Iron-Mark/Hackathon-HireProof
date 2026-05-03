@@ -72,14 +72,14 @@ const termsSections = [
     body: [
       'Users are responsible for protecting their API keys, account credentials, webhook URLs, provider keys, and automation destinations.',
       'Automation integrations should include human review before applying to jobs, sending resumes, sharing personal data, or continuing high-impact workflows.',
-      'Marketplace listings for n8n, Make, npm, and Chrome Web Store are not claimed live until the relevant external review or publish step is completed.',
+      'npm packages may be published separately from app-store or marketplace approvals. Make Custom App review, n8n directory/community verification, and Chrome Web Store approval are not claimed live until the relevant external review step is completed.',
     ],
   },
 ]
 
 const boundaryItems = [
   'Chrome Web Store publication requires Google review and is not claimed live until approved.',
-  'n8n, Make, and npm marketplace publication require external account-backed submission or publishing.',
+  'npm packages for the CLI, SDK, LangChain tool, and n8n node are published separately from Make review, n8n directory/community verification, and Chrome Web Store approval.',
   'Discord and WhatsApp/Zernio proof require real provider events and matching logs before live-proof claims are made.',
   'WDK proof currently means accepted-run proof unless a completed durable workflow transcript and callback evidence are captured.',
 ]

@@ -4,6 +4,15 @@ Last checked: 2026-05-04
 
 This runbook turns the repo-shipped automation packs into external marketplace submissions. Do not mark any marketplace as live until the matching account-backed submission and approval evidence exists.
 
+Npm publication status as of 2026-05-04:
+
+- Published: `@hireproof/cli@1.0.0`
+- Published: `@hireproof/langchain@1.0.0`
+- Published: `hireproof-sdk@1.0.0`
+- Published: `n8n-nodes-hireproof@1.0.0`
+
+Make Custom App review and any n8n directory/community verification remain separate external review steps.
+
 ## Prerequisites
 
 - Production URL verified: `https://hireproof-sigma.vercel.app`
@@ -30,6 +39,7 @@ pnpm integrations:build
 node integrations\n8n-nodes-hireproof\test\request.test.mjs
 npm pack .\integrations\n8n-nodes-hireproof --dry-run
 npm pack .\integrations\n8n-nodes-hireproof
+npm view n8n-nodes-hireproof version
 ```
 
 Local install options:
@@ -57,7 +67,7 @@ Submission steps:
    - Async `202 processing` response and callback receiver output.
 7. Submit to n8n community-node review only after local install and screenshots are complete.
 
-Current claim: source package implemented and validated. Not yet approved by n8n.
+Current claim: npm package is published and source package is validated. n8n community/directory verification is still pending until local n8n screenshots and review evidence are captured.
 
 ## Make Custom App
 
@@ -105,22 +115,20 @@ node packages\hireproof-langchain\test-smoke.mjs
 npm pack --workspace @hireproof/langchain --dry-run
 npm pack --workspace @hireproof/langchain
 
-# Only after account ownership and package naming are confirmed:
-npm login
-npm publish --workspace @hireproof/langchain --access public
+npm view @hireproof/langchain version
 ```
 
 Submission steps:
 
 1. Run `node packages/hireproof-langchain/test-smoke.mjs`.
 2. Test the example in `packages/hireproof-langchain/examples/basic-agent.mjs`.
-3. Run `npm pack --workspace @hireproof/langchain` or pack from the package directory.
-4. Install the packed tarball into a separate sample app.
+3. Run `npm pack --workspace @hireproof/langchain` or pack from the package directory when validating a new release.
+4. Install the npm package or packed tarball into a separate sample app.
 5. Confirm `createHireProofAuditTool` can be imported and invoked.
-6. Publish to npm only from an account that should own the package name.
-7. Add the npm URL to `/docs/automations` only after publish succeeds.
+6. Confirm the npm package page stays public.
+7. Update `/docs/automations` after any version bump.
 
-Current claim: package source implemented and smoke-tested. Not yet published to npm.
+Current claim: package is published on npm and smoke-tested.
 
 ## ZIP Bundle Validation
 

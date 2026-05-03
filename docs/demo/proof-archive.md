@@ -15,7 +15,8 @@ This file keeps the judge-facing proof artifacts in one place. It intentionally 
 | Discord ChatSDK | Credential-ready | Production credentials and webhook readiness pass; shared reply path passes. | Live Discord bot delivery until screenshots/logs are captured. |
 | Telegram ChatSDK | Live delivery proven | Real Telegram message screenshot plus matching production webhook log. | Report-link screenshot until the platform reply base-URL fallback is re-tested live. |
 | WhatsApp/Zernio ChatSDK | Credential-gated | Route exists and controlled shared reply path passes; Zernio credentials are missing. | Live WhatsApp delivery. |
-| HireProof CLI TUI | Repo-rendered proof | Light and dark terminal UI screenshots are generated from the repo-shipped Ink TUI. | npm-published package until owner publishes from npm account. |
+| HireProof CLI TUI | npm-published and repo-rendered proof | `@hireproof/cli@1.0.0` is public on npm; light and dark terminal UI screenshots are generated from the repo-shipped Ink TUI. | Future CLI version bumps until separately published. |
+| SDK and agent packages | npm-published | `hireproof-sdk@1.0.0`, `@hireproof/langchain@1.0.0`, and `n8n-nodes-hireproof@1.0.0` are public on npm. | Make Custom App review and n8n directory/community verification until external review evidence exists. |
 
 Use this one-line status in public/demo materials:
 
@@ -188,13 +189,27 @@ Do not claim a completed durable report callback unless a callback result is cap
 - Public docs: `https://hireproof-sigma.vercel.app/docs/cli`.
 - Light screenshot: `public/cli-tui-screenshot.png`.
 - Dark screenshot: `public/cli-tui-screenshot-dark.png`.
+- npm package: `https://www.npmjs.com/package/@hireproof/cli`.
 - Verified commands: `npm run cli:test`, `npm run lint`, `npm run build`, and `npm pack --workspace @hireproof/cli --dry-run`.
 
 Use this claim in the submission:
 
 > HireProof also ships as a local terminal product surface: a tested CLI with rich audit reports, an Ink-based Shield Sentinel TUI, Tab autocomplete, health/config tools, recent report summaries, and clean JSON for automations.
 
-Do not claim the CLI is published to npm until the owner completes the external npm publish step.
+The CLI npm package is public. Keep version-specific claims to `1.0.0` until a new package version is published.
+
+## Published npm Package Proof
+
+- `@hireproof/cli@1.0.0`: `https://www.npmjs.com/package/@hireproof/cli`
+- `@hireproof/langchain@1.0.0`: `https://www.npmjs.com/package/@hireproof/langchain`
+- `hireproof-sdk@1.0.0`: `https://www.npmjs.com/package/hireproof-sdk`
+- `n8n-nodes-hireproof@1.0.0`: `https://www.npmjs.com/package/n8n-nodes-hireproof`
+
+Use this claim in the submission:
+
+> HireProof ships with four public npm packages: a rich CLI/TUI, a LangChain agent tool, a typed SDK, and an n8n community-node package.
+
+Do not claim Make marketplace approval or n8n directory/community verification until those external review artifacts are captured.
 
 ## Final Demo Order
 
@@ -214,6 +229,7 @@ Do not claim the CLI is published to npm until the owner completes the external 
 - [x] `POST /api/workflows/audit` accepts a run or the archived accepted run is cited.
 - [x] Slack screenshot proof is included: `docs/demo/Screenshot 2026-04-30 024756.jpg`.
 - [x] CLI TUI light/dark screenshot proof is included: `public/cli-tui-screenshot.png`, `public/cli-tui-screenshot-dark.png`.
+- [x] Four npm packages are public: `@hireproof/cli`, `@hireproof/langchain`, `hireproof-sdk`, and `n8n-nodes-hireproof`.
 - [x] BYOK credential route hardening is verified by `test/byok-credentials.test.mjs`.
 - [x] `npm run proof:chat-live` passes for controlled chat proof.
 - [x] `npm run build` passes before final submission.

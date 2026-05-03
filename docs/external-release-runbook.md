@@ -17,9 +17,10 @@ Use this status language until each external proof gate is completed:
 | Telegram bot | Live delivery proven | Fresh screenshot with final report link after latest deployment |
 | WhatsApp/Zernio | Implemented and credential-gated | Zernio credentials, real WhatsApp/Zernio event, reply screenshot, and webhook log |
 | WDK workflow | Production accepted-run proven | Completed durable run transcript plus callback proof |
-| LangChain package | Source package implemented and smoke-tested | npm package published from owner account |
-| HireProof CLI | Source package implemented, locally tested, and light/dark screenshot-proven | npm package published from owner account |
-| n8n node | Source package implemented and build-validated | n8n community node submission and approval |
+| LangChain package | Published on npm and smoke-tested | Future version bumps from owner account |
+| HireProof CLI | Published on npm, locally tested, and light/dark screenshot-proven | Future version bumps from owner account |
+| TypeScript SDK | Published on npm | Future version bumps from owner account |
+| n8n node | Published on npm and build-validated | n8n directory/community verification after local n8n screenshots |
 | Make app | Source pack implemented and static-validated | Make custom app submission and review approval |
 
 ## Before Any External Submission
@@ -255,15 +256,32 @@ Reference docs:
 - `docs/automation-integrations.md`
 - `docs/automation-marketplace-submission.md`
 
+### Published npm Packages
+
+Current npm package pages:
+
+- `https://www.npmjs.com/package/@hireproof/cli`
+- `https://www.npmjs.com/package/@hireproof/langchain`
+- `https://www.npmjs.com/package/hireproof-sdk`
+- `https://www.npmjs.com/package/n8n-nodes-hireproof`
+
+Verification commands:
+
+```powershell
+npm view @hireproof/cli version
+npm view @hireproof/langchain version
+npm view hireproof-sdk version
+npm view n8n-nodes-hireproof version
+```
+
 ### LangChain npm Package
 
-Owner steps:
+Future version-bump steps:
 
 ```powershell
 node packages\hireproof-langchain\test-smoke.mjs
 npm pack --workspace @hireproof/langchain --dry-run
 npm pack --workspace @hireproof/langchain
-npm login
 npm publish --workspace @hireproof/langchain --access public
 ```
 
@@ -275,7 +293,9 @@ Capture:
 
 ### HireProof CLI npm Package
 
-Owner steps:
+Do not run `npm publish` from the repo root. The root package is the full Next.js app and is marked private with a `prepublishOnly` blocker to prevent accidental publication. Publish the CLI workspace only.
+
+Future version-bump steps:
 
 ```powershell
 node --test test\hireproof-cli.test.mjs
@@ -290,6 +310,8 @@ Repo proof assets to include in release materials:
 ```text
 public/cli-tui-screenshot.png
 public/cli-tui-screenshot-dark.png
+packages/hireproof-cli/assets/cli-tui-screenshot.png
+packages/hireproof-cli/assets/cli-tui-screenshot-dark.png
 ```
 
 After publish, verify:

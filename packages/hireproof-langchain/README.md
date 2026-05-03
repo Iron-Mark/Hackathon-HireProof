@@ -36,4 +36,4 @@ const result = await hireProofTool.func({
 
 ## Publishing Boundary
 
-This package source is repo-shipped and testable. Publishing to npm requires maintainer account access and is not claimed until completed.
+This package is published on npm as `@hireproof/langchain`. The source remains repo-shipped and testable.

@@ -31,7 +31,7 @@ export default function SdkQuickstartPage() {
 
       {/* Step 1: Install */}
       <Step n={1} title="Install the package">
-        <p className="mb-4 text-sm font-medium text-muted">The SDK is available on npm as <code className="bg-surface px-1 rounded">hireproof-sdk</code>.</p>
+        <p className="mb-4 text-sm font-medium text-muted">The SDK is published on npm as <a href="https://www.npmjs.com/package/hireproof-sdk" className="font-black text-safe hover:underline">hireproof-sdk</a>.</p>
         <CodeBlock title="Terminal" code="npm install hireproof-sdk" />
       </Step>
 

@@ -11,7 +11,7 @@ export default function SdkPage() {
   return (
     <div className="space-y-12 pb-24 text-foreground">
       <section className="space-y-4">
-        <div className="mb-2 inline-block rounded-full bg-evidence/10 px-3 py-1 text-[10px] font-black text-evidence uppercase tracking-widest">v1.2.4 — Stable</div>
+        <div className="mb-2 inline-block rounded-full bg-evidence/10 px-3 py-1 text-[10px] font-black text-evidence uppercase tracking-widest">v1.0.0 — Published on npm</div>
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">HireProof SDK</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
           A high-performance, typed TypeScript client for the HireProof platform. Build secure, agentic job verification into any application.
@@ -25,6 +25,9 @@ export default function SdkPage() {
           <h2 className="text-2xl font-black">Installation</h2>
         </div>
         <CodeBlock title="Terminal" code="npm install hireproof-sdk" />
+        <p className="text-sm font-semibold leading-relaxed text-muted">
+          Package page: <a href="https://www.npmjs.com/package/hireproof-sdk" className="font-black text-safe hover:underline">npmjs.com/package/hireproof-sdk</a>
+        </p>
       </section>
 
       {/* Concepts */}

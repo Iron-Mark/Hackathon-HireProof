@@ -1,6 +1,7 @@
 {
   "name": "hireproof",
   "version": "1.0.0",
+  "private": true,
   "description": "HireProof is a proof-backed AI agent for checking suspicious job posts before someone applies. A user pastes a job post, recruiter message, or job URL, and the app investigates the opportunity with visible evidence before returning a verdict: **Safe**, **Caution**, or **High-Risk**.",
   "main": "index.js",
   "workspaces": [
@@ -16,6 +17,7 @@
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start",
+    "prepublishOnly": "node scripts/prevent-root-publish.mjs",
     "lint": "tsc --noEmit --project tsconfig.lint.json",
     "cleanup:local-data": "node scripts/cleanup-local-data.mjs",
     "cli": "node packages/hireproof-cli/bin/hireproof.mjs",

@@ -12,7 +12,7 @@ export default function CliDocsPage() {
     <div className="space-y-12 pb-24 text-foreground">
       <section className="space-y-4">
         <div className="inline-block rounded-full bg-safe/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-safe">
-          Repo-shipped package
+          Published on npm
         </div>
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">HireProof CLI</h1>
         <p className="max-w-3xl text-xl font-medium leading-relaxed text-muted">
@@ -27,7 +27,7 @@ export default function CliDocsPage() {
         </div>
         <div className="rounded-3xl border border-border-soft bg-surface p-6">
           <p className="text-sm font-semibold leading-relaxed text-muted">
-            The CLI source is included in the repo at <code className="rounded bg-background px-1.5 py-0.5">packages/hireproof-cli</code> and is tested locally. It is not published to npm until the owner completes the external publish step.
+            The CLI is published as <a href="https://www.npmjs.com/package/@hireproof/cli" className="font-black text-safe hover:underline">@hireproof/cli</a> and the source remains in the repo at <code className="rounded bg-background px-1.5 py-0.5">packages/hireproof-cli</code>. The package includes the Ink TUI, rich report output, local report summaries, and clean JSON mode for automation.
           </p>
         </div>
       </section>
@@ -38,7 +38,14 @@ export default function CliDocsPage() {
           <h2 className="text-2xl font-black">Run From The Repo</h2>
         </div>
         <CodeBlock
-          title="PowerShell"
+          title="Install from npm"
+          code={`npx @hireproof/cli --help
+npx @hireproof/cli tui
+npx @hireproof/cli health
+npx @hireproof/cli audit --text "Remote frontend intern. PHP 80,000/week. No interview. Telegram only." --mode demo`}
+        />
+        <CodeBlock
+          title="Run from repo source"
           code={`npm install
 node packages\\hireproof-cli\\bin\\hireproof.mjs --help
 node packages\\hireproof-cli\\bin\\hireproof.mjs tui
