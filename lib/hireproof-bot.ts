@@ -18,6 +18,9 @@ type HireProofBot = Chat<Record<string, Adapter>>
 const CHAT_TEXT_LIMIT = 10_000
 const DEFAULT_PRODUCTION_BASE_URL = 'https://hireproof-sigma.vercel.app'
 const DISCORD_INTERACTION_PING_TYPE = 1
+const DISCORD_INTERACTION_APPLICATION_COMMAND_TYPE = 2
+const DISCORD_INTERACTION_CALLBACK_PONG_TYPE = 1
+const DISCORD_INTERACTION_CALLBACK_CHANNEL_MESSAGE_TYPE = 4
 const ED25519_SPKI_DER_PREFIX = '302a300506032b6570032100'
 const requiredEnvironmentByPlatform: Record<WebhookPlatform, string[]> = {
   slack: ['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'REDIS_URL'],
@@ -298,6 +301,66 @@ function verifyDiscordInteractionRequest(request: Request, body: string) {
   )
 }
 
+function createDiscordInteractionResponse(content: string) {
+  return Response.json({
+    type: DISCORD_INTERACTION_CALLBACK_CHANNEL_MESSAGE_TYPE,
+    data: {
+      content,
+      allowed_mentions: { parse: [] },
+    },
+  })
+}
+
+function extractDiscordCommandText(payload: {
+  data?: {
+    options?: Array<{
+      name?: string
+      value?: unknown
+    }>
+  }
+}) {
+  const option = payload.data?.options?.find((item) => item.name === 'job_post')
+  return typeof option?.value === 'string' ? option.value : ''
+}
+
+async function handleDiscordApplicationCommand(payload: {
+  data?: {
+    name?: string
+    options?: Array<{
+      name?: string
+      value?: unknown
+    }>
+  }
+  channel_id?: string
+  guild_id?: string
+}) {
+  const command = payload.data?.name
+
+  if (command === 'help') {
+    return createDiscordInteractionResponse(
+      'HireProof checks suspicious job posts, recruiter messages, and apply links. Use `/verify` and paste the full job text to get a Safe, Caution, or High-Risk verdict.',
+    )
+  }
+
+  if (command !== 'verify') return null
+
+  const text = normalizeChatText(extractDiscordCommandText(payload))
+
+  if (!text) {
+    return createDiscordInteractionResponse(
+      'Paste the job post into the `job_post` field, then run `/verify` again.',
+    )
+  }
+
+  const baseUrl = getChatReplyBaseUrl()
+  const { verdict } = await createChatReply(text, baseUrl, 'discord', {
+    threadId: payload.guild_id ? `discord:${payload.guild_id}` : undefined,
+    channelId: payload.channel_id,
+  })
+
+  return createDiscordInteractionResponse(verdict.text)
+}
+
 function cloneRequestWithBody(request: Request, body: string) {
   return new Request(request.url, {
     method: request.method,
@@ -559,14 +622,34 @@ export async function handleDiscordWebhook(request: Request, options?: WebhookOp
   const body = await request.text()
 
   try {
-    const payload = JSON.parse(body) as { type?: number }
+    const payload = JSON.parse(body) as {
+      type?: number
+      data?: {
+        name?: string
+        options?: Array<{
+          name?: string
+          value?: unknown
+        }>
+      }
+      channel_id?: string
+      guild_id?: string
+    }
 
     if (payload.type === DISCORD_INTERACTION_PING_TYPE) {
       if (!verifyDiscordInteractionRequest(request, body)) {
         return new Response('invalid request signature', { status: 401 })
       }
 
-      return Response.json({ type: DISCORD_INTERACTION_PING_TYPE })
+      return Response.json({ type: DISCORD_INTERACTION_CALLBACK_PONG_TYPE })
+    }
+
+    if (payload.type === DISCORD_INTERACTION_APPLICATION_COMMAND_TYPE) {
+      if (!verifyDiscordInteractionRequest(request, body)) {
+        return new Response('invalid request signature', { status: 401 })
+      }
+
+      const commandResponse = await handleDiscordApplicationCommand(payload)
+      if (commandResponse) return commandResponse
     }
   } catch {
     // Non-JSON requests are passed through so the adapter can return its own response.

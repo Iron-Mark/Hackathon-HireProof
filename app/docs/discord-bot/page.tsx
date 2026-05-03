@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import { CodeBlock } from '@/components/ui/code-block'
 import { MessageSquareWarning, ShieldCheck, Webhook } from 'lucide-react'
 
+const DISCORD_INSTALL_URL = 'https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0'
+
 export const metadata: Metadata = {
   title: 'ChatSDK Community Bots | HireProof Docs',
   description: 'Use HireProof through ChatSDK-backed Slack, Discord, Telegram, and WhatsApp community workflows.',
@@ -14,6 +16,17 @@ export default function DiscordBotPage() {
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">ChatSDK Community Bots</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
           HireProof routes community checks through the shared ChatSDK adapter surface. Slack has screenshot proof, Telegram has live delivery proof, Discord is credential-ready pending a real event capture, and WhatsApp/Zernio remains credential-gated.
+        </p>
+        <a
+          href={DISCORD_INSTALL_URL}
+          className="inline-flex w-fit rounded-full border border-evidence/30 bg-evidence/10 px-4 py-2 text-sm font-black text-evidence transition hover:-translate-y-0.5 hover:bg-evidence/15"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Install HireProof on Discord
+        </a>
+        <p className="max-w-2xl text-sm font-semibold leading-6 text-muted">
+          Discord commands are available as <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">/verify job_post:&lt;text&gt;</code> and <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">/help</code> after command registration.
         </p>
       </section>
 

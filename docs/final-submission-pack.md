@@ -75,6 +75,7 @@ Careful boundary:
 - Demo: `https://hireproof-sigma.vercel.app`
 - Main flow: `https://hireproof-sigma.vercel.app/audit`
 - Track proof docs: `https://hireproof-sigma.vercel.app/docs/triple-track-coverage`
+- Discord install: `https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0`
 - Health check: `https://hireproof-sigma.vercel.app/api/health`
 - Integration proof: `https://hireproof-sigma.vercel.app/api/integrations/proof`
 
@@ -107,6 +108,8 @@ Proof points:
 - Slack screenshot proof is captured at `docs/demo/Screenshot 2026-04-30 024756.jpg`.
 - Telegram has real delivery screenshot/log proof.
 - Discord is credential-ready but still pending a real provider-event capture.
+- Discord public server install link is available at `https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0`.
+- Discord slash commands are implemented as `/verify job_post:<text>` and `/help`; register them with `npm run discord:commands`.
 - WhatsApp/Zernio routes are implemented behind credential gates.
 
 Safe boundary:

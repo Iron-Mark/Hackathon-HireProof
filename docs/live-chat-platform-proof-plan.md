@@ -128,6 +128,33 @@ docs/platform-proof-status.md
 
 ## Discord Proof
 
+### Public Install Link
+
+Use Discord's provided Add App flow unless a custom onboarding page is needed:
+
+```text
+https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0
+```
+
+The `client_id` is public and safe to share. Treat this as the install handoff link, not as live-provider proof by itself.
+
+### Slash Commands
+
+HireProof supports these Discord application commands:
+
+```text
+/verify job_post:<suspicious job post text>
+/help
+```
+
+Register or refresh commands from the repo after setting `DISCORD_BOT_TOKEN` and `DISCORD_APPLICATION_ID`:
+
+```powershell
+npm run discord:commands
+```
+
+For faster test-server registration, set `DISCORD_GUILD_ID` before running the command. Leave `DISCORD_GUILD_ID` unset for global registration.
+
 ### Required Production Variables
 
 ```text

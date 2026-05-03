@@ -89,14 +89,15 @@ test('audit report CSV export includes claims, signals, evidence, and next steps
   assert.match(exportPayload.content, /"Evidence","Search","company: No official careers page found. https:\/\/example.com"/)
 })
 
-test('chrome extension docs only claim local install until store listing exists', async () => {
+test('chrome extension docs distinguish ZIP install from pending store review', async () => {
   const source = await fs.readFile(new URL('../app/docs/chrome-extension/page.tsx', import.meta.url), 'utf8')
   const overview = await fs.readFile(new URL('../app/docs/page.tsx', import.meta.url), 'utf8')
 
-  assert.match(source, /load it locally/i)
+  assert.match(source, /Download Chrome ZIP/)
+  assert.match(source, /manual Developer mode install/i)
+  assert.match(source, /Chrome Web Store publication is still pending review/)
   assert.match(overview, /Local extension package/)
-  assert.match(overview, /load it locally/i)
-  assert.doesNotMatch(source, /Chrome Web Store/)
+  assert.match(overview, /Chrome Web Store listing is still pending review/i)
   assert.doesNotMatch(overview, /Click the toolbar icon on any job page to scan it in seconds/)
 })
 
@@ -136,10 +137,31 @@ test('docs reflect current scoring and chat platform proof status', async () => 
   assert.doesNotMatch(security, /multi-layer egress proxy/)
 })
 
+test('legal docs expose real privacy and terms anchors used by the footer', async () => {
+  const legalPage = await fs.readFile(new URL('../app/docs/legal/page.tsx', import.meta.url), 'utf8')
+  const footer = await fs.readFile(new URL('../components/layout/site-footer.tsx', import.meta.url), 'utf8')
+
+  assert.match(footer, /\/docs\/legal#terms-of-service/)
+  assert.match(footer, /\/docs\/legal#privacy-policy/)
+
+  assert.match(legalPage, /id="privacy-policy"/)
+  assert.match(legalPage, /id="terms-of-service"/)
+  assert.match(legalPage, /Privacy Policy/)
+  assert.match(legalPage, /Terms of Service/)
+  assert.match(legalPage, /What HireProof processes/)
+  assert.match(legalPage, /Provider and third-party calls/)
+  assert.match(legalPage, /Acceptable use/)
+  assert.match(legalPage, /No guarantees/)
+  assert.match(legalPage, /not legal advice/i)
+  assert.match(legalPage, /not lawyer-reviewed/i)
+  assert.doesNotMatch(legalPage, /Vercel Global Edge/)
+  assert.doesNotMatch(legalPage, /disputes@hireproof\.com/)
+})
+
 test('public README keeps export and extension claims honest', async () => {
   const source = await fs.readFile(new URL('../README.md', import.meta.url), 'utf8')
   const pricing = await fs.readFile(new URL('../app/pricing/page.tsx', import.meta.url), 'utf8')
-  const resultScreen = await fs.readFile(new URL('../components/result-screen.tsx', import.meta.url), 'utf8')
+  const resultScreen = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
 
   assert.match(source, /PNG Screenshot Export/)
   assert.match(source, /Forensic PDF Dossier/)
@@ -167,7 +189,7 @@ test('research 03 action plan exists as active execution roadmap', async () => {
   const index = await fs.readFile(new URL('../docs/README.md', import.meta.url), 'utf8')
 
   assert.match(source, /P0 - Demo Credibility Cleanup/)
-  assert.match(source, /live-tested in Slack with screenshot evidence/)
+  assert.match(source, /live-tested in Slack and Telegram with screenshot\/log evidence/)
   assert.match(source, /production-accepted/)
   assert.match(index, /hireproof-action-plan\.md/)
 })
@@ -210,7 +232,7 @@ test('sandbox webhooks use the same signed headers as production webhooks', asyn
 })
 
 test('homepage ticker avoids unsupported hard impact metrics', async () => {
-  const source = await fs.readFile(new URL('../components/impact-ticker.tsx', import.meta.url), 'utf8')
+  const source = await fs.readFile(new URL('../components/marketing/impact-ticker.tsx', import.meta.url), 'utf8')
 
   assert.doesNotMatch(source, /scams identified this week/)
   assert.doesNotMatch(source, /potential theft prevented/)
@@ -220,9 +242,9 @@ test('homepage ticker avoids unsupported hard impact metrics', async () => {
 
 test('first-place sprint surfaces demo clarity and public proof from the homepage', async () => {
   const source = await fs.readFile(new URL('../app/home-client.tsx', import.meta.url), 'utf8')
-  const header = await fs.readFile(new URL('../components/site-header.tsx', import.meta.url), 'utf8')
+  const header = await fs.readFile(new URL('../components/layout/site-header.tsx', import.meta.url), 'utf8')
   const proofPage = await fs.readFile(new URL('../app/proof/page.tsx', import.meta.url), 'utf8')
-  const spotTheBot = await fs.readFile(new URL('../components/spot-the-bot.tsx', import.meta.url), 'utf8')
+  const spotTheBot = await fs.readFile(new URL('../components/marketing/spot-the-bot.tsx', import.meta.url), 'utf8')
 
   assert.match(source, /Paste a job post\. See if it/)
   assert.match(source, /safe, suspicious, or high-risk/)
@@ -267,7 +289,7 @@ test('first-place sprint surfaces demo clarity and public proof from the homepag
 
 test('pricing and audit copy keep business and privacy claims honest', async () => {
   const pricing = await fs.readFile(new URL('../app/pricing/page.tsx', import.meta.url), 'utf8')
-  const auditForm = await fs.readFile(new URL('../components/audit-form.tsx', import.meta.url), 'utf8')
+  const auditForm = await fs.readFile(new URL('../components/audit/audit-form.tsx', import.meta.url), 'utf8')
 
   assert.match(pricing, /Free individual checks/)
   assert.match(pricing, /job boards, schools, recruiters, and community groups/)
@@ -280,7 +302,7 @@ test('pricing and audit copy keep business and privacy claims honest', async () 
 })
 
 test('audit form supports clipboard text and screenshot paste', async () => {
-  const auditForm = await fs.readFile(new URL('../components/audit-form.tsx', import.meta.url), 'utf8')
+  const auditForm = await fs.readFile(new URL('../components/audit/audit-form.tsx', import.meta.url), 'utf8')
   const auditClient = await fs.readFile(new URL('../app/audit/audit-client.tsx', import.meta.url), 'utf8')
 
   assert.match(auditForm, /ClipboardPaste/)
@@ -332,9 +354,9 @@ test('audit form supports clipboard text and screenshot paste', async () => {
 
 test('history, result, and proof pages keep the audit journey polished', async () => {
   const historyPage = await fs.readFile(new URL('../app/history/page.tsx', import.meta.url), 'utf8')
-  const resultScreen = await fs.readFile(new URL('../components/result-screen.tsx', import.meta.url), 'utf8')
+  const resultScreen = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
   const proofPage = await fs.readFile(new URL('../app/proof/page.tsx', import.meta.url), 'utf8')
-  const siteHeader = await fs.readFile(new URL('../components/site-header.tsx', import.meta.url), 'utf8')
+  const siteHeader = await fs.readFile(new URL('../components/layout/site-header.tsx', import.meta.url), 'utf8')
   const docsLayout = await fs.readFile(new URL('../app/docs/layout.tsx', import.meta.url), 'utf8')
 
   assert.match(historyPage, /Open report/)
@@ -367,7 +389,7 @@ test('history, result, and proof pages keep the audit journey polished', async (
 
 test('demo login response only returns public demo identity', async () => {
   const route = await fs.readFile(new URL('../app/api/auth/demo-login/route.ts', import.meta.url), 'utf8')
-  const snackbar = await fs.readFile(new URL('../components/demo-login-snackbar.tsx', import.meta.url), 'utf8')
+  const snackbar = await fs.readFile(new URL('../components/system/demo-login-snackbar.tsx', import.meta.url), 'utf8')
 
   assert.match(route, /assertSameOrigin/)
   assert.match(route, /new URL\(origin\)/)

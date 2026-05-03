@@ -6,6 +6,7 @@ HireProof takes a pasted job post, recruiter message, screenshot, or job URL and
 
 - Production demo: <https://hireproof-sigma.vercel.app>
 - Live docs: <https://hireproof-sigma.vercel.app/docs>
+- Discord install: <https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0>
 - Author: [Mark Siazon](https://www.marksiazon.dev/)
 - Built for the [Vercel Zero to Agent Hackathon](https://community.vercel.com/hackathons/zero-to-agent)
 
@@ -51,6 +52,8 @@ What is complete in this repo:
 - Headless `/api/v1/audit` endpoint with API-key auth and webhook support.
 - MCP endpoint and investigation tools.
 - ChatSDK webhook adapters for Slack, Discord, Telegram, and WhatsApp-via-Zernio.
+- Public Discord server install link for adding the HireProof app: <https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0>.
+- Discord slash commands: `/verify job_post:<text>` checks a suspicious job post, and `/help` explains how to use HireProof in Discord.
 - Vercel Workflow / WDK audit start route.
 - Native automation packs for n8n, Make, and LangChain, plus portable HTTP templates.
 - Shareable audit reports, history, trends, PDF dossier, CSV export, PNG export, and safe-report certificate.
@@ -333,6 +336,15 @@ Copy `.env.example` to `.env.local` and fill only what you need.
 | `ZERNIO_API_KEY` | WhatsApp/Zernio | Enables Zernio-backed replies. |
 | `ZERNIO_WEBHOOK_SECRET` | WhatsApp/Zernio | Verifies Zernio webhooks. |
 | `WORKFLOW_SECRET` | WDK | Protects workflow start routes. |
+| `DISCORD_GUILD_ID` | Discord optional | Registers slash commands to one server for faster testing when running `npm run discord:commands`. |
+
+Register Discord slash commands after setting the Discord env vars:
+
+```bash
+npm run discord:commands
+```
+
+Set `DISCORD_GUILD_ID` for immediate server-scoped command registration during testing. Leave it unset for global commands, which can take longer to appear in Discord.
 
 ## Verification
 
