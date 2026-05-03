@@ -11,11 +11,17 @@ function titleCaseVerdict(verdict: AuditReport['verdict']) {
   return verdict.charAt(0).toUpperCase() + verdict.slice(1)
 }
 
+function normalizeReportBaseUrl(baseUrl?: string) {
+  const normalized = baseUrl?.trim().replace(/\s+/g, '')
+  return normalized ? normalized.replace(/\/$/, '') : ''
+}
+
 export function formatChatVerdict(report: AuditReport, baseUrl?: string): ChatVerdict {
   const verdict = titleCaseVerdict(report.verdict)
   const redFlags = report.redFlags.slice(0, 3)
   const evidence = report.evidence.slice(0, 2)
-  const reportUrl = report.id && baseUrl ? `${baseUrl.replace(/\/$/, '')}/audit/${report.id}` : null
+  const normalizedBaseUrl = normalizeReportBaseUrl(baseUrl)
+  const reportUrl = report.id && normalizedBaseUrl ? `${normalizedBaseUrl}/audit/${report.id}` : null
 
   const lines = [
     `HireProof verdict: ${verdict} (${report.riskScore}/100)`,

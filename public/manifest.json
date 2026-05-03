@@ -4,8 +4,8 @@
   "description": "Proof-backed AI job verification. Detect scams before you apply.",
   "start_url": "/audit",
   "display": "standalone",
-  "background_color": "#0c0f14",
-  "theme_color": "#0c0f14",
+  "background_color": "#05140f",
+  "theme_color": "#167C5C",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -20,9 +20,15 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

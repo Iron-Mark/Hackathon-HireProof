@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-05-03T04:46:20.850Z",
+  "checkedAt": "2026-05-03T18:31:07.874Z",
   "base": "https://hireproof-sigma.vercel.app",
   "status": "ready",
   "coreStatus": "ready",
@@ -40,7 +40,7 @@
     "httpStatus": 200,
     "status": "ChatSDK Agents verdict formatted.",
     "platform": "discord",
-    "reportUrl": "https://hireproof-sigma.vercel.app/audit/chat_1777783583254",
+    "reportUrl": "https://hireproof-sigma.vercel.app\r\n/audit/chat_1777833069410",
     "verdict": "high-risk",
     "riskScore": 92
   },
@@ -80,7 +80,9 @@
   },
   "validation": {
     "mode": "controlled",
-    "passed": true,
-    "errors": []
+    "passed": false,
+    "errors": [
+      "shared ChatSDK reply path did not return the expected high-risk production report"
+    ]
   }
 }

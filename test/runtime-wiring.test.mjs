@@ -89,6 +89,14 @@ test('chat and workflow status endpoints expose honest track readiness', async (
   assert.match(workflowRoute, /startAuditWorkflow/)
 })
 
+test('chat verdict formatter strips accidental whitespace from report URLs', async () => {
+  const source = await fs.readFile(new URL('../lib/chat-verdict.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /normalizeReportBaseUrl/)
+  assert.match(source, /\.trim\(\)\.replace\(\/\\s\+\/g, ''\)/)
+  assert.match(source, /\`\$\{normalizedBaseUrl\}\/audit\/\$\{report\.id\}\`/)
+})
+
 test('slack webhook is wired through ChatSDK instead of a local-only simulator', async () => {
   const bot = await fs.readFile(new URL('../lib/hireproof-bot.ts', import.meta.url), 'utf8')
   const webhook = await fs.readFile(new URL('../app/api/webhooks/slack/route.ts', import.meta.url), 'utf8')
@@ -127,7 +135,10 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   assert.match(bot, /from 'node:crypto'/)
   assert.match(bot, /verifyDiscordInteractionRequest/)
   assert.match(bot, /DISCORD_INTERACTION_PING_TYPE = 1/)
-  assert.match(bot, /Response\.json\(\{ type: DISCORD_INTERACTION_PING_TYPE \}/)
+  assert.match(bot, /DISCORD_INTERACTION_CALLBACK_PONG_TYPE = 1/)
+  assert.match(bot, /Response\.json\(\{ type: DISCORD_INTERACTION_CALLBACK_PONG_TYPE \}/)
+  assert.match(bot, /DISCORD_INTERACTION_APPLICATION_COMMAND_TYPE = 2/)
+  assert.match(bot, /handleDiscordApplicationCommand/)
   assert.match(bot, /handleTelegramStartCommand/)
   assert.match(bot, /Welcome to HireProof/)
   assert.match(bot, /sendTelegramMessage/)

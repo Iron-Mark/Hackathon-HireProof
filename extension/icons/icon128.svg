@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
-  <rect width="128" height="128" rx="28" fill="#16a34a"/>
-  <circle cx="64" cy="64" r="36" stroke="white" stroke-width="6" fill="none"/>
-  <path d="M44 66 L58 80 L86 48" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HireProof HP shield bot logo">
+  <rect width="128" height="128" rx="28" fill="#05140F"/>
+  <path d="M64 10L105 25V58C105 84 89 105 64 116C39 105 23 84 23 58V25L64 10Z" fill="#06291D" stroke="#22C55E" stroke-width="7"/>
+  <rect x="35" y="35" width="58" height="29" rx="14" fill="#06100D" stroke="#DFFBEA" stroke-width="5"/>
+  <circle cx="51" cy="50" r="5" fill="#22C55E"/>
+  <circle cx="77" cy="50" r="5" fill="#22C55E"/>
+  <path d="M43 75V101H55V91H70V101H82V75H70V84H55V75H43Z" fill="#F8FAF7"/>
+  <path d="M82 73H96C106 73 113 81 113 91C113 102 106 109 96 109H82V73Z" fill="#22C55E"/>
+  <path d="M88 92L95 99L109 84" stroke="#05140F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

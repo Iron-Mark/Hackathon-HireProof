@@ -1,34 +1,43 @@
 # HireProof Brand Assets
 
-This folder contains the core branding and graphic assets for the HireProof hackathon project.
+This folder contains source and reusable brand assets for HireProof. The current app icon direction is the HP shield-bot mark: an AI bot, a shield frame, a white `H`, and a single green checked `P` for Proof.
 
-## Files
+## Current App Icon Files
 
-- `brand/hireproof-logo.svg`: primary horizontal logo for headers, decks, README files, and submission pages.
-- `brand/hireproof-mark.svg`: compact icon mark for app icons, favicons, badges, and avatars.
-- `brand/hireproof-wordmark.svg`: text-only wordmark for tight layouts.
-- `icons/favicon.svg`: browser favicon source.
-- `social/og-image.svg`: 1200x630 Open Graph image for link previews.
-- `social/showcase-card.svg`: 1600x900 showcase graphic for hackathon submissions and slides.
-- `patterns/evidence-grid.svg`: subtle background pattern for hero sections or presentation pages.
+- `public/downloads/hireproof-hp-shield-bot-icon.png`: saved 1024x1024 source for the current shield-bot HP mark.
+- `public/downloads/hireproof-hp-favicon-source.png`: favicon source copy used to regenerate browser and PWA icons.
+- `app/icon.png`: Next.js app icon source.
+- `public/favicon.png`: full-size browser favicon fallback.
+- `public/favicon-32x32.png` and `public/favicon-16x16.png`: small browser favicon sizes.
+- `public/icon-192.png` and `public/icon-512.png`: PWA install icons.
+- `public/apple-touch-icon.png`: iOS home-screen icon.
+- `public/og-image.png`: current social preview image using the HP shield-bot identity.
+
+## Archived Legacy Assets
+
+- `brand/legacy/hireproof-logo.svg`: original horizontal logo for older docs, decks, and README contexts.
+- `brand/legacy/hireproof-mark.svg`: original compact mark.
+- `brand/legacy/hireproof-wordmark.svg`: original text-only wordmark.
+- `brand/legacy/favicon.svg`: legacy favicon source, no longer wired as the active favicon.
+- `brand/legacy/og-image.svg`: legacy Open Graph source, superseded by `public/og-image.png`.
+- `brand/legacy/showcase-card.svg`: legacy showcase graphic.
+- `patterns/evidence-grid.svg`: background pattern for hero sections or presentation pages.
 - `tokens/hireproof-brand.css`: CSS custom properties for app theming.
-- `tokens/hireproof-brand.json`: structured brand tokens for v0, design tools, or docs.
+- `tokens/hireproof-brand.json`: structured brand tokens for design tools or docs.
 
 ## Brand Direction
 
-HireProof should feel like a calm investigator, not a generic chatbot. The visual system uses:
+HireProof should feel like an AI trust-and-safety agent for job seekers. The visual system uses:
 
-- high-contrast ink and paper neutrals
-- green, amber, and red for verdict semantics
-- blue only as a supporting evidence/action color
-- thin borders, editorial spacing, and restrained shadows
-- document, shield, and evidence-card motifs
+- dark ink backgrounds
+- safety green as the primary proof/action color
+- warm white for high-contrast lettering
+- shield, document, evidence-card, and verified-check motifs
+- restrained glows that support trust rather than generic neon styling
 
 ## Usage Notes
 
-- Use the full logo on landing pages, README headers, and presentation slides.
-- Use the compact mark for favicons, social avatars, and small navigation.
-- Use the Open Graph image when sharing the deployed app.
-- Use the showcase card for hackathon gallery screenshots when the live result screen is not available.
+- Use the HP shield-bot mark for favicons, app icons, Discord bot avatars, and compact logo placements.
+- Use the full logo only when horizontal space is available.
+- Keep exactly one `P` in compact HP marks; the green checked `P` is the Proof symbol.
 - Do not recolor verdict semantics: green means Safe, amber means Caution, red means High-Risk.
-
