@@ -393,6 +393,53 @@ test('v2 intelligence does not claim no supporting evidence when a trusted job p
   assert.doesNotMatch(report.summary, /No supporting evidence/i)
 })
 
+test('v2 intelligence ignores stale comparable-host apply mismatch for trusted LinkedIn job pages', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_linkedin_comparable_mismatch',
+    extractedClaims: {
+      company: 'Dexian Asia Pacific',
+      role: 'Quality Assurance Automation Engineer',
+      salary: 'Not specified',
+      location: 'Manila, National Capital Region, Philippines',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn job page',
+    },
+    evidence: [
+      {
+        source: 'LinkedIn public job page',
+        type: 'Job Post Source',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'Resolved LinkedIn public job page content: Quality Assurance Automation Engineer Dexian Asia Pacific Manila, National Capital Region, Philippines Easy Apply',
+      },
+      {
+        source: 'SerpApi Google Search',
+        type: 'Official Company Presence',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'Trust: official | Quality Assurance Automation Engineer - Dexian Asia Pacific.',
+      },
+      {
+        source: 'Talent.com',
+        type: 'Comparable Jobs',
+        url: 'https://ph.talent.com/view?id=liquidnet-qa',
+        snippet: 'Trust: job-result | Senior QA Engineer at Liquidnet | Location: Manila, Metro Manila',
+      },
+      {
+        source: 'SerpApi Google Jobs',
+        type: 'Apply Path Mismatch',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'Risk signal: submitted apply domain linkedin.com does not match official company domain ph.talent.com.',
+      },
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.equal(report.intelligence.applyPath.status, 'trusted-board')
+  assert.ok(report.intelligence.signals.every((signal) => signal.id !== 'apply_path_mismatch'))
+  assert.ok(report.intelligence.scoreTrace.every((item) => item.step !== 'Apply path' || item.delta !== 18))
+})
+
 test('remote recruiter free-mail identity remains risky even with a real company footprint', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({

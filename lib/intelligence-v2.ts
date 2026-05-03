@@ -324,6 +324,35 @@ function deriveRecruiterIdentity(
   return { status: 'unknown', evidenceIds }
 }
 
+function mismatchHostsFromEvidence(item: EvidenceItem) {
+  const text = `${item.snippet || ''} ${item.url || ''}`
+  const submittedHost = text.match(/\bsubmitted apply domain\s+([a-z0-9.-]+\.[a-z]{2,})\b/i)?.[1]?.toLowerCase()
+  const claimedOfficialHost = text.match(/\bofficial company domain\s+([a-z0-9.-]+\.[a-z]{2,})\b/i)?.[1]?.toLowerCase()
+  return { submittedHost, claimedOfficialHost }
+}
+
+function isTrustedJobBoardHost(host?: string) {
+  return Boolean(host && /(?:^|\.)((linkedin|indeed|jobstreet)\.com|greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|workdayjobs\.com|myworkdayjobs\.com)$/i.test(host))
+}
+
+function isComparableAggregatorHost(host?: string) {
+  return Boolean(host && /(?:^|\.)(talent\.com|trabajo\.org|jobsora\.com|jooble\.org|simplyhired\.com|careerjet\.[a-z.]+)$/i.test(host))
+}
+
+function isActionableApplyPathMismatch(item: EvidenceItem, officialHost?: string) {
+  const { submittedHost, claimedOfficialHost } = mismatchHostsFromEvidence(item)
+  if (isTrustedJobBoardHost(submittedHost) && claimedOfficialHost && rootDomain(submittedHost) !== rootDomain(claimedOfficialHost)) return false
+  if (
+    claimedOfficialHost &&
+    officialHost &&
+    rootDomain(claimedOfficialHost) !== rootDomain(officialHost)
+  ) return false
+
+  if (isTrustedJobBoardHost(submittedHost) && isComparableAggregatorHost(claimedOfficialHost)) return false
+
+  return true
+}
+
 function addSignal(signals: IntelligenceSignal[], signal: IntelligenceSignal) {
   if (!signals.some(existing => existing.id === signal.id)) signals.push(signal)
 }
@@ -376,7 +405,8 @@ function deriveIntelligence(
   const localEvidence = evidence.filter(item => item.type === 'Verified Local Presence' || item.type === 'Local Presence')
   const verifiedLocalEvidence = byType('Verified Local Presence')
   const comparableEvidence = byType('Comparable Jobs')
-  const mismatchEvidence = byType('Apply Path Mismatch')
+  const officialHost = hostnameFromUrl(officialEvidence.find(item => item.url)?.url)
+  const mismatchEvidence = byType('Apply Path Mismatch').filter(item => isActionableApplyPathMismatch(item, officialHost))
   const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
   const staleEvidence = evidence.filter(item => item.freshness === 'stale')
   const weakEvidence = evidence.filter(item => item.sourceQuality === 'weak')
@@ -541,7 +571,6 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Apply path', -5, 'Professional application path lowers risk.')
   }
 
-  const officialHost = hostnameFromUrl(officialEvidence.find(item => item.url)?.url)
   const recruiterIdentity = deriveRecruiterIdentity(extractedClaims, evidence, officialHost)
   if (recruiterIdentity.status === 'verified' || recruiterIdentity.status === 'domain-match') {
     addSignal(signals, {

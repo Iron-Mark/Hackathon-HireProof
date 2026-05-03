@@ -22,6 +22,7 @@ async function loadSerpApiModule() {
       if (id === '@upstash/redis') return { Redis: class {} }
       return {}
     },
+    URL,
     URLSearchParams,
     AbortController,
     DOMException,
@@ -53,6 +54,7 @@ async function loadSerpApiModuleWithFetch(fetchImpl) {
       if (id === '@upstash/redis') return { Redis: class {} }
       return {}
     },
+    URL,
     URLSearchParams,
     AbortController,
     DOMException,
@@ -165,6 +167,92 @@ test('smart SerpApi evidence emits trusted positive and high-risk signals', asyn
   assert.ok(evidence.some(item => item.type === 'Verified Local Presence'))
   assert.ok(evidence.some(item => item.type === 'Comparable Jobs'))
   assert.ok(evidence.some(item => /Risk signal:/.test(item.snippet)))
+})
+
+test('SerpApi apply-path mismatch ignores unrelated comparable job hosts', async () => {
+  const { buildEvidenceFromSerpApiResults } = await loadSerpApiModule()
+
+  const evidence = buildEvidenceFromSerpApiResults({
+    claims: {
+      company: 'Dexian Asia Pacific',
+      role: 'Quality Assurance Automation Engineer',
+      salary: 'Not specified',
+      location: 'Manila, National Capital Region, Philippines',
+    },
+    web: {
+      organic_results: [
+        {
+          title: 'Quality Assurance Automation Engineer - Dexian Asia Pacific',
+          link: 'https://www.linkedin.com/jobs/view/4405077596/',
+          displayed_link: 'linkedin.com',
+          snippet: 'Dexian Asia Pacific is hiring a Quality Assurance Automation Engineer in Manila.',
+        },
+      ],
+    },
+    jobs: {
+      jobs_results: [
+        {
+          title: 'Senior QA Engineer',
+          company_name: 'Liquidnet',
+          location: 'Manila, Metro Manila',
+          via: 'Talent.com',
+          apply_options: [{ title: 'Apply on Talent.com', link: 'https://ph.talent.com/view?id=liquidnet-qa' }],
+        },
+        {
+          title: 'Automation Test Engineer',
+          company_name: 'Computer Professionals Inc.',
+          location: 'Metro Manila',
+          via: 'Trabajo.org',
+          apply_options: [{ title: 'Apply on Trabajo', link: 'https://ph.trabajo.org/job/computer-professionals' }],
+        },
+      ],
+    },
+    applicationUrl: 'https://www.linkedin.com/jobs/view/4405077596/',
+  })
+
+  assert.ok(evidence.some(item => item.type === 'Comparable Jobs'))
+  assert.ok(evidence.every(item => item.type !== 'Apply Path Mismatch'))
+})
+
+test('SerpApi apply-path mismatch remains for suspicious submitted forms when official apply links exist', async () => {
+  const { buildEvidenceFromSerpApiResults } = await loadSerpApiModule()
+
+  const evidence = buildEvidenceFromSerpApiResults({
+    claims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'PHP 40,000 per month',
+      location: 'Manila',
+    },
+    web: {
+      organic_results: [
+        {
+          title: 'Acme Careers - Official Careers',
+          link: 'https://acme.com/careers/frontend-developer',
+          displayed_link: 'acme.com',
+          snippet: 'Official careers page for Acme frontend developer roles.',
+        },
+      ],
+      knowledge_graph: { title: 'Acme Careers', website: 'https://acme.com' },
+    },
+    jobs: {
+      jobs_results: [
+        {
+          title: 'Frontend Developer',
+          company_name: 'Acme Careers',
+          location: 'Manila',
+          via: 'LinkedIn',
+          apply_options: [{ title: 'Apply on Acme', link: 'https://acme.com/careers/frontend-developer' }],
+          related_links: [{ link: 'https://www.linkedin.com/jobs/view/123' }],
+        },
+      ],
+    },
+    applicationUrl: 'https://fake-apply.example.com/acme-form',
+  })
+
+  assert.ok(evidence.some(item => item.type === 'Apply Path Mismatch'))
+  assert.ok(evidence.some(item => /fake-apply\.example\.com/.test(item.snippet)))
+  assert.ok(evidence.some(item => /acme\.com/.test(item.snippet)))
 })
 
 test('smart SerpApi orchestration uses bounded deep searches before backfill', async () => {

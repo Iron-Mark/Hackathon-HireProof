@@ -521,10 +521,36 @@ function isReputableJobBoard(url?: string, source?: string) {
   ].some(domain => host.includes(domain) || label.includes(domain.replace('.com', '')))
 }
 
-function compareApplyHost(applicationUrl: string | undefined, officialHost: string, applyLinks: string[]) {
+function rootDomainFromHost(host: string) {
+  const parts = host.replace(/^www\./i, '').split('.').filter(Boolean)
+  if (parts.length < 2) return host
+  return parts.slice(-2).join('.')
+}
+
+function isTrustedSubmittedApplyHost(host: string) {
+  return [
+    'linkedin.com',
+    'indeed.com',
+    'jobstreet.com',
+    'greenhouse.io',
+    'lever.co',
+    'ashbyhq.com',
+    'smartrecruiters.com',
+    'workdayjobs.com',
+    'myworkdayjobs.com',
+  ].some(domain => host.includes(domain))
+}
+
+function compareApplyHost(
+  applicationUrl: string | undefined,
+  officialHost: string,
+  applyLinks: string[],
+  options: { allowTrustedJobBoard?: boolean } = {},
+) {
   const submittedHost = hostnameFromUrl(applicationUrl)
   if (!submittedHost || !officialHost) return null
-  const officialRoot = officialHost.split('.').slice(-2).join('.')
+  if (options.allowTrustedJobBoard && isTrustedSubmittedApplyHost(submittedHost)) return null
+  const officialRoot = rootDomainFromHost(officialHost)
   const submittedMatchesOfficial = submittedHost.includes(officialRoot)
   const applyMatchesOfficial = applyLinks.some(link => hostnameFromUrl(link).includes(officialRoot))
   if (!submittedMatchesOfficial && applyMatchesOfficial) {
@@ -589,7 +615,10 @@ export function buildEvidenceFromSerpApiResults(input: SmartEvidenceInput): Evid
       bestLink,
     ))
 
-    const mismatch = compareApplyHost(input.applicationUrl, officialHost || hostnameFromUrl(bestLink), applyLinks)
+    const targetCompanyJob = hasCompanyToken(job.company_name || '', company)
+    const mismatch = targetCompanyJob
+      ? compareApplyHost(input.applicationUrl, officialHost, applyLinks, { allowTrustedJobBoard: true })
+      : null
     if (mismatch) {
       output.push(evidence('SerpApi Google Jobs', 'Apply Path Mismatch', mismatch, input.applicationUrl))
     }
