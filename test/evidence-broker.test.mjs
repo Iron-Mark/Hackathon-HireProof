@@ -346,3 +346,52 @@ test('real search and reputation evidence still triggers negative reputation', a
 
   assert.ok(signals.map((signal) => signal.id).includes('evidence.negative_reputation'))
 })
+
+test('evidence broker suppresses low-value urlscan receipts for shared job platforms', async () => {
+  const { runEvidenceBroker } = await loadEvidenceBrokerModule()
+  const broker = await runEvidenceBroker({
+    claims: {
+      company: 'Dexian Asia Pacific',
+      role: 'Quality Assurance Automation Engineer',
+      salary: 'Not specified',
+      location: 'Manila, Philippines',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn job page',
+    },
+    applicationUrl: 'https://www.linkedin.com/jobs/view/4405077596/',
+    existingEvidence: [
+      {
+        source: 'LinkedIn public job page',
+        type: 'Job Post Source',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'HireProof read public job content.',
+      },
+    ],
+  }, {
+    liveSearchAllowed: false,
+    providers: {
+      rdap: async () => ({ status: 'not-live', evidence: [] }),
+      dns: async () => ({ status: 'not-live', evidence: [] }),
+      safeBrowsing: async () => ({ status: 'not-live', evidence: [] }),
+      certificateTransparency: async () => ({ status: 'not-live', evidence: [] }),
+      threatIntel: async () => ({ status: 'not-live', evidence: [] }),
+      companyRegistry: async () => ({ status: 'not-live', evidence: [] }),
+      urlscan: async () => ({
+        status: 'ok',
+        evidence: [
+          {
+            source: 'urlscan.io',
+            type: 'URL Intelligence',
+            snippet: 'Existing urlscan result for linkedin.com: Rhino Recruitment - The only reliable all-in-one staffing provider. | HTTP 200.',
+            url: 'https://urlscan.io/result/example',
+            sourceType: 'threat-intel',
+            trustLevel: 'low',
+            sourceQuality: 'public',
+          },
+        ],
+      }),
+    },
+  })
+
+  assert.ok(!broker.evidence.some((item) => item.source === 'urlscan.io' && /Rhino Recruitment/i.test(item.snippet)))
+})

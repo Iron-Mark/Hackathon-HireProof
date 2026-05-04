@@ -665,7 +665,15 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Contact method', offPlatformWeight, 'Off-platform contact increases job-scam risk.')
   }
 
-  const finalDelta = Math.max(0, clampScore(baseScore) - score)
+  const rawFinalDelta = Math.max(0, clampScore(baseScore) - score)
+  const hasTrustedHiringSurface = officialEvidence.length > 0 &&
+    comparableEvidence.length > 0 &&
+    mismatchEvidence.length === 0 &&
+    reputationRiskEvidence.length === 0 &&
+    !contactMethod.includes('telegram') &&
+    !contactMethod.includes('whatsapp') &&
+    /official|careers|linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath)
+  const finalDelta = hasTrustedHiringSurface ? Math.min(rawFinalDelta, 12) : rawFinalDelta
   score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
 
   const submittedHost = hostnameFromUrl(mismatchEvidence.find(item => item.url)?.url)
@@ -709,7 +717,7 @@ function deriveIntelligence(
   }
 
   return {
-    riskScore: clampScore(Math.max(baseScore, score)),
+    riskScore: clampScore(score),
     intelligence: {
       coverage: {
         company: companyCoverage,

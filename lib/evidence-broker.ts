@@ -96,6 +96,12 @@ const TRUSTED_APPLY_ROOTS = new Set([
   'workdayjobs.com',
   'myworkdayjobs.com',
 ])
+const SHARED_JOB_PLATFORM_ROOTS = new Set([
+  ...TRUSTED_APPLY_ROOTS,
+  'talent.com',
+  'trabajo.org',
+  'foundit.com.ph',
+])
 const FREE_EMAIL_DOMAINS = new Set([
   'gmail.com',
   'yahoo.com',
@@ -273,6 +279,13 @@ function dedupeEvidence(items: EvidenceItem[]) {
     output.push(item)
   }
   return output.slice(0, 100)
+}
+
+function isLowValueSharedPlatformUrlscanEvidence(item: EvidenceItem, targets: EvidenceTargets) {
+  if (item.source !== 'urlscan.io' || item.type !== 'URL Intelligence') return false
+  if (item.trustLevel === 'risk') return false
+  const domain = rootDomain(targets.applyDomain || targets.officialDomain || targets.contactDomains[0] || cleanHost(item.url))
+  return Boolean(domain && SHARED_JOB_PLATFORM_ROOTS.has(domain))
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
@@ -832,7 +845,7 @@ export async function runEvidenceBroker(
   if (Date.now() - startedAt <= totalBudgetMs) {
     const result = await runProvider('urlscan', () => providerImpl.urlscan(enrichedTargets, { ...context, targets: enrichedTargets }), context)
     statuses.urlscan = mergeProviderStatus('urlscan', statuses.urlscan, result, now)
-    evidenceItems.push(...(result.evidence || []))
+    evidenceItems.push(...(result.evidence || []).filter(item => !isLowValueSharedPlatformUrlscanEvidence(item, enrichedTargets)))
   }
 
   if (evidenceItems.length === 0) {

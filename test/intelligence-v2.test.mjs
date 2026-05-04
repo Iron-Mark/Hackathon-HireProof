@@ -442,6 +442,59 @@ test('v2 intelligence ignores stale comparable-host apply mismatch for trusted L
   assert.ok(report.intelligence.scoreTrace.every((item) => item.step !== 'Apply path' || item.delta !== 18))
 })
 
+test('trusted LinkedIn staffing report does not overinflate policy reconciliation', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_dexian_calibrated',
+    extractedClaims: {
+      company: 'Dexian Asia Pacific',
+      role: 'Quality Assurance Automation Engineer',
+      salary: 'Not specified',
+      location: 'Manila, National Capital Region, Philippines',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn job page',
+    },
+    evidence: [
+      {
+        source: 'LinkedIn public job page',
+        type: 'Job Post Source',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'HireProof read public job content from https://www.linkedin.com/jobs/view/4405077596/.',
+      },
+      {
+        source: 'SerpApi Google Search',
+        type: 'Official Company Presence',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'Trust: official | Quality Assurance Automation Engineer | Dexian Asia Pacific Manila, National Capital Region, Philippines.',
+      },
+      {
+        source: 'LinkedIn Philippines',
+        type: 'Comparable Jobs',
+        url: 'https://ph.linkedin.com/jobs/view/senior-qa-test-automation-engineer-at-genapct-4383662979',
+        snippet: 'Trust: reputable-job-board | Senior QA Test Automation Engineer at Genapct | Location: Makati City, Metro Manila',
+      },
+      {
+        source: 'HireProof domain broker',
+        type: 'Domain Mismatch',
+        url: 'https://www.linkedin.com/jobs/view/4405077596/',
+        snippet: 'Trust signal: submitted apply domain linkedin.com matches the official company root linkedin.com.',
+        sourceType: 'domain',
+        trustLevel: 'medium',
+      },
+    ],
+    enrichmentRedFlags: ['No local presence found'],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  const policyTrace = report.intelligence.scoreTrace.find((item) => item.step === 'Policy reconciliation')
+  assert.ok(policyTrace)
+  assert.ok(policyTrace.delta <= 12)
+  assert.ok(report.riskScore <= 35)
+  assert.equal(report.intelligence.applyPath.status, 'trusted-board')
+  assert.ok(report.redFlags.every((flag) => !/scam|fraud|fake|apply path/i.test(flag)))
+})
+
 test('remote recruiter free-mail identity remains risky even with a real company footprint', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({
