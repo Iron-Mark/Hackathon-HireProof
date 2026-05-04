@@ -65,6 +65,13 @@ const automationDownloads = [
   },
 ]
 
+const automationProof = [
+  { label: 'Published packages', value: 'SDK, CLI, LangChain, n8n', tone: 'safe' },
+  { label: 'Source pack', value: 'Make Custom App bundle', tone: 'evidence' },
+  { label: 'Workflow templates', value: 'n8n, Make HTTP, curl', tone: 'safe' },
+  { label: 'Runtime paths', value: 'REST API, webhooks, WDK', tone: 'evidence' },
+]
+
 export default function AutomationsPage() {
   return (
     <div className="space-y-12 pb-24">
@@ -75,17 +82,19 @@ export default function AutomationsPage() {
         </p>
       </section>
 
-      <section className="rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
-          <img
-            src="/docs-media/docs-automations.png"
-            alt="HireProof Automations documentation showing npm packages, native integration packs, and workflow templates"
-            className="w-full object-cover"
-            loading="lazy"
-          />
+      <section className="rounded-3xl border border-border-soft bg-surface/70 p-5 shadow-sm sm:p-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {automationProof.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-border-soft bg-background p-4 shadow-sm">
+              <div className={`mb-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${item.tone === 'safe' ? 'bg-safe/10 text-safe' : 'bg-evidence/10 text-evidence'}`}>
+                {item.label}
+              </div>
+              <p className="text-sm font-black leading-5 text-foreground">{item.value}</p>
+            </div>
+          ))}
         </div>
         <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
-          Media proof: the automation docs surface published packages, Make source-pack boundaries, and API workflow templates in one page.
+          Integration proof: published packages, source-pack boundaries, workflow templates, and runtime endpoints are surfaced without full-page screenshots.
         </p>
       </section>
 

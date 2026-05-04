@@ -79,22 +79,22 @@ const integrationRows = [
 
 const proofAssets = [
   {
-    src: '/docs-media/docs-investigation-engine.png',
-    alt: 'HireProof investigation engine documentation showing evidence-weighted audit behavior',
+    icon: ShieldCheck,
     title: 'Reusable audit core',
     desc: 'The same investigation engine supports web reports, headless clients, and tool-based workflows.',
+    proof: 'Shared report shape',
   },
   {
-    src: '/docs-media/docs-automations.png',
-    alt: 'HireProof automations documentation showing integration packages and workflow templates',
+    icon: Workflow,
     title: 'Automation-ready surface',
     desc: 'Published packages and workflow templates let teams route verdicts into existing pipelines.',
+    proof: 'API, SDK, webhooks',
   },
   {
-    src: '/docs-media/docs-skills.png',
-    alt: 'HireProof skills documentation showing MCP and agent-skill surfaces',
+    icon: PlugZap,
     title: 'Agent tool surface',
     desc: 'MCP and skill-style integrations make HireProof useful inside larger AI workbenches.',
+    proof: 'MCP and skills',
   },
 ]
 
@@ -253,13 +253,18 @@ export default function UseCasesPage() {
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {proofAssets.map((asset) => (
-            <figure key={asset.src} className="overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-sm">
-              <img src={asset.src} alt={asset.alt} className="aspect-[16/10] w-full object-cover" loading="lazy" />
-              <figcaption className="border-t border-border-soft p-4">
-                <strong className="block text-sm font-black text-foreground">{asset.title}</strong>
-                <span className="mt-1 block text-xs font-semibold leading-5 text-muted">{asset.desc}</span>
-              </figcaption>
-            </figure>
+            <article key={asset.title} className="rounded-2xl border border-border-soft bg-surface p-5 shadow-sm">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-safe/10 text-safe">
+                  <asset.icon className="h-5 w-5" />
+                </div>
+                <span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-safe">
+                  {asset.proof}
+                </span>
+              </div>
+              <h3 className="text-sm font-black text-foreground">{asset.title}</h3>
+              <p className="mt-2 text-xs font-semibold leading-5 text-muted">{asset.desc}</p>
+            </article>
           ))}
         </div>
       </section>

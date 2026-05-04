@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description: 'How HireProof investigates job posts with claim extraction, OCR, URL enrichment, evidence tools, transparent scoring, and demo/live boundaries.',
 }
 
+const pipelineProof = [
+  { icon: Search, label: 'Input normalization', detail: 'Text, URLs, screenshots, and recruiter messages become structured claims.' },
+  { icon: Microscope, label: 'Evidence tools', detail: 'Company, news, jobs, local footprint, OCR, and apply-path checks run as available.' },
+  { icon: ShieldCheck, label: 'Scoring policy', detail: 'A transparent evidence-weighted policy produces Safe, Caution, or High-Risk.' },
+  { icon: Workflow, label: 'Report output', detail: 'The UI, API, MCP, chat, and workflow paths receive the same report shape.' },
+]
+
 export default function InvestigationEnginePage() {
   return (
     <div className="space-y-12 pb-24 text-foreground">
@@ -17,17 +24,23 @@ export default function InvestigationEnginePage() {
         </p>
       </section>
 
-      <section className="rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
-          <img
-            src="/docs-media/docs-investigation-engine.png"
-            alt="HireProof AI Investigation Engine documentation showing the agent loop, evidence pipeline, and input normalization"
-            className="w-full object-cover"
-            loading="lazy"
-          />
+      <section className="rounded-3xl border border-border-soft bg-surface/70 p-5 shadow-sm sm:p-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {pipelineProof.map((item, index) => (
+            <div key={item.label} className="relative rounded-2xl border border-border-soft bg-background p-4 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-safe/10 text-safe">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted">0{index + 1}</span>
+              </div>
+              <h2 className="text-sm font-black">{item.label}</h2>
+              <p className="mt-2 text-xs font-semibold leading-5 text-muted">{item.detail}</p>
+            </div>
+          ))}
         </div>
         <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
-          Media proof: the engine docs show the agent loop, evidence pipeline, OCR path, URL enrichment, and demo/live boundaries.
+          Engine proof: the pipeline is summarized as product UI instead of a full-page screenshot of this documentation page.
         </p>
       </section>
 
@@ -140,6 +153,18 @@ export default function InvestigationEnginePage() {
             <p className="text-sm font-black uppercase tracking-widest">Fail-Safe Resilience</p>
             <p className="text-sm font-medium text-muted leading-relaxed">
               If a specific AI model or tool is unavailable, the engine automatically pivots to fallback checks. We prioritize a <strong>transparent evidence-weighted policy</strong> over raw LLM output so verdicts stay explainable and consistent.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-evidence/30 bg-evidence/5 p-6">
+        <div className="flex items-start gap-4">
+          <Search className="mt-1 h-5 w-5 text-evidence" />
+          <div className="space-y-2">
+            <p className="text-sm font-black uppercase tracking-widest text-evidence">Evidence provider status</p>
+            <p className="text-sm font-medium text-muted leading-relaxed">
+              Live reports can show the status of SerpApi, RDAP, DNS, Safe Browsing, certificate transparency, threat-intel, company-registry, and urlscan checks. Status values such as <strong>ok</strong>, <strong>cache-only</strong>, <strong>degraded</strong>, and <strong>not-live</strong> explain provider coverage without blocking the audit. A missing phishing hit is neutral; it is not treated as proof that a job is safe.
             </p>
           </div>
         </div>

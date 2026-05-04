@@ -287,7 +287,7 @@ export function DeveloperClient() {
         <main className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-24">
           <div className="w-full space-y-8 rounded-3xl border border-border-soft bg-surface p-8 shadow-2xl">
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-foreground text-background">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-safe text-background dark:text-[#06130d]">
                 <Terminal className="h-8 w-8" />
               </div>
               <h1 className="text-3xl font-black tracking-tight">Developer Access</h1>
@@ -380,7 +380,7 @@ export function DeveloperClient() {
                   <Key className="h-5 w-5 text-evidence" />
                   <h2 className="text-xl font-black">Managed API Keys</h2>
                 </div>
-                <button onClick={createKey} className="flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-xs font-black text-background hover:bg-evidence transition-all">
+                <button onClick={createKey} className="hireproof-cta-primary flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black">
                   <Plus className="h-4 w-4" /> Generate Key
                 </button>
               </div>
@@ -681,7 +681,7 @@ export function DeveloperClient() {
                         <code className="whitespace-pre">{script}</code>
                         <button
                           onClick={() => copy(script)}
-                          className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity bg-background p-1.5 rounded-lg border border-border-soft hover:bg-safe hover:text-background"
+                          className="absolute right-2 top-2 cursor-pointer opacity-0 group-hover/code:opacity-100 transition-opacity bg-background p-1.5 rounded-lg border border-border-soft hover:bg-safe hover:text-background dark:hover:text-[#06130d]"
                           aria-label={`Copy badge script for ${domain.domain}`}
                         >
                           <Copy className="h-3.5 w-3.5" />

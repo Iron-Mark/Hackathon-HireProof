@@ -388,7 +388,7 @@ export default function ExtensionDemo() {
       </div>
 
       {/* Demo Controller Footer */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full bg-foreground px-8 py-4 text-background shadow-[0_0_50px_rgba(0,0,0,0.3)] flex items-center gap-8 backdrop-blur-md">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full border border-safe/25 bg-surface/95 px-8 py-4 text-foreground shadow-[0_0_50px_rgba(0,0,0,0.3)] flex items-center gap-8 backdrop-blur-md">
          <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-safe animate-pulse" />
             <span className="text-xs font-black uppercase tracking-widest">Extension Demo Active</span>
@@ -397,13 +397,13 @@ export default function ExtensionDemo() {
          <div className="flex gap-4">
             <button 
               onClick={() => setActiveStage('scanning')}
-              className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'scanning' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-white/50 hover:text-white'}`}
+              className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'scanning' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
             >
               Scan Mode
             </button>
             <button 
               onClick={() => setActiveStage('result')}
-              className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'result' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-white/50 hover:text-white'}`}
+              className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'result' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
             >
               Verdict Mode
             </button>

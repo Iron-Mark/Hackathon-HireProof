@@ -91,6 +91,30 @@ Manual actions after Phase 2:
 - Review npm package pages for copy/screenshots.
 - Continue external n8n community and Make review flows separately.
 
+### Phase 3: Evidence Provider Status UI
+
+Status: complete locally as of 2026-05-04.
+
+What changed:
+
+- Audit result pages now render an `Evidence provider status` panel when `operations.evidenceProviders` is present.
+- The panel shows provider labels, status badges, messages, fetch/cache timestamps, retry timing, and rate-limit timing when available.
+- Supported visible providers include SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, and urlscan.
+- The panel explicitly states that provider misses are operational context, not proof that an opportunity is safe.
+- `docs/investigation-engine` now explains the evidence-provider status model and the neutral meaning of missing phishing hits.
+
+Verification:
+
+- `node --test test/runtime-wiring.test.mjs` passed.
+- `npm run lint` passed.
+- `npm run build` passed.
+- Local live audit generated `report_1777857241946` with provider statuses for SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, and urlscan.
+- Playwright verified `/audit/report_1777857241946` renders the provider-status panel at `375px` and `1280px` without horizontal overflow.
+
+Remaining manual action:
+
+- Add `GOOGLE_SAFE_BROWSING_API_KEY` in Vercel if Safe Browsing should move from `not-live` to active provider checks in production.
+
 ## Current State
 
 The repo is on the deployed HireProof production branch with the evidence funnel, published CLI/SDK packages, native integration packs, and current docs pages implemented.

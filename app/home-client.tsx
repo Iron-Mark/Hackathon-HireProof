@@ -8,7 +8,6 @@ import { motion } from 'framer-motion'
 import { SiteHeader } from '@/components/layout/site-header'
 
 import { SpotTheBot } from '@/components/marketing/spot-the-bot'
-import { BrandMark } from '@/components/brand/brand-mark'
 import { ImpactTicker } from '@/components/marketing/impact-ticker'
 
 const flags = [
@@ -612,6 +611,12 @@ export function HomeClient() {
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(var(--hireproof-safe)_1px,transparent_1px)] [background-size:32px_32px]" />
         </div>
+        <img
+          src="/media/job-application-meme.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[min(34rem,72vw)] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[1.75rem] border border-safe/30 object-cover opacity-[0.08] shadow-[0_0_54px_rgba(52,211,153,0.28)] dark:opacity-[0.14] sm:block lg:left-[60%] lg:w-[38rem]"
+        />
         <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -637,7 +642,7 @@ export function HomeClient() {
             </Link>
             <Link
               href="/audit"
-              className="hireproof-focus inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-border-soft bg-background dark:border-white/20 dark:bg-white/5 px-8 py-4 text-lg font-black text-foreground dark:text-white transition-all hover:bg-surface dark:hover:bg-white/10 sm:w-auto"
+              className="hireproof-focus inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-border-soft bg-surface px-8 py-4 text-lg font-black text-foreground transition-all hover:border-safe/40 hover:bg-safe/5 sm:w-auto"
             >
               Quick demo
             </Link>

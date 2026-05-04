@@ -31,7 +31,7 @@ export function CodeBlock({ title, language, code }: CodeBlockProps) {
         </div>
         <button
           onClick={handleCopy}
-          className="relative flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+          className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-safe/10 hover:text-safe"
           aria-label="Copy code"
           title="Copy code"
         >

@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   description: 'A practical HireProof guide to AI-generated recruitment scam patterns, suspicious job posts, recruiter messages, and evidence-first verification.',
 }
 
+const scamPatterns = [
+  { icon: Bot, label: 'Generated pitch', detail: 'Polished but vague role text, copied phrasing, and urgency pressure.' },
+  { icon: UserCheck, label: 'Identity gap', detail: 'Recruiter or company claims do not match official hiring evidence.' },
+  { icon: Zap, label: 'Fast trust ask', detail: 'Personal data, payment, or off-platform chat before a normal interview.' },
+]
+
 export default function DeadInternetPage() {
   return (
     <div className="max-w-4xl mx-auto pb-24">
@@ -30,17 +36,20 @@ export default function DeadInternetPage() {
         </p>
       </div>
 
-      <section className="mb-12 rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
-        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
-          <img
-            src="/docs-media/docs-dead-internet.png"
-            alt="HireProof AI-generated recruitment scam guide showing detection methodology and evidence-first verification"
-            className="w-full object-cover"
-            loading="lazy"
-          />
+      <section className="mb-12 rounded-3xl border border-border-soft bg-surface/70 p-5 shadow-sm sm:p-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {scamPatterns.map((pattern) => (
+            <div key={pattern.label} className="rounded-2xl border border-border-soft bg-background p-4 shadow-sm">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-risk-bg text-risk-text">
+                <pattern.icon className="h-5 w-5" />
+              </div>
+              <h2 className="text-sm font-black">{pattern.label}</h2>
+              <p className="mt-2 text-xs font-semibold leading-5 text-muted">{pattern.detail}</p>
+            </div>
+          ))}
         </div>
         <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
-          Media proof: the recruitment-scam brief explains the automated scam patterns HireProof checks before verdict generation.
+          Pattern brief: AI-generated recruitment scams are summarized as checkable signals instead of a full-page screenshot.
         </p>
       </section>
 

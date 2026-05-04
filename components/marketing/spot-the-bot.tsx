@@ -123,7 +123,7 @@ export function SpotTheBot() {
           <div className="relative z-10 p-4 sm:p-5 lg:p-6">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-border-soft pb-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background shadow-lg">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-safe text-background shadow-lg dark:text-[#06130d]">
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
@@ -201,7 +201,7 @@ export function SpotTheBot() {
                       <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black uppercase tracking-widest ${
                         isSelected
                           ? isCorrect
-                            ? 'bg-safe text-background'
+                            ? 'bg-safe text-background dark:text-[#06130d]'
                             : 'bg-risk-bg text-risk-text'
                           : 'bg-surface text-muted'
                       }`}>
@@ -216,7 +216,7 @@ export function SpotTheBot() {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           className={`absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border-4 border-surface shadow-xl ${
-                            isCorrect ? 'bg-safe text-background' : 'bg-risk-bg text-risk-text'
+                            isCorrect ? 'bg-safe text-background dark:text-[#06130d]' : 'bg-risk-bg text-risk-text'
                           }`}
                         >
                           {isCorrect ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
@@ -308,7 +308,7 @@ export function SpotTheBot() {
             animate={{ opacity: 1, scale: 1 }}
             className="relative z-10 p-6 text-center md:p-10"
           >
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-safe text-background shadow-xl shadow-safe/20 relative overflow-hidden">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-safe text-background shadow-xl shadow-safe/20 relative overflow-hidden dark:text-[#06130d]">
                <div className="bot-scan-line opacity-20" />
                <Sparkles className="h-10 w-10 relative z-10" />
             </div>

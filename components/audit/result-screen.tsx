@@ -73,8 +73,9 @@ interface Result {
     scoreTrace: Array<{ step: string; delta: number; scoreAfter: number; reason: string }>
   }
   operations?: {
-    liveSearch?: { status?: string; message?: string; retryAfterSec?: number }
-    coverageBackfill?: { status?: string; message?: string; retryAfterSec?: number }
+    liveSearch?: OperationalStatus
+    coverageBackfill?: OperationalStatus
+    evidenceProviders?: Partial<Record<EvidenceProviderKey, OperationalStatus>>
     salaryBenchmark?: { source?: string; country?: string; currency?: string; message?: string }
     falsePositiveControl?: { profileModeExplanation?: string }
   }
@@ -118,6 +119,24 @@ function sanitizeUrl(url?: string): string | undefined {
 }
 
 type ResultEvidence = Result['evidence'][number]
+type OperationalStatus = {
+  status?: string
+  message?: string
+  retryAfterSec?: number
+  provider?: string
+  fetchedAt?: string
+  expiresAt?: string
+  rateLimitedUntil?: string
+}
+type EvidenceProviderKey =
+  | 'serpapi'
+  | 'rdap'
+  | 'dns'
+  | 'safeBrowsing'
+  | 'certificateTransparency'
+  | 'threatIntel'
+  | 'companyRegistry'
+  | 'urlscan'
 
 function isOcrEvidence(item: ResultEvidence) {
   const type = item.type.toLowerCase()
@@ -197,10 +216,36 @@ function formatEvidenceStatus(value?: string) {
 
 function getEvidenceStatusTone(value?: string): EvidenceStatusTone {
   const normalized = String(value || '').toLowerCase()
-  if (['verified', 'clear', 'normal', 'official', 'matched', 'platform-match'].includes(normalized)) return 'safe'
-  if (['risk', 'risky', 'anomalous', 'mismatch', 'blocked'].includes(normalized)) return 'risk'
-  if (['missing', 'unknown', 'partial', 'not-live', 'sparse'].includes(normalized)) return 'caution'
+  if (['verified', 'clear', 'normal', 'official', 'matched', 'platform-match', 'ok'].includes(normalized)) return 'safe'
+  if (['risk', 'risky', 'anomalous', 'mismatch', 'blocked', 'throttled', 'circuit-open'].includes(normalized)) return 'risk'
+  if (['missing', 'unknown', 'partial', 'not-live', 'sparse', 'degraded', 'cache-only'].includes(normalized)) return 'caution'
   return 'neutral'
+}
+
+function getProviderDisplayName(value: string) {
+  const labels: Record<string, string> = {
+    serpapi: 'SerpApi',
+    rdap: 'RDAP',
+    dns: 'DNS',
+    safeBrowsing: 'Safe Browsing',
+    certificateTransparency: 'Certificate Transparency',
+    threatIntel: 'Threat Intel',
+    companyRegistry: 'Company Registry',
+    urlscan: 'urlscan',
+  }
+  return labels[value] || formatEvidenceLabel(value)
+}
+
+function formatProviderTimestamp(value?: string) {
+  if (!value) return ''
+  const timestamp = Date.parse(value)
+  if (Number.isNaN(timestamp)) return ''
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(timestamp)
 }
 
 function getEvidenceToneClasses(tone: EvidenceStatusTone) {
@@ -551,6 +596,25 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
       tone: getEvidenceStatusTone(intelligence?.marketBenchmark?.status),
     },
   ]
+  const providerRows = Object.entries(result.operations?.evidenceProviders || {})
+    .filter((entry): entry is [string, OperationalStatus] => Boolean(entry[1]?.status || entry[1]?.message))
+    .map(([key, status]) => ({
+      key,
+      label: getProviderDisplayName(key),
+      status: formatEvidenceStatus(status.status),
+      tone: getEvidenceStatusTone(status.status),
+      message: status.message || (
+        status.status === 'ok'
+          ? `${getProviderDisplayName(key)} responded during this audit.`
+          : 'No provider detail was included.'
+      ),
+      fetchedAt: formatProviderTimestamp(status.fetchedAt),
+      expiresAt: formatProviderTimestamp(status.expiresAt),
+      retryAfterSec: status.retryAfterSec,
+      rateLimitedUntil: formatProviderTimestamp(status.rateLimitedUntil),
+    }))
+  const providerOkCount = providerRows.filter((row) => row.tone === 'safe').length
+  const providerAttentionCount = providerRows.length - providerOkCount
 
   const submitFeedback = async (vote: 'helpful' | 'incorrect') => {
     if (feedbackGiven || !result.id) return
@@ -883,6 +947,66 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                   </div>
                 )}
               </div>
+
+              {providerRows.length > 0 && (
+                <div data-testid="evidence-provider-status" className="mb-5 overflow-hidden rounded-xl border border-border-soft bg-surface">
+                  <div className="flex flex-col gap-3 border-b border-border-soft bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-black">Evidence provider status</h3>
+                      <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                        Shows which live providers ran, reused cache, degraded, or were not configured. Provider misses are operational context, not proof that an opportunity is safe.
+                      </p>
+                    </div>
+                    <div className="flex gap-2 text-[10px] font-black uppercase tracking-wider">
+                      <span className="rounded-md border border-safe/25 bg-safe/10 px-2.5 py-1 text-safe-text">{providerOkCount} ok</span>
+                      <span className="rounded-md border border-caution/30 bg-caution/10 px-2.5 py-1 text-caution-text">{providerAttentionCount} review</span>
+                    </div>
+                  </div>
+                  <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-3">
+                    {providerRows.map((row) => (
+                      <div key={row.key} className="border-b border-border-soft p-4 sm:border-r xl:[&:nth-child(3n)]:border-r-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-black text-foreground">{row.label}</div>
+                            <div className="mt-1 text-xs font-semibold leading-5 text-muted">{row.message}</div>
+                          </div>
+                          <span className={`shrink-0 rounded-md border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                            {row.status}
+                          </span>
+                        </div>
+                        {(row.fetchedAt || row.expiresAt || row.retryAfterSec || row.rateLimitedUntil) && (
+                          <dl className="mt-3 grid gap-2 text-[10px] font-black uppercase tracking-wider text-muted">
+                            {row.fetchedAt && (
+                              <div className="flex justify-between gap-3">
+                                <dt>Fetched</dt>
+                                <dd className="text-foreground">{row.fetchedAt}</dd>
+                              </div>
+                            )}
+                            {row.expiresAt && (
+                              <div className="flex justify-between gap-3">
+                                <dt>Cache expires</dt>
+                                <dd className="text-foreground">{row.expiresAt}</dd>
+                              </div>
+                            )}
+                            {row.retryAfterSec && (
+                              <div className="flex justify-between gap-3">
+                                <dt>Retry after</dt>
+                                <dd className="text-foreground">{row.retryAfterSec}s</dd>
+                              </div>
+                            )}
+                            {row.rateLimitedUntil && (
+                              <div className="flex justify-between gap-3">
+                                <dt>Rate limited until</dt>
+                                <dd className="text-foreground">{row.rateLimitedUntil}</dd>
+                              </div>
+                            )}
+                          </dl>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {coverageRows.length > 0 ? (
                 <div className="overflow-hidden rounded-xl border border-border-soft">

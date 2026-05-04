@@ -381,7 +381,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
             <button
               type="button"
               onClick={removeImage}
-              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background hover:bg-risk-text shadow-sm after:absolute after:inset-[-10px]"
+              className="absolute -right-2 -top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-risk-bg text-risk-text hover:bg-risk-text hover:text-background shadow-sm after:absolute after:inset-[-10px]"
             >
               <X className="h-3 w-3" />
             </button>
@@ -475,7 +475,7 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
             data-testid="investigate-button"
             aria-label="Investigate Job Post"
             disabled={loading || (!text.trim() && !url.trim() && !image)}
-            className="hireproof-focus cta-glow flex w-full items-center justify-center gap-2 rounded-xl border border-safe bg-safe py-3 font-black text-background shadow-lg shadow-safe/20 transition-colors hover:bg-safe-text disabled:cursor-not-allowed disabled:border-safe/30 disabled:bg-safe-bg disabled:text-safe-text disabled:opacity-100 disabled:shadow-none"
+            className="hireproof-focus hireproof-cta-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 font-black disabled:cursor-not-allowed disabled:border-safe/30 disabled:bg-safe-bg disabled:text-safe-text disabled:opacity-100 disabled:shadow-none"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {loading ? 'Investigating...' : 'Investigate'}

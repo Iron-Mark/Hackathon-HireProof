@@ -102,7 +102,7 @@ export function DemoLoginSnackbar() {
           <div className="p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-safe text-background dark:text-[#06130d]">
                   <Terminal className="h-4 w-4" />
                 </div>
                 <div>
@@ -112,7 +112,7 @@ export function DemoLoginSnackbar() {
               </div>
               <button
                 onClick={handleDismiss}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-background hover:text-foreground"
+                className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-background hover:text-foreground"
                 aria-label="Dismiss"
               >
                 <X className="h-3.5 w-3.5" />

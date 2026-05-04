@@ -149,7 +149,7 @@ export default function HistoryPage() {
                           {report.riskScore}<span className="ml-1 text-[10px] opacity-40">/100</span>
                         </span>
                       </div>
-                      <div className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border-soft bg-background px-3 text-xs font-black text-evidence transition-all group-hover:border-safe group-hover:bg-safe group-hover:text-background">
+                      <div className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border-soft bg-background px-3 text-xs font-black text-evidence transition-all group-hover:border-safe group-hover:bg-safe group-hover:text-background dark:group-hover:text-[#06130d]">
                         Open report
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
@@ -182,7 +182,7 @@ export default function HistoryPage() {
                   a.click()
                   URL.revokeObjectURL(url)
                 }}
-                className="hireproof-focus flex w-full items-center justify-center gap-2 rounded-xl border border-safe bg-safe px-5 py-3 text-sm font-black text-background shadow-lg shadow-safe/20 transition-colors hover:bg-safe-text disabled:border-safe/30 disabled:bg-safe-bg disabled:text-safe-text disabled:opacity-100 md:w-auto"
+                className="hireproof-focus hireproof-cta-primary flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black shadow-lg disabled:border-safe/30 disabled:bg-safe-bg disabled:text-safe-text disabled:opacity-100 md:w-auto"
               >
                 <Download className="h-5 w-5" />
                 Download Report Packet

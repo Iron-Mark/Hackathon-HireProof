@@ -832,3 +832,17 @@ test('live audit routes expose balanced guardrails and SerpApi circuit status', 
   assert.match(serpapi, /recordSerpApiFailure/)
   assert.match(serpapi, /getSerpApiOperationalStatus/)
 })
+
+test('audit result UI exposes evidence provider status transparency', async () => {
+  const resultScreen = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
+  const investigationDocs = await fs.readFile(new URL('../app/docs/investigation-engine/page.tsx', import.meta.url), 'utf8')
+
+  assert.match(resultScreen, /data-testid="evidence-provider-status"/)
+  assert.match(resultScreen, /Evidence provider status/)
+  assert.match(resultScreen, /getProviderDisplayName/)
+  assert.match(resultScreen, /safeBrowsing/)
+  assert.match(resultScreen, /certificateTransparency/)
+  assert.match(resultScreen, /Provider misses are operational context/)
+  assert.match(investigationDocs, /Evidence provider status/)
+  assert.match(investigationDocs, /A missing phishing hit is neutral/)
+})

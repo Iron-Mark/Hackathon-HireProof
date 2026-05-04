@@ -30,6 +30,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | Verified-only safer alternatives | Implemented | Alternatives require sourced comparable-job evidence |
 | Demo fixture labeling | Implemented | Fixture snackbar, visible result warning, fixture evidence wording |
 | Live audit guardrails | Implemented | Queue throttling, SerpApi circuit breaker, cache telemetry |
+| Evidence provider status UI | Implemented locally | Audit report panel for SerpApi, RDAP, DNS, Safe Browsing, CT, threat-intel, registry, and urlscan statuses |
 
 ## Pending External Proof
 
@@ -79,6 +80,18 @@ Checked on 2026-05-04 against `https://hireproof-sigma.vercel.app/api/audit` wit
   - Google Safe Browsing: `not-live`
 
 This proves the evidence broker status object is returned in live SSE results. It also shows the current production boundary: Safe Browsing is not live until `GOOGLE_SAFE_BROWSING_API_KEY` is configured, and RDAP/Certificate Transparency can degrade without blocking the audit.
+
+## Latest Provider Status UI Smoke
+
+Checked locally on 2026-05-04 after Phase 3:
+
+- Local report: `/audit/report_1777857241946`
+- Input: Vercel role with `https://vercel.com/careers` and `recruiting@vercel.com`
+- Provider keys present: SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, urlscan
+- Browser check: provider-status panel rendered at `375px` and `1280px`
+- Overflow check: no horizontal overflow at either viewport
+
+This proves the UI can surface the provider-status object returned by live audit results. Production deployment still requires committing and pushing the Phase 3 UI changes.
 
 ## Latest Package Proof
 
