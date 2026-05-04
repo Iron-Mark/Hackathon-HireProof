@@ -98,17 +98,17 @@ export default function ExtensionDemo() {
     <div className="min-h-screen bg-[#f3f2ef] dark:bg-[#121212] transition-colors">
       <SiteHeader />
       
-      <div className="relative mx-auto max-w-[1400px] px-6 py-12">
+      <div className="relative mx-auto max-w-[1400px] overflow-hidden px-4 py-8 sm:px-6 sm:py-12">
         {/* Fake LinkedIn Top Banner */}
-        <div className="mb-8 flex items-center justify-between rounded-xl bg-white dark:bg-[#1d2226] p-4 shadow-sm border border-black/5 dark:border-white/5">
-           <div className="flex items-center gap-6">
+        <div className="mb-8 flex min-w-0 items-center justify-between gap-4 rounded-xl border border-black/5 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-[#1d2226]">
+           <div className="flex min-w-0 items-center gap-6">
               <div className="h-10 w-10 bg-[#0a66c2] rounded flex items-center justify-center text-white font-black text-2xl">in</div>
               <div className="hidden md:flex items-center bg-[#eef3f8] dark:bg-[#38434f] rounded px-4 py-2 w-72">
                 <Search className="h-4 w-4 text-muted mr-2" />
                 <span className="text-sm text-muted">Search jobs, people...</span>
               </div>
            </div>
-           <div className="flex items-center gap-6 text-muted font-bold text-xs">
+           <div className="hidden items-center gap-6 text-xs font-bold text-muted sm:flex">
               <span className="text-[#0a66c2] border-b-2 border-[#0a66c2] pb-1">Home</span>
               <span>My Network</span>
               <span>Jobs</span>
@@ -116,10 +116,10 @@ export default function ExtensionDemo() {
            </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
           {/* Mock LinkedIn Job Post */}
-          <main className="space-y-6">
-            <div className="rounded-2xl bg-white dark:bg-[#1d2226] p-10 shadow-sm border border-black/5 dark:border-white/5 relative overflow-hidden">
+          <main className="min-w-0 space-y-6">
+            <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-[#1d2226] sm:p-10">
               {/* Highlight Overlay if Extension is active */}
               {activeStage === 'result' && (
                 <motion.div 
@@ -129,12 +129,12 @@ export default function ExtensionDemo() {
                 />
               )}
 
-              <div className="flex items-start justify-between">
-                <div className="flex gap-6">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-6">
                   <div className="h-20 w-20 bg-[#f8f9fa] dark:bg-[#2e343a] rounded-xl flex items-center justify-center border border-black/5">
                     <Globe className="h-10 w-10 text-muted" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h1 className="text-3xl font-black tracking-tight">Remote Frontend Intern - PHP 80,000/week</h1>
                     <div className="mt-2 flex flex-wrap items-center gap-4 text-sm font-bold text-[#0a66c2]">
                       <span>Apex Crypto Solutions</span>
@@ -149,7 +149,7 @@ export default function ExtensionDemo() {
                 </div>
               </div>
 
-              <div className="mt-10 flex gap-4">
+              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                  <button className="flex-1 rounded-full bg-[#0a66c2] py-3 text-lg font-black text-white hover:bg-[#004182] transition-colors">Apply Now</button>
                  <button className="rounded-full border border-[#0a66c2] px-8 py-3 text-lg font-black text-[#0a66c2] hover:bg-[#0a66c2]/5 transition-colors">Save</button>
               </div>
@@ -194,7 +194,7 @@ export default function ExtensionDemo() {
             </div>
 
             {/* Fake Feed Content */}
-            <div className="rounded-2xl bg-white dark:bg-[#1d2226] p-6 shadow-sm border border-black/5 dark:border-white/5 opacity-40">
+            <div className="rounded-2xl border border-black/5 bg-white p-5 opacity-40 shadow-sm dark:border-white/5 dark:bg-[#1d2226] sm:p-6">
                <div className="flex items-center gap-3 mb-4">
                   <div className="h-12 w-12 rounded-full bg-surface" />
                   <div className="space-y-2">
@@ -211,7 +211,7 @@ export default function ExtensionDemo() {
           </main>
 
           {/* HireProof Sidebar Extension (The "Wow" part) */}
-          <aside className="relative">
+          <aside className="relative min-w-0">
             <div className="sticky top-28 space-y-6">
               <AnimatePresence mode="wait">
                 {isExtensionOpen ? (
@@ -219,11 +219,11 @@ export default function ExtensionDemo() {
                     initial={{ x: 300, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: 300, opacity: 0 }}
-                    className="rounded-[2.5rem] border border-border-soft bg-surface p-1 shadow-2xl overflow-hidden relative"
+                    className="relative overflow-hidden rounded-[2rem] border border-border-soft bg-surface p-1 shadow-2xl sm:rounded-[2.5rem]"
                   >
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-safe via-caution to-risk-bg" />
                     
-                    <div className="bg-background/50 p-6 backdrop-blur-md">
+                    <div className="bg-background/50 p-5 backdrop-blur-md sm:p-6">
                       <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-2">
                           <BrandMark className="h-8 w-8" />
@@ -388,13 +388,13 @@ export default function ExtensionDemo() {
       </div>
 
       {/* Demo Controller Footer */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full border border-safe/25 bg-surface/95 px-8 py-4 text-foreground shadow-[0_0_50px_rgba(0,0,0,0.3)] flex items-center gap-8 backdrop-blur-md">
+      <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 flex-col items-center gap-3 rounded-3xl border border-safe/25 bg-surface/95 px-4 py-4 text-foreground shadow-[0_0_50px_rgba(0,0,0,0.3)] backdrop-blur-md sm:bottom-8 sm:w-auto sm:flex-row sm:gap-8 sm:rounded-full sm:px-8">
          <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-safe animate-pulse" />
             <span className="text-xs font-black uppercase tracking-widest">Extension Demo Active</span>
          </div>
-         <div className="h-6 w-px bg-white/10" />
-         <div className="flex gap-4">
+         <div className="hidden h-6 w-px bg-white/10 sm:block" />
+         <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
             <button 
               onClick={() => setActiveStage('scanning')}
               className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'scanning' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}

@@ -217,9 +217,12 @@ test('use cases docs page markets real workflows with proof-safe integration lan
   assert.match(useCases, /Headless API, MCP tool, SDK, or workflow handoff/)
   assert.match(useCases, /Safe, Caution, or High-Risk/)
   assert.match(useCases, /Demo fixture mode is intentionally labeled/)
-  assert.match(useCases, /docs-media\/docs-automations\.png/)
-  assert.match(useCases, /docs-media\/docs-investigation-engine\.png/)
-  assert.match(useCases, /docs-media\/docs-skills\.png/)
+  assert.match(useCases, /Shared report shape/)
+  assert.match(useCases, /API, SDK, webhooks/)
+  assert.match(useCases, /MCP and skills/)
+  assert.doesNotMatch(useCases, /docs-media\/docs-automations\.png/)
+  assert.doesNotMatch(useCases, /docs-media\/docs-investigation-engine\.png/)
+  assert.doesNotMatch(useCases, /docs-media\/docs-skills\.png/)
   assert.match(useCases, /docs-media\/use-cases-agent-gate\.svg/)
   assert.match(useCases, /not law-enforcement verification or a guarantee/)
   assert.match(docsLayout, /Use Cases/)
@@ -859,4 +862,65 @@ test('audit result UI exposes evidence provider status transparency', async () =
   assert.match(resultScreen, /Provider misses are operational context/)
   assert.match(investigationDocs, /Evidence provider status/)
   assert.match(investigationDocs, /A missing phishing hit is neutral/)
+})
+
+test('audit report schema accepts live enriched claims with provider status metadata', async () => {
+  const { AuditReportSchema } = await import('../lib/schemas.ts')
+
+  const report = {
+    id: 'report_schema_provider_status',
+    version: '2',
+    verdict: 'caution',
+    riskScore: 45,
+    confidence: 'Medium',
+    summary: 'Live provider status regression fixture.',
+    extractedClaims: {
+      company: 'Vercel',
+      role: 'Software Engineer',
+      salary: 'Not specified',
+      location: 'New York City, San Francisco Read more Senior Communications Manager San Francisco Read more Senior Customer Support Engineer Australia Read more Senior Customer Support Engineer Germany, United Kingdom',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'Provided job URL with a resolved public careers path and additional normalized context from the source page.',
+      recruiterName: 'Software Engineer Role At Vercel. Apply Through',
+      recruiterEmail: 'recruiting@vercel.com',
+    },
+    redFlags: [],
+    greenFlags: [],
+    evidence: [],
+    alternatives: [],
+    nextSteps: ['Review the provider status before trusting the report.'],
+    timestamp: new Date().toISOString(),
+    mode: 'live',
+    source: 'web',
+    publiclyListed: true,
+    intelligence: {
+      coverage: {
+        company: 'verified',
+        local: 'partial',
+        recruiter: 'verified',
+        reputation: 'clear',
+        market: 'missing',
+        applyPath: 'official',
+      },
+      companyProfileMode: 'established_remote',
+      companyIdentity: { status: 'matched', officialDomain: 'vercel.com', evidenceIds: [] },
+      recruiterIdentity: { status: 'domain-match', recruiterEmailDomain: 'vercel.com', evidenceIds: [] },
+      localPresence: { status: 'partial', evidenceIds: [] },
+      marketBenchmark: { status: 'missing', evidenceIds: [] },
+      applyPath: { status: 'official', submittedHost: 'vercel.com', officialHost: 'vercel.com', evidenceIds: [] },
+      signals: [],
+      scoreTrace: [],
+    },
+    operations: {
+      liveSearch: { status: 'cache-only', message: 'Fresh evidence broker cache was reused.' },
+      evidenceProviders: {
+        serpapi: { provider: 'serpapi', status: 'ok', message: 'SerpApi live search completed.' },
+        rdap: { provider: 'rdap', status: 'degraded', message: 'RDAP did not return usable data.' },
+        dns: { provider: 'dns', status: 'ok' },
+        safeBrowsing: { provider: 'safeBrowsing', status: 'not-live', message: 'Google Safe Browsing key is not configured.' },
+      },
+    },
+  }
+
+  assert.equal(AuditReportSchema.safeParse(report).success, true)
 })

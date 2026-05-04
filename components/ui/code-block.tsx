@@ -24,9 +24,9 @@ export function CodeBlock({ title, language, code }: CodeBlockProps) {
   }
 
   return (
-    <div className="mb-6 overflow-hidden rounded-xl border border-border-soft bg-[#0d1117] shadow-sm">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
-        <div className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
+    <div className="mb-6 max-w-full overflow-hidden rounded-xl border border-border-soft bg-[#0d1117] shadow-sm">
+      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5">
+        <div className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-zinc-400">
           {title || language || 'Snippet'}
         </div>
         <button
@@ -60,8 +60,8 @@ export function CodeBlock({ title, language, code }: CodeBlockProps) {
           </AnimatePresence>
         </button>
       </div>
-      <div className="relative overflow-x-auto p-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
-        <pre className="text-[13px] leading-relaxed text-[#c9d1d9] font-mono selection:bg-[#1f6feb]/30">
+      <div className="relative max-w-full overflow-x-auto p-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
+        <pre className="min-w-0 whitespace-pre text-[13px] font-mono leading-relaxed text-[#c9d1d9] selection:bg-[#1f6feb]/30">
           <code>{code}</code>
         </pre>
       </div>

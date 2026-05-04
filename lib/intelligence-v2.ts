@@ -206,6 +206,68 @@ function hasTrustedJobPageEvidence(evidence: EvidenceItem[]) {
   })
 }
 
+const ROLE_STOP_WORDS = new Set([
+  'and',
+  'the',
+  'for',
+  'with',
+  'from',
+  'role',
+  'jobs',
+  'job',
+  'page',
+  'apply',
+  'developer',
+  'engineer',
+])
+
+function importantTokens(value: string) {
+  return normalizeText(value)
+    .split(' ')
+    .filter(token => token.length >= 3 && !ROLE_STOP_WORDS.has(token))
+}
+
+function hasCompanyRoleOverlap(claims: ExtractedClaims, item: EvidenceItem) {
+  const text = normalizeText(`${item.source} ${item.type} ${item.snippet} ${item.url || ''}`)
+  const companyTokens = importantTokens(claims.company)
+  const roleTokens = importantTokens(claims.role)
+  const companyMatched = companyTokens.length === 0 || companyTokens.some(token => text.includes(token))
+  const roleMatches = roleTokens.filter(token => text.includes(token)).length
+  const roleThreshold = roleTokens.length >= 3 ? 2 : Math.min(1, roleTokens.length)
+  return companyMatched && roleMatches >= roleThreshold
+}
+
+function isOfficialOrTrustedHiringEvidence(item: EvidenceItem) {
+  const host = hostnameFromUrl(item.url)
+  const text = normalizeText(`${item.source} ${item.type} ${item.snippet} ${item.url || ''}`)
+  return (
+    item.type === 'Official Company Presence' ||
+    item.sourceQuality === 'official' ||
+    isTrustedJobBoardHost(host) ||
+    text.includes('official careers') ||
+    text.includes('trusted ats') ||
+    text.includes('ashby') ||
+    text.includes('greenhouse') ||
+    text.includes('lever') ||
+    text.includes('workday') ||
+    text.includes('smartrecruiters')
+  )
+}
+
+function findOfficialSourceMatches(claims: ExtractedClaims, evidence: EvidenceItem[]) {
+  return evidence.filter(item => isOfficialOrTrustedHiringEvidence(item) && hasCompanyRoleOverlap(claims, item))
+}
+
+function hasGlobalHiringContext(claims: ExtractedClaims, evidence: EvidenceItem[]) {
+  const text = normalizeText([
+    claims.location,
+    claims.applicationPath,
+    claims.role,
+    ...evidence.map(item => `${item.source} ${item.type} ${item.snippet} ${item.url || ''}`),
+  ].join(' '))
+  return /\b(remote|hybrid|global|worldwide|international|distributed|multi locale|multilocale|countries|country|apac|emea|philippines|ph|metro manila|quezon city|makati|manila)\b/.test(text)
+}
+
 export function normalizeCompensation(value: string): NormalizedCompensation | null {
   const text = String(value || '').trim()
   if (!text || /not specified/i.test(text)) return null
@@ -410,6 +472,10 @@ function deriveIntelligence(
   const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
   const staleEvidence = evidence.filter(item => item.freshness === 'stale')
   const weakEvidence = evidence.filter(item => item.sourceQuality === 'weak')
+  const officialSourceMatches = findOfficialSourceMatches(extractedClaims, evidence)
+  const globalHiringContext = hasGlobalHiringContext(extractedClaims, evidence)
+  const normalizedContactMethod = normalizeText(extractedClaims.contactMethod)
+  const hasOffPlatformContact = normalizedContactMethod.includes('telegram') || normalizedContactMethod.includes('whatsapp')
   const companyProfileMode = inferCompanyProfileMode(extractedClaims, evidence, verifiedLocalEvidence)
   const digitalFootprintEvidence = evidence.filter(item =>
     item.sourceQuality === 'official' ||
@@ -463,6 +529,23 @@ function deriveIntelligence(
       rationale: 'Remote roles are weighted toward official domain, company profile, reputable job board, and apply-host consistency.',
     })
     score = applyTrace(scoreTrace, score, 'Company profile mode', -6, 'Remote profile has consistent digital footprint evidence.')
+  }
+
+  if (officialSourceMatches.length > 0 && !hasOffPlatformContact) {
+    addSignal(signals, {
+      id: 'official_source_role_reconciliation',
+      label: 'Official source matched company and role',
+      direction: 'trust',
+      severity: 'high',
+      weight: -8,
+      evidenceIds: officialSourceMatches.map(item => item.id || '').filter(Boolean),
+      rationale: globalHiringContext
+        ? 'An official or trusted hiring source matches the company and role, so city-level or job-board metadata differences are treated as confirmation notes rather than scam signals.'
+        : 'An official or trusted hiring source matches the company and role, reducing the chance that the submitted listing is an impersonation.',
+    })
+    score = applyTrace(scoreTrace, score, 'Source reconciliation', -8, globalHiringContext
+      ? 'Official source matched the role; global/remote market wording is a minor confirmation note.'
+      : 'Official source matched the submitted company and role.')
   }
 
   if (verifiedLocalEvidence.length > 0) {
@@ -648,7 +731,7 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Source quality', 2, 'Weak mirrored sources have lower evidentiary value.')
   }
 
-  const contactMethod = normalizeText(extractedClaims.contactMethod)
+  const contactMethod = normalizedContactMethod
   if (contactMethod.includes('telegram') || contactMethod.includes('whatsapp')) {
     const offPlatformWeight = recruiterIdentity.status === 'verified' || recruiterIdentity.status === 'domain-match' ? 8 : contactMethod.includes('telegram') ? 16 : 12
     addSignal(signals, {
@@ -667,12 +750,15 @@ function deriveIntelligence(
 
   const rawFinalDelta = Math.max(0, clampScore(baseScore) - score)
   const hasTrustedHiringSurface = officialEvidence.length > 0 &&
-    comparableEvidence.length > 0 &&
+    (comparableEvidence.length > 0 || officialSourceMatches.length > 0) &&
     mismatchEvidence.length === 0 &&
     reputationRiskEvidence.length === 0 &&
     !contactMethod.includes('telegram') &&
     !contactMethod.includes('whatsapp') &&
-    /official|careers|linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath)
+    (
+      /official|careers|linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath) ||
+      officialSourceMatches.length > 0
+    )
   const finalDelta = hasTrustedHiringSurface ? Math.min(rawFinalDelta, 12) : rawFinalDelta
   score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
 
@@ -683,9 +769,9 @@ function deriveIntelligence(
   const marketCoverage: IntelligenceSummary['coverage']['market'] = salaryAnomalous ? 'anomalous' : comparableEvidence.length > 0 ? 'normal' : 'missing'
   const applyPathStatus: IntelligenceSummary['applyPath']['status'] = mismatchEvidence.length > 0
     ? 'mismatch'
-    : /official|careers/i.test(extractedClaims.applicationPath)
+    : /official|careers/i.test(extractedClaims.applicationPath) || officialSourceMatches.some(item => hostnameFromUrl(item.url) && !isTrustedJobBoardHost(hostnameFromUrl(item.url)))
       ? 'official'
-      : /linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath)
+      : /linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday/i.test(extractedClaims.applicationPath) || officialSourceMatches.length > 0
         ? 'trusted-board'
         : 'unknown'
   const missingCoverageCount = [companyCoverage, localCoverage, reputationCoverage, marketCoverage, applyPathStatus]
@@ -778,7 +864,9 @@ function deriveIntelligence(
         profileModeExplanation: companyProfileMode === 'startup_remote'
           ? 'HireProof detected a remote startup profile, so missing local office or Maps evidence did not hurt the score when official and reputable digital footprint evidence was consistent.'
           : companyProfileMode === 'established_remote'
-            ? 'HireProof detected an established remote role, so official domain, trusted job-board, and recruiter consistency were weighted above local office evidence.'
+            ? 'HireProof detected an established remote or global hiring profile, so official source, trusted ATS/job-board, and recruiter consistency were weighted above local office evidence. City-level wording differences should be confirmed, but they are not treated as scam signals when the role is officially matched.'
+            : officialSourceMatches.length > 0 && globalHiringContext
+              ? 'HireProof matched the company and role on an official or trusted hiring source. For global or remote hiring, city-level metadata differences are shown as confirmation notes instead of local-office scam signals.'
             : undefined,
       },
     },
@@ -805,8 +893,14 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
     reportEvidence,
     reportEvidence.filter(item => item.type === 'Verified Local Presence'),
   )
+  const preliminaryOfficialSourceMatches = findOfficialSourceMatches(input.extractedClaims, reportEvidence)
+  const preliminaryGlobalHiringContext = hasGlobalHiringContext(input.extractedClaims, reportEvidence)
 
-  if (preliminaryProfileMode === 'startup_remote' || preliminaryProfileMode === 'established_remote') {
+  if (
+    preliminaryProfileMode === 'startup_remote' ||
+    preliminaryProfileMode === 'established_remote' ||
+    (preliminaryOfficialSourceMatches.length > 0 && preliminaryGlobalHiringContext)
+  ) {
     redFlags = redFlags.filter(flag => !/no local/i.test(flag))
   }
 

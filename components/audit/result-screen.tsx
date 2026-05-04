@@ -1011,28 +1011,29 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
               <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
                 {coverageRows.length > 0 ? (
                   <div className="overflow-hidden rounded-xl border border-border-soft bg-background/40">
-                    <div className="overflow-x-auto">
-                      <div className="min-w-[36rem] xl:min-w-0">
-                        <div className="grid grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
-                          <div>Coverage</div>
-                          <div>Status</div>
-                          <div>Meaning</div>
-                        </div>
-                        {coverageRows.map((row) => (
-                          <div key={row.label} className="grid grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] items-center gap-2 border-t border-border-soft px-4 py-2.5 xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
-                            <div className="text-sm font-black">{row.label}</div>
-                            <div>
-                              <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
-                                {row.value}
-                              </span>
-                            </div>
-                            <div className="text-xs font-semibold leading-5 text-muted">
-                              {row.tone === 'safe' ? 'Evidence supports this dimension.' : row.tone === 'risk' ? 'This dimension pushed risk upward.' : row.tone === 'caution' ? 'Evidence is incomplete or unresolved.' : 'Recorded for reviewer context.'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="hidden grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(0,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted sm:grid xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                      <div>Coverage</div>
+                      <div>Status</div>
+                      <div>Meaning</div>
                     </div>
+                    {coverageRows.map((row) => (
+                      <div key={row.label} className="border-t border-border-soft px-4 py-3 sm:grid sm:grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(0,1fr)] sm:items-center sm:gap-2 sm:py-2.5 xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                        <div className="mb-2 flex items-center justify-between gap-3 sm:mb-0 sm:block">
+                          <div className="text-sm font-black">{row.label}</div>
+                          <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide sm:hidden ${getEvidenceToneClasses(row.tone)}`}>
+                            {row.value}
+                          </span>
+                        </div>
+                        <div className="hidden sm:block">
+                          <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                            {row.value}
+                          </span>
+                        </div>
+                        <div className="text-xs font-semibold leading-5 text-muted">
+                          {row.tone === 'safe' ? 'Evidence supports this dimension.' : row.tone === 'risk' ? 'This dimension pushed risk upward.' : row.tone === 'caution' ? 'Evidence is incomplete or unresolved.' : 'Recorded for reviewer context.'}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="rounded-xl border border-border-soft bg-surface p-4">
@@ -1041,27 +1042,28 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 )}
 
                 <div className="overflow-hidden rounded-xl border border-border-soft bg-background/40">
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[36rem] xl:min-w-0">
-                      <div className="grid grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
-                        <div>Context</div>
-                        <div>Status</div>
-                        <div>Detail</div>
+                  <div className="hidden grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(0,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted sm:grid xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                    <div>Context</div>
+                    <div>Status</div>
+                    <div>Detail</div>
+                  </div>
+                  <div className="divide-y divide-border-soft">
+                    {identityRows.map((row) => (
+                      <div key={row.label} className="px-4 py-3 sm:grid sm:grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(0,1fr)] sm:items-center sm:gap-2 sm:py-2.5 xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                        <div className="mb-2 flex items-center justify-between gap-3 sm:mb-0 sm:block">
+                          <div className="text-xs font-black uppercase tracking-wide text-muted">{row.label}</div>
+                          <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide sm:hidden ${getEvidenceToneClasses(row.tone)}`}>
+                            {row.value}
+                          </span>
+                        </div>
+                        <div className="hidden sm:block">
+                          <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                            {row.value}
+                          </span>
+                        </div>
+                        <div className="min-w-0 break-words text-sm font-semibold text-muted sm:truncate">{row.detail}</div>
                       </div>
-                      <div className="divide-y divide-border-soft">
-                        {identityRows.map((row) => (
-                          <div key={row.label} className="grid grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] items-center gap-2 px-4 py-2.5 xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
-                            <div className="text-xs font-black uppercase tracking-wide text-muted">{row.label}</div>
-                            <div>
-                              <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
-                                {row.value}
-                              </span>
-                            </div>
-                            <div className="min-w-0 truncate text-sm font-semibold text-muted">{row.detail}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>

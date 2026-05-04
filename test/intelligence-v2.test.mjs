@@ -442,6 +442,56 @@ test('v2 intelligence ignores stale comparable-host apply mismatch for trusted L
   assert.ok(report.intelligence.scoreTrace.every((item) => item.step !== 'Apply path' || item.delta !== 18))
 })
 
+test('v2 intelligence reconciles official global hiring sources without local-office penalty', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_heidi_global_official_match',
+    extractedClaims: {
+      company: 'Heidi',
+      role: 'Frontend Website Developer PH',
+      salary: 'Not specified',
+      location: 'Quezon City, National Capital Region, Philippines Remote',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn Apply; responses managed off LinkedIn',
+    },
+    evidence: [
+      {
+        source: 'LinkedIn public job page',
+        type: 'Job Post Source',
+        url: 'https://www.linkedin.com/jobs/view/heidi-frontend-website-developer-ph',
+        snippet: 'Trust: reputable-job-board | Frontend Website Developer PH at Heidi | Quezon City Remote | Responses managed off LinkedIn.',
+      },
+      {
+        source: 'Heidi careers',
+        type: 'Official Company Presence',
+        url: 'https://www.heidihealth.com/careers/9e0694a3-685c-4f11-9ca0-ad8fd3715785',
+        snippet: 'Trust: official | Frontend Website Developer | PH | Heidi Health official careers listing. Location: Makati City. Global healthcare AI company with multi-locale platform.',
+      },
+      {
+        source: 'Ashby',
+        type: 'Official Company Presence',
+        url: 'https://jobs.ashbyhq.com/heidi/9e0694a3-685c-4f11-9ca0-ad8fd3715785',
+        snippet: 'Trust: official | Heidi | Frontend Website Developer PH | Apply through Ashby.',
+      },
+      {
+        source: 'LinkedIn company profile',
+        type: 'Company Check',
+        url: 'https://www.linkedin.com/company/heidihealth',
+        snippet: 'Heidi Health software company profile with global healthcare AI footprint.',
+      },
+    ],
+    enrichmentRedFlags: ['No local presence found'],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.ok(report.riskScore <= 30)
+  assert.equal(report.intelligence.applyPath.status, 'official')
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'official_source_role_reconciliation'))
+  assert.ok(report.redFlags.every((flag) => !/no local/i.test(flag)))
+  assert.match(report.operations?.falsePositiveControl?.profileModeExplanation || '', /city-level wording differences/i)
+})
+
 test('trusted LinkedIn staffing report does not overinflate policy reconciliation', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({

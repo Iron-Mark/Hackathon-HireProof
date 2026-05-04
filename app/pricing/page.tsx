@@ -182,7 +182,8 @@ export default function PricingPage() {
             <p className="text-muted font-medium mt-2">Simple tiers for individual safety checks and high-volume verification.</p>
           </div>
           <div className="overflow-hidden rounded-3xl border border-border-soft bg-surface">
-            <table className="w-full text-left text-sm">
+            <div className="max-w-full overflow-x-auto">
+            <table className="w-full min-w-[52rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-border-soft bg-background/50">
                   <th className="px-6 py-4 font-black">Feature</th>
@@ -215,6 +216,7 @@ export default function PricingPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 

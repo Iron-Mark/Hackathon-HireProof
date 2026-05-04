@@ -183,7 +183,7 @@ npx @hireproof/cli --help`}
         <p className="font-medium leading-relaxed text-muted">
           Automated job workflows can move faster than human review. A safety checkpoint lets your pipeline inspect the job text first, then continue only when the returned verdict and risk score are acceptable.
         </p>
-        <div className="hireproof-card relative overflow-hidden rounded-3xl border border-border-soft p-8">
+        <div className="hireproof-card relative overflow-hidden rounded-3xl border border-border-soft p-5 sm:p-8">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-safe/5 blur-3xl" />
           <div className="relative grid gap-4 sm:grid-cols-3">
             {[
@@ -217,8 +217,8 @@ npx @hireproof/cli --help`}
           Use the native node package when you want credential-managed n8n operations named <code className="rounded bg-surface px-1.5 py-0.5 text-sm">Run audit</code> and <code className="rounded bg-surface px-1.5 py-0.5 text-sm">Run async audit</code>. Import <code className="rounded bg-surface px-1.5 py-0.5 text-sm">hireproof-n8n-workflow.json</code> only when you want the portable HTTP Request quick start.
         </p>
 
-        <div className="my-8 overflow-x-auto rounded-3xl border border-border-soft bg-[#fafafa] p-6 shadow-inner dark:bg-[#0d1117] hide-scrollbar">
-          <div className="flex min-w-[700px] items-center justify-center py-6">
+        <div className="my-8 max-w-full overflow-x-auto rounded-3xl border border-border-soft bg-[#fafafa] p-4 shadow-inner dark:bg-[#0d1117] sm:p-6">
+          <div className="flex min-w-[680px] items-center justify-center py-6">
             <div className="flex w-44 items-center gap-3 rounded-xl border border-border bg-background p-3 shadow-sm">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
                 <Webhook className="h-5 w-5" />
@@ -289,7 +289,7 @@ npx @hireproof/cli --help`}
           </div>
         </div>
 
-        <div className="hireproof-card space-y-8 rounded-3xl border border-border-soft p-8">
+        <div className="hireproof-card space-y-8 rounded-3xl border border-border-soft p-5 sm:p-8">
           <div className="rounded-2xl border border-safe/30 bg-safe/5 p-5">
             <h3 className="mb-2 text-sm font-black uppercase tracking-widest text-safe">Import path</h3>
             <p className="text-sm font-semibold leading-relaxed text-muted">
@@ -302,7 +302,7 @@ npx @hireproof/cli --help`}
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-safe text-sm text-background dark:text-[#06130d]">1</span>
               HTTP Request Node
             </h3>
-            <div className="ml-11">
+            <div className="ml-0 sm:ml-11">
               <ul className="space-y-3 font-medium text-muted">
                 <li className="flex flex-wrap items-center gap-3">
                   <span className="w-24 text-sm font-bold text-foreground">Method:</span>
@@ -325,7 +325,7 @@ npx @hireproof/cli --help`}
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-safe text-sm text-background dark:text-[#06130d]">2</span>
               JSON Body
             </h3>
-            <div className="ml-11 space-y-4">
+            <div className="ml-0 space-y-4 sm:ml-11">
               <CodeBlock
                 title="Demo-safe request"
                 language="json"
@@ -346,7 +346,7 @@ npx @hireproof/cli --help`}
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-safe text-sm text-background dark:text-[#06130d]">3</span>
               IF Node
             </h3>
-            <div className="ml-11 space-y-4">
+            <div className="ml-0 space-y-4 sm:ml-11">
               <p className="font-medium text-muted">Route from fields that the API really returns: <code className="rounded bg-surface px-1.5 py-0.5">verdict</code> and <code className="rounded bg-surface px-1.5 py-0.5">riskScore</code>.</p>
               <CodeBlock
                 language="javascript"
