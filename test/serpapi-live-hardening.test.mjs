@@ -77,18 +77,22 @@ test('SerpApi news reputation keeps negative evidence company-specific', async (
   assert.match(source, /if \(!isCompanySpecificNewsResult\(result, company\)\) continue/)
 })
 
-test('live audit routes ensure direct SerpApi coverage after agent execution', async () => {
+test('live audit routes delegate direct coverage to the evidence broker', async () => {
   const uiRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
   const apiRoute = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')
+  const broker = await fs.readFile(new URL('../lib/evidence-broker.ts', import.meta.url), 'utf8')
 
   for (const source of [uiRoute, apiRoute]) {
-    assert.match(source, /runSmartSerpApiInvestigation/)
-    assert.match(source, /ensureSerpApiEvidenceCoverage/)
+    assert.match(source, /runEvidenceBroker/)
+    assert.match(source, /evidenceProviders/)
     assert.match(source, /searchCompanyPresence/)
     assert.match(source, /searchNewsReputation/)
     assert.match(source, /searchComparableJobs/)
     assert.match(source, /searchLocalPresence/)
   }
+
+  assert.match(broker, /runSmartSerpApiInvestigation/)
+  assert.match(broker, /ensureSerpApiEvidenceCoverage/)
 })
 
 test('SerpApi locale inference localizes Philippine audits', async () => {

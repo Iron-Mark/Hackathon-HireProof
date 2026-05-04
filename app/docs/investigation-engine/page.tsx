@@ -1,9 +1,10 @@
+import type { Metadata } from 'next'
 import { Cpu, Zap, Search, ShieldCheck, Workflow, Brain, Microscope } from 'lucide-react'
 import { CodeBlock } from '@/components/ui/code-block'
 
-export const metadata = { 
+export const metadata: Metadata = {
   title: 'AI Investigation Engine — HireProof Docs',
-  description: 'How HireProof\'s autonomous agent investigates job posts using real-time web evidence.'
+  description: 'How HireProof investigates job posts with claim extraction, OCR, URL enrichment, evidence tools, transparent scoring, and demo/live boundaries.',
 }
 
 export default function InvestigationEnginePage() {
@@ -13,6 +14,20 @@ export default function InvestigationEnginePage() {
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">AI Investigation Engine</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
           HireProof is powered by an autonomous, multi-surface investigation engine for employment fraud. The focused domain is intentional: job seekers need a fast, evidence-backed decision before applying, paying fees, or sharing identity data.
+        </p>
+      </section>
+
+      <section className="rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
+          <img
+            src="/docs-media/docs-investigation-engine.png"
+            alt="HireProof AI Investigation Engine documentation showing the agent loop, evidence pipeline, and input normalization"
+            className="w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
+          Media proof: the engine docs show the agent loop, evidence pipeline, OCR path, URL enrichment, and demo/live boundaries.
         </p>
       </section>
 

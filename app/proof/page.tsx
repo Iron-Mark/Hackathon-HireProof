@@ -76,16 +76,7 @@ const readyProof = [
 
 const proofStats = [
   { icon: Server, label: 'Production', value: 'Live Vercel app' },
-  {
-    icon: MessageSquare,
-    brandIcon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/slack.svg',
-    label: 'Chat proof',
-    value: 'Slack screenshot',
-    brandColor: '#4A154B',
-    brandIconColor: '#4A154B',
-    cardClassName: 'border-[#4A154B]/25 bg-[#4A154B]/10',
-    iconClassName: 'border border-[#4A154B]/20 bg-white',
-  },
+  { icon: MessageSquare, label: 'Chat proof', value: 'Slack screenshot' },
   { icon: Workflow, label: 'Workflow', value: 'WDK accepted run' },
   { icon: FileArchive, label: 'Exports', value: 'PDF, PNG, CSV' },
   { icon: Terminal, label: 'CLI', value: 'TUI screenshot' },

@@ -4,7 +4,7 @@ import { Activity, AlertTriangle, CheckCircle2, Download, FileCode2, KeyRound, S
 
 export const metadata: Metadata = {
   title: 'n8n & Automations | HireProof Docs',
-  description: 'Use repo-shipped HireProof automation integrations for n8n, Make, LangChain, HTTP webhooks, and workflow handoff.',
+  description: 'Use HireProof published npm packages, Make source pack, HTTP webhooks, and workflow handoff for agent and automation integrations.',
 }
 
 const nativeIntegrations = [
@@ -71,7 +71,21 @@ export default function AutomationsPage() {
       <section className="space-y-4">
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">Automations & Agents</h1>
         <p className="text-xl font-medium leading-relaxed text-muted">
-          Ship HireProof into automation flows with repo-built native integration packs for <strong className="text-foreground">n8n</strong>, Make, and LangChain, plus portable HTTP templates for quick starts. Each integration calls the production headless audit API and routes from the actual <code className="rounded bg-surface px-1.5 py-0.5 text-sm">verdict</code> and <code className="rounded bg-surface px-1.5 py-0.5 text-sm">riskScore</code> fields.
+          Ship HireProof into automation flows with published npm packages for <strong className="text-foreground">n8n</strong>, LangChain, the TypeScript SDK, and the CLI, plus a Make Custom App source pack and portable HTTP templates for quick starts. Each integration calls the production headless audit API and routes from the actual <code className="rounded bg-surface px-1.5 py-0.5 text-sm">verdict</code> and <code className="rounded bg-surface px-1.5 py-0.5 text-sm">riskScore</code> fields.
+        </p>
+      </section>
+
+      <section className="rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
+          <img
+            src="/docs-media/docs-automations.png"
+            alt="HireProof Automations documentation showing npm packages, native integration packs, and workflow templates"
+            className="w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
+          Media proof: the automation docs surface published packages, Make source-pack boundaries, and API workflow templates in one page.
         </p>
       </section>
 

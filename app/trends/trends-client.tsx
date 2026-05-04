@@ -87,6 +87,9 @@ export function TrendsClient() {
             <p className="mt-6 max-w-2xl text-lg font-medium text-muted leading-relaxed">
               Recurring risk patterns from job-post checks, saved reports, and live evidence sources.
             </p>
+            <p className="mt-3 max-w-2xl text-sm font-semibold text-muted">
+              Trends use the same public-report policy as Explore: demo fixtures, screenshots, private audits, and old seeded records are excluded.
+            </p>
           </div>
           <div className="flex gap-3">
             <button
@@ -143,7 +146,7 @@ export function TrendsClient() {
                   <div key={section.title} className="space-y-5">
                     <h4 className="text-xs font-black uppercase tracking-widest text-muted">{section.title}</h4>
                     {section.items.length === 0 ? (
-                      <p className="text-sm font-semibold text-muted">No saved reports yet.</p>
+                      <p className="text-sm font-semibold text-muted">No public live reports yet.</p>
                     ) : section.items.slice(0, 5).map((item: any, i: number) => (
                       <div key={`${section.title}-${item.label}`} className="space-y-2">
                         <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest">
@@ -169,7 +172,7 @@ export function TrendsClient() {
               <h3 className="text-2xl font-black mb-8">Recent High-Risk Reports</h3>
               <div className="grid gap-4">
                 {viewModel.recentHighRisk.length === 0 ? (
-                  <p className="text-sm font-semibold text-muted">No high-risk reports saved yet.</p>
+                  <p className="text-sm font-semibold text-muted">No public high-risk reports yet.</p>
                 ) : viewModel.recentHighRisk.map((report: any) => (
                   <div key={report.id} className="rounded-2xl border border-border-soft bg-background p-5">
                     <div className="flex items-start justify-between gap-4">

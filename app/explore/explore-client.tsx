@@ -9,6 +9,7 @@ import type { AuditReport } from '@/lib/schemas'
 
 export function ExploreClient() {
   const [reports, setReports] = useState<AuditReport[]>([])
+  const [totalReports, setTotalReports] = useState(0)
   const [query, setQuery] = useState('')
   const [verdict, setVerdict] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -24,6 +25,7 @@ export function ExploreClient() {
         const res = await fetch(`/api/intelligence/reports?${params.toString()}`)
         const data = await res.json()
         setReports(data.reports || [])
+        setTotalReports(Number(data.total || 0))
       } catch (e) {
         console.error('Failed to fetch reports')
       } finally {
@@ -56,6 +58,9 @@ export function ExploreClient() {
           <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Audit <span className="text-safe">Database.</span></h1>
           <p className="mt-4 max-w-2xl text-lg font-medium text-muted">
             Explore recent HireProof job-post checks. Review the red flags, evidence, and verdict patterns behind suspicious opportunities.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm font-semibold text-muted">
+            Public Explore only shows live, explicitly listed reports. Demo fixtures, screenshots, private audits, and old seeded reports are excluded.
           </p>
         </header>
 
@@ -114,8 +119,12 @@ export function ExploreClient() {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface">
                   <Search className="h-8 w-8 text-muted opacity-20" />
                 </div>
-                <h3 className="text-xl font-black">No reports found</h3>
-                <p className="text-muted">Try adjusting your filters or search query.</p>
+                <h3 className="text-xl font-black">{totalReports === 0 ? 'No public live reports yet' : 'No reports found'}</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-muted">
+                  {totalReports === 0
+                    ? 'HireProof is hiding demo, screenshot, and private audits from this public database until real public reports are available.'
+                    : 'Try adjusting your filters or search query.'}
+                </p>
               </div>
             ) : (
               reports.map((report) => (

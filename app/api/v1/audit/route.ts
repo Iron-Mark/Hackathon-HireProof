@@ -19,15 +19,14 @@ import {
   generateSummary,
 } from '@/lib/risk-scorer'
 import {
-  ensureSerpApiEvidenceCoverage,
   getSerpApiOperationalStatus,
   hasSerpApiKey,
-  runSmartSerpApiInvestigation,
   searchCompanyPresence,
   searchComparableJobs,
   searchLocalPresence,
   searchNewsReputation,
 } from '@/lib/serpapi'
+import { runEvidenceBroker } from '@/lib/evidence-broker'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { saveReport } from '@/lib/db'
 import { authenticateApiKey, getOwnerProviderCredentials, recordUsage } from '@/lib/auth-store'
@@ -41,7 +40,7 @@ import {
   enrichAuditRequestInput,
 } from '@/lib/job-url-enrichment.mjs'
 import { enrichAuditRequestWithOcr } from '@/lib/ocr.mjs'
-import { acquireLiveAuditGuardrail, buildOperationalEvidence } from '@/lib/live-audit-guardrails'
+import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 
 export const runtime = 'nodejs'
 
@@ -439,22 +438,21 @@ export async function POST(request: Request) {
                 }
               }
             } catch (agentError) {
-              evidence = await runSmartSerpApiInvestigation(extractedClaims, {
-                serpapiKey: ownerCredentials.serpapiKey,
-                applicationUrl: validated.url || undefined,
-              })
+              console.warn('[A2A Audit API] Agent tool execution failed, continuing with evidence broker fallback.', agentError)
             }
-          } else if (liveSearchAllowed) {
-            evidence = await runSmartSerpApiInvestigation(extractedClaims, {
-              serpapiKey: ownerCredentials.serpapiKey,
-              applicationUrl: validated.url || undefined,
-            })
           }
 
-          evidence = liveSearchAllowed ? await ensureSerpApiEvidenceCoverage(evidence, extractedClaims, ownerCredentials.serpapiKey) : evidence
-          if (serpApiOperationalStatus.status === 'circuit-open') {
-            evidence.push(buildOperationalEvidence(serpApiOperationalStatus))
-          }
+          const broker = await runEvidenceBroker({
+            claims: extractedClaims,
+            applicationUrl: validated.url || undefined,
+            text: validated.text,
+            existingEvidence: evidence,
+          }, {
+            serpapiKey: ownerCredentials.serpapiKey,
+            liveSearchAllowed: liveSearchRequested,
+            externalEvidenceAllowed: true,
+          })
+          evidence = broker.evidence
 
           const routeRedFlags: string[] = []
           const enrichmentRedFlags = buildEnrichmentRedFlags(requestEnrichment)
@@ -475,9 +473,9 @@ export async function POST(request: Request) {
             source: 'api',
             publiclyListed: !validated.image,
             operations: {
-              liveSearch: serpApiOperationalStatus.status === 'circuit-open'
-                ? serpApiOperationalStatus
-                : guardrail.status,
+              ...broker.operations,
+              liveSearch: broker.operations.liveSearch || guardrail.status,
+              evidenceProviders: broker.operations.evidenceProviders,
             },
           })
 

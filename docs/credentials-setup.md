@@ -20,6 +20,11 @@ Short answer: mostly yes for a hackathon demo, with limits.
 | `BYOK_ENCRYPTION_KEY` | You generate it | Yes | Required before Developer Portal users can save encrypted OpenAI/SerpApi keys server-side. |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway | Free monthly credits, then paid usage | Vercel lists a free monthly AI Gateway credit tier. |
 | `VERCEL_AI_GATEWAY_API_KEY` | Vercel AI Gateway | Same as above | This repo accepts either key name. |
+| `SERPAPI_API_KEY` | SerpApi | Free trial / paid quota | Best live web, news, jobs, and maps evidence. |
+| `GOOGLE_SAFE_BROWSING_API_KEY` | Google Safe Browsing | No-cost quota | Optional known phishing, malware, and social-engineering URL checks. |
+| `OPENCORPORATES_API_KEY` | OpenCorporates | Plan/quota dependent | Optional company registry evidence. |
+| `URLSCAN_API_KEY` | urlscan.io | Free tier with limits | Optional existing scan search metadata. HireProof does not submit scans unless explicitly enabled. |
+| `PHISHTANK_API_KEY` | PhishTank | Free with limits | Optional phishing lookup fallback. |
 
 ## 1. Slack Credentials
 
@@ -203,7 +208,42 @@ BYOK_ENCRYPTION_KEY=generated-random-hex
 
 Without this value, production will reject hosted BYOK saves. Authenticated `/api/v1/audit` and `/api/mcp` calls use the account owner's stored BYOK credentials when present, then fall back to platform environment keys.
 
-## 6. Add Variables To Vercel
+## 6. Evidence Funnel Keys
+
+SerpApi remains the best source for live company/search/news/jobs/maps checks:
+
+```env
+SERPAPI_API_KEY=
+```
+
+HireProof also has a fallback evidence funnel. These are optional. Missing keys should degrade the audit, not fail it:
+
+```env
+GOOGLE_SAFE_BROWSING_API_KEY=
+OPENCORPORATES_API_KEY=
+URLSCAN_API_KEY=
+PHISHTANK_API_KEY=
+```
+
+No-key checks still run where possible:
+
+- RDAP through `rdap.cloud` for domain age and registration evidence.
+- DNS over HTTPS through Cloudflare first, then Google fallback.
+- Certificate Transparency through `crt.sh`.
+- URLhaus host lookup.
+
+Budget controls:
+
+```env
+EVIDENCE_PROVIDER_TIMEOUT_MS=3500
+EVIDENCE_PROVIDER_TOTAL_BUDGET_MS=9000
+EVIDENCE_CACHE_TTL_MS=21600000
+ENABLE_URLSCAN_SUBMIT=false
+```
+
+Keep `ENABLE_URLSCAN_SUBMIT=false` unless you intentionally add public URL submissions later. The current implementation uses urlscan search metadata only.
+
+## 7. Add Variables To Vercel
 
 In Vercel:
 
@@ -220,12 +260,17 @@ WORKFLOW_SECRET=
 BYOK_ENCRYPTION_KEY=
 AI_GATEWAY_API_KEY=
 HIREPROOF_MODEL=openai/gpt-4o-mini
+SERPAPI_API_KEY=
+GOOGLE_SAFE_BROWSING_API_KEY=
+OPENCORPORATES_API_KEY=
+URLSCAN_API_KEY=
+PHISHTANK_API_KEY=
 ```
 
 5. Apply to **Production**, **Preview**, and **Development** if needed.
 6. Redeploy after adding the values. Environment changes do not affect old deployments.
 
-## 7. Add Variables Locally
+## 8. Add Variables Locally
 
 Create or update `.env.local`:
 
@@ -238,11 +283,16 @@ BYOK_ENCRYPTION_KEY=generated-random-hex
 AI_GATEWAY_API_KEY=gw_your_key
 HIREPROOF_MODEL=openai/gpt-4o-mini
 APP_BASE_URL=http://localhost:3002
+SERPAPI_API_KEY=
+GOOGLE_SAFE_BROWSING_API_KEY=
+OPENCORPORATES_API_KEY=
+URLSCAN_API_KEY=
+PHISHTANK_API_KEY=
 ```
 
 Restart the dev server after changing `.env.local`.
 
-## 8. Verify Setup
+## 9. Verify Setup
 
 Run the app:
 
@@ -262,6 +312,7 @@ Expected result:
 - `workflow.state` becomes `ready` when `WORKFLOW_SECRET` is present.
 - `gateway.state` becomes `ready` when `AI_GATEWAY_API_KEY` or `VERCEL_AI_GATEWAY_API_KEY` is present.
 - Developer Portal hosted BYOK saves succeed when `BYOK_ENCRYPTION_KEY` is present and the submitted provider key verifies.
+- Live audits include `operations.evidenceProviders` when the evidence funnel runs.
 
 Local route checks:
 
@@ -271,7 +322,7 @@ Invoke-RestMethod http://localhost:3002/api/webhooks/slack
 Invoke-RestMethod http://localhost:3002/api/workflows/audit
 ```
 
-## 9. Recommended Hackathon Setup
+## 10. Recommended Hackathon Setup
 
 For the lowest-cost demo:
 

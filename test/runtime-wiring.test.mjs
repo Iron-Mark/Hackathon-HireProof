@@ -73,23 +73,52 @@ test('public intelligence listings exclude demo fixture reports by default', asy
   const { filterPublicIntelligenceReports } = await import('../lib/public-intelligence-reports.mjs')
   const liveReport = {
     id: 'report_live',
+    version: '2',
     mode: 'live',
     credentialMode: 'platform-env',
     source: 'api',
     publiclyListed: true,
     evidence: [{ source: 'SerpApi Google Search' }],
+    intelligence: {
+      coverage: {},
+      companyIdentity: { status: 'matched', evidenceIds: [] },
+      localPresence: { status: 'missing', evidenceIds: [] },
+      marketBenchmark: { status: 'normal', evidenceIds: [] },
+      applyPath: { status: 'matched', evidenceIds: [] },
+      signals: [],
+      scoreTrace: [],
+    },
   }
 
   const reports = [
     liveReport,
+    { ...liveReport, id: 'report_legacy_v1', version: undefined },
+    { ...liveReport, id: 'report_no_intelligence', intelligence: undefined },
+    { ...liveReport, id: 'report_legacy_no_public_flag', publiclyListed: undefined },
     { ...liveReport, id: 'report_private', publiclyListed: false },
     { ...liveReport, id: 'report_demo_mode', mode: 'demo' },
     { ...liveReport, id: 'report_demo_credentials', credentialMode: 'demo' },
     { ...liveReport, id: 'report_demo_source', source: 'demo' },
+    { ...liveReport, id: 'report_demo_owner', ownerId: 'demo' },
+    { ...liveReport, id: 'report_demo_key', apiKeyId: 'env_demo_key' },
     {
       ...liveReport,
       id: 'report_demo_fixture_evidence',
       evidence: [{ source: 'Demo fixture: market signal' }],
+    },
+    {
+      ...liveReport,
+      id: 'report_legacy_telegram_fixture',
+      extractedClaims: {
+        company: 'Unknown / Not Verifiable',
+        role: 'Frontend Intern',
+        salary: 'PHP 80,000 per week',
+        location: 'Remote',
+        contactMethod: 'Telegram',
+        applicationPath: 'Direct message only',
+      },
+      summary: 'This opportunity has unrealistic salary and Telegram-only contact.',
+      evidence: [{ source: 'Job Search Analysis', snippet: 'Average intern salary for Southeast Asia is $500-$1,500/month.' }],
     },
   ]
 
@@ -100,6 +129,7 @@ test('trend intelligence collapses repeated demo-run signatures', async () => {
   const { buildPublicReportTrends } = await import('../lib/public-intelligence-reports.mjs')
   const first = {
     id: 'report_first',
+    version: '2',
     verdict: 'high-risk',
     riskScore: 94,
     mode: 'live',
@@ -107,6 +137,15 @@ test('trend intelligence collapses repeated demo-run signatures', async () => {
     source: 'api',
     publiclyListed: true,
     timestamp: '2026-05-04T00:00:00.000Z',
+    intelligence: {
+      coverage: {},
+      companyIdentity: { status: 'matched', evidenceIds: [] },
+      localPresence: { status: 'missing', evidenceIds: [] },
+      marketBenchmark: { status: 'normal', evidenceIds: [] },
+      applyPath: { status: 'matched', evidenceIds: [] },
+      signals: [],
+      scoreTrace: [],
+    },
     extractedClaims: {
       company: 'Apex Hiring',
       role: 'Frontend Intern',
@@ -120,6 +159,20 @@ test('trend intelligence collapses repeated demo-run signatures', async () => {
     id: 'report_duplicate',
     timestamp: '2026-05-04T00:01:00.000Z',
   }
+  const oldFixture = {
+    ...first,
+    id: 'report_old_fixture',
+    extractedClaims: {
+      company: 'Unknown / Not Verifiable',
+      role: 'Frontend Intern',
+      salary: 'PHP 80,000 per week',
+      location: 'Remote',
+      contactMethod: 'Telegram',
+      applicationPath: 'Direct message only',
+    },
+    summary: 'This opportunity has unrealistic salary and Telegram-only contact.',
+    evidence: [{ source: 'Job Search Analysis', snippet: 'Average intern salary for Southeast Asia is $500-$1,500/month.' }],
+  }
   const distinct = {
     ...first,
     id: 'report_distinct',
@@ -132,7 +185,7 @@ test('trend intelligence collapses repeated demo-run signatures', async () => {
     },
   }
 
-  const trends = buildPublicReportTrends([first, duplicate, distinct])
+  const trends = buildPublicReportTrends([first, duplicate, oldFixture, distinct])
 
   assert.equal(trends.totalReports, 2)
   assert.deepEqual(trends.verdicts, { safe: 1, caution: 0, 'high-risk': 1 })
@@ -577,7 +630,9 @@ test('screenshot audits are excluded from public explore and trends listings by 
   assert.match(v1Route, /publiclyListed:\s*!validated\.image/)
   assert.match(reportsRoute, /filterPublicIntelligenceReports/)
   assert.match(db, /buildPublicReportTrends/)
-  assert.match(publicReports, /publiclyListed !== false/)
+  assert.match(publicReports, /publiclyListed === true/)
+  assert.match(publicReports, /version === '2'/)
+  assert.match(publicReports, /Boolean\(report\.intelligence\)/)
   assert.match(omniDocs, /Google Vision OCR \+ Tesseract fallback/)
   assert.match(omniDocs, /excluded from Explore and Trends by default/)
 })
@@ -704,14 +759,17 @@ test('demo fixtures do not ship fake safer alternatives', async () => {
 test('live audit routes expose balanced guardrails and SerpApi circuit status', async () => {
   const uiRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
   const v1Route = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')
+  const schemas = await fs.readFile(new URL('../lib/schemas.ts', import.meta.url), 'utf8')
   const guardrails = await fs.readFile(new URL('../lib/live-audit-guardrails.ts', import.meta.url), 'utf8')
   const serpapi = await fs.readFile(new URL('../lib/serpapi.ts', import.meta.url), 'utf8')
 
   for (const source of [uiRoute, v1Route]) {
     assert.match(source, /acquireLiveAuditGuardrail/)
-    assert.match(source, /buildOperationalEvidence/)
+    assert.match(source, /runEvidenceBroker/)
+    assert.match(source, /evidenceProviders/)
     assert.match(source, /Retry-After/)
   }
+  assert.match(schemas, /evidenceProviders/)
   assert.match(guardrails, /maxConcurrent/)
   assert.match(guardrails, /liveSearch/)
   assert.match(serpapi, /circuitOpenUntil/)

@@ -17,16 +17,15 @@ import {
   generateSummary,
 } from '@/lib/risk-scorer'
 import {
-  ensureSerpApiEvidenceCoverage,
   getSerpApiResponseCacheStats,
   getSerpApiOperationalStatus,
   isSerpApiConfigured,
-  runSmartSerpApiInvestigation,
   searchCompanyPresence,
   searchComparableJobs,
   searchLocalPresence,
   searchNewsReputation,
 } from '@/lib/serpapi'
+import { runEvidenceBroker } from '@/lib/evidence-broker'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { saveReport } from '@/lib/db'
 import { getHireProofModel, getModelProviderStatus, hasHireProofModelProvider } from '@/lib/ai-model'
@@ -38,7 +37,7 @@ import {
   enrichAuditRequestInput,
 } from '@/lib/job-url-enrichment.mjs'
 import { enrichAuditRequestWithOcr } from '@/lib/ocr.mjs'
-import { acquireLiveAuditGuardrail, buildOperationalEvidence } from '@/lib/live-audit-guardrails'
+import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 
 export const runtime = 'nodejs'
 
@@ -415,20 +414,22 @@ export async function POST(request: Request) {
           } catch (agentError) {
             console.warn('[AI Agent] Execution loop failed or timed out. Falling back to concurrent direct execution.', agentError)
             sendEvent('log', { message: 'Agent taking too long, switching to fast concurrent search...', phase: 'coverage', status: 'active', label: 'Fast evidence fallback' })
-            
-            evidence = await runSmartSerpApiInvestigation(extractedClaims, { applicationUrl: validated.url || undefined })
           }
         } else if (liveSearchAllowed) {
           sendEvent('log', { message: 'Checking company footprint concurrently...', phase: 'company', status: 'active', label: 'Concurrent evidence' })
-
-          evidence = await runSmartSerpApiInvestigation(extractedClaims, { applicationUrl: validated.url || undefined })
         }
 
-        sendEvent('log', { message: 'Checking evidence coverage and source mix...', phase: 'coverage', status: 'active', label: 'Evidence coverage' })
-        evidence = liveSearchAllowed ? await ensureSerpApiEvidenceCoverage(evidence, extractedClaims) : evidence
-        if (serpApiOperationalStatus.status === 'circuit-open') {
-          evidence.push(buildOperationalEvidence(serpApiOperationalStatus))
-        }
+        sendEvent('log', { message: 'Checking evidence coverage, domains, DNS, certificates, and threat-intel fallbacks...', phase: 'coverage', status: 'active', label: 'Evidence funnel' })
+        const broker = await runEvidenceBroker({
+          claims: extractedClaims,
+          applicationUrl: validated.url || undefined,
+          text: validated.text,
+          existingEvidence: evidence,
+        }, {
+          liveSearchAllowed: liveSearchRequested,
+          externalEvidenceAllowed: validated.mode !== 'demo',
+        })
+        evidence = broker.evidence
 
         sendEvent('log', { message: 'Calculating deterministic risk score...', phase: 'score', status: 'active', label: 'Risk scoring' })
 
@@ -454,9 +455,9 @@ export async function POST(request: Request) {
           source: 'web',
           publiclyListed: !validated.image,
           operations: {
-            liveSearch: serpApiOperationalStatus.status === 'circuit-open'
-              ? serpApiOperationalStatus
-              : guardrail.status,
+            ...broker.operations,
+            liveSearch: broker.operations.liveSearch || guardrail.status,
+            evidenceProviders: broker.operations.evidenceProviders,
           },
         })
 

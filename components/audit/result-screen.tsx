@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText, Bot, UserCheck, ShieldCheck, SearchCheck, Table, Camera, Eye, EyeOff, ChevronDown, ListTree } from 'lucide-react'
+import { ArrowLeft, Download, Share2, AlertTriangle, Zap, CheckCircle2, Clock, AlertCircle, Loader2, Link2, FileText, Bot, UserCheck, ShieldCheck, SearchCheck, Table, Camera, Eye, EyeOff, ChevronDown, ListTree, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import html2canvas from 'html2canvas'
@@ -1229,46 +1229,63 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
 
 
 
-        <div className="text-center pb-6 print:hidden">
-          <div className="mb-10 rounded-2xl border border-border-soft bg-surface/30 p-6">
-            <p className="mb-4 text-xs font-black uppercase tracking-wider text-muted">
-              {feedbackGiven ? 'Thank you for your feedback!' : 'Was this investigation accurate?'}
-            </p>
-            {!feedbackGiven && (
-              <select
-                value={feedbackReason}
-                onChange={(event) => setFeedbackReason(event.target.value)}
-                className="mb-4 w-full max-w-sm rounded-xl border border-border-soft bg-background px-3 py-2 text-xs font-bold text-foreground outline-none focus:border-safe"
-                aria-label="Feedback reason"
-              >
-                <option value="">Optional reason</option>
-                <option value="false_positive">False positive</option>
-                <option value="missed_risk">Missed risk</option>
-                <option value="stale_evidence">Stale evidence</option>
-                <option value="salary_wrong">Salary benchmark wrong</option>
-                <option value="company_match_wrong">Company match wrong</option>
-                <option value="recruiter_match_wrong">Recruiter match wrong</option>
-                <option value="other">Other</option>
-              </select>
-            )}
-            <div className="flex justify-center gap-4">
-              <button 
-                onClick={() => submitFeedback('helpful')}
-                disabled={feedbackGiven || !result.id || !!feedbackLoading}
-                className="hireproof-focus flex items-center gap-2 rounded-full border border-border px-6 py-2 text-sm font-bold hover:bg-safe/10 hover:text-safe disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {feedbackLoading === 'helpful' ? <Loader2 className="w-4 h-4 animate-spin" /> : '👍'} Helpful
-              </button>
-              <button 
-                onClick={() => submitFeedback('incorrect')}
-                disabled={feedbackGiven || !result.id || !!feedbackLoading}
-                className="hireproof-focus flex items-center gap-2 rounded-full border border-border px-6 py-2 text-sm font-bold hover:bg-risk/10 hover:text-risk disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {feedbackLoading === 'incorrect' ? <Loader2 className="w-4 h-4 animate-spin" /> : '👎'} Incorrect
-              </button>
+        <div className="pb-6 print:hidden">
+          <div className="mb-10 rounded-2xl border border-border-soft bg-surface/50 p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-normal text-muted">
+                  Investigation feedback
+                </p>
+                <p className="mt-1 text-sm font-black text-foreground">
+                  {feedbackGiven ? 'Thank you for your feedback.' : 'Was this investigation accurate?'}
+                </p>
+              </div>
+
+              {!feedbackGiven && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label className="block min-w-0 sm:w-64">
+                    <span className="mb-1 block text-[10px] font-black uppercase tracking-normal text-muted">Reason</span>
+                    <select
+                      value={feedbackReason}
+                      onChange={(event) => setFeedbackReason(event.target.value)}
+                      className="hireproof-focus h-11 w-full rounded-xl border border-border-soft bg-background px-3 text-xs font-bold text-foreground outline-none transition-colors hover:border-border focus:border-safe"
+                      aria-label="Feedback reason"
+                    >
+                      <option value="">Optional reason</option>
+                      <option value="false_positive">False positive</option>
+                      <option value="missed_risk">Missed risk</option>
+                      <option value="stale_evidence">Stale evidence</option>
+                      <option value="salary_wrong">Salary benchmark wrong</option>
+                      <option value="company_match_wrong">Company match wrong</option>
+                      <option value="recruiter_match_wrong">Recruiter match wrong</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+
+                  <div className="grid h-11 grid-cols-2 overflow-hidden rounded-xl border border-border-soft bg-background p-1 sm:w-72" aria-label="Investigation accuracy feedback">
+                    <button
+                      onClick={() => submitFeedback('helpful')}
+                      disabled={feedbackGiven || !result.id || !!feedbackLoading}
+                      className="hireproof-focus inline-flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-xs font-black text-muted transition-colors hover:bg-safe-bg hover:text-safe-text disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      {feedbackLoading === 'helpful' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                      Accurate
+                    </button>
+                    <button
+                      onClick={() => submitFeedback('incorrect')}
+                      disabled={feedbackGiven || !result.id || !!feedbackLoading}
+                      className="hireproof-focus inline-flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-xs font-black text-muted transition-colors hover:bg-risk/10 hover:text-risk disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      {feedbackLoading === 'incorrect' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
+                      Inaccurate
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="mt-6 border-t border-border-soft pt-4">
-              <p className="text-[10px] font-bold text-muted uppercase tracking-widest">
+
+            <div className="mt-4 border-t border-border-soft pt-4">
+              <p className="text-[10px] font-bold uppercase tracking-normal text-muted">
                 Is this your company? <a href="/docs/legal" className="text-safe hover:underline">Report a false positive</a>
               </p>
             </div>

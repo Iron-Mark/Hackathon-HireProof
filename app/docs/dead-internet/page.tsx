@@ -1,5 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { ShieldAlert, Cpu, Bot, UserCheck, AlertTriangle, Zap, BarChart3, Fingerprint, Network, Globe } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'AI-Generated Recruitment Scams | HireProof Docs',
+  description: 'A practical HireProof guide to AI-generated recruitment scam patterns, suspicious job posts, recruiter messages, and evidence-first verification.',
+}
 
 export default function DeadInternetPage() {
   return (
@@ -23,6 +29,20 @@ export default function DeadInternetPage() {
           A practical guide to the automated patterns HireProof checks in suspicious job posts and recruiter messages.
         </p>
       </div>
+
+      <section className="mb-12 rounded-3xl border border-border-soft bg-surface/70 p-4 shadow-sm sm:p-6">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-background shadow-inner">
+          <img
+            src="/docs-media/docs-dead-internet.png"
+            alt="HireProof AI-generated recruitment scam guide showing detection methodology and evidence-first verification"
+            className="w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted">
+          Media proof: the recruitment-scam brief explains the automated scam patterns HireProof checks before verdict generation.
+        </p>
+      </section>
 
       <div className="prose prose-slate prose-invert max-w-none space-y-12">
         {/* Executive Summary */}
@@ -68,7 +88,7 @@ export default function DeadInternetPage() {
         <section className="space-y-4 text-center">
           <div className="overflow-hidden rounded-3xl border border-border-soft bg-surface shadow-2xl">
             <img 
-              src="/technical_architecture_fraud_1777460510551.png" 
+              src="/technical_architecture_fraud_v2.png" 
               alt="Technical architecture of automated recruitment fraud" 
               className="w-full object-cover"
             />

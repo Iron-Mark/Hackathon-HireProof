@@ -10,6 +10,7 @@ Live evidence mode is the real investigation path. Depending on the input and co
 - run screenshot OCR with Google Vision first and Tesseract fallback when needed;
 - extract company, role, salary, location, contact method, apply path, and recruiter fields;
 - check web presence, news, comparable jobs, local footprint, apply-path consistency, and salary context;
+- enrich evidence through a quota-aware funnel: SerpApi first, then RDAP, DNS over HTTPS, Safe Browsing when configured, certificate transparency, threat-intel fallbacks, company registry when configured, and urlscan search metadata when available;
 - score the report with source quality, freshness, recruiter identity, company profile mode, and salary anomaly reasoning;
 - stream browser events that become the visible report timeline.
 
@@ -48,6 +49,19 @@ Live audits are protected because external evidence checks can be expensive.
 - Persistent Redis cache hooks and in-memory cache reuse normalized searches.
 - Similarity cache can reuse equivalent company, role, location, and apply-host audits.
 - Reports can include operational notes when throttling or circuit state affects live evidence.
+
+## Evidence Funnel Boundaries
+
+The evidence broker is designed to preserve API limits and keep reports honest.
+
+- Cache is checked before provider calls.
+- SerpApi remains the strongest live source when configured and healthy.
+- If SerpApi is missing, throttled, or circuit-open, HireProof can still run domain, DNS, certificate, and threat-intel checks.
+- Safe Browsing, OpenCorporates, urlscan, and PhishTank are optional. Missing keys should appear as not configured or degraded provider status, not a failed audit.
+- An old domain or no phishing feed hit is neutral. It is not proof that a job is safe.
+- Known-bad phishing, malware, or social-engineering hits are high-risk evidence.
+- Newly registered apply/recruiter domains, recruiter-domain mismatch, missing custom mail DNS, and very recent certificate activity can increase risk.
+- Official apply domains, trusted job boards/ATS hosts, recruiter domains matching the official root, and active registry matches can add trust, but they do not override strong scam signals by themselves.
 
 ## Timeline Meaning
 
