@@ -148,7 +148,7 @@ export function SiteHeader() {
           </div>
         </Link>
         <div ref={menuRef} className="flex min-w-0 items-center gap-2">
-          <nav aria-label="Primary navigation" className="hidden items-center gap-1 rounded-full border border-border-soft bg-surface/75 p-1 text-sm font-semibold shadow-sm md:flex">
+          <nav aria-label="Primary navigation" className="hidden items-center gap-1 rounded-full border border-border-soft bg-surface/75 p-1 text-sm font-semibold shadow-sm lg:flex">
             {primaryLinks.map((link) => {
               const Icon = link.icon
 
@@ -217,7 +217,7 @@ export function SiteHeader() {
             </div>
           </nav>
           <div className="flex items-center rounded-full border border-border-soft bg-surface/75 p-1 shadow-sm">
-            <div className="relative md:hidden">
+            <div className="relative lg:hidden">
               <button
                 type="button"
                 aria-label="Open site navigation"
@@ -261,7 +261,7 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={openHireProofCommandMenu}
-              className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-safe/10 hover:text-foreground md:hidden"
+              className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-safe/10 hover:text-foreground lg:hidden"
               aria-label="Search site"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
@@ -272,7 +272,7 @@ export function SiteHeader() {
                 : 'text-muted hover:bg-safe/10 hover:text-foreground'
             }`}>
               <SearchCheck className="h-4 w-4" aria-hidden="true" />
-              <span>Audit</span>
+              <span className="hidden sm:inline">Audit</span>
             </Link>
           </div>
         </div>

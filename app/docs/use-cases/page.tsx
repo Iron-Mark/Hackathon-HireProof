@@ -269,7 +269,7 @@ export default function UseCasesPage() {
           <Workflow className="h-6 w-6 text-safe" />
           <h2 className="text-2xl font-black">Where it plugs in</h2>
         </div>
-        <div className="grid gap-3 md:hidden">
+        <div className="grid gap-3 lg:hidden">
           {integrationRows.map(([useCase, input, surface, output]) => (
             <article key={useCase} className="rounded-2xl border border-border-soft bg-surface p-4 shadow-sm">
               <h3 className="text-sm font-black text-foreground">{useCase}</h3>
@@ -290,7 +290,7 @@ export default function UseCasesPage() {
             </article>
           ))}
         </div>
-        <div className="hidden overflow-x-auto rounded-2xl border border-border-soft bg-surface shadow-sm md:block">
+        <div className="hidden overflow-x-auto rounded-2xl border border-border-soft bg-surface shadow-sm lg:block">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="border-b border-border-soft bg-background text-xs font-black uppercase tracking-wider text-muted">
               <tr>
