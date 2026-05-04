@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s | HireProof'
   },
   description: 'Paste a job post or recruiter message. HireProof checks the claims with live evidence and returns a Safe, Caution, or High-Risk verdict before you apply.',
-  metadataBase: new URL('https://hireproof.vercel.app'),
+  metadataBase: new URL('https://hireproof-sigma.vercel.app'),
   keywords: ['job search', 'scam detector', 'hireproof', 'job verification', 'recruitment scam', 'recruitment fraud'],
   authors: [{ name: 'HireProof Team' }],
   manifest: '/manifest.json',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'HireProof - Job Verification',
     description: 'Paste a job post. Know if it\'s legit before you apply. HireProof checks the claims and returns a verdict with receipts.',
-    url: 'https://hireproof.vercel.app',
+    url: 'https://hireproof-sigma.vercel.app',
     siteName: 'HireProof',
     images: [
       {
@@ -120,19 +120,19 @@ export default function RootLayout({
                       "@type": "ListItem",
                       "position": 1,
                       "name": "Home",
-                      "item": "https://hireproof.vercel.app"
+                      "item": "https://hireproof-sigma.vercel.app"
                     },
                     {
                       "@type": "ListItem",
                       "position": 2,
                       "name": "Audit",
-                      "item": "https://hireproof.vercel.app/audit"
+                      "item": "https://hireproof-sigma.vercel.app/audit"
                     },
                     {
                       "@type": "ListItem",
                       "position": 3,
                       "name": "Intelligence",
-                      "item": "https://hireproof.vercel.app/explore"
+                      "item": "https://hireproof-sigma.vercel.app/explore"
                     }
                   ]
                 }),

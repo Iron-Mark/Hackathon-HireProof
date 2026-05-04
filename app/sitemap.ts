@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://hireproof.vercel.app'
+  const baseUrl = 'https://hireproof-sigma.vercel.app'
   const lastModified = new Date()
 
   const routes = [

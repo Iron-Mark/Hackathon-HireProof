@@ -122,6 +122,10 @@ test('docs reflect current scoring and chat platform proof status', async () => 
   const slackBot = await fs.readFile(new URL('../app/docs/slack-bot/page.tsx', import.meta.url), 'utf8')
   const telegramBot = await fs.readFile(new URL('../app/docs/telegram-bot/page.tsx', import.meta.url), 'utf8')
   const security = await fs.readFile(new URL('../app/docs/security/page.tsx', import.meta.url), 'utf8')
+  const automations = await fs.readFile(new URL('../app/docs/automations/page.tsx', import.meta.url), 'utf8')
+  const investigationEngine = await fs.readFile(new URL('../app/docs/investigation-engine/page.tsx', import.meta.url), 'utf8')
+  const deadInternet = await fs.readFile(new URL('../app/docs/dead-internet/page.tsx', import.meta.url), 'utf8')
+  const useCases = await fs.readFile(new URL('../app/docs/use-cases/page.tsx', import.meta.url), 'utf8')
 
   assert.match(riskScoring, /capped green-credit/)
   assert.match(riskScoring, /Company check evidence/)
@@ -179,6 +183,28 @@ test('docs reflect current scoring and chat platform proof status', async () => 
   assert.doesNotMatch(security, /TLS 1\.3 Only/)
   assert.doesNotMatch(security, /Zero-PII Storage Strategy/)
   assert.doesNotMatch(security, /multi-layer egress proxy/)
+
+  assert.doesNotMatch(automations, /\/docs-media\/docs-automations\.png/)
+  assert.match(automations, /Integration proof/)
+  assert.match(automations, /Published packages/)
+  assert.match(automations, /Workflow templates/)
+
+  assert.doesNotMatch(investigationEngine, /\/docs-media\/docs-investigation-engine\.png/)
+  assert.match(investigationEngine, /Engine proof/)
+  assert.match(investigationEngine, /Input normalization/)
+  assert.match(investigationEngine, /Evidence tools/)
+
+  assert.doesNotMatch(deadInternet, /\/docs-media\/docs-dead-internet\.png/)
+  assert.match(deadInternet, /Pattern brief/)
+  assert.match(deadInternet, /Generated pitch/)
+  assert.match(deadInternet, /Fast trust ask/)
+
+  assert.doesNotMatch(useCases, /\/docs-media\/docs-automations\.png/)
+  assert.doesNotMatch(useCases, /\/docs-media\/docs-investigation-engine\.png/)
+  assert.doesNotMatch(useCases, /\/docs-media\/docs-skills\.png/)
+  assert.match(useCases, /Shared report shape/)
+  assert.match(useCases, /API, SDK, webhooks/)
+  assert.match(useCases, /MCP and skills/)
 })
 
 test('legal docs expose real privacy and terms anchors used by the footer', async () => {

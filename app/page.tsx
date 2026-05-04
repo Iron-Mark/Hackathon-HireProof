@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'HireProof - Verify Job Posts Before Applying',
     description: 'Know if it\'s legit before you apply. HireProof checks the claims and returns a verdict with receipts.',
-    url: 'https://hireproof.vercel.app',
+    url: 'https://hireproof-sigma.vercel.app',
     siteName: 'HireProof',
     images: [
       {
