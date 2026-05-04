@@ -197,6 +197,38 @@ export function HomeClient() {
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(16,185,129,0.1)_90deg,transparent_90deg)]"
           />
         </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-24 top-16 z-0 hidden h-[260px] w-[310px] rotate-[-10deg] opacity-[0.1] md:block xl:left-4 xl:top-24"
+        >
+          <div className="absolute inset-0 rounded-[3rem] border border-safe/20 bg-[radial-gradient(circle_at_30%_25%,rgba(52,211,153,0.28),transparent_34%),linear-gradient(135deg,rgba(52,211,153,0.12),rgba(96,165,250,0.05)_48%,transparent)] shadow-[0_0_90px_rgba(52,211,153,0.16)]" />
+          <div className="absolute left-16 top-14 h-28 w-28 rotate-[-8deg] rounded-[1.7rem] border border-safe/35 bg-safe/10 shadow-[0_0_42px_rgba(52,211,153,0.22)]" />
+          <div className="absolute left-28 top-22 h-16 w-12 rotate-[-8deg] rounded-lg border border-safe/35 bg-background/35" />
+          <div className="absolute left-34 top-28 h-2 w-14 rotate-[-8deg] rounded-full bg-safe/55" />
+          <div className="absolute left-32 top-38 h-2 w-20 rotate-[-8deg] rounded-full bg-evidence/25" />
+          <div className="absolute left-34 top-48 h-2 w-12 rotate-[-8deg] rounded-full bg-safe/35" />
+          <div className="absolute left-52 top-24 h-3 w-40 rounded-full bg-safe/50" />
+          <div className="absolute left-52 top-48 h-3 w-56 rounded-full bg-evidence/25" />
+          <div className="absolute left-52 top-72 h-3 w-36 rounded-full bg-safe/35" />
+          <div className="absolute left-68 top-30 h-14 w-14 rotate-12 rounded-2xl border border-evidence/25 bg-evidence/10" />
+          <div className="absolute bottom-10 left-20 h-24 w-64 rounded-[2rem] border border-safe/20 bg-background/25 backdrop-blur-sm" />
+          <div className="absolute bottom-20 left-34 h-3 w-24 rounded-full bg-risk-text/30" />
+          <div className="absolute bottom-20 left-64 h-3 w-20 rounded-full bg-safe/45" />
+          <div className="absolute bottom-34 left-34 h-3 w-36 rounded-full bg-muted/25" />
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-32 right-[4%] z-0 hidden h-[800px] w-[616px] origin-bottom-right overflow-hidden rounded-[2.2rem] border border-safe/30 bg-surface/5 opacity-[0.18] shadow-[0_0_110px_rgba(52,211,153,0.28)] saturate-125 [transform-style:preserve-3d] [transform:perspective(1100px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(17deg)_skewX(-4deg)] md:block xl:-bottom-44 xl:right-[12%] xl:h-[960px] xl:w-[738px] xl:[transform:perspective(1200px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(19deg)_skewX(-4deg)]"
+        >
+          <img
+            src="/media/job-application-meme.png"
+            alt=""
+            className="h-full w-full object-cover object-[center_12%]"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-l from-background/0 via-background/22 to-background/85" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+        </div>
         <div className="relative z-10 mx-auto grid max-w-[1600px] gap-8 px-6 py-10 md:px-12 lg:px-20 lg:py-14 xl:grid-cols-[minmax(0,1fr)_460px] xl:items-center xl:px-32">
           <motion.div
             initial="hidden"
@@ -285,7 +317,7 @@ export function HomeClient() {
                   <button
                     key={mode}
                     onClick={() => setActiveDemo(mode as any)}
-                    className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
                       isActive
                         ? isScam
                           ? 'bg-risk-bg text-risk-text shadow-lg shadow-risk-bg/20'
@@ -376,8 +408,9 @@ export function HomeClient() {
       </section>
 
       {/* How it works */}
-      <section className="border-b border-border-soft">
-        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 py-14">
+      <section className="relative border-y border-border-soft bg-safe/5">
+        <div className="absolute inset-x-0 top-0 h-px bg-safe/35" />
+        <div className="mx-auto max-w-[1600px] px-6 py-14 md:px-12 lg:px-20 xl:px-32">
           <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <p className="text-sm font-black uppercase tracking-normal text-safe">Workflow</p>
@@ -590,7 +623,7 @@ export function HomeClient() {
       </section>
 
       {/* Spot the Bot Training Section */}
-      <section className="py-12 sm:py-16">
+      <section className="border-b border-border-soft bg-surface py-14">
         <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32">
           <div className="mb-6 text-center sm:mb-8">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-safe">
@@ -607,7 +640,7 @@ export function HomeClient() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative overflow-hidden bg-surface dark:bg-[#080a0d] py-24">
+      <section className="relative overflow-hidden border-t border-border-soft bg-background dark:bg-[#080a0d] py-24">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(var(--hireproof-safe)_1px,transparent_1px)] [background-size:32px_32px]" />
         </div>
@@ -615,7 +648,7 @@ export function HomeClient() {
           src="/media/job-application-meme.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[min(34rem,72vw)] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[1.75rem] border border-safe/30 object-cover opacity-[0.08] shadow-[0_0_54px_rgba(52,211,153,0.28)] dark:opacity-[0.14] sm:block lg:left-[60%] lg:w-[38rem]"
+          className="pointer-events-none absolute left-[46%] top-1/2 hidden w-[min(34rem,72vw)] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[1.75rem] border border-safe/30 object-cover opacity-[0.08] shadow-[0_0_54px_rgba(52,211,153,0.28)] dark:opacity-[0.14] sm:block lg:left-[56%] lg:w-[38rem]"
         />
         <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
           <motion.div
@@ -627,7 +660,8 @@ export function HomeClient() {
             <ShieldAlert className="h-10 w-10" />
           </motion.div>
           <h2 className="text-4xl font-black tracking-tight text-foreground dark:text-white md:text-5xl lg:text-6xl">
-            Check the post before you apply.
+            Check the post<br />
+            before you apply.
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-relaxed text-muted dark:text-white/70 md:text-xl">
             Paste the listing, recruiter message, freelance gig, scholarship pitch, or application URL. HireProof turns suspicious claims into an evidence-backed verdict.
@@ -635,16 +669,24 @@ export function HomeClient() {
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/audit"
-              className="hireproof-focus hireproof-cta-primary inline-flex w-full items-center justify-center gap-3 rounded-2xl px-8 py-4 text-lg font-black sm:w-auto"
+              className="hireproof-focus hireproof-cta-primary group relative inline-flex w-full items-center justify-center gap-3 rounded-2xl px-8 py-4 text-lg font-black sm:w-auto"
             >
               Start investigation
               <ArrowRight className="h-5 w-5" />
+              <span className="pointer-events-none absolute bottom-full left-1/2 mb-3 w-max max-w-64 -translate-x-1/2 translate-y-1 rounded-xl border border-border-soft bg-surface/95 px-4 py-2 text-center text-[10px] font-black uppercase tracking-widest text-foreground opacity-0 shadow-2xl ring-1 ring-white/10 backdrop-blur-md transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                Paste a real post or message
+                <span className="absolute left-1/2 top-full -mt-1 -translate-x-1/2 border-4 border-transparent border-t-border-soft" />
+              </span>
             </Link>
             <Link
-              href="/audit"
-              className="hireproof-focus inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-border-soft bg-surface px-8 py-4 text-lg font-black text-foreground transition-all hover:border-safe/40 hover:bg-safe/5 sm:w-auto"
+              href="/audit?demo=high-risk"
+              className="hireproof-focus group relative inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-border-soft bg-surface px-8 py-4 text-lg font-black text-foreground transition-all hover:border-safe/40 hover:bg-safe/5 sm:w-auto"
             >
-              Quick demo
+              Try high-risk demo
+              <span className="pointer-events-none absolute bottom-full left-1/2 mb-3 w-max max-w-64 -translate-x-1/2 translate-y-1 rounded-xl border border-border-soft bg-surface/95 px-4 py-2 text-center text-[10px] font-black uppercase tracking-widest text-foreground opacity-0 shadow-2xl ring-1 ring-white/10 backdrop-blur-md transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                Open an instant scam example
+                <span className="absolute left-1/2 top-full -mt-1 -translate-x-1/2 border-4 border-transparent border-t-border-soft" />
+              </span>
             </Link>
           </div>
           <p className="mt-8 text-xs font-black uppercase tracking-[0.3em] text-muted dark:text-white/30">

@@ -536,6 +536,7 @@ test('remote recruiter free-mail identity remains risky even with a real company
 
 test('result screen replaces pseudo bot claims with evidence-backed v2 panels', async () => {
   const source = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
+  const riskChart = await fs.readFile(new URL('../components/audit/risk-radar-chart.tsx', import.meta.url), 'utf8')
 
   assert.doesNotMatch(source, /Bot Probability/)
   assert.doesNotMatch(source, /Linguistic Entropy/)
@@ -547,6 +548,11 @@ test('result screen replaces pseudo bot claims with evidence-backed v2 panels', 
   assert.match(source, /max-w-7xl/)
   assert.match(source, /Analyst coverage matrix/)
   assert.match(source, /lg:grid-cols-\[minmax\(0,1fr\)_360px\]/)
+  assert.match(riskChart, /aria-label="Risk score legend"/)
+  assert.match(riskChart, /absolute right-4 top-4 z-10/)
+  assert.match(riskChart, /Low/)
+  assert.match(riskChart, /Caution/)
+  assert.match(riskChart, /High/)
   assert.doesNotMatch(source, /md:w-80/)
   assert.doesNotMatch(source, /bot-scan-line opacity-20/)
 })

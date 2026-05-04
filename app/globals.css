@@ -229,35 +229,35 @@ textarea {
   background: linear-gradient(
     120deg,
     transparent 0%,
-    transparent 46%,
-    color-mix(in srgb, var(--hireproof-evidence) 38%, transparent) 50%,
-    transparent 54%,
+    transparent 48%,
+    color-mix(in srgb, var(--hireproof-evidence) 28%, transparent) 50%,
+    transparent 52%,
     transparent 100%
   );
   pointer-events: none;
-  animation: bot-scan-line 8s ease-in-out infinite;
-  opacity: 0.38;
+  animation: bot-scan-line 16s linear infinite;
+  opacity: 0.2;
 }
 
 @keyframes bot-scan-line {
   0% {
-    transform: translateX(-90%);
+    transform: translateX(-110%);
     opacity: 0;
   }
-  28% {
+  25% {
     opacity: 0;
   }
-  42% {
-    opacity: 0.38;
+  40% {
+    opacity: 0.2;
   }
-  58% {
-    opacity: 0.38;
+  60% {
+    opacity: 0.2;
   }
-  72% {
+  75% {
     opacity: 0;
   }
   100% {
-    transform: translateX(90%);
+    transform: translateX(110%);
     opacity: 0;
   }
 }

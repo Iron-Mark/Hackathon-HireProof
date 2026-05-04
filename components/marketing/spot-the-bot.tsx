@@ -188,7 +188,7 @@ export function SpotTheBot() {
                       disabled={isDisabled}
                       whileHover={!isDisabled ? { scale: 1.01, y: -2 } : {}}
                       whileTap={!isDisabled ? { scale: 0.99 } : {}}
-                      className={`group relative flex min-h-[12rem] w-full flex-col text-left rounded-2xl border p-5 transition-all duration-200 ${
+                      className={`group relative flex min-h-[12rem] w-full cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all duration-200 ${
                         isSelected
                           ? isCorrect
                             ? 'border-safe bg-safe/5 shadow-xl shadow-safe/10'

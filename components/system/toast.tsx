@@ -59,7 +59,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <>
       {children}
       <div
-        className="fixed bottom-5 right-5 z-100 flex flex-col gap-2 pointer-events-none"
+        className="fixed bottom-5 right-4 z-[100] flex w-[min(calc(100vw-2rem),24rem)] flex-col gap-2 pointer-events-none sm:right-5"
         role="status"
         aria-live="polite"
         aria-label="Notifications"
@@ -84,15 +84,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   stiffness: 400,
                   damping: 25,
                 }}
-                className="pointer-events-auto flex items-center gap-3 rounded-xl border border-border-soft bg-surface px-4 py-3 shadow-lg max-w-sm"
+                className="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-border-soft bg-surface px-4 py-3 shadow-lg"
               >
-                <Icon className={`h-4 w-4 shrink-0 ${iconColor}`} />
-                <span className="text-sm font-bold truncate">
+                <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${iconColor}`} />
+                <span className="min-w-0 flex-1 text-sm font-bold leading-5">
                   {toast.message}
                 </span>
                 <button
                   onClick={() => dismiss(toast.id)}
-                  className="ml-1 shrink-0 text-muted hover:text-foreground"
+                  className="ml-1 shrink-0 cursor-pointer rounded-md text-muted transition-colors hover:text-foreground"
                   aria-label="Dismiss notification"
                 >
                   <X className="h-3.5 w-3.5" />

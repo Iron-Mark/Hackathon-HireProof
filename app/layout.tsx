@@ -3,6 +3,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/system/theme-provider'
 import { ToastProvider } from '@/components/system/toast'
 import { CommandMenu } from '@/components/layout/command-menu'
+import { ScrollToTopControl } from '@/components/layout/scroll-to-top-control'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { ThemeScanner } from '@/components/system/theme-scanner'
 import { DemoLoginSnackbar } from '@/components/system/demo-login-snackbar'
@@ -88,6 +89,7 @@ export default function RootLayout({
           <ToastProvider>
             <ThemeScanner />
             <CommandMenu />
+            <ScrollToTopControl />
             <DemoLoginSnackbar />
             <script
               id="json-ld"

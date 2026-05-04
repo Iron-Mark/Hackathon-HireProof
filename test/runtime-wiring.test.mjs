@@ -261,6 +261,20 @@ test('global command search is visible and indexes public app pages', async () =
   assert.doesNotMatch(docsLayout, /filteredSidebar/)
 })
 
+test('global scroll-to-top control is mobile and desktop friendly', async () => {
+  const layout = await fs.readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8')
+  const control = await fs.readFile(new URL('../components/layout/scroll-to-top-control.tsx', import.meta.url), 'utf8')
+
+  assert.match(layout, /ScrollToTopControl/)
+  assert.match(control, /window\.scrollY > 420/)
+  assert.match(control, /prefers-reduced-motion: reduce/)
+  assert.match(control, /aria-label="Scroll back to top"/)
+  assert.match(control, /min-h-12 min-w-12/)
+  assert.match(control, /right-3/)
+  assert.match(control, /lg:right-8/)
+  assert.match(control, /bottom-\[5\.25rem\]/)
+})
+
 test('chat and workflow status endpoints expose honest track readiness', async () => {
   const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
   const workflowRoute = await fs.readFile(new URL('../app/api/workflows/audit/route.ts', import.meta.url), 'utf8')

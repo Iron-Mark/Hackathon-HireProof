@@ -652,7 +652,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
               onClick={handleDownload}
               disabled={isExporting}
               title="Download PNG Screenshot"
-              className="hireproof-focus flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface transition-colors hover:bg-evidence-bg sm:w-auto sm:gap-1.5 sm:px-3"
+              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:gap-1.5 sm:px-3"
             >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               <span className="hidden text-xs font-black sm:inline">PNG</span>
@@ -663,7 +663,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 timestamp: result.id ? new Date().toISOString() : undefined
               })}
               title="Download PDF dossier"
-              className="hireproof-focus flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-colors hover:bg-evidence-bg sm:w-auto sm:gap-1.5 sm:px-3"
+              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 sm:w-auto sm:gap-1.5 sm:px-3"
             >
               <FileText className="w-4 h-4" />
               <span className="hidden text-xs font-black sm:inline">PDF</span>
@@ -671,7 +671,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
             <button
               onClick={handleReportCsvDownload}
               title="Download report CSV"
-              className="hireproof-focus flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-colors hover:bg-evidence-bg sm:w-auto sm:gap-1.5 sm:px-3"
+              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 sm:w-auto sm:gap-1.5 sm:px-3"
             >
               <Table className="w-4 h-4" />
               <span className="hidden text-xs font-black sm:inline">CSV</span>
@@ -680,7 +680,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
               onClick={handleShare}
               title="Share verdict"
               aria-label="Share verdict"
-              className="hireproof-focus flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-colors hover:bg-evidence-bg sm:w-auto sm:gap-1.5 sm:px-3"
+              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 sm:w-auto sm:gap-1.5 sm:px-3"
             >
               <Share2 className="w-4 h-4" />
               <span className="hidden text-xs font-black sm:inline">Share</span>
@@ -693,7 +693,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                   timestamp: new Date().toISOString()
                 })}
                 title="Download Safety Certificate"
-                className="hireproof-focus flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface hover:bg-evidence-bg text-safe transition-colors"
+                className="hireproof-focus flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-safe transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95"
               >
                 <UserCheck className="w-4 h-4" />
               </button>
@@ -714,7 +714,7 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 <div>
                   <h3 className="text-2xl font-black">HireProof Verdict</h3>
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted">
-                    <span className="h-1.5 w-1.5 rounded-full bg-safe animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-safe" />
                     Evidence-backed report
                   </div>
                 </div>
@@ -1008,47 +1008,61 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 </div>
               )}
 
-              {coverageRows.length > 0 ? (
-                <div className="overflow-hidden rounded-xl border border-border-soft">
-                  <div className="grid grid-cols-[minmax(8rem,0.9fr)_minmax(7rem,0.55fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted sm:grid-cols-[minmax(10rem,0.9fr)_minmax(7rem,0.45fr)_minmax(0,1fr)]">
-                    <div>Coverage</div>
-                    <div>Status</div>
-                    <div className="hidden sm:block">Meaning</div>
+              <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+                {coverageRows.length > 0 ? (
+                  <div className="overflow-hidden rounded-xl border border-border-soft bg-background/40">
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[36rem] xl:min-w-0">
+                        <div className="grid grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                          <div>Coverage</div>
+                          <div>Status</div>
+                          <div>Meaning</div>
+                        </div>
+                        {coverageRows.map((row) => (
+                          <div key={row.label} className="grid grid-cols-[minmax(7rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] items-center gap-2 border-t border-border-soft px-4 py-2.5 xl:grid-cols-[minmax(6.5rem,0.8fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                            <div className="text-sm font-black">{row.label}</div>
+                            <div>
+                              <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                                {row.value}
+                              </span>
+                            </div>
+                            <div className="text-xs font-semibold leading-5 text-muted">
+                              {row.tone === 'safe' ? 'Evidence supports this dimension.' : row.tone === 'risk' ? 'This dimension pushed risk upward.' : row.tone === 'caution' ? 'Evidence is incomplete or unresolved.' : 'Recorded for reviewer context.'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  {coverageRows.map((row) => (
-                    <div key={row.label} className="grid grid-cols-[minmax(8rem,0.9fr)_minmax(7rem,0.55fr)] items-center gap-3 border-t border-border-soft px-4 py-3 sm:grid-cols-[minmax(10rem,0.9fr)_minmax(7rem,0.45fr)_minmax(0,1fr)]">
-                      <div className="text-sm font-black">{row.label}</div>
-                      <div>
-                        <span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
-                          {row.value}
-                        </span>
-                      </div>
-                      <div className="hidden text-xs font-semibold leading-5 text-muted sm:block">
-                        {row.tone === 'safe' ? 'Evidence supports this dimension.' : row.tone === 'risk' ? 'This dimension pushed risk upward.' : row.tone === 'caution' ? 'Evidence is incomplete or unresolved.' : 'Recorded for reviewer context.'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-border-soft bg-surface p-4">
-                  <div className="text-sm font-bold text-muted">Legacy report: structured v2 coverage was not included in this result.</div>
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-xl border border-border-soft bg-surface p-4">
+                    <div className="text-sm font-bold text-muted">Legacy report: structured v2 coverage was not included in this result.</div>
+                  </div>
+                )}
 
-              <div className="mt-5 overflow-hidden rounded-xl border border-border-soft">
-                <div className="bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted">Identity and market context</div>
-                <div className="divide-y divide-border-soft">
-                  {identityRows.map((row) => (
-                    <div key={row.label} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(10rem,0.7fr)_minmax(8rem,0.5fr)_minmax(0,1fr)] sm:items-center">
-                      <div className="text-xs font-black uppercase tracking-wide text-muted">{row.label}</div>
-                      <div>
-                        <span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
-                          {row.value}
-                        </span>
+                <div className="overflow-hidden rounded-xl border border-border-soft bg-background/40">
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[36rem] xl:min-w-0">
+                      <div className="grid grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] bg-surface px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                        <div>Context</div>
+                        <div>Status</div>
+                        <div>Detail</div>
                       </div>
-                      <div className="truncate text-sm font-semibold text-muted">{row.detail}</div>
+                      <div className="divide-y divide-border-soft">
+                        {identityRows.map((row) => (
+                          <div key={row.label} className="grid grid-cols-[minmax(8rem,0.75fr)_minmax(6rem,0.5fr)_minmax(14rem,1fr)] items-center gap-2 px-4 py-2.5 xl:grid-cols-[minmax(7rem,0.78fr)_minmax(5.5rem,0.52fr)_minmax(0,1fr)]">
+                            <div className="text-xs font-black uppercase tracking-wide text-muted">{row.label}</div>
+                            <div>
+                              <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${getEvidenceToneClasses(row.tone)}`}>
+                                {row.value}
+                              </span>
+                            </div>
+                            <div className="min-w-0 truncate text-sm font-semibold text-muted">{row.detail}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>

@@ -293,7 +293,8 @@ function AuditContent() {
               </div>
               <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Check a Job <span className="text-safe">Post.</span></h1>
               <p className="mx-auto mt-3 max-w-2xl text-base font-medium text-muted sm:text-lg">
-                Paste the job details below. Our agents will cross-reference signals in real-time.
+                Paste the job details below.<br />
+                Our agents will cross-reference signals in real-time.
               </p>
             </div>
 
