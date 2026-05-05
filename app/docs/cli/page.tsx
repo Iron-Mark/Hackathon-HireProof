@@ -154,8 +154,8 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit .\\job-post.txt --json`}
         />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-3xl border border-border-soft bg-surface p-6">
+      <section className="grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="min-w-0 rounded-3xl border border-border-soft bg-surface p-6">
           <HeartPulse className="mb-4 h-6 w-6 text-safe" />
           <h2 className="mb-3 text-xl font-black">Health Checks</h2>
           <p className="mb-4 text-sm font-semibold leading-relaxed text-muted">
@@ -164,7 +164,7 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit .\\job-post.txt --json`}
           <CodeBlock title="Terminal" code="hireproof health --base-url https://hireproof-sigma.vercel.app" />
         </div>
 
-        <div className="rounded-3xl border border-border-soft bg-surface p-6">
+        <div className="min-w-0 rounded-3xl border border-border-soft bg-surface p-6">
           <Settings className="mb-4 h-6 w-6 text-safe" />
           <h2 className="mb-3 text-xl font-black">Local Config</h2>
           <p className="mb-4 text-sm font-semibold leading-relaxed text-muted">

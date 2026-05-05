@@ -281,19 +281,19 @@ export function HomeClient() {
                   <motion.div key={demo.href} variants={cardReveal}>
                     <Link
                       href={demo.href}
-                      className={`hireproof-focus group relative block overflow-hidden rounded-xl border p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98] ${demo.className}`}
+                      className={`hireproof-focus group relative block min-w-0 overflow-hidden rounded-xl border p-3 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98] ${demo.className}`}
                     >
                       <span className="pointer-events-none absolute inset-0 bg-white/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-white/10" />
-                      <span className="pointer-events-none absolute -right-8 -top-10 h-20 w-20 rounded-full bg-current/10 blur-2xl transition-transform duration-300 group-hover:scale-150 group-focus-visible:scale-150" />
-                      <div className="relative mb-2 flex items-center justify-between gap-2 text-sm font-black">
-                        <span className="flex items-center gap-2">
+                      <span className="pointer-events-none absolute right-2 top-2 h-16 w-16 rounded-full bg-current/10 blur-2xl transition-transform duration-300 group-hover:scale-125 group-focus-visible:scale-125" />
+                      <div className="relative mb-2 flex min-w-0 items-center justify-between gap-2 text-sm font-black">
+                        <span className="flex min-w-0 items-center gap-2">
                           <Icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 group-focus-visible:scale-110" />
                           {demo.label}
                         </span>
                         <ArrowRight className="h-3.5 w-3.5 opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-80 group-focus-visible:translate-x-0.5 group-focus-visible:opacity-80" />
                       </div>
-                      <p className="relative text-xs font-semibold leading-5">{demo.description}</p>
-                      <span className="relative mt-2 inline-flex text-[10px] font-black uppercase tracking-widest opacity-0 transition-opacity duration-300 group-hover:opacity-70 group-focus-visible:opacity-70">
+                      <p className="relative min-w-0 break-words text-xs font-semibold leading-5">{demo.description}</p>
+                      <span className="relative mt-2 inline-flex max-w-full whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-wide opacity-0 transition-opacity duration-300 group-hover:opacity-70 group-focus-visible:opacity-70">
                         Try case
                       </span>
                     </Link>

@@ -55,13 +55,13 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
       role="switch"
       aria-checked={checked}
       onClick={onChange}
-      className={`relative h-6 w-11 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-safe ${
+      className={`relative h-11 w-[68px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-safe ${
         checked ? 'bg-safe' : 'bg-border-soft'
       }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform ${
-          checked ? 'translate-x-5' : 'translate-x-0'
+        className={`absolute left-1 top-1 h-9 w-9 rounded-full bg-background shadow transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-0'
         }`}
       />
     </button>

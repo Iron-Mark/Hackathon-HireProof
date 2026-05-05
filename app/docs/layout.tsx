@@ -120,11 +120,30 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     setIsMobileSidebarOpen(false)
   }, [pathname])
 
+  useEffect(() => {
+    if (!isMobileSidebarOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileSidebarOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMobileSidebarOpen])
+
   const renderSidebarContent = () => (
     <nav className="p-4 space-y-6">
       <button
         type="button"
-        onClick={openHireProofCommandMenu}
+        onClick={() => {
+          setIsMobileSidebarOpen(false)
+          openHireProofCommandMenu()
+        }}
         className="hireproof-focus flex h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border-soft bg-surface px-3 text-left text-[13px] font-bold text-muted transition-colors hover:border-safe/50 hover:bg-background hover:text-foreground"
         aria-label="Search documentation with global site search"
       >
@@ -142,6 +161,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={() => setIsMobileSidebarOpen(false)}
                   className={`group flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-all duration-200 ${
                     pathname === item.href
                       ? 'bg-safe/10 text-safe font-black shadow-sm'
@@ -166,33 +186,33 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <SiteHeader />
       {/* Sub-header Navigation */}
       <div className="sticky top-[72px] z-20 border-b border-border-soft bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 md:px-12 lg:px-20 xl:px-32">
-          <div className="flex items-center gap-0">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-2 px-3 sm:px-6 md:px-12 lg:px-20 xl:px-32">
+          <div className="flex min-w-0 flex-1 snap-x snap-mandatory items-center gap-0 overflow-x-auto overscroll-x-contain">
             <Link
               href="/docs"
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+              className={`flex shrink-0 snap-start items-center gap-2 border-b-2 px-3 py-3 text-sm font-black transition-colors sm:px-4 ${
                 activeTab === 'docs' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
               }`}
             >
-              <BookOpen className="h-4 w-4" />
+              <BookOpen className="h-4 w-4 shrink-0" />
               Docs
             </Link>
             <Link
               href="/docs/api-reference"
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+              className={`flex shrink-0 snap-start items-center gap-2 border-b-2 px-3 py-3 text-sm font-black transition-colors sm:px-4 ${
                 activeTab === 'api' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
               }`}
             >
-              <Code2 className="h-4 w-4" />
+              <Code2 className="h-4 w-4 shrink-0" />
               API Reference
             </Link>
             <Link
               href="/docs/sdk"
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-colors ${
+              className={`hidden shrink-0 snap-start items-center gap-2 border-b-2 px-3 py-3 text-sm font-black transition-colors sm:flex sm:px-4 ${
                 activeTab === 'sdk' ? 'border-safe text-foreground' : 'border-transparent text-muted hover:text-foreground'
               }`}
             >
-              <Package className="h-4 w-4" />
+              <Package className="h-4 w-4 shrink-0" />
               SDK
             </Link>
           </div>
@@ -200,7 +220,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           {/* Mobile Sidebar Toggle */}
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-foreground lg:hidden"
+            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-foreground lg:hidden"
             aria-label="Open documentation menu"
           >
             <Menu className="h-5 w-5" />
@@ -241,6 +261,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   </div>
                   <button
                     onClick={() => setIsMobileSidebarOpen(false)}
+                    aria-label="Close documentation menu"
                     className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-surface"
                   >
                     <X className="h-4 w-4" />
@@ -255,7 +276,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         </AnimatePresence>
 
         {/* Main content */}
-        <main className="min-w-0 flex-1 px-6 md:px-12 lg:px-20 xl:px-32 py-10">
+        <main className="min-w-0 flex-1 px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32">
           <div className="mx-auto max-w-5xl">
             {children}
           </div>
@@ -275,7 +296,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             }
           }
         }}
-        className="hireproof-focus group fixed bottom-4 right-4 cursor-pointer z-50 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-soft bg-surface/95 px-3 py-3 text-sm font-black text-foreground shadow-2xl backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-safe/40 hover:bg-background hover:text-safe sm:bottom-6 sm:right-6 sm:px-4"
+        className="hireproof-focus group fixed bottom-6 right-6 z-50 hidden min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border-soft bg-surface/95 px-4 py-3 text-sm font-black text-foreground shadow-2xl backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-safe/40 hover:bg-background hover:text-safe xl:inline-flex"
         title="Copy page text for AI Prompting"
         aria-label="Copy page text for AI Prompting"
       >

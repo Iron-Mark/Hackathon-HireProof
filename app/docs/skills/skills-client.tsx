@@ -297,8 +297,8 @@ zip -r hireproof-skill.zip .agents/skills/hireproof/
         <p className="mb-4 text-sm font-semibold text-muted">
           MCP clients automatically namespace tools using the server name from your config. Since the server key is <code className="font-mono bg-surface px-1.5 py-0.5 rounded text-xs">"hireproof"</code>, the tools appear as:
         </p>
-        <div className="overflow-hidden rounded-xl border border-border-soft">
-          <table className="w-full text-xs">
+        <div className="max-w-full overflow-x-auto rounded-xl border border-border-soft">
+          <table className="min-w-[42rem] w-full text-xs">
             <thead>
               <tr className="border-b border-border-soft bg-surface">
                 <th className="px-4 py-3 text-left font-black text-muted">MCP Client Name</th>
@@ -332,7 +332,7 @@ zip -r hireproof-skill.zip .agents/skills/hireproof/
         <h2 className="mb-6 text-2xl font-black">Available Skills</h2>
         <div className="space-y-6">
           {SKILLS.map((skill) => (
-            <div key={skill.name} className={`rounded-2xl border p-6 ${skill.color}`}>
+            <div key={skill.name} className={`min-w-0 rounded-2xl border p-6 ${skill.color}`}>
               {/* Skill Header */}
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -352,8 +352,8 @@ zip -r hireproof-skill.zip .agents/skills/hireproof/
               </div>
 
               {/* Params */}
-              <div className="mb-4 overflow-hidden rounded-xl border border-border-soft bg-background/50">
-                <table className="w-full text-xs">
+              <div className="mb-4 max-w-full overflow-x-auto rounded-xl border border-border-soft bg-background/50">
+                <table className="min-w-[42rem] w-full text-xs">
                   <thead>
                     <tr className="border-b border-border-soft">
                       <th className="px-4 py-2 text-left font-black text-muted">Parameter</th>

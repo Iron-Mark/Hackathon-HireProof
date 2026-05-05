@@ -12,11 +12,11 @@ export function ImpactTicker() {
   ]
 
   return (
-    <div className="w-full bg-surface/50 dark:bg-[#0c0f14] py-2 overflow-hidden border-y border-border-soft dark:border-white/5 backdrop-blur-sm">
+    <div className="flex min-h-8 w-full items-center overflow-hidden border-y border-border-soft bg-surface/50 py-2 backdrop-blur-sm dark:border-white/5 dark:bg-[#0c0f14]">
       <motion.div 
         animate={{ x: [0, -1000] }}
         transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="flex whitespace-nowrap gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/70 dark:text-white/70"
+        className="flex items-center gap-12 whitespace-nowrap text-[10px] font-black uppercase leading-none tracking-[0.2em] text-foreground/70 dark:text-white/70"
       >
         {items.map((item) => (
           <StatItem key={item.text} icon={item.icon} text={item.text} />

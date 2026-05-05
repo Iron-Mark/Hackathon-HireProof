@@ -18,8 +18,10 @@ import {
   Network,
   Search,
   SearchCheck,
+  Settings,
   ShieldCheck,
   Cpu,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/system/theme-toggle'
@@ -41,6 +43,7 @@ type ResourceGroup = {
 const primaryLinks: NavLink[] = [
   { href: '/history', label: 'History', icon: History },
   { href: '/docs', label: 'Docs', icon: BookOpen },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 const resourceGroups: ResourceGroup[] = [
@@ -76,6 +79,8 @@ const resourceGroups: ResourceGroup[] = [
 export function SiteHeader() {
   const pathname = usePathname()
   const menuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const isActive = (href: string) => href === '/docs' ? pathname.startsWith('/docs') : pathname === href
@@ -90,7 +95,9 @@ export function SiteHeader() {
     if (!isMenuOpen) return
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node
+
+      if (!menuRef.current?.contains(target) && !mobileMenuRef.current?.contains(target)) {
         setIsMenuOpen(false)
       }
     }
@@ -98,6 +105,37 @@ export function SiteHeader() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsMenuOpen(false)
+        return
+      }
+
+      if (event.key !== 'Tab' || !mobileMenuRef.current || !window.matchMedia('(max-width: 1023px)').matches) {
+        return
+      }
+
+      const focusable = Array.from(
+        mobileMenuRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const activeElement = document.activeElement as HTMLElement | null
+
+      if (!activeElement || !mobileMenuRef.current.contains(activeElement)) {
+        event.preventDefault()
+        first.focus()
+      } else if (event.shiftKey && activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault()
+        first.focus()
       }
     }
 
@@ -108,6 +146,16 @@ export function SiteHeader() {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
+  }, [isMenuOpen])
+
+  useEffect(() => {
+    if (!isMenuOpen || !window.matchMedia('(max-width: 1023px)').matches) return
+
+    const frame = window.requestAnimationFrame(() => {
+      mobileCloseButtonRef.current?.focus()
+    })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [isMenuOpen])
 
   const renderMenuLink = (link: NavLink) => {
@@ -135,9 +183,81 @@ export function SiteHeader() {
     )
   }
 
+  const mobileMenu = isMenuOpen ? (
+    <div
+      ref={mobileMenuRef}
+      role="menu"
+      className="fixed inset-0 z-[70] h-dvh max-h-dvh overflow-y-auto bg-background p-4 text-sm font-semibold shadow-2xl sm:p-6 lg:hidden"
+    >
+      <div className="mb-4 flex items-center justify-between gap-3 border-b border-border-soft pb-4">
+        <Link
+          href="/"
+          role="menuitem"
+          className="hireproof-focus flex min-w-0 items-center gap-3 rounded-sm"
+        >
+          <BrandMark className="h-9 w-9 shrink-0" />
+          <BrandWordmark className="text-lg" />
+        </Link>
+        <button
+          ref={mobileCloseButtonRef}
+          type="button"
+          aria-label="Close site navigation"
+          onClick={() => setIsMenuOpen(false)}
+          className="hireproof-focus flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-soft bg-surface text-muted transition-colors hover:bg-safe/10 hover:text-foreground"
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="mb-3">
+        <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-normal text-muted">
+          Start here
+        </div>
+        <div className="space-y-1">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setIsMenuOpen(false)
+              openHireProofCommandMenu()
+            }}
+            className="hireproof-focus flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-muted transition-colors hover:bg-safe/10 hover:text-foreground"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0">
+              <span className="block font-black leading-tight">Search</span>
+              <span className="block text-xs font-semibold leading-tight opacity-75">Find pages and docs</span>
+            </span>
+          </button>
+          <div className="flex min-h-[48px] items-center justify-between gap-3 rounded-xl px-3 py-2 text-muted">
+            <span className="min-w-0">
+              <span className="block font-black leading-tight">Theme</span>
+              <span className="block text-xs font-semibold leading-tight opacity-75">Switch light or dark mode</span>
+            </span>
+            <ThemeToggle />
+          </div>
+          {primaryLinks.map((link) => renderMenuLink(link))}
+        </div>
+      </div>
+      {resourceGroups.map((group) => (
+        <div key={group.label} className="mb-3 last:mb-0">
+          <div className="px-2 pb-1">
+            <span className="inline-flex items-center gap-2 rounded-full border border-safe/25 bg-safe/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-foreground">
+              <span className={`h-1.5 w-1.5 rounded-full ${group.accent}`} aria-hidden="true" />
+              {group.label}
+            </span>
+          </div>
+          <div className="space-y-1">
+            {group.links.map((link) => renderMenuLink(link))}
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null
+
   return (
+    <>
     <header className="sticky top-0 z-50 border-b border-border-soft bg-background/92 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-6 md:px-12 lg:px-20 xl:px-32 py-2">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-2 sm:px-6 md:px-12 lg:px-20 xl:px-32">
         <Link href="/" className="hireproof-focus flex min-w-0 cursor-pointer items-center gap-3 rounded-sm group">
           <BrandMark className="h-9 w-9 shrink-0 transition-transform group-hover:scale-110 glitch-hover" />
           <div className="min-w-0 leading-tight">
@@ -228,40 +348,14 @@ export function SiteHeader() {
               >
                 <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
-              {isMenuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 top-full z-[60] mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-border-soft bg-surface p-3 text-sm font-semibold shadow-lg"
-                >
-                  <div className="mb-3">
-                    <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-normal text-muted">
-                      Start here
-                    </div>
-                    <div className="space-y-1">
-                      {primaryLinks.map((link) => renderMenuLink(link))}
-                    </div>
-                  </div>
-                  {resourceGroups.map((group) => (
-                    <div key={group.label} className="mb-3 last:mb-0">
-                      <div className="px-2 pb-1">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-safe/25 bg-safe/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-foreground">
-                          <span className={`h-1.5 w-1.5 rounded-full ${group.accent}`} aria-hidden="true" />
-                          {group.label}
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        {group.links.map((link) => renderMenuLink(link))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-            <ThemeToggle />
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
             <button
               type="button"
               onClick={openHireProofCommandMenu}
-              className="hireproof-focus flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-safe/10 hover:text-foreground lg:hidden"
+              className="hireproof-focus hidden h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-safe/10 hover:text-foreground"
               aria-label="Search site"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
@@ -278,5 +372,7 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+    {mobileMenu}
+    </>
   )
 }

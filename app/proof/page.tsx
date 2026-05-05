@@ -265,14 +265,14 @@ export default function ProofPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid min-w-0 gap-4 md:grid-cols-2">
           {readyProof.map((item) => {
             const Icon = item.icon
             const brandIcons = 'brandIcons' in item && Array.isArray(item.brandIcons) ? item.brandIcons : null
             return (
-              <Link key={item.title} href={item.href} className="hireproof-focus group rounded-2xl border border-border-soft bg-surface p-6 shadow-sm transition hover:border-safe-bg hover:bg-background">
+              <Link key={item.title} href={item.href} className="hireproof-focus group min-w-0 rounded-2xl border border-border-soft bg-surface p-5 shadow-sm transition hover:border-safe-bg hover:bg-background sm:p-6">
                 <div className="mb-5 flex items-start justify-between gap-4">
-                  <div className={`${brandIcons ? 'w-20 gap-1.5 px-2' : 'w-12'} flex h-12 items-center justify-center rounded-xl bg-safe-bg text-safe-text`}>
+                  <div className={`${brandIcons ? 'w-20 gap-1.5 px-2' : 'w-12'} flex h-12 shrink-0 items-center justify-center rounded-xl bg-safe-bg text-safe-text`}>
                     {brandIcons ? (
                       brandIcons.map((brand) => (
                         <BrandIcon
@@ -287,12 +287,12 @@ export default function ProofPage() {
                       <Icon className="h-6 w-6" />
                     )}
                   </div>
-                  <div className="rounded-full bg-background px-3 py-1 text-[10px] font-black uppercase tracking-normal text-muted group-hover:text-foreground">
+                  <div className="min-w-0 rounded-full bg-background px-2.5 py-1 text-right text-[10px] font-black uppercase tracking-normal text-muted group-hover:text-foreground">
                     {item.status}
                   </div>
                 </div>
-                <h2 className="text-xl font-black">{item.title}</h2>
-                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{item.body}</p>
+                <h2 className="break-words text-xl font-black">{item.title}</h2>
+                <p className="mt-2 break-words text-sm font-semibold leading-6 text-muted">{item.body}</p>
                 <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-evidence">
                   View proof <ExternalLink className="h-4 w-4" />
                 </div>

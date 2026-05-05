@@ -397,13 +397,13 @@ export default function ExtensionDemo() {
          <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
             <button 
               onClick={() => setActiveStage('scanning')}
-              className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'scanning' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
+              className={`min-h-11 cursor-pointer rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all ${activeStage === 'scanning' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
             >
               Scan Mode
             </button>
             <button 
               onClick={() => setActiveStage('result')}
-              className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full transition-all ${activeStage === 'result' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
+              className={`min-h-11 cursor-pointer rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all ${activeStage === 'result' ? 'bg-safe text-background dark:text-[#06130d]' : 'text-muted hover:bg-safe/10 hover:text-safe'}`}
             >
               Verdict Mode
             </button>

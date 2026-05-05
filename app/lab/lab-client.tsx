@@ -304,7 +304,7 @@ export function LabClient() {
     <div className="min-h-screen bg-background text-foreground selection:bg-safe/30 hireproof-grid">
       <SiteHeader />
 
-      <main className="mx-auto max-w-[1600px] px-6 py-12 md:px-12 lg:px-20 xl:px-32">
+      <main className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32">
         <div className="mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <div>
             <div className="mb-4 flex items-center gap-3">
@@ -324,28 +324,28 @@ export function LabClient() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-border-soft bg-surface p-4 text-center backdrop-blur-md">
-              <div className="text-2xl font-black tabular-nums">{progress}%</div>
+          <div className="grid w-full grid-cols-3 gap-2 sm:w-auto sm:gap-4">
+            <div className="min-w-0 rounded-2xl border border-border-soft bg-surface p-3 text-center backdrop-blur-md sm:p-4">
+              <div className="text-xl font-black tabular-nums sm:text-2xl">{progress}%</div>
               <div className="text-[10px] font-black uppercase tracking-widest text-muted">Progress</div>
             </div>
-            <div className="rounded-2xl border border-border-soft bg-surface p-4 text-center backdrop-blur-md">
-              <div className="text-2xl font-black tabular-nums">{formatElapsed(elapsedMs)}</div>
+            <div className="min-w-0 rounded-2xl border border-border-soft bg-surface p-3 text-center backdrop-blur-md sm:p-4">
+              <div className="text-xl font-black tabular-nums sm:text-2xl">{formatElapsed(elapsedMs)}</div>
               <div className="text-[10px] font-black uppercase tracking-widest text-muted">Elapsed</div>
             </div>
-            <div className="rounded-2xl border border-border-soft bg-surface p-4 text-center backdrop-blur-md">
-              <div className="text-2xl font-black tabular-nums">{eventCount}</div>
+            <div className="min-w-0 rounded-2xl border border-border-soft bg-surface p-3 text-center backdrop-blur-md sm:p-4">
+              <div className="text-xl font-black tabular-nums sm:text-2xl">{eventCount}</div>
               <div className="text-[10px] font-black uppercase tracking-widest text-muted">Events</div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
-          <div className="space-y-8">
-            <section className="hireproof-card relative overflow-hidden rounded-[2.5rem] p-10">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="min-w-0 space-y-6 sm:space-y-8">
+            <section className="hireproof-card relative min-w-0 overflow-hidden rounded-3xl p-5 sm:p-8 lg:rounded-[2.5rem] lg:p-10">
               <div className="bot-scan-line opacity-5" />
 
-              <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+              <div className="mb-6 flex flex-col justify-between gap-4 md:mb-8 md:flex-row md:items-center">
                 <div className="flex items-center gap-3">
                   <Fingerprint className="h-5 w-5 text-safe" />
                   <h2 className="text-xl font-black">Job Post Input</h2>
@@ -358,14 +358,14 @@ export function LabClient() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Paste a job description, recruiter message, email, or listing details..."
-                  className="h-52 w-full rounded-3xl border border-border-soft bg-background/40 p-8 pb-24 font-mono text-sm leading-relaxed text-foreground outline-none transition-all placeholder:text-muted/40 focus:border-safe/50 focus:ring-1 focus:ring-safe/20"
+                  className="h-56 w-full rounded-3xl border border-border-soft bg-background/40 p-5 font-mono text-sm leading-relaxed text-foreground outline-none transition-all placeholder:text-muted/40 focus:border-safe/50 focus:ring-1 focus:ring-safe/20 sm:h-52 sm:p-8 sm:pb-24"
                 />
-                <div className="absolute bottom-6 right-6 flex gap-3">
+                <div className="mt-3 flex flex-col gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0 sm:flex-row">
                   {isProcessing ? (
                     <button
                       type="button"
                       onClick={cancelScan}
-                      className="flex h-14 items-center gap-3 rounded-2xl border border-risk-text/20 bg-risk-bg/10 px-6 text-sm font-black text-risk-text transition-all hover:border-risk-text/40"
+                      className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-risk-text/20 bg-risk-bg/10 px-5 text-sm font-black text-risk-text transition-all hover:border-risk-text/40 sm:h-14 sm:px-6"
                     >
                       <AlertTriangle className="h-5 w-5" />
                       CANCEL
@@ -375,7 +375,7 @@ export function LabClient() {
                     type="button"
                     onClick={runInvestigation}
                     disabled={isProcessing}
-                    className={`hireproof-cta-primary flex h-14 items-center gap-3 rounded-2xl px-8 text-sm font-black disabled:opacity-50 ${
+                    className={`hireproof-cta-primary flex h-12 items-center justify-center gap-3 rounded-2xl px-5 text-sm font-black disabled:opacity-50 sm:h-14 sm:px-8 ${
                       isProcessing ? 'shadow-[0_0_40px_rgba(16,185,129,0.4)]' : ''
                     }`}
                   >
@@ -386,8 +386,8 @@ export function LabClient() {
               </div>
             </section>
 
-            <section className="hireproof-card relative overflow-hidden rounded-[2.5rem] p-10">
-              <div className="mb-10 flex items-center justify-between">
+            <section className="hireproof-card relative min-w-0 overflow-hidden rounded-3xl p-5 sm:p-8 lg:rounded-[2.5rem] lg:p-10">
+              <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <Layers className="h-5 w-5 text-evidence" />
                   <h2 className="text-xl font-black">Verification Pipeline</h2>
@@ -405,7 +405,7 @@ export function LabClient() {
                       opacity: step.status === 'pending' ? 0.42 : 1,
                       x: step.status === 'active' ? 10 : 0,
                     }}
-                    className={`relative flex items-center gap-6 rounded-3xl border p-6 transition-all ${
+                    className={`relative flex min-w-0 items-start gap-4 rounded-3xl border p-4 transition-all sm:items-center sm:gap-6 sm:p-6 ${
                       step.status === 'error'
                         ? 'border-risk-text/40 bg-risk-bg/10'
                         : step.status === 'active'
@@ -459,7 +459,7 @@ export function LabClient() {
             </section>
 
             {report ? (
-              <section className="hireproof-card rounded-[2.5rem] p-10">
+              <section className="hireproof-card min-w-0 rounded-3xl p-5 sm:p-8 lg:rounded-[2.5rem] lg:p-10">
                 <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-start">
                   <div>
                     <div className={`mb-3 inline-flex rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${verdictTone}`}>
@@ -516,8 +516,8 @@ export function LabClient() {
             ) : null}
           </div>
 
-          <aside className="space-y-8">
-            <section className="flex h-[420px] flex-col rounded-[2.5rem] border border-border-soft bg-foreground p-8 shadow-2xl dark:bg-black">
+          <aside className="min-w-0 space-y-6 sm:space-y-8">
+            <section className="flex h-[420px] min-w-0 flex-col rounded-3xl border border-border-soft bg-foreground p-5 shadow-2xl dark:bg-black sm:p-8 lg:rounded-[2.5rem]">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Terminal className="h-4 w-4 text-background/40 dark:text-white/40" />
@@ -550,7 +550,7 @@ export function LabClient() {
               </div>
             </section>
 
-            <section className="hireproof-card rounded-[2.5rem] p-8">
+            <section className="hireproof-card min-w-0 rounded-3xl p-5 sm:p-8 lg:rounded-[2.5rem]">
               <div className="mb-8 flex items-center gap-3">
                 <Activity className="h-4 w-4 text-evidence" />
                 <h3 className="text-sm font-black uppercase tracking-[0.2em]">Audit Telemetry</h3>

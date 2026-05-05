@@ -54,8 +54,8 @@ export default function OmniModalPage() {
       {/* Tech Breakdown */}
       <section className="space-y-6">
         <h2 className="text-2xl font-black">Modalities Comparison</h2>
-        <div className="overflow-hidden rounded-2xl border border-border-soft">
-          <table className="w-full text-sm">
+        <div className="max-w-full overflow-x-auto rounded-2xl border border-border-soft">
+          <table className="min-w-[38rem] w-full text-sm">
             <thead>
               <tr className="border-b border-border-soft bg-surface">
                 <th className="px-6 py-4 text-left font-black text-muted uppercase tracking-widest text-[10px]">Modality</th>

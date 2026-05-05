@@ -22,8 +22,8 @@ function Endpoint({ method, path, badge, description, children }: {
 
 function ParamTable({ params }: { params: Array<{ name: string; type: string; required: boolean; desc: string }> }) {
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-border-soft">
-      <table className="w-full text-xs">
+    <div className="mb-4 max-w-full overflow-x-auto rounded-xl border border-border-soft">
+      <table className="min-w-[42rem] w-full text-xs">
         <thead><tr className="border-b border-border-soft bg-surface">
           <th className="px-4 py-2.5 text-left font-black text-muted">Parameter</th>
           <th className="px-4 py-2.5 text-left font-black text-muted">Type</th>
@@ -222,8 +222,8 @@ local_presence   — Verify local business footprint
 
       <div id="errors" />
       <h3 className="mb-3 mt-8 text-lg font-black">Error Responses</h3>
-      <div className="overflow-hidden rounded-xl border border-border-soft">
-        <table className="w-full text-xs">
+      <div className="max-w-full overflow-x-auto rounded-xl border border-border-soft">
+        <table className="min-w-[32rem] w-full text-xs">
           <thead><tr className="border-b border-border-soft bg-surface">
             <th className="px-4 py-2.5 text-left font-black text-muted">Status</th>
             <th className="px-4 py-2.5 text-left font-black text-muted">Meaning</th>

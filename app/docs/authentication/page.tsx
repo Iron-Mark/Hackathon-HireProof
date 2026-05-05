@@ -28,8 +28,8 @@ export default function Page() {
       {/* Endpoint table */}
       <section className="mb-10">
         <h2 className="mb-3 text-2xl font-black">Endpoint Access</h2>
-        <div className="overflow-hidden rounded-xl border border-border-soft">
-          <table className="w-full text-xs">
+        <div className="max-w-full overflow-x-auto rounded-xl border border-border-soft">
+          <table className="min-w-[38rem] w-full text-xs">
             <thead>
               <tr className="border-b border-border-soft bg-surface">
                 <th className="px-4 py-3 text-left font-black text-muted">Endpoint</th>

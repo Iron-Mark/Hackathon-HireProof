@@ -52,8 +52,8 @@ export default function ArchitecturePage() {
       {/* Tech Stack */}
       <section className="mb-12">
         <h2 className="mb-5 text-2xl font-black">Tech Stack</h2>
-        <div className="overflow-hidden rounded-xl border border-border-soft">
-          <table className="w-full text-sm">
+        <div className="max-w-full overflow-x-auto rounded-xl border border-border-soft">
+          <table className="min-w-[42rem] w-full text-sm">
             <thead>
               <tr className="border-b border-border-soft bg-surface">
                 <th className="px-4 py-3 text-left text-xs font-black text-muted uppercase tracking-wider w-40">Layer</th>

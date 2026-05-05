@@ -228,7 +228,7 @@ export function CommandMenu() {
             role="dialog"
             aria-modal="true"
             aria-label="Site search"
-            className="fixed left-1/2 top-[7.5rem] z-[70] w-[min(42rem,calc(100vw-1.5rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl ring-1 ring-white/10 sm:top-[16%]"
+            className="fixed left-1/2 top-[4.75rem] z-[70] w-[min(42rem,calc(100vw-1.5rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl ring-1 ring-white/10 sm:top-[16%]"
           >
             <div className="flex items-center border-b border-border-soft px-4">
               <Search className="h-5 w-5 text-muted" />
@@ -245,7 +245,7 @@ export function CommandMenu() {
               </div>
             </div>
 
-            <div className="max-h-[min(30rem,calc(100vh-15rem))] overflow-y-auto p-2">
+            <div className="max-h-[min(30rem,calc(100dvh-12rem))] overflow-y-auto p-2">
               <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted">
                 {query.trim() ? 'Search results' : 'Start here'}
               </div>

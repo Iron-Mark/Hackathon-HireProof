@@ -52,19 +52,19 @@ export default function TripleTrackCoveragePage() {
         </p>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-3">
+      <section className="grid min-w-0 gap-5 md:grid-cols-3">
         {tracks.map((track) => (
-          <article key={track.title} className="rounded-2xl border border-border-soft bg-surface p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between gap-4">
+          <article key={track.title} className="min-w-0 rounded-2xl border border-border-soft bg-surface p-6 shadow-sm">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-background text-safe">
                 <track.icon className="h-5 w-5" />
               </div>
-              <span className="rounded-full bg-safe/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-safe">
+              <span className="min-w-0 max-w-full break-words rounded-full bg-safe/10 px-3 py-1 text-right text-[10px] font-black uppercase leading-tight tracking-wide text-safe">
                 {track.status}
               </span>
             </div>
             <h2 className="text-xl font-black">{track.title}</h2>
-            <p className="mt-3 text-sm font-medium leading-6 text-muted">{track.body}</p>
+            <p className="mt-3 break-words text-sm font-medium leading-6 text-muted">{track.body}</p>
           </article>
         ))}
       </section>
