@@ -304,7 +304,7 @@ export function LabClient() {
     <div className="min-h-screen bg-background text-foreground selection:bg-safe/30 hireproof-grid">
       <SiteHeader />
 
-      <main className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32">
+      <main className="mx-auto max-w-400 px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32">
         <div className="mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <div>
             <div className="mb-4 flex items-center gap-3">
@@ -517,7 +517,7 @@ export function LabClient() {
           </div>
 
           <aside className="min-w-0 space-y-6 sm:space-y-8">
-            <section className="flex h-[420px] min-w-0 flex-col rounded-3xl border border-border-soft bg-foreground p-5 shadow-2xl dark:bg-black sm:p-8 lg:rounded-[2.5rem]">
+            <section className="flex h-105 min-w-0 flex-col rounded-3xl border border-border-soft bg-foreground p-5 shadow-2xl dark:bg-black sm:p-8 lg:rounded-[2.5rem]">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Terminal className="h-4 w-4 text-background/40 dark:text-white/40" />
@@ -573,7 +573,7 @@ export function LabClient() {
             </section>
 
             {error ? (
-              <section className="rounded-[2rem] border border-risk-text/25 bg-risk-bg/10 p-6 text-risk-text">
+              <section className="rounded-4xl border border-risk-text/25 bg-risk-bg/10 p-6 text-risk-text">
                 <div className="mb-2 flex items-center gap-2 text-sm font-black">
                   <AlertTriangle className="h-4 w-4" />
                   Stream Error

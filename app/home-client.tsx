@@ -194,12 +194,12 @@ export function HomeClient() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(16,185,129,0.1)_90deg,transparent_90deg)]"
+            className="absolute top-1/2 left-1/2 h-300 w-300 -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0deg,rgba(16,185,129,0.1)_90deg,transparent_90deg)]"
           />
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-24 top-16 z-0 hidden h-[260px] w-[310px] rotate-[-10deg] opacity-[0.1] md:block xl:left-4 xl:top-24"
+          className="pointer-events-none absolute -left-24 top-16 z-0 hidden h-65 w-77.5 rotate-[-10deg] opacity-[0.1] md:block xl:left-4 xl:top-24"
         >
           <div className="absolute inset-0 rounded-[3rem] border border-safe/20 bg-[radial-gradient(circle_at_30%_25%,rgba(52,211,153,0.28),transparent_34%),linear-gradient(135deg,rgba(52,211,153,0.12),rgba(96,165,250,0.05)_48%,transparent)] shadow-[0_0_90px_rgba(52,211,153,0.16)]" />
           <div className="absolute left-16 top-14 h-28 w-28 rotate-[-8deg] rounded-[1.7rem] border border-safe/35 bg-safe/10 shadow-[0_0_42px_rgba(52,211,153,0.22)]" />
@@ -211,14 +211,14 @@ export function HomeClient() {
           <div className="absolute left-52 top-48 h-3 w-56 rounded-full bg-evidence/25" />
           <div className="absolute left-52 top-72 h-3 w-36 rounded-full bg-safe/35" />
           <div className="absolute left-68 top-30 h-14 w-14 rotate-12 rounded-2xl border border-evidence/25 bg-evidence/10" />
-          <div className="absolute bottom-10 left-20 h-24 w-64 rounded-[2rem] border border-safe/20 bg-background/25 backdrop-blur-sm" />
+          <div className="absolute bottom-10 left-20 h-24 w-64 rounded-4xl border border-safe/20 bg-background/25 backdrop-blur-sm" />
           <div className="absolute bottom-20 left-34 h-3 w-24 rounded-full bg-risk-text/30" />
           <div className="absolute bottom-20 left-64 h-3 w-20 rounded-full bg-safe/45" />
           <div className="absolute bottom-34 left-34 h-3 w-36 rounded-full bg-muted/25" />
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-32 right-[4%] z-0 hidden h-[800px] w-[616px] origin-bottom-right overflow-hidden rounded-[2.2rem] border border-safe/30 bg-surface/5 opacity-[0.18] shadow-[0_0_110px_rgba(52,211,153,0.28)] saturate-125 [transform-style:preserve-3d] [transform:perspective(1100px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(17deg)_skewX(-4deg)] md:block xl:-bottom-44 xl:right-[12%] xl:h-[960px] xl:w-[738px] xl:[transform:perspective(1200px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(19deg)_skewX(-4deg)]"
+          className="pointer-events-none absolute -bottom-32 right-[4%] z-0 hidden h-200 w-154 origin-bottom-right overflow-hidden rounded-[2.2rem] border border-safe/30 bg-surface/5 opacity-[0.18] shadow-[0_0_110px_rgba(52,211,153,0.28)] saturate-125 transform-3d transform-[perspective(1100px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(17deg)_skewX(-4deg)] md:block xl:-bottom-44 xl:right-[12%] xl:h-240 xl:w-184.5 xl:transform-[perspective(1200px)_rotateX(11deg)_rotateY(-8deg)_rotateZ(19deg)_skewX(-4deg)]"
         >
           <img
             src="/media/job-application-meme.png"
@@ -226,10 +226,10 @@ export function HomeClient() {
             className="h-full w-full object-cover object-[center_12%]"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-l from-background/0 via-background/22 to-background/85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-l from-background/0 via-background/22 to-background/85" />
+          <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent" />
         </div>
-        <div className="relative z-10 mx-auto grid max-w-[1600px] gap-8 px-6 py-10 md:px-12 lg:px-20 lg:py-14 xl:grid-cols-[minmax(0,1fr)_460px] xl:items-center xl:px-32">
+        <div className="relative z-10 mx-auto grid max-w-400 gap-8 px-6 py-10 md:px-12 lg:px-20 lg:py-14 xl:grid-cols-[minmax(0,1fr)_460px] xl:items-center xl:px-32">
           <motion.div
             initial="hidden"
             animate="show"
@@ -292,8 +292,8 @@ export function HomeClient() {
                         </span>
                         <ArrowRight className="h-3.5 w-3.5 opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-80 group-focus-visible:translate-x-0.5 group-focus-visible:opacity-80" />
                       </div>
-                      <p className="relative min-w-0 break-words text-xs font-semibold leading-5">{demo.description}</p>
-                      <span className="relative mt-2 inline-flex max-w-full whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-wide opacity-0 transition-opacity duration-300 group-hover:opacity-70 group-focus-visible:opacity-70">
+                      <p className="relative min-w-0 wrap-break-word text-xs font-semibold leading-5">{demo.description}</p>
+                      <span className="relative mt-2 inline-flex max-w-full whitespace-normal wrap-break-word text-[10px] font-black uppercase leading-tight tracking-wide opacity-0 transition-opacity duration-300 group-hover:opacity-70 group-focus-visible:opacity-70">
                         Try case
                       </span>
                     </Link>
@@ -350,7 +350,7 @@ export function HomeClient() {
 
                 <motion.div 
                   whileHover={{ rotateX: 2, rotateY: -2, scale: 1.01 }}
-                  className="hireproof-card relative rounded-[2rem] p-6 border border-border-soft shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-safe/20 bg-surface/50 backdrop-blur-sm"
+                  className="hireproof-card relative rounded-4xl p-6 border border-border-soft shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-safe/20 bg-surface/50 backdrop-blur-sm"
                 >
                 <div className={`absolute top-0 left-0 w-full h-1 ${current.progressClass}`} />
                 
@@ -410,7 +410,7 @@ export function HomeClient() {
       {/* How it works */}
       <section className="relative border-y border-border-soft bg-safe/5">
         <div className="absolute inset-x-0 top-0 h-px bg-safe/35" />
-        <div className="mx-auto max-w-[1600px] px-6 py-14 md:px-12 lg:px-20 xl:px-32">
+        <div className="mx-auto max-w-400 px-6 py-14 md:px-12 lg:px-20 xl:px-32">
           <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <p className="text-sm font-black uppercase tracking-normal text-safe">Workflow</p>
@@ -446,7 +446,7 @@ export function HomeClient() {
 
       {/* Evidence signals */}
       <section className="border-b border-border-soft bg-surface">
-        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 py-14">
+        <div className="mx-auto max-w-400 px-6 md:px-12 lg:px-20 xl:px-32 py-14">
           <div className="mb-8 flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-evidence" />
             <h2 className="text-2xl font-black">Evidence signals</h2>
@@ -462,7 +462,7 @@ export function HomeClient() {
               const Icon = signal.icon
               return (
                 <motion.div key={signal.title} variants={cardReveal} className="group relative flex gap-4 overflow-hidden rounded-2xl border border-border-soft bg-background p-5 transition-all hover:border-evidence/50 hover:shadow-lg">
-                  <div className="absolute inset-0 bg-gradient-to-r from-evidence/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-linear-to-r from-evidence/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                   <div className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-evidence-bg text-evidence shadow-inner transition-transform group-hover:scale-110">
                     <Icon className="h-5 w-5" />
                   </div>
@@ -482,7 +482,7 @@ export function HomeClient() {
 
       {/* Automations */}
       <section className="border-b border-border-soft bg-background">
-        <div className="mx-auto grid max-w-[1600px] gap-8 px-6 py-14 md:px-12 lg:grid-cols-[0.95fr_1.05fr] lg:px-20 xl:px-32">
+        <div className="mx-auto grid max-w-400 gap-8 px-6 py-14 md:px-12 lg:grid-cols-[0.95fr_1.05fr] lg:px-20 xl:px-32">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -549,10 +549,10 @@ export function HomeClient() {
       {/* Dead Internet Theory Section */}
       <section className="relative overflow-hidden border-b border-border-soft bg-background py-24 text-foreground">
         <div className="absolute inset-0 opacity-[0.03] dark:opacity-10 text-foreground">
-          <div className="absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] bg-size-[20px_20px] mask-[radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         </div>
         
-        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32 relative z-10">
+        <div className="mx-auto max-w-400 px-6 md:px-12 lg:px-20 xl:px-32 relative z-10">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -624,7 +624,7 @@ export function HomeClient() {
 
       {/* Spot the Bot Training Section */}
       <section className="border-b border-border-soft bg-surface py-14">
-        <div className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32">
+        <div className="mx-auto max-w-400 px-6 md:px-12 lg:px-20 xl:px-32">
           <div className="mb-6 text-center sm:mb-8">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-safe/30 bg-safe/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-safe">
               <ZapIcon className="h-4 w-4" />
@@ -642,13 +642,13 @@ export function HomeClient() {
       {/* Final CTA */}
       <section className="relative overflow-hidden border-t border-border-soft bg-background dark:bg-[#080a0d] py-24">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[radial-gradient(var(--hireproof-safe)_1px,transparent_1px)] [background-size:32px_32px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(var(--hireproof-safe)_1px,transparent_1px)] bg-size-[32px_32px]" />
         </div>
         <img
           src="/media/job-application-meme.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-[46%] top-1/2 hidden w-[min(34rem,72vw)] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[1.75rem] border border-safe/30 object-cover opacity-[0.08] shadow-[0_0_54px_rgba(52,211,153,0.28)] dark:opacity-[0.14] sm:block lg:left-[56%] lg:w-[38rem]"
+          className="pointer-events-none absolute left-[46%] top-1/2 hidden w-[min(34rem,72vw)] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[1.75rem] border border-safe/30 object-cover opacity-[0.08] shadow-[0_0_54px_rgba(52,211,153,0.28)] dark:opacity-[0.14] sm:block lg:left-[56%] lg:w-152"
         />
         <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
           <motion.div

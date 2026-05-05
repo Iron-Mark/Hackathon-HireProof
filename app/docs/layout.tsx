@@ -185,8 +185,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-background">
       <SiteHeader />
       {/* Sub-header Navigation */}
-      <div className="sticky top-[72px] z-20 border-b border-border-soft bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-2 px-3 sm:px-6 md:px-12 lg:px-20 xl:px-32">
+      <div className="sticky top-18 z-20 border-b border-border-soft bg-background/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-400 items-center justify-between gap-2 px-3 sm:px-6 md:px-12 lg:px-20 xl:px-32">
           <div className="flex min-w-0 flex-1 snap-x snap-mandatory items-center gap-0 overflow-x-auto overscroll-x-contain">
             <Link
               href="/docs"
@@ -228,10 +228,10 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1600px]">
+      <div className="mx-auto flex max-w-400">
         {/* Desktop Sidebar */}
         <aside className="hidden w-64 shrink-0 border-r border-border-soft lg:block xl:w-72">
-          <div className="sticky top-[136px] max-h-[calc(100vh-136px)] overflow-y-auto">
+          <div className="sticky top-34 max-h-[calc(100vh-136px)] overflow-y-auto">
             {renderSidebarContent()}
           </div>
         </aside>
