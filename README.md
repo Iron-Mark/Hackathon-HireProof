@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/social/github-social-preview-1280x640.png" alt="HireProof social preview" width="900">
+</p>
+
 # HireProof
 
 Employment-fraud trust and safety for suspicious job posts, recruiter messages, screenshots, and apply links.
