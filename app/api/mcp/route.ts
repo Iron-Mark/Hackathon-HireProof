@@ -15,6 +15,10 @@ export const runtime = 'nodejs'
 
 const VALID_METHODS = new Set(['tools/call', 'tools/list'])
 
+function requireByokForLiveApi() {
+  return process.env.REQUIRE_BYOK_FOR_LIVE_API === 'true'
+}
+
 export async function POST(request: Request) {
   const apiKey = request.headers.get('x-api-key')
   const apiAuth = apiKey ? await authenticateApiKey(apiKey) : null
@@ -84,6 +88,11 @@ export async function POST(request: Request) {
       // Execute tool with timeout
       const timeoutMs = 15_000
       const ownerCredentials = apiAuth.isFallback ? {} : await getOwnerProviderCredentials(apiAuth.ownerId)
+      if (requireByokForLiveApi() && !ownerCredentials.serpapiKey) {
+        return new Response(JSON.stringify({
+          error: 'Platform MCP search credentials are disabled after hackathon submission. Add BYOK SerpApi credentials in the developer portal.',
+        }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+      }
       const result = await Promise.race([
         executeMCPTool(name, safeParams, { serpapiKey: ownerCredentials.serpapiKey }),
         new Promise((_, reject) => setTimeout(() => reject(new Error(`Tool ${name} timed out after ${timeoutMs}ms`)), timeoutMs)),

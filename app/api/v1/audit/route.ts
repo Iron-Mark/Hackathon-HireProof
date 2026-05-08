@@ -41,8 +41,13 @@ import {
 } from '@/lib/job-url-enrichment.mjs'
 import { enrichAuditRequestWithOcr } from '@/lib/ocr.mjs'
 import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
+import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
 
 export const runtime = 'nodejs'
+
+function requireByokForLiveApi() {
+  return process.env.REQUIRE_BYOK_FOR_LIVE_API === 'true'
+}
 
 class LiveAuditCredentialsError extends Error {
   missing: string[]
@@ -341,6 +346,33 @@ export async function POST(request: Request) {
   const serpApiOperationalStatus = getSerpApiOperationalStatus()
   const liveSearchRequested = validated.mode !== 'demo' && serpapiAvailable
   const liveSearchAllowed = liveSearchRequested && serpApiOperationalStatus.status !== 'circuit-open'
+
+  if (requireByokForLiveApi() && validated.mode !== 'demo' && !ownerHasByok) {
+    await recordUsage({ ownerId: apiAuth.ownerId, apiKeyId: apiAuth.apiKeyId, endpoint: '/api/v1/audit', status: 503 })
+    return new Response(JSON.stringify({
+      error: 'Platform live audit credentials are disabled after hackathon submission. Use mode=demo or add BYOK model/search credentials in the developer portal.',
+      missing: ['owner BYOK MODEL_PROVIDER_KEY or SERPAPI_API_KEY'],
+      recovery: 'Use mode=demo for fixtures or add live credentials through the developer portal BYOK settings.',
+    }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+  }
+
+  if (validated.mode !== 'demo' && modelAvailable && !ownerCredentials.modelProviderKey) {
+    const modelCostGuard = await checkProviderCostGuard('model')
+    if (!modelCostGuard.allowed) {
+      await recordUsage({ ownerId: apiAuth.ownerId, apiKeyId: apiAuth.apiKeyId, endpoint: '/api/v1/audit', status: 429 })
+      return new Response(JSON.stringify({
+        error: modelCostGuard.status.message || 'Daily model platform provider limit reached.',
+        modelProvider: modelCostGuard.status,
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(modelCostGuard.retryAfterSec || 60),
+        },
+      })
+    }
+  }
+
   const guardrail = await acquireLiveAuditGuardrail({ identifier: apiKey, channel: 'api', live: liveSearchAllowed })
   if (!guardrail.allowed) {
     return new Response(JSON.stringify({
@@ -371,6 +403,14 @@ export async function POST(request: Request) {
 
           if (hasCompany && liveSearchAllowed && modelAvailable) {
             try {
+              if (!ownerCredentials.modelProviderKey) {
+                const agentModelGuard = await checkProviderCostGuard('model')
+                if (!agentModelGuard.allowed) {
+                  console.warn('[A2A Audit API] Agent model cost guard active, continuing with evidence broker fallback.')
+                  throw new Error(agentModelGuard.status.message || 'Daily model platform provider limit reached.')
+                }
+              }
+
               const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000'
               
               const result = await generateText({

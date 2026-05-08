@@ -5,6 +5,7 @@ import {
   searchComparableJobs,
   searchLocalPresence,
 } from '@/lib/serpapi'
+import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
 
 // MCP Tool definitions
 export const MCP_TOOLS = {
@@ -74,6 +75,23 @@ export async function executeMCPTool(
   risk_indicators: string[]
 }> {
   try {
+    if (!options.serpapiKey) {
+      const costGuard = await checkProviderCostGuard('serpapi')
+      if (!costGuard.allowed) {
+        return {
+          evidence: [{
+            source: 'HireProof Operations',
+            type: 'Search Cost Guard',
+            sourceType: 'enrichment',
+            trustLevel: 'low',
+            snippet: costGuard.status.message || 'Daily SerpApi platform provider limit reached.',
+          }],
+          summary: costGuard.status.message || 'Daily SerpApi platform provider limit reached.',
+          risk_indicators: ['provider_cost_guard_active'],
+        }
+      }
+    }
+
     switch (toolName) {
       case 'search_company': {
         const companyName = String(params.company_name || '')

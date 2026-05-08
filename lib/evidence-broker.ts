@@ -5,6 +5,7 @@ import {
   hasSerpApiKey,
   runSmartSerpApiInvestigation,
 } from '@/lib/serpapi'
+import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
 
 type EvidenceProviderName =
   | 'serpapi'
@@ -408,6 +409,14 @@ async function defaultSafeBrowsingProvider(urls: string[], context: ProviderCont
   if (!key) return { status: 'not-live', message: 'Google Safe Browsing key is not configured.' }
   const uniqueUrls = Array.from(new Set(urls)).slice(0, 10)
   if (uniqueUrls.length === 0) return { status: 'not-live', message: 'No full URLs available for Safe Browsing.' }
+  const costGuard = await checkProviderCostGuard('safeBrowsing')
+  if (!costGuard.allowed) {
+    return {
+      status: 'throttled',
+      retryAfterSec: costGuard.retryAfterSec,
+      message: costGuard.status.message || 'Google Safe Browsing daily platform limit reached.',
+    }
+  }
 
   const { response, body } = await fetchJson(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${encodeURIComponent(key)}`, {
     method: 'POST',
@@ -776,7 +785,16 @@ export async function runEvidenceBroker(
 
   const liveSearchAllowed = options.liveSearchAllowed !== false
   const serpapiStatus = getSerpApiOperationalStatus()
-  const serpapiAvailable = liveSearchAllowed && hasSerpApiKey(options.serpapiKey) && serpapiStatus.status !== 'circuit-open'
+  let serpapiAvailable = liveSearchAllowed && hasSerpApiKey(options.serpapiKey) && serpapiStatus.status !== 'circuit-open'
+  let serpapiCostStatus: OperationalStatus | undefined
+
+  if (serpapiAvailable && !options.serpapiKey) {
+    const costGuard = await checkProviderCostGuard('serpapi')
+    if (!costGuard.allowed) {
+      serpapiAvailable = false
+      serpapiCostStatus = costGuard.status
+    }
+  }
 
   if (serpapiAvailable) {
     const serpEvidence = await runSmartSerpApiInvestigation(input.claims, {
@@ -790,12 +808,18 @@ export async function runEvidenceBroker(
   } else {
     statuses.serpapi = operationStatus(
       'serpapi',
-      serpapiStatus.status === 'circuit-open' ? 'circuit-open' : 'not-live',
-      serpapiStatus.status === 'circuit-open'
+      serpapiCostStatus?.status === 'throttled'
+        ? 'throttled'
+        : serpapiStatus.status === 'circuit-open'
+          ? 'circuit-open'
+          : 'not-live',
+      serpapiCostStatus?.message
+        ? serpapiCostStatus.message
+        : serpapiStatus.status === 'circuit-open'
         ? serpapiStatus.message || 'SerpApi circuit breaker is open.'
         : 'SerpApi key is not configured or live search is disabled; domain evidence funnel continued.',
       now,
-      serpapiStatus.retryAfterSec ? { retryAfterSec: serpapiStatus.retryAfterSec } : {},
+      (serpapiCostStatus?.retryAfterSec || serpapiStatus.retryAfterSec) ? { retryAfterSec: serpapiCostStatus?.retryAfterSec || serpapiStatus.retryAfterSec } : {},
     )
   }
 

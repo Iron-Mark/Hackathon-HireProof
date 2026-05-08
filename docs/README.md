@@ -28,6 +28,13 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 - `hireproof-action-plan.md`: Active credibility-first execution roadmap distilled from Research 03.
 - `platform-proof-status.md`: Current ChatSDK, WDK, AI Gateway, and Vercel environment proof state.
 - `remaining-work.md`: Current punch list for runtime wiring, product gaps, and hardening work.
+- `after-hackathon-cost-safety.md`: Cost-safety and provider-cap runbook for keeping production live after judging.
+- `portfolio-case-study.md`: Portfolio-ready solo global hackathon case study for Mark Siazon.
+- `promo-post-drafts.md`: Local post-submission promo copy for LinkedIn, X/Twitter, GitHub, community, and portfolio use.
+- `post-winners-checklist.md`: Winner/finalist/not-selected follow-up plan for public updates after results.
+- `portfolio-product-design-case-study.md`: Product design case study focused on audience, trust model, product decisions, tradeoffs, and roadmap.
+- `portfolio-ui-ux-case-study.md`: UI/UX case study focused on flow, information architecture, responsive behavior, and evidence readability.
+- `portfolio-dev-case-study.md`: Developer case study focused on architecture, agent surfaces, packages, verification, and production boundaries.
 - `submission-package.md`: Original submission copy and demo checklists.
 - `demo/proof-archive.md`: Judge-facing proof archive for production readiness, Slack proof, and WDK accepted-run evidence.
 

@@ -385,6 +385,8 @@ scripts/
 - [`docs/assets-index.md`](docs/assets-index.md): logos, social previews, platform graphics, Chrome Web Store assets.
 - [`docs/chrome-web-store-listing.md`](docs/chrome-web-store-listing.md): extension listing and reviewer notes.
 - [`docs/automation-integrations.md`](docs/automation-integrations.md): CLI, SDK, n8n, Make, and LangChain integration status.
+- [`docs/after-hackathon-cost-safety.md`](docs/after-hackathon-cost-safety.md): wallet-safety runbook for keeping production live after judging.
+- [`docs/portfolio-case-study.md`](docs/portfolio-case-study.md): portfolio-ready solo global hackathon case study by Mark Siazon.
 - [`docs/evidence-screenshot-checklist.md`](docs/evidence-screenshot-checklist.md): proof capture checklist.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md): deployment notes.
 

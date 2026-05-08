@@ -36,6 +36,21 @@ type Usage = {
     networkCalls: number
     creditsSaved: number
   }
+  providerCostGuards?: {
+    limits: {
+      model: number
+      serpapi: number
+      googleVision: number
+      safeBrowsing: number
+    }
+    flags: {
+      publicLiveAuditEnabled: boolean
+      publicGoogleVisionOcrEnabled: boolean
+      publicTrendsExternalSignalsEnabled: boolean
+      requireByokForLiveApi: boolean
+    }
+    resetAt: string
+  }
 }
 type ProviderCredential = { provider: 'openai' | 'serpapi'; lastFour: string; createdAt: string; updatedAt: string; verifiedAt: string | null }
 type VerifiedDomain = {
@@ -348,12 +363,13 @@ export function DeveloperClient() {
         </div>
 
         {/* Header Stats */}
-        <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {[
             { label: 'Infrastructure Status', value: 'Operational', icon: Activity, color: 'text-safe' },
             { label: 'API Requests (30d)', value: usage?.totalRequests ?? '0', icon: Database, color: 'text-evidence' },
             { label: 'Success Rate', value: usage?.totalRequests ? `${((usage.successfulRequests / usage.totalRequests) * 100).toFixed(1)}%` : '100%', icon: Zap, color: 'text-safe' },
             { label: 'SerpApi Saved', value: usage?.serpapiCache?.creditsSaved ?? '0', icon: RefreshCcw, color: 'text-evidence' },
+            { label: 'Provider Guard', value: usage?.providerCostGuards?.flags.requireByokForLiveApi ? 'BYOK' : 'Capped', icon: ShieldCheck, color: 'text-safe' },
             { label: 'Active Keys', value: keys.length, icon: Key, color: 'text-foreground' },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl border border-border-soft bg-surface p-5 shadow-sm hover:border-evidence/50 transition-colors">

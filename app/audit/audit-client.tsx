@@ -23,6 +23,10 @@ type StreamEvent =
   | { type: 'error'; message: string }
 
 type DemoVerdict = 'safe' | 'caution' | 'high-risk'
+type CostPosture = {
+  publicLiveEvidence?: boolean
+  byokRequiredForApiLive?: boolean
+}
 
 const DEMO_VERDICTS: DemoVerdict[] = ['high-risk', 'caution', 'safe']
 
@@ -188,8 +192,22 @@ function AuditContent() {
   const [streamLogs, setStreamLogs] = useState<string[]>([])
   const [streamEvents, setStreamEvents] = useState<AuditProgressEvent[]>([])
   const [liveMode, setLiveMode] = useState(true)
+  const [costPosture, setCostPosture] = useState<CostPosture | null>(null)
   const loadedDemoRef = useRef<string | null>(null)
   const activeAuditRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/health')
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => {
+        if (!cancelled && json?.costPosture) setCostPosture(json.costPosture)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const demo = searchParams.get('demo')
@@ -297,6 +315,15 @@ function AuditContent() {
                 Our agents will cross-reference signals in real-time.
               </p>
             </div>
+
+            {costPosture?.publicLiveEvidence === false && (
+              <div className="mb-4 flex max-w-3xl items-start gap-3 rounded-2xl border border-evidence/25 bg-evidence/10 px-4 py-3 text-left text-sm font-semibold text-foreground">
+                <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-evidence" />
+                <p className="leading-6">
+                  <span className="font-black">Live evidence is capped.</span> Public audits stay available with deterministic checks after the hackathon; hosted live provider runs are BYOK or API-key gated to protect production costs.
+                </p>
+              </div>
+            )}
 
             <div className="relative mb-4 grid w-full max-w-[17.25rem] grid-cols-2 overflow-visible rounded-xl border border-safe/25 bg-safe/10 p-1 text-xs font-black shadow-sm shadow-safe/10 lg:mb-5">
               <motion.div
