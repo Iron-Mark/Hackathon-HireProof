@@ -12,7 +12,7 @@ export const hireProofAuditTool = new DynamicStructuredTool({
   description: 'Audit a job post or recruiter message with HireProof before an agent applies or sends user data.',
   schema: HireProofInput,
   async func(input) {
-    const baseUrl = process.env.HIREPROOF_URL || 'https://hireproof-sigma.vercel.app'
+    const baseUrl = process.env.HIREPROOF_URL || 'https://hireproof.tech'
     const apiKey = process.env.HIREPROOF_API_KEY || 'hireproof_agent_demo_key'
 
     const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/v1/audit`, {

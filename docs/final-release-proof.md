@@ -15,11 +15,11 @@ Last verified: 2026-05-05, Asia/Manila
 
 The following public URLs returned HTTP 200:
 
-- https://hireproof-sigma.vercel.app
-- https://hireproof-sigma.vercel.app/audit
-- https://hireproof-sigma.vercel.app/docs
-- https://hireproof-sigma.vercel.app/api/health
-- https://hireproof-sigma.vercel.app/api/integrations/proof
+- https://hireproof.tech
+- https://hireproof.tech/audit
+- https://hireproof.tech/docs
+- https://hireproof.tech/api/health
+- https://hireproof.tech/api/integrations/proof
 - https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/releases/tag/v1.0
 
 ## Runtime Readiness

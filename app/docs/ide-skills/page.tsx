@@ -65,14 +65,14 @@ When the user asks you to verify a job listing, check if a company is legitimate
 
 Make a POST request to the HireProof API.
 
-Endpoint: \`https://hireproof-sigma.vercel.app/api/v1/audit\`
+Endpoint: \`https://hireproof.tech/api/v1/audit\`
 Headers:
   - \`Content-Type: application/json\`
 Body:
   - \`text\`: The job description or recruiter message string.
 
 \`\`\`bash
-curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \\
+curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
   -d '{"text": "Remote frontend intern. PHP 80,000/week."}'
 \`\`\`

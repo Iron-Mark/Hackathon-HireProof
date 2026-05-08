@@ -37,7 +37,7 @@ export default function LangchainPage() {
 
 const hireProofTool = createHireProofAuditTool({
   apiKey: process.env.HIREPROOF_API_KEY,
-  baseUrl: 'https://hireproof-sigma.vercel.app',
+  baseUrl: 'https://hireproof.tech',
   safeRiskThreshold: 40,
 })
 

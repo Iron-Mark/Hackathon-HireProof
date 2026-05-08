@@ -26,7 +26,7 @@ const platforms = [
   { title: 'AI CLI Skill', desc: 'Drop SKILL.md into .agents/skills/hireproof/ and any CLI agent can use it.' },
 ]
 
-const HERO_CURL = `curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \\
+const HERO_CURL = `curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{

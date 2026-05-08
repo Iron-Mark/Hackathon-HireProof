@@ -10,13 +10,13 @@ HireProof helps a job seeker decide whether an opportunity is worth trusting bef
 
 Built as a solo global hackathon project by [Mark Siazon](https://www.marksiazon.dev/) in just over one week for the [Vercel Zero to Agent Hackathon](https://community.vercel.com/hackathons/zero-to-agent).
 
-[![Production Demo](https://img.shields.io/badge/Production-hireproof--sigma.vercel.app-111827?style=for-the-badge)](https://hireproof-sigma.vercel.app)
-[![Docs](https://img.shields.io/badge/Docs-Live-2563eb?style=for-the-badge)](https://hireproof-sigma.vercel.app/docs)
+[![Production Demo](https://img.shields.io/badge/Production-hireproof--sigma.vercel.app-111827?style=for-the-badge)](https://hireproof.tech)
+[![Docs](https://img.shields.io/badge/Docs-Live-2563eb?style=for-the-badge)](https://hireproof.tech/docs)
 [![Built Solo](https://img.shields.io/badge/Built%20Solo-Mark%20Siazon-0f766e?style=for-the-badge)](https://www.marksiazon.dev/)
 [![GitHub](https://img.shields.io/badge/GitHub-Iron--Mark-24292f?style=for-the-badge&logo=github)](https://github.com/Iron-Mark)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Mark%20Siazon-0a66c2?style=for-the-badge&logo=linkedin)](https://ph.linkedin.com/in/mark-siazon)
 
-[![Open Live App](https://img.shields.io/badge/Open-Live%20App-16a34a?style=for-the-badge)](https://hireproof-sigma.vercel.app/audit)
+[![Open Live App](https://img.shields.io/badge/Open-Live%20App-16a34a?style=for-the-badge)](https://hireproof.tech/audit)
 [![Download Extension](https://img.shields.io/badge/Download-Chrome%20Extension-f97316?style=for-the-badge)](public/downloads/hireproof-extension.zip)
 [![Download Integrations](https://img.shields.io/badge/Download-Integration%20Pack-7c3aed?style=for-the-badge)](public/downloads/hireproof-native-integrations.zip)
 [![Install CLI](https://img.shields.io/badge/Install-CLI-111827?style=for-the-badge)](https://www.npmjs.com/package/@hireproof/cli)
@@ -43,7 +43,7 @@ HireProof turns that manual investigation into one evidence-backed workflow. It 
 
 | Action | Link |
 | --- | --- |
-| Open the live audit | [Run HireProof](https://hireproof-sigma.vercel.app/audit) |
+| Open the live audit | [Run HireProof](https://hireproof.tech/audit) |
 | Install the CLI | [`npx @hireproof/cli`](https://www.npmjs.com/package/@hireproof/cli) |
 | Download the Chrome extension ZIP | [`hireproof-extension.zip`](public/downloads/hireproof-extension.zip) |
 | Download native integration source pack | [`hireproof-native-integrations.zip`](public/downloads/hireproof-native-integrations.zip) |
@@ -56,12 +56,12 @@ HireProof turns that manual investigation into one evidence-backed workflow. It 
 
 | Destination | Link |
 | --- | --- |
-| Production app | <https://hireproof-sigma.vercel.app> |
-| Main audit flow | <https://hireproof-sigma.vercel.app/audit> |
-| Public docs | <https://hireproof-sigma.vercel.app/docs> |
-| Track proof | <https://hireproof-sigma.vercel.app/docs/triple-track-coverage> |
-| Health check | <https://hireproof-sigma.vercel.app/api/health> |
-| Integration proof | <https://hireproof-sigma.vercel.app/api/integrations/proof> |
+| Production app | <https://hireproof.tech> |
+| Main audit flow | <https://hireproof.tech/audit> |
+| Public docs | <https://hireproof.tech/docs> |
+| Track proof | <https://hireproof.tech/docs/triple-track-coverage> |
+| Health check | <https://hireproof.tech/api/health> |
+| Integration proof | <https://hireproof.tech/api/integrations/proof> |
 | Discord install | <https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0> |
 | Creator portfolio | <https://www.marksiazon.dev/> |
 
@@ -95,7 +95,7 @@ The score is explainable by design. HireProof shows the evidence that drove the 
 
 ## Demo In 60 Seconds
 
-1. Open <https://hireproof-sigma.vercel.app/audit>.
+1. Open <https://hireproof.tech/audit>.
 2. Paste this suspicious sample:
 
 ```text
@@ -109,7 +109,7 @@ Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.
 For API proof:
 
 ```bash
-curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
+curl -X POST https://hireproof.tech/api/v1/audit \
   -H "Content-Type: application/json" \
   -H "x-api-key: hireproof_agent_demo_key" \
   -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'
@@ -144,7 +144,7 @@ HireProof uses a transparent evidence-weighted safety policy.
 
 | Surface | Safe claim | Boundary |
 | --- | --- | --- |
-| Production web app | Stable public alias is available at `https://hireproof-sigma.vercel.app`. | Recheck live URL before final submission or public launch. |
+| Production web app | Stable public alias is available at `https://hireproof.tech`. | Recheck live URL before final submission or public launch. |
 | API smoke | Demo API path returns a structured High-Risk report with the public demo key. | Live evidence depends on configured model/search credentials. |
 | Slack | Screenshot proof exists for a real HireProof reply. | Endpoint-level logs should be recaptured if judges require fresh log proof. |
 | Telegram | Live delivery proof exists with screenshot/log evidence. | The final report-link screenshot should be recaptured after permalink fallback changes. |
@@ -314,7 +314,7 @@ pnpm integrations:package
 Production smoke checks:
 
 ```powershell
-$base='https://hireproof-sigma.vercel.app'
+$base='https://hireproof.tech'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
 Invoke-RestMethod -Uri "$base/api/v1/audit" `

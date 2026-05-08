@@ -45,7 +45,7 @@ export default function Page() {
           Send a request without <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">webhook_url</code>.
           The server holds the connection open while it investigates (typically 5–15s), then returns the full <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">AuditReport</code> as JSON.
         </p>
-        <CodeBlock title="Request" code={`curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \\
+        <CodeBlock title="Request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{"text": "Remote frontend intern. PHP 80,000/week. Message us on Telegram."}'`} />
@@ -90,7 +90,7 @@ export default function Page() {
         <p className="mb-4 text-sm font-semibold text-muted leading-6">
           The same audit contract accepts raw text, a public job URL, an uploaded screenshot as a data URL, or any combination of those fields. When a screenshot is included, HireProof extracts readable text through the OCR path and marks the report as not publicly listed by default.
         </p>
-        <CodeBlock title="Screenshot + URL request" code={`curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \\
+        <CodeBlock title="Screenshot + URL request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{
@@ -132,7 +132,7 @@ export default function Page() {
           Include a <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">webhook_url</code> and the server immediately returns <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">202 Accepted</code>.
           The investigation runs in the background. Once complete, the full <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">AuditReport</code> is POSTed to your webhook URL.
         </p>
-        <CodeBlock title="Async Request" code={`curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \\
+        <CodeBlock title="Async Request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{

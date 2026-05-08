@@ -5,13 +5,13 @@
   "version": "1.0.0",
   "theme": "#16a34a",
   "language": "en",
-  "baseUrl": "https://hireproof-sigma.vercel.app",
+  "baseUrl": "https://hireproof.tech",
   "connection": "hireproof-api",
   "modules": [
     "audit-job-post",
     "audit-job-post-async",
     "get-api-health"
   ],
-  "documentationUrl": "https://hireproof-sigma.vercel.app/docs/automations",
+  "documentationUrl": "https://hireproof.tech/docs/automations",
   "supportUrl": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues"
 }

@@ -71,15 +71,15 @@ The controlled command fails if production health, readiness shape, webhook meta
 Use the stable production alias:
 
 ```text
-https://hireproof-sigma.vercel.app
+https://hireproof.tech
 ```
 
 Expected webhook URLs:
 
 ```text
-https://hireproof-sigma.vercel.app/api/webhooks/discord
-https://hireproof-sigma.vercel.app/api/webhooks/telegram
-https://hireproof-sigma.vercel.app/api/webhooks/zernio
+https://hireproof.tech/api/webhooks/discord
+https://hireproof.tech/api/webhooks/telegram
+https://hireproof.tech/api/webhooks/zernio
 ```
 
 ### 2. Confirm Shared State
@@ -95,7 +95,7 @@ REDIS_URL
 Check production readiness after env changes:
 
 ```powershell
-Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "https://hireproof.tech/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
 Expected before live proof:
@@ -164,7 +164,7 @@ DISCORD_BOT_TOKEN
 DISCORD_PUBLIC_KEY
 DISCORD_APPLICATION_ID
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 ### Steps
@@ -174,13 +174,13 @@ APP_BASE_URL=https://hireproof-sigma.vercel.app
 3. Confirm the interaction endpoint is registered:
 
 ```text
-https://hireproof-sigma.vercel.app/api/webhooks/discord
+https://hireproof.tech/api/webhooks/discord
 ```
 
 4. Check readiness:
 
 ```powershell
-Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "https://hireproof.tech/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
 5. Send a real Discord event to HireProof, preferably from a test server job channel.
@@ -212,7 +212,7 @@ TELEGRAM_BOT_TOKEN
 TELEGRAM_WEBHOOK_SECRET_TOKEN
 TELEGRAM_BOT_USERNAME
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 ### Steps
@@ -225,14 +225,14 @@ APP_BASE_URL=https://hireproof-sigma.vercel.app
 ```powershell
 $token = "<TELEGRAM_BOT_TOKEN>"
 $secret = "<TELEGRAM_WEBHOOK_SECRET_TOKEN>"
-$url = "https://hireproof-sigma.vercel.app/api/webhooks/telegram"
+$url = "https://hireproof.tech/api/webhooks/telegram"
 Invoke-WebRequest -Method Post -Uri "https://api.telegram.org/bot$token/setWebhook" -Body @{ url = $url; secret_token = $secret }
 ```
 
 5. Check readiness:
 
 ```powershell
-Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "https://hireproof.tech/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
 6. Send the bot a real Telegram message:
@@ -264,7 +264,7 @@ ZERNIO_API_KEY
 ZERNIO_WEBHOOK_SECRET
 ZERNIO_BOT_NAME=HireProof
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 ### Steps
@@ -276,14 +276,14 @@ APP_BASE_URL=https://hireproof-sigma.vercel.app
 5. Register the production webhook:
 
 ```text
-https://hireproof-sigma.vercel.app/api/webhooks/zernio
+https://hireproof.tech/api/webhooks/zernio
 ```
 
 6. Deploy or redeploy after setting env vars.
 7. Check readiness:
 
 ```powershell
-Invoke-WebRequest -Uri "https://hireproof-sigma.vercel.app/api/integrations/proof" | Select-Object -ExpandProperty Content
+Invoke-WebRequest -Uri "https://hireproof.tech/api/integrations/proof" | Select-Object -ExpandProperty Content
 ```
 
 8. Send a real WhatsApp message through the connected Zernio inbox:

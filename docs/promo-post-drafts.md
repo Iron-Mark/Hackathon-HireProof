@@ -4,7 +4,7 @@ Local drafts for post-submission promotion. Keep links current before posting.
 
 ## Primary Links
 
-[Live Demo](https://hireproof-sigma.vercel.app/audit) |
+[Live Demo](https://hireproof.tech/audit) |
 [Repository](https://github.com/Iron-Mark/hackathon-v0-zero_to_agent) |
 [v1.0 Release](https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/releases/tag/v1.0) |
 [Packages](https://github.com/Iron-Mark?tab=packages&repo_name=hackathon-v0-zero_to_agent) |
@@ -32,7 +32,7 @@ What I wanted to prove:
 
 This was built under solo hackathon pressure, but I treated it like a real production product: live demo, release assets, package workflow, cost-safety controls, and documentation that still makes sense after the competition.
 
-Live demo: https://hireproof-sigma.vercel.app/audit
+Live demo: https://hireproof.tech/audit
 
 Repo: https://github.com/Iron-Mark/hackathon-v0-zero_to_agent
 
@@ -46,7 +46,7 @@ From a portfolio angle, this project shows product thinking, interface design, f
 
 Built by Mark Siazon in about one week.
 
-Live demo: https://hireproof-sigma.vercel.app
+Live demo: https://hireproof.tech
 
 ## X / Twitter - Launch
 
@@ -54,7 +54,7 @@ I built HireProof solo for a global hackathon in about one week.
 
 Paste a suspicious job post, recruiter message, screenshot, or apply link. HireProof checks evidence and returns Safe, Caution, or High-Risk with proof.
 
-Live demo: https://hireproof-sigma.vercel.app/audit
+Live demo: https://hireproof.tech/audit
 
 ## X / Twitter - Builder Thread
 
@@ -76,7 +76,7 @@ Web, API, MCP tools, ChatSDK routes, Vercel Workflow, CLI, SDK, n8n, LangChain, 
 
 5/ Built by Mark Siazon in about one week as a solo global hackathon project.
 
-Live demo: https://hireproof-sigma.vercel.app/audit
+Live demo: https://hireproof.tech/audit
 
 ## Discord / Community
 
@@ -86,7 +86,7 @@ It checks suspicious job posts, recruiter messages, screenshots, and apply links
 
 The goal is simple: help job seekers avoid scams before they send money, IDs, resumes, or personal data.
 
-Live demo: https://hireproof-sigma.vercel.app/audit
+Live demo: https://hireproof.tech/audit
 
 ## GitHub Release Follow-Up
 
@@ -106,7 +106,7 @@ Proof-backed job scam verification agent for suspicious job posts, recruiter mes
 
 Built solo by Mark Siazon in about one week for a global hackathon. The project combines product design, UI/UX, full-stack engineering, AI agent tooling, package distribution, and production launch readiness.
 
-[Open Live Demo](https://hireproof-sigma.vercel.app/audit) |
+[Open Live Demo](https://hireproof.tech/audit) |
 [View Repository](https://github.com/Iron-Mark/hackathon-v0-zero_to_agent)
 
 ## Visual Pairings

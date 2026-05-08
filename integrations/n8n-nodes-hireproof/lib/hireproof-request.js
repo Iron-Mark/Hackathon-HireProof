@@ -1,4 +1,4 @@
-const DEFAULT_BASE_URL = 'https://hireproof-sigma.vercel.app'
+const DEFAULT_BASE_URL = 'https://hireproof.tech'
 
 function normalizeBaseUrl(baseUrl) {
   const value = String(baseUrl || DEFAULT_BASE_URL).trim()

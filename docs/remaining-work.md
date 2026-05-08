@@ -4,7 +4,7 @@ Last checked: 2026-05-04
 
 HireProof is core production-ready on the stable production URL:
 
-- Production URL: `https://hireproof-sigma.vercel.app`
+- Production URL: `https://hireproof.tech`
 - Production deployments are verified through the stable alias; deployment-specific preview URLs are intentionally not treated as durable submission links.
 - GitHub `main` is the source of truth for the latest submission commit.
 
@@ -71,7 +71,7 @@ pnpm integrations:build
 pnpm integrations:test
 pnpm integrations:package
 
-$base='https://hireproof-sigma.vercel.app'
+$base='https://hireproof.tech'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
 Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)

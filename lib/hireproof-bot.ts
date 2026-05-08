@@ -16,7 +16,7 @@ type WebhookPlatform = 'slack' | 'discord' | 'telegram' | 'zernio'
 type HireProofBot = Chat<Record<string, Adapter>>
 
 const CHAT_TEXT_LIMIT = 10_000
-const DEFAULT_PRODUCTION_BASE_URL = 'https://hireproof-sigma.vercel.app'
+const DEFAULT_PRODUCTION_BASE_URL = 'https://hireproof.tech'
 const CHAT_URL_PATTERN = /https?:\/\/[^\s<>"')]+/i
 const DISCORD_INTERACTION_PING_TYPE = 1
 const DISCORD_INTERACTION_APPLICATION_COMMAND_TYPE = 2

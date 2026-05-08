@@ -26,7 +26,7 @@ const SKILLS: Skill[] = [
       { name: 'company_name', type: 'string', required: true, desc: 'The company name to investigate' },
       { name: 'role', type: 'string', required: false, desc: 'Role title for context-aware search' },
     ],
-    example: `curl -X POST https://hireproof-sigma.vercel.app/api/mcp \\
+    example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{"method":"tools/call","name":"search_company","arguments":{"company_name":"Accenture","role":"Frontend Developer"}}'`,
@@ -42,7 +42,7 @@ const SKILLS: Skill[] = [
       { name: 'company_name', type: 'string', required: true, desc: 'The company name to search news for' },
       { name: 'keywords', type: 'string[]', required: false, desc: 'Additional keywords e.g. ["scam", "fraud"]' },
     ],
-    example: `curl -X POST https://hireproof-sigma.vercel.app/api/mcp \\
+    example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{"method":"tools/call","name":"news_check","arguments":{"company_name":"TechStart Solutions","keywords":["scam","fraud"]}}'`,
@@ -59,7 +59,7 @@ const SKILLS: Skill[] = [
       { name: 'location', type: 'string', required: false, desc: 'Geographic location for market context' },
       { name: 'level', type: 'string', required: false, desc: 'Experience level e.g. "Entry Level", "Senior"' },
     ],
-    example: `curl -X POST https://hireproof-sigma.vercel.app/api/mcp \\
+    example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{"method":"tools/call","name":"jobs_compare","arguments":{"role":"Frontend Intern","location":"Philippines","level":"Entry Level"}}'`,
@@ -75,7 +75,7 @@ const SKILLS: Skill[] = [
       { name: 'company_name', type: 'string', required: true, desc: 'The company name to look up locally' },
       { name: 'location', type: 'string', required: false, desc: 'City or region to search within' },
     ],
-    example: `curl -X POST https://hireproof-sigma.vercel.app/api/mcp \\
+    example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: hireproof_agent_demo_key" \\
   -d '{"method":"tools/call","name":"local_presence","arguments":{"company_name":"Accenture","location":"Philippines"}}'`,
@@ -87,7 +87,7 @@ const SKILLS: Skill[] = [
 const MCP_CONFIG = `{
   "mcpServers": {
     "hireproof": {
-      "url": "https://hireproof-sigma.vercel.app/api/mcp",
+      "url": "https://hireproof.tech/api/mcp",
       "headers": {
         "x-api-key": "hireproof_agent_demo_key"
       }
@@ -99,7 +99,7 @@ const SDK_EXAMPLE = `import HireProof from 'hireproof-sdk'
 
 const client = new HireProof({
   apiKey: 'hireproof_agent_demo_key',
-  baseUrl: 'https://hireproof-sigma.vercel.app',
+  baseUrl: 'https://hireproof.tech',
 })
 
 // Call any individual skill

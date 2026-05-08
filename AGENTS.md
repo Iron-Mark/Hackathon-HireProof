@@ -21,7 +21,7 @@ Use targeted checks when the change is narrow, but do not claim broad E2E readin
 
 ## Deployment and Live Verification
 
-- Canonical public URL: `https://hireproof-sigma.vercel.app`.
+- Canonical public URL: `https://hireproof.tech`.
 - The public alias can be healthy while raw Vercel deployment URLs or `git-main` URLs return `401 Unauthorized` because of deployment protection.
 - When dashboard preview links disagree with the public alias, use `npx vercel inspect <deployment-url>` and direct HTTP checks before deciding whether production is actually broken.
 - When the user asks to check env or Vercel, verify live environment/deployment behavior directly instead of inferring from code.

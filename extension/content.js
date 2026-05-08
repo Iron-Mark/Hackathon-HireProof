@@ -37,7 +37,7 @@ function openInvestigation(text) {
   const loader = d.querySelector('.hireproof-loading-state');
   
   // Update: use the current Vercel URL
-  const baseUrl = 'https://hireproof-sigma.vercel.app/audit';
+  const baseUrl = 'https://hireproof.tech/audit';
   const url = `${baseUrl}?text=${encodeURIComponent(text)}&embed=true`;
   
   loader.style.display = 'flex';

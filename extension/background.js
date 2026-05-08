@@ -14,7 +14,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     
     // Open the HireProof web app in a new tab with the selected text
     // This provides the best UX as it takes the user directly to the full investigation
-    const url = `https://hireproof-sigma.vercel.app/audit?text=${encodeURIComponent(text)}`;
+    const url = `https://hireproof.tech/audit?text=${encodeURIComponent(text)}`;
     
     chrome.tabs.create({ url });
   }

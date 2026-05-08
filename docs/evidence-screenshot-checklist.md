@@ -2,7 +2,7 @@
 
 Last checked: 2026-05-04
 
-Use this checklist when collecting proof for the hackathon submission, marketplace review, or public updates. Capture the stable production URL when possible: `https://hireproof-sigma.vercel.app`.
+Use this checklist when collecting proof for the hackathon submission, marketplace review, or public updates. Capture the stable production URL when possible: `https://hireproof.tech`.
 
 ## Core Product Proof
 

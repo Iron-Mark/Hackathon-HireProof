@@ -2,7 +2,7 @@
   "name": "hireproof-api",
   "label": "HireProof API",
   "type": "apiKey",
-  "baseUrl": "https://hireproof-sigma.vercel.app",
+  "baseUrl": "https://hireproof.tech",
   "parameters": [
     {
       "name": "apiKey",
@@ -16,7 +16,7 @@
       "label": "Base URL",
       "type": "url",
       "required": true,
-      "default": "https://hireproof-sigma.vercel.app"
+      "default": "https://hireproof.tech"
     }
   ],
   "headers": {

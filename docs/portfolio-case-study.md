@@ -4,7 +4,7 @@
 
 HireProof is a proof-backed job scam verification agent built by Mark Siazon during a solo global hackathon sprint. The project was developed in roughly one week as a production-facing Vercel app, not just a local prototype.
 
-Live app: https://hireproof-sigma.vercel.app
+Live app: https://hireproof.tech
 
 v1.0 release: https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/releases/tag/v1.0
 

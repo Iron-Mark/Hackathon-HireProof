@@ -15,7 +15,7 @@ Make Custom App review and any n8n directory/community verification remain separ
 
 ## Prerequisites
 
-- Production URL verified: `https://hireproof-sigma.vercel.app`
+- Production URL verified: `https://hireproof.tech`
 - Demo API key verified: `hireproof_agent_demo_key`
 - Source bundle generated: `public/downloads/hireproof-native-integrations.zip`
 - Validation passed:

@@ -310,7 +310,7 @@ npx @hireproof/cli --help`}
                 </li>
                 <li className="flex flex-wrap items-center gap-3">
                   <span className="w-24 text-sm font-bold text-foreground">URL:</span>
-                  <code className="rounded-md bg-surface px-2 py-1 text-sm shadow-sm">https://hireproof-sigma.vercel.app/api/v1/audit</code>
+                  <code className="rounded-md bg-surface px-2 py-1 text-sm shadow-sm">https://hireproof.tech/api/v1/audit</code>
                 </li>
                 <li className="flex flex-wrap items-center gap-3">
                   <span className="w-24 text-sm font-bold text-foreground">Header:</span>
@@ -460,7 +460,7 @@ npx @hireproof/cli --help`}
         <CodeBlock
           title="Workflow handoff"
           language="bash"
-          code={`curl -X POST https://hireproof-sigma.vercel.app/api/workflows/audit \\
+          code={`curl -X POST https://hireproof.tech/api/workflows/audit \\
   -H "Content-Type: application/json" \\
   -H "x-workflow-secret: $WORKFLOW_SECRET" \\
   -d '{

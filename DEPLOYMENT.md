@@ -8,7 +8,7 @@ The app has been deployed to production on Vercel. The current local working tre
 
 ### Production URLs
 
-- **Canonical Demo URL**: https://hireproof-sigma.vercel.app
+- **Canonical Demo URL**: https://hireproof.tech
 - **Project**: iron-marks-projects/hireproof
 - **Vercel Project ID**: prj_8pHu5GQQ0EzG49bgCcMm1QdNK9JB
 

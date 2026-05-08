@@ -3,7 +3,7 @@
 These are the 4 open investigation skills exposed by HireProof via its MCP (Model Context Protocol) server.
 Any AI agent or LLM client that supports MCP can call these tools directly.
 
-**MCP Server Endpoint:** `https://hireproof-sigma.vercel.app/api/mcp`
+**MCP Server Endpoint:** `https://hireproof.tech/api/mcp`
 **Authentication:** `x-api-key: hireproof_agent_demo_key` (public demo key)
 
 ---
@@ -137,11 +137,11 @@ Any AI agent or LLM client that supports MCP can call these tools directly.
 
 ```bash
 # List all available skills
-curl https://hireproof-sigma.vercel.app/api/mcp \
+curl https://hireproof.tech/api/mcp \
   -H "x-api-key: hireproof_agent_demo_key"
 
 # Call a specific skill
-curl -X POST https://hireproof-sigma.vercel.app/api/mcp \
+curl -X POST https://hireproof.tech/api/mcp \
   -H "Content-Type: application/json" \
   -H "x-api-key: hireproof_agent_demo_key" \
   -d '{"method":"tools/call","name":"search_company","arguments":{"company_name":"Accenture"}}'
@@ -154,7 +154,7 @@ import HireProof from 'hireproof-sdk'
 
 const client = new HireProof({
   apiKey: 'hireproof_agent_demo_key',
-  baseUrl: 'https://hireproof-sigma.vercel.app',
+  baseUrl: 'https://hireproof.tech',
 })
 
 // Call any individual skill
@@ -173,7 +173,7 @@ Add this to your MCP configuration:
 {
   "mcpServers": {
     "hireproof": {
-      "url": "https://hireproof-sigma.vercel.app/api/mcp",
+      "url": "https://hireproof.tech/api/mcp",
       "headers": {
         "x-api-key": "hireproof_agent_demo_key"
       }

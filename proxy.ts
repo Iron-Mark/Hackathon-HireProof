@@ -57,6 +57,15 @@ const DOWNLOAD_ROUTE_FILES = new Set([
 export function proxy(request: NextRequest) {
   const ua = request.headers.get('user-agent') || ''
   const pathname = request.nextUrl.pathname
+  const host = request.headers.get('host')?.toLowerCase().split(':')[0] || ''
+
+  if (host === 'hireproof-sigma.vercel.app' || host === 'www.hireproof.tech') {
+    const url = request.nextUrl.clone()
+    url.hostname = 'hireproof.tech'
+    url.protocol = 'https'
+    return NextResponse.redirect(url, 308)
+  }
+
   const isApiOrIntegrationRoute = (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/.well-known/workflow/')

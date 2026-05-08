@@ -12,7 +12,7 @@ Status: complete as of 2026-05-04.
 
 Verified production URL:
 
-- `https://hireproof-sigma.vercel.app`
+- `https://hireproof.tech`
 
 Routes verified with HTTP `200`:
 
@@ -84,7 +84,7 @@ SDK follow-up completed and published:
   - `import HireProof from 'hireproof-sdk'` works.
   - `import { HireProof } from 'hireproof-sdk'` works.
   - `require('hireproof-sdk').HireProof` works.
-  - Demo audit against `https://hireproof-sigma.vercel.app` returns High-Risk, score `92`.
+  - Demo audit against `https://hireproof.tech` returns High-Risk, score `92`.
 
 Manual actions after Phase 2:
 
@@ -124,7 +124,7 @@ Verified so far:
 - `node --test test/runtime-wiring.test.mjs` passes.
 - `npm run lint` passes.
 - `npm run build` passes.
-- Production smoke on `https://hireproof-sigma.vercel.app` passes for public pages, docs pages, health, demo audit, and live SSE audit with origin headers.
+- Production smoke on `https://hireproof.tech` passes for public pages, docs pages, health, demo audit, and live SSE audit with origin headers.
 - `docs/remaining-work.md` and `docs/final-live-vs-pending-status.md` are the current truth boundaries for live vs external-proof work.
 
 Current dirty areas:

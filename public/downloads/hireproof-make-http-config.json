@@ -2,7 +2,7 @@
   "name": "HireProof Make.com HTTP module config",
   "module": "HTTP > Make a request",
   "method": "POST",
-  "url": "https://hireproof-sigma.vercel.app/api/v1/audit",
+  "url": "https://hireproof.tech/api/v1/audit",
   "headers": [
     {
       "name": "Content-Type",

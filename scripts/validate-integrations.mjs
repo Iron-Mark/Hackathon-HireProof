@@ -41,12 +41,12 @@ async function validateN8n() {
 
   const { buildAuditRequestOptions } = require('../integrations/n8n-nodes-hireproof/lib/hireproof-request.js')
   const syncOptions = buildAuditRequestOptions({
-    baseUrl: 'https://hireproof-sigma.vercel.app/',
+    baseUrl: 'https://hireproof.tech/',
     apiKey: 'hireproof_agent_demo_key',
     text: 'Remote frontend intern. PHP 80,000/week.',
     mode: 'demo',
   })
-  assert.equal(syncOptions.url, 'https://hireproof-sigma.vercel.app/api/v1/audit')
+  assert.equal(syncOptions.url, 'https://hireproof.tech/api/v1/audit')
   assert.equal(syncOptions.body.mode, 'demo')
 
   const { HireProofApi } = require('../integrations/n8n-nodes-hireproof/credentials/HireProofApi.credentials.js')

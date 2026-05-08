@@ -91,7 +91,7 @@ const popupIdle = shell('HireProof popup', `
   <section class="copy"><div class="brand">${logo}<span>HireProof</span></div><h1>Scan job posts before you apply.</h1><p>Check suspicious listings and recruiter messages from the browser, with evidence-backed verdicts.</p></section>
   <section class="browser"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="url">chrome-extension://hireproof/popup.html</div></div><div class="popup">
     <div class="popup-header"><div class="popup-logo"><span class="mini-logo">${logo}</span><span>HireProof</span></div><span class="badge">Extension</span></div>
-    <div class="status">Human-filter active</div><label>API Server URL</label><input value="https://hireproof-sigma.vercel.app" /><label>API Key</label><input value="hireproof_agent_demo_key" /><div class="actions"><button class="primary">Scan This Page</button><button class="secondary">Paste & Check</button></div>
+    <div class="status">Human-filter active</div><label>API Server URL</label><input value="https://hireproof.tech" /><label>API Key</label><input value="hireproof_agent_demo_key" /><div class="actions"><button class="primary">Scan This Page</button><button class="secondary">Paste & Check</button></div>
   </div></section>
 </main>`)
 

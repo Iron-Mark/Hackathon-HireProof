@@ -20,7 +20,7 @@ HireProof checks job posts, recruiter messages, or selected page text when the u
 Scan requests are sent to the HireProof API server configured in the popup. The default server is:
 
 ```text
-https://hireproof-sigma.vercel.app
+https://hireproof.tech
 ```
 
 Self-hosted users can replace that value with their own HireProof server URL.

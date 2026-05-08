@@ -39,7 +39,7 @@ npm run integrations:package
 Production smoke:
 
 ```powershell
-$base = "https://hireproof-sigma.vercel.app"
+$base = "https://hireproof.tech"
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
 Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType "application/json" -Headers @{"x-api-key"="hireproof_agent_demo_key"} -Body (@{
@@ -117,7 +117,7 @@ DISCORD_BOT_TOKEN
 DISCORD_PUBLIC_KEY
 DISCORD_APPLICATION_ID
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 Owner steps:
@@ -126,7 +126,7 @@ Owner steps:
 2. Confirm interaction endpoint:
 
 ```text
-https://hireproof-sigma.vercel.app/api/webhooks/discord
+https://hireproof.tech/api/webhooks/discord
 ```
 
 3. Register or refresh commands if needed:
@@ -158,7 +158,7 @@ TELEGRAM_BOT_TOKEN
 TELEGRAM_WEBHOOK_SECRET_TOKEN
 TELEGRAM_BOT_USERNAME
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 Owner steps:
@@ -169,7 +169,7 @@ Owner steps:
 ```powershell
 $token = "<TELEGRAM_BOT_TOKEN>"
 $secret = "<TELEGRAM_WEBHOOK_SECRET_TOKEN>"
-$url = "https://hireproof-sigma.vercel.app/api/webhooks/telegram"
+$url = "https://hireproof.tech/api/webhooks/telegram"
 Invoke-WebRequest -Method Post -Uri "https://api.telegram.org/bot$token/setWebhook" -Body @{ url = $url; secret_token = $secret }
 ```
 
@@ -191,7 +191,7 @@ ZERNIO_API_KEY
 ZERNIO_WEBHOOK_SECRET
 ZERNIO_BOT_NAME=HireProof
 REDIS_URL
-APP_BASE_URL=https://hireproof-sigma.vercel.app
+APP_BASE_URL=https://hireproof.tech
 ```
 
 Owner steps:
@@ -202,7 +202,7 @@ Owner steps:
 4. Register webhook:
 
 ```text
-https://hireproof-sigma.vercel.app/api/webhooks/zernio
+https://hireproof.tech/api/webhooks/zernio
 ```
 
 5. Redeploy after setting env vars.
@@ -235,7 +235,7 @@ Owner steps:
 3. Start a workflow run against:
 
 ```text
-https://hireproof-sigma.vercel.app/api/workflows/audit
+https://hireproof.tech/api/workflows/audit
 ```
 
 4. Confirm the run is accepted.

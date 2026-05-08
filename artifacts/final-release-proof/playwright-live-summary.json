@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-05-05T06:13:01.446Z",
-  "base": "https://hireproof-sigma.vercel.app",
+  "base": "https://hireproof.tech",
   "viewports": [
     {
       "name": "small-mobile-320x568",
@@ -36,15 +36,15 @@
   "routes": [
     {
       "name": "home",
-      "url": "https://hireproof-sigma.vercel.app/"
+      "url": "https://hireproof.tech/"
     },
     {
       "name": "audit",
-      "url": "https://hireproof-sigma.vercel.app/audit"
+      "url": "https://hireproof.tech/audit"
     },
     {
       "name": "docs",
-      "url": "https://hireproof-sigma.vercel.app/docs"
+      "url": "https://hireproof.tech/docs"
     }
   ],
   "results": [

@@ -22,7 +22,7 @@ Then install the generated package in a self-hosted n8n instance through communi
 ## Credentials
 
 - API key: use `hireproof_agent_demo_key` for deterministic demo fixtures, or a real HireProof API key for live/provider-backed audits.
-- Base URL: defaults to `https://hireproof-sigma.vercel.app`.
+- Base URL: defaults to `https://hireproof.tech`.
 
 ## Submission Boundary
 

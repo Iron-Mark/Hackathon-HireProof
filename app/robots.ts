@@ -32,6 +32,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       })),
     ],
-    sitemap: 'https://hireproof-sigma.vercel.app/sitemap.xml',
+    sitemap: 'https://hireproof.tech/sitemap.xml',
   }
 }

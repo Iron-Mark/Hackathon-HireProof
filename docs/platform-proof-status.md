@@ -14,7 +14,7 @@ Final submission status:
 - Next blocker: send one real Discord message and re-test Telegram for the report-link screenshot.
 
 - Vercel Production has `WORKFLOW_SECRET`, `HIREPROOF_MODEL`, Redis REST storage, `REDIS_URL`, Slack credentials, Discord credentials, Telegram credentials, AI Gateway credentials, `MODEL_PROVIDER_KEY`, and `SERPAPI_API_KEY` configured.
-- Production is served through the stable alias `https://hireproof-sigma.vercel.app`.
+- Production is served through the stable alias `https://hireproof.tech`.
 - Production `/api/integrations/proof` reports core readiness separately from optional platform proof: `status` / `coreStatus` are `ready` when Slack, Workflow, and AI Gateway are ready, while `optionalStatus` tracks Discord and Telegram.
 - Production WDK proof passed: `/api/workflows/audit` accepted a run and returned `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 - Production ChatSDK reply proof passed through `/api/chat/hireproof` and returned a formatted HireProof verdict plus report link.
@@ -68,7 +68,7 @@ Still useful for full live Option C:
 
 ## Production Proof Results
 
-Production route checks were run against `https://hireproof-sigma.vercel.app`.
+Production route checks were run against `https://hireproof.tech`.
 
 ### Readiness
 
@@ -180,9 +180,9 @@ The current working tree passed:
 3. Re-run production smoke checks before the final submission:
 
 ```powershell
-Invoke-RestMethod https://hireproof-sigma.vercel.app/api/integrations/proof
-Invoke-RestMethod https://hireproof-sigma.vercel.app/api/chat/hireproof
-Invoke-RestMethod https://hireproof-sigma.vercel.app/api/workflows/audit
+Invoke-RestMethod https://hireproof.tech/api/integrations/proof
+Invoke-RestMethod https://hireproof.tech/api/chat/hireproof
+Invoke-RestMethod https://hireproof.tech/api/workflows/audit
 ```
 
 Slack screenshot proof is already captured. Keep the screenshot with the submission materials and add logs only if needed.

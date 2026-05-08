@@ -8,7 +8,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 
 | Area | Status | Evidence path |
 | --- | --- | --- |
-| Stable production site | Live | `https://hireproof-sigma.vercel.app` |
+| Stable production site | Live | `https://hireproof.tech` |
 | Web audit flow | Implemented | `/audit` and demo scenarios |
 | Screenshot OCR audit path | Implemented and production-smoke-proven | Google Vision OCR evidence receipt, Tesseract fallback in repo |
 | Screenshot privacy default | Implemented | Screenshot reports are excluded from Explore/Trends by default |
@@ -48,7 +48,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 
 Checked after checkpoint `0b83430`:
 
-- Route: `POST https://hireproof-sigma.vercel.app/api/v1/audit`
+- Route: `POST https://hireproof.tech/api/v1/audit`
 - Mode: `live`
 - Credential mode: `platform-env`
 - Input claim: `Company: Canva. Role: Product Designer.`
@@ -63,7 +63,7 @@ This proves the live search/model path is production-wired. It does not guarante
 
 ## Latest Evidence Funnel Smoke
 
-Checked on 2026-05-04 against `https://hireproof-sigma.vercel.app/api/audit` with production `Origin` / `Referer` headers:
+Checked on 2026-05-04 against `https://hireproof.tech/api/audit` with production `Origin` / `Referer` headers:
 
 - Input claim: Vercel role with `https://vercel.com/careers` and `recruiting@vercel.com`
 - Mode: `live`
@@ -108,7 +108,7 @@ Checked on 2026-05-04 from clean temporary npm projects:
 
 Checked after the OCR/privacy checkpoint:
 
-- Route: `POST https://hireproof-sigma.vercel.app/api/audit`
+- Route: `POST https://hireproof.tech/api/audit`
 - Input type: generated screenshot data URL
 - OCR source: `Screenshot OCR: Google Vision`
 - OCR type: `Screenshot OCR`
@@ -154,7 +154,7 @@ Use for alternatives:
 ## Final Pre-Submission Smoke
 
 ```powershell
-$base='https://hireproof-sigma.vercel.app'
+$base='https://hireproof.tech'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
 Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-const base = (process.env.HIREPROOF_PROOF_BASE_URL || 'https://hireproof-sigma.vercel.app').replace(/\/$/, '')
+const base = (process.env.HIREPROOF_PROOF_BASE_URL || 'https://hireproof.tech').replace(/\/$/, '')
 const requireLive = process.argv.includes('--require-live')
 const defaultOutputFile = requireLive
   ? 'live-chat-proof-check-strict-latest.json'

@@ -12,7 +12,7 @@ Use this copy when submitting `public/downloads/hireproof-extension.zip` to the 
 
 **Language:** English
 
-**Website:** https://hireproof-sigma.vercel.app
+**Website:** https://hireproof.tech
 
 **Support URL:** https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues
 

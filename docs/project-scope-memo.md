@@ -10,7 +10,7 @@ Do not make additional repo, release, or tag changes unless there is an obvious 
 
 ## Canonical Links
 
-- Live app: https://hireproof-sigma.vercel.app
+- Live app: https://hireproof.tech
 - GitHub repo: https://github.com/Iron-Mark/hackathon-v0-zero_to_agent
 - v1.0 release: https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/releases/tag/v1.0
 - GitHub Packages tab: https://github.com/Iron-Mark?tab=packages&repo_name=hackathon-v0-zero_to_agent

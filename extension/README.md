@@ -28,7 +28,7 @@ The `public/downloads` copy is the website download fallback while the Chrome We
 
 For the public download package, unzip `hireproof-extension.zip` first and select the unzipped `hireproof-extension` folder.
 
-The packaged extension defaults to `https://hireproof-sigma.vercel.app`, but users can replace the API Server URL in the popup for self-hosted deployments.
+The packaged extension defaults to `https://hireproof.tech`, but users can replace the API Server URL in the popup for self-hosted deployments.
 
 ## Chrome Web Store Submission Boundary
 

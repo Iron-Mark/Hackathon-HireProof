@@ -18,14 +18,14 @@ assert.equal(body.mode, 'demo')
 assert.equal(body.webhook_url, undefined)
 
 const asyncOptions = buildAuditRequestOptions({
-  baseUrl: 'https://hireproof-sigma.vercel.app/',
+  baseUrl: 'https://hireproof.tech/',
   apiKey: 'hireproof_agent_demo_key',
   text: body.text,
   mode: 'demo',
   webhookUrl: 'https://example.com/hireproof-callback',
 })
 
-assert.equal(asyncOptions.url, 'https://hireproof-sigma.vercel.app/api/v1/audit')
+assert.equal(asyncOptions.url, 'https://hireproof.tech/api/v1/audit')
 assert.equal(asyncOptions.headers['x-api-key'], 'hireproof_agent_demo_key')
 assert.equal(asyncOptions.body.webhook_url, 'https://example.com/hireproof-callback')
 

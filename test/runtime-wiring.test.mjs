@@ -413,7 +413,7 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   assert.match(bot, /handleTelegramStartCommand/)
   assert.match(bot, /Welcome to HireProof/)
   assert.match(bot, /sendTelegramMessage/)
-  assert.match(bot, /DEFAULT_PRODUCTION_BASE_URL = 'https:\/\/hireproof-sigma\.vercel\.app'/)
+  assert.match(bot, /DEFAULT_PRODUCTION_BASE_URL = 'https:\/\/hireproof\.tech'/)
   assert.match(bot, /getChatReplyBaseUrl/)
   assert.match(bot, /VERCEL_PROJECT_PRODUCTION_URL/)
   assert.match(bot, /Fake Check Pattern/)
@@ -865,7 +865,10 @@ test('robots and proxy discourage common AI crawlers from scraping public pages'
   }
 
   assert.match(robots, /disallow:\s*'\/'/)
-  assert.match(robots, /hireproof-sigma\.vercel\.app\/sitemap\.xml/)
+  assert.match(robots, /hireproof\.tech\/sitemap\.xml/)
+  assert.match(proxy, /hireproof-sigma\.vercel\.app/)
+  assert.match(proxy, /www\.hireproof\.tech/)
+  assert.match(proxy, /NextResponse\.redirect\(url, 308\)/)
   assert.match(proxy, /noai, noimageai/)
   assert.match(proxy, /isApiOrIntegrationRoute/)
   assert.match(proxy, /API, MCP, webhook, and headless agent routes stay reachable/)

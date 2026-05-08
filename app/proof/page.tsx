@@ -33,7 +33,7 @@ const readyProof = [
     title: 'Production web app',
     status: 'production-deployed',
     body: 'Stable demo URL is live on Vercel and the core audit flow is available without login.',
-    href: 'https://hireproof-sigma.vercel.app',
+    href: 'https://hireproof.tech',
   },
   {
     icon: CheckCircle2,

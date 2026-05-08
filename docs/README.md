@@ -3,7 +3,7 @@
 This directory contains the historical research, strategy, and planning documents generated during the **Zero to Agent** hackathon workstream. These files are preserved for context and process transparency.
 
 ## Live Documentation
-For the most up-to-date technical documentation, visit the **[Live Documentation Portal](https://hireproof-sigma.vercel.app/docs)**.
+For the most up-to-date technical documentation, visit the **[Live Documentation Portal](https://hireproof.tech/docs)**.
 
 ## Archived Contents
 

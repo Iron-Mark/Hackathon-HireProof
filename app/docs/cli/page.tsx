@@ -86,7 +86,7 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit --text "Remote frontend i
           title="Terminal"
           code={`HIREPROOF
 Shield Sentinel terminal console
-Target https://hireproof-sigma.vercel.app  Mode demo  Key configured
+Target https://hireproof.tech  Mode demo  Key configured
 API ok | mode demo | key configured | latest High-Risk 92/100 | / commands | Tab complete | ? help
 
 Shield Sentinel        > Audit - Run the guided audit workflow
@@ -161,7 +161,7 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit .\\job-post.txt --json`}
           <p className="mb-4 text-sm font-semibold leading-relaxed text-muted">
             Check whether the target HireProof API is reachable before wiring it into a script or CI job.
           </p>
-          <CodeBlock title="Terminal" code="hireproof health --base-url https://hireproof-sigma.vercel.app" />
+          <CodeBlock title="Terminal" code="hireproof health --base-url https://hireproof.tech" />
         </div>
 
         <div className="min-w-0 rounded-3xl border border-border-soft bg-surface p-6">
@@ -172,7 +172,7 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit .\\job-post.txt --json`}
           </p>
           <CodeBlock
             title="Terminal"
-            code={`hireproof config set baseUrl https://hireproof-sigma.vercel.app
+            code={`hireproof config set baseUrl https://hireproof.tech
 hireproof config set apiKey hireproof_agent_demo_key
 hireproof config list`}
           />

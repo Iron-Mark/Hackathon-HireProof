@@ -74,12 +74,12 @@ Careful boundary:
 
 ## Links
 
-- Demo: `https://hireproof-sigma.vercel.app`
-- Main flow: `https://hireproof-sigma.vercel.app/audit`
-- Track proof docs: `https://hireproof-sigma.vercel.app/docs/triple-track-coverage`
+- Demo: `https://hireproof.tech`
+- Main flow: `https://hireproof.tech/audit`
+- Track proof docs: `https://hireproof.tech/docs/triple-track-coverage`
 - Discord install: `https://discord.com/oauth2/authorize?client_id=1500240100804530336&scope=bot%20applications.commands&permissions=0`
-- Health check: `https://hireproof-sigma.vercel.app/api/health`
-- Integration proof: `https://hireproof-sigma.vercel.app/api/integrations/proof`
+- Health check: `https://hireproof.tech/api/health`
+- Integration proof: `https://hireproof.tech/api/integrations/proof`
 
 ## Track Wording
 
@@ -236,13 +236,13 @@ It returns a Safe, Caution, or High-Risk verdict with red flags, proof links, an
 
 Built with v0, Vercel, MCP tools, AI SDK, ChatSDK, and Vercel Workflow.
 
-Demo: https://hireproof-sigma.vercel.app
+Demo: https://hireproof.tech
 
 ### Community Message
 
 Hey, I built HireProof for Zero to Agent. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
 
-Demo: https://hireproof-sigma.vercel.app
+Demo: https://hireproof.tech
 
 ### Localized Voting Copy
 

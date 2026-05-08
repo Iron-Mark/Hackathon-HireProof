@@ -2,7 +2,7 @@ class HireProofApi {
   constructor() {
     this.name = 'hireProofApi'
     this.displayName = 'HireProof API'
-    this.documentationUrl = 'https://hireproof-sigma.vercel.app/docs/authentication'
+    this.documentationUrl = 'https://hireproof.tech/docs/authentication'
     this.properties = [
       {
         displayName: 'API Key',
@@ -19,7 +19,7 @@ class HireProofApi {
         displayName: 'Base URL',
         name: 'baseUrl',
         type: 'string',
-        default: 'https://hireproof-sigma.vercel.app',
+        default: 'https://hireproof.tech',
         required: true,
         description: 'HireProof deployment URL without a trailing slash.',
       },
