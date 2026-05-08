@@ -2,7 +2,7 @@ import { createHireProofAuditTool } from '../dist/index.js'
 
 const hireProofTool = createHireProofAuditTool({
   apiKey: process.env.HIREPROOF_API_KEY || 'hireproof_agent_demo_key',
-  baseUrl: process.env.HIREPROOF_URL || 'https://hireproof-sigma.vercel.app',
+  baseUrl: process.env.HIREPROOF_URL || 'https://hireproof.tech',
 })
 
 const result = await hireProofTool.func({

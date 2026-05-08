@@ -52,7 +52,7 @@ Example console frame:
 ```text
 HIREPROOF
 Shield Sentinel terminal console
-Target https://hireproof-sigma.vercel.app  Mode demo  Key configured
+Target https://hireproof.tech  Mode demo  Key configured
 
 Shield Sentinel        > Audit - Run the guided audit workflow
     .-=========-.        Paste message - Paste a recruiter message or job post
@@ -174,7 +174,7 @@ hireproof health
 ### Config
 
 ```powershell
-hireproof config set baseUrl https://hireproof-sigma.vercel.app
+hireproof config set baseUrl https://hireproof.tech
 hireproof config set apiKey hireproof_agent_demo_key
 hireproof config list
 ```
@@ -183,7 +183,7 @@ hireproof config list
 
 Shared:
 
-- `--base-url <url>`: HireProof server URL. Defaults to config, `HIREPROOF_URL`, or `https://hireproof-sigma.vercel.app`.
+- `--base-url <url>`: HireProof server URL. Defaults to config, `HIREPROOF_URL`, or `https://hireproof.tech`.
 - `--api-key <key>`: API key. Defaults to config, `HIREPROOF_API_KEY`, or the public demo key.
 - `--json`: Print raw JSON where supported.
 - `--plain`: Print compact non-boxed text where supported.

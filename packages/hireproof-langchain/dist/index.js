@@ -1,6 +1,6 @@
 const { z } = require('zod')
 
-const DEFAULT_BASE_URL = 'https://hireproof-sigma.vercel.app'
+const DEFAULT_BASE_URL = 'https://hireproof.tech'
 const DEFAULT_API_KEY = 'hireproof_agent_demo_key'
 
 const HireProofAuditInputSchema = z.object({

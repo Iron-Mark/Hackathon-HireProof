@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 
-export declare const DEFAULT_BASE_URL = "https://hireproof-sigma.vercel.app"
+export declare const DEFAULT_BASE_URL = "https://hireproof.tech"
 export declare const DEFAULT_API_KEY = "hireproof_agent_demo_key"
 
 export declare const HireProofAuditInputSchema: z.ZodObject<{

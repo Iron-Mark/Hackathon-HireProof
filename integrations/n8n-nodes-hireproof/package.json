@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "n8n community node for running HireProof job-safety audits before automated apply workflows continue.",
   "license": "MIT",
-  "homepage": "https://hireproof-sigma.vercel.app/docs/automations",
+  "homepage": "https://hireproof.tech/docs/automations",
   "repository": {
     "type": "git",
     "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent.git",

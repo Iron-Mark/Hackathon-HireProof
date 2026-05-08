@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-const DEFAULT_BASE_URL = 'https://hireproof-sigma.vercel.app'
+const DEFAULT_BASE_URL = 'https://hireproof.tech'
 const DEFAULT_API_KEY = 'hireproof_agent_demo_key'
 const CONFIG_KEYS = new Set(['baseUrl', 'apiKey'])
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/g
@@ -413,7 +413,7 @@ async function commandConfig(argv) {
 
   if (!action || action === '--help') {
     console.log(`Usage:
-  hireproof config set baseUrl https://hireproof-sigma.vercel.app
+  hireproof config set baseUrl https://hireproof.tech
   hireproof config set apiKey <key>
   hireproof config get <key>
   hireproof config list

@@ -20,7 +20,7 @@
     "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent.git",
     "directory": "packages/hireproof-cli"
   },
-  "homepage": "https://hireproof-sigma.vercel.app/docs/cli",
+  "homepage": "https://hireproof.tech/docs/cli",
   "keywords": [
     "hireproof",
     "cli",

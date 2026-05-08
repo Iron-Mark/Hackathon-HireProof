@@ -340,7 +340,7 @@ function MainPanel({ screen, baseUrl, apiKey, mode, health, report, reports, aud
 }
 
 export function HireProofTuiApp({
-  baseUrl = 'https://hireproof-sigma.vercel.app',
+  baseUrl = 'https://hireproof.tech',
   apiKey = '',
   mode = 'demo',
   color = true,
