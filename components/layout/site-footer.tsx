@@ -239,12 +239,10 @@ export function SiteFooter() {
                   <Globe className="h-5 w-5" />
                 </a>
               </Tooltip>
-              <Tooltip content="View Zero to Agent showcase">
+              <Tooltip content="View Cursor Hackathon proof">
                 <a
-                  href="https://community.vercel.com/hackathons/zero-to-agent/showcase"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="HireProof Zero to Agent showcase submission"
+                  href="/portfolio"
+                  aria-label="HireProof Cursor Hackathon proof"
                   className={socialLinkClass}
                 >
                   <ShieldCheck className="h-5 w-5" />
@@ -355,16 +353,14 @@ export function SiteFooter() {
               M.Siazon
             </a>
             <span>.</span>
-            <span>Built for Vercel Zero to Agent</span>
+            <span>Built for Cursor Hackathon</span>
             <span>·</span>
             <a
-              href="https://community.vercel.com/hackathons/zero-to-agent/showcase"
-              target="_blank"
-              rel="noreferrer"
+              href="/portfolio"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-foreground underline underline-offset-4 hover:text-safe focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <BrandMark className="h-3.5 w-3.5" />
-              Submitted showcase
+              Build proof
             </a>
             .
           </div>

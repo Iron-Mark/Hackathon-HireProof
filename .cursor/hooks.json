@@ -3,7 +3,8 @@
   "hooks": {
     "beforeShellExecution": [
       {
-        "command": "node scripts/cursor-pretool-guard.mjs"
+        "command": "node scripts/cursor-pretool-guard.mjs",
+        "failClosed": true
       }
     ]
   }

@@ -228,7 +228,7 @@ Recommended cover image:
 
 ### Social Post
 
-I built HireProof for Zero to Agent.
+I built HireProof for Cursor Hackathon.
 
 Paste a suspicious job post, recruiter message, or apply link, and it checks whether the opportunity looks legit using evidence, not vibes.
 
@@ -240,7 +240,7 @@ Demo: https://hireproof.tech
 
 ### Community Message
 
-Hey, I built HireProof for Zero to Agent. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
+Hey, I built HireProof for Cursor Hackathon. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
 
 Demo: https://hireproof.tech
 

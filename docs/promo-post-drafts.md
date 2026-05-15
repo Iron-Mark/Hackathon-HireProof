@@ -20,7 +20,7 @@ HireProof checks suspicious job posts, recruiter messages, screenshots, and appl
 
 ## LinkedIn - Portfolio Launch
 
-I built and shipped HireProof solo for the Vercel Zero to Agent global hackathon in about one week.
+I built and shipped HireProof solo for the Cursor Hackathon in about one week.
 
 It is a proof-backed job scam verification agent: paste a job post, recruiter message, screenshot, or apply link, and it returns a Safe, Caution, or High-Risk verdict with visible evidence, red flags, green flags, and next steps.
 
@@ -64,7 +64,7 @@ The result is not just a ranking. The controllable work is the shipped proof: ap
 
 ## X / Twitter - Builder Thread
 
-1/ I built HireProof solo for the Vercel Zero to Agent global hackathon.
+1/ I built HireProof solo for the Cursor Hackathon.
 
 It helps job seekers verify suspicious job posts before applying or sharing personal data.
 
@@ -86,7 +86,7 @@ Live demo: https://hireproof.tech/audit
 
 ## Discord / Community
 
-I built HireProof for the Vercel Zero to Agent global hackathon.
+I built HireProof for the Cursor Hackathon.
 
 It checks suspicious job posts, recruiter messages, screenshots, and apply links before someone applies. The result is a Safe, Caution, or High-Risk verdict with visible evidence, red flags, and next steps.
 

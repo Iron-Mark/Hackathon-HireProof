@@ -82,6 +82,6 @@ Only change the repo if a submitted link or release-critical asset is actually b
 The hackathon result is now known. HireProof was not selected, but that outcome does not reduce the build quality: the app shipped live with proof surfaces, API packaging, docs, and cost controls. Because the event included community voting, final placement reflected reach and voting dynamics as well as product merit. Use this as a strong portfolio and startup proof point, not as a negative result.
 
 - Turn the local drafts into a polished portfolio page for Mark Siazon.
-- Use outcome-independent wording: built and shipped for Vercel Zero to Agent, live as a focused job-post verification product, and ready for pilot validation.
+- Use outcome-independent wording: built and shipped for Cursor Hackathon, live as a focused job-post verification product, and ready for pilot validation.
 - Use `docs/promo-post-drafts.md`, `docs/post-winners-checklist.md`, `docs/portfolio-product-design-case-study.md`, `docs/portfolio-ui-ux-case-study.md`, and `docs/portfolio-dev-case-study.md` as the source pack.
 - Do not claim a win, marketplace approval, broad fraud-platform coverage, continuous learning, or completed workflow transcript without new proof.

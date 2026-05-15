@@ -1,7 +1,7 @@
 ---
 marp: true
 title: HireProof
-description: Pitch deck for the Zero to Agent hackathon project
+description: Pitch deck for the Cursor Hackathon project
 theme: default
 paginate: true
 ---

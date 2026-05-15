@@ -1,8 +1,8 @@
-# Contrarian Winning Strategy for Zero to Agent
+# Contrarian Winning Strategy for Cursor Hackathon
 
 ## Executive summary
 
-The first batch likely over-optimized **how to build** and underweighted **why people pick winners**. In Zero to Agent, the hard constraints are solo-only, one submission, live-on-entity["company","Vercel","cloud platform"], and a one-day vote window, while winners are chosen by both community votes and the Vercel team. At the same time, the public showcase on April 25 only shows two visible projects: a travel planner and a skincare tool. That means the real edge is not “more AI”; it is a **painkiller agent with obvious utility, visible proof, and a pre-built vote funnel**. citeturn3view0turn1view0turn5view0
+The first batch likely over-optimized **how to build** and underweighted **why people pick winners**. In Cursor Hackathon, the hard constraints are solo-only, one submission, live-on-entity["company","Vercel","cloud platform"], and a one-day vote window, while winners are chosen by both community votes and the Vercel team. At the same time, the public showcase on April 25 only shows two visible projects: a travel planner and a skincare tool. That means the real edge is not “more AI”; it is a **painkiller agent with obvious utility, visible proof, and a pre-built vote funnel**. citeturn3view0turn1view0turn5view0
 
 My recommendation is to build **OfferProof**: a live agent for students and junior professionals in the entity["country","Philippines","country in southeast asia"] that searches live jobs, verifies company footprint, scans recent news, and returns an evidence-backed shortlist with red/yellow/green trust signals. This fits a real local pain: youth employment softness and underemployment remain meaningful, while phishing and risky URLs surged sharply by end-2025. It also fits Gen Z voting behavior because the result is instantly understandable, screenshot-friendly, and useful today. citeturn21view0turn21view3turn25view0turn25view1turn25view2turn25view3
 
@@ -41,7 +41,7 @@ The timing risk is real: during the event window, Manila is UTC+8 while PT is UT
 | Chat-platform bots | M | M | H | L | M | H | L | Avoid |
 | Workflow ops/approval | M | M | H | L | M | M | M | Back-end angle only |
 
-This map is an inference from the current showcase, official Zero to Agent tracks, and official agent templates, plus local need indicators around jobs and scams. citeturn1view0turn5view0turn22view0turn22view1turn21view0turn21view3
+This map is an inference from the current showcase, official Cursor Hackathon tracks, and official agent templates, plus local need indicators around jobs and scams. citeturn1view0turn5view0turn22view0turn22view1turn21view0turn21view3
 
 ### Judge delight matrix
 
@@ -184,7 +184,7 @@ Why Workflows wins: official materials emphasize durable, resumable execution an
 | Channel | Timing | Copy |
 |---|---|---|
 | TikTok/Reel | submit day | “Job hunting is messy. I built an agent that finds real jobs and flags sketchy ones with receipts.” |
-| X | submit day | “Built OfferProof for Zero to Agent: live job search + company/news verification + red-flag score.” |
+| X | submit day | “Built OfferProof for Cursor Hackathon: live job search + company/news verification + red-flag score.” |
 | LinkedIn | submit day | “Solo-built a Vercel agent that helps candidates avoid bad applies and focus on evidence-backed roles.” |
 | Discord/class GC | voting day | “I built something real for job hunting—vote only if the demo earns it.” |
 | Vercel comment | voting day | “Happy to answer about Workflow + AI SDK + SerpApi design choices.” |
@@ -231,7 +231,7 @@ timeline
 
 **First v0 prompt**
 ```text
-Build “OfferProof,” a production-ready Next.js app for Zero to Agent.
+Build “OfferProof,” a production-ready Next.js app for Cursor Hackathon.
 Purpose: user enters a job role/location or pastes a job post; the app runs a 4-step agent workflow:
 1) fetch live job listings,
 2) verify company footprint,

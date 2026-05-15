@@ -39,7 +39,7 @@ export default function PilotPage() {
         </div>
         <h1 className="text-4xl font-black tracking-tight lg:text-5xl">Pilot Program</h1>
         <p className="max-w-3xl text-xl font-medium leading-relaxed text-muted">
-          HireProof remains a focused employment-fraud trust product after Zero to Agent. The outcome was shaped by community-vote reach as well as product quality, so the next 90 days should turn the shipped proof into pilot evidence.
+          HireProof remains a focused employment-fraud trust product after Cursor Hackathon. The outcome was shaped by community-vote reach as well as product quality, so the next 90 days should turn the shipped proof into pilot evidence.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link href="/audit?demo=high-risk" className="hireproof-focus hireproof-cta-primary inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-black">
@@ -98,7 +98,7 @@ export default function PilotPage() {
           <div>
             <h2 className="text-xl font-black">Positioning boundary</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-              Say HireProof was built and shipped for the Vercel Zero to Agent hackathon, remains live as a focused job-post verification product, and is moving into pilot validation. Do not frame the result as a loss, claim a win, claim marketplace approval, promise continuous learning, or broaden into generic fraud coverage without new proof.
+              Say HireProof was built and shipped for the Cursor Hackathon, remains live as a focused job-post verification product, and is moving into pilot validation. Do not frame the result as a loss, claim a win, claim marketplace approval, promise continuous learning, or broaden into generic fraud coverage without new proof.
             </p>
           </div>
         </div>

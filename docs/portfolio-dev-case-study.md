@@ -4,7 +4,7 @@
 
 HireProof is a production-facing AI agent application for checking suspicious job posts, recruiter messages, screenshots, and apply links.
 
-Built solo by Mark Siazon in about one week for the Vercel Zero to Agent global hackathon.
+Built solo by Mark Siazon in about one week for the Cursor Hackathon.
 
 ## Stack
 

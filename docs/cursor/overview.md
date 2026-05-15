@@ -16,11 +16,11 @@ End users and integrators rely on these paths. Cursor agents may **read** and **
 
 | Surface | Role |
 | --- | --- |
-| `@cursor/sdk` (Phase 2) | Optional developer-portal agent runs (BYOK) |
-| `.cursor/skills/`, hooks | Contributor guardrails and MCP-first habits |
+| `@cursor/sdk` | Optional developer-portal and internal agent runs behind server-side feature flags |
+| `.cursor/rules/`, `.cursor/skills/`, hooks | Contributor guardrails and MCP-first habits |
 | Bugbot + `.cursor/BUGBOT.md` | PR review on security-sensitive paths |
-| Cloud QA (Phase 3) | Exploratory UI walkthroughs with artifacts |
-| Internal cron routes (Phase 3) | Repo health, docs drift (secured webhooks) |
+| Cloud Agent QA | Exploratory UI walkthroughs with metadata first; artifact ingestion is future work |
+| Internal cron routes | Repo health, docs drift (secured webhooks) |
 
 ## Architecture diagram
 
@@ -34,9 +34,9 @@ flowchart TB
 
   subgraph cursorLayer [Cursor layer]
     SDK["@cursor/sdk in /developer"]
-    Skills["Repo skills + hooks"]
+    Skills["Repo rules + skills + hooks"]
     Bugbot["PR review + BUGBOT.md"]
-    CloudQA["Cloud-agent UI walkthroughs"]
+    CloudQA["Cloud Agent UI walkthroughs"]
     Cron["Internal cron routes"]
   end
 
@@ -57,17 +57,19 @@ flowchart TB
 | Path | Audience | Purpose |
 | --- | --- | --- |
 | `.agents/skills/hireproof/SKILL.md` | Any IDE / agent user | Investigate job posts via MCP or headless API |
-| `.cursor/skills/hireproof-architecture/SKILL.md` | Repo contributors | Live-vs-demo honesty, SSRF, secrets, MCP-first edits |
+| `.cursor/rules/hireproof-architecture.mdc` | Cursor Agent / Inline Edit | Always-on repo architecture and safety rules |
+| `.cursor/skills/hireproof-architecture/SKILL.md` | Cursor SDK agents | Live-vs-demo honesty, SSRF, secrets, MCP-first edits |
 
 Do not merge these into one file—they serve different users.
 
 ## Suggested rollout order
 
 1. **Bugbot** — `.cursor/BUGBOT.md` + GitHub check (no app code)
-2. **Repo skills + pretool guard** — `.cursor/skills`, `scripts/cursor-pretool-guard.mjs`, hooks
+2. **Repo rules, skills + pretool guard** — `.cursor/rules`, `.cursor/skills`, `.cursor/environment.json`, `scripts/cursor-pretool-guard.mjs`, hooks
 3. **Docs** — this folder + `/docs/cursor` on the live site
-4. **SDK panel** — `@cursor/sdk`, secured routes (sibling / Phase 2)
-5. **Cloud QA + cron** — preview-only, metadata-first (Phase 3)
+4. **SDK panel** — `@cursor/sdk`, secured routes, feature flag, run metadata
+5. **Cloud Agent QA + cron** — preview-only, metadata-first
+6. **Cloud Agent environment governance** — scoped secrets, environment version review, audit log visibility
 
 ## Fallback discipline
 

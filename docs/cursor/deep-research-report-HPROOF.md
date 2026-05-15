@@ -1,8 +1,8 @@
 # HireProof × Cursor Integration — Deep Research Report
 
-**Status:** Strategic blueprint (Phase 1 config and docs in repo; SDK routes Phase 2)  
-**Audience:** HireProof contributors and maintainers  
-**Source:** Cursor Deep Research export (cleaned for version control)  
+**Status:** Strategic blueprint with implementation notes. Current branch has SDK routes, server-side `@cursor/sdk` wiring, `.cursor` config, internal routes, and docs behind feature flags.
+**Audience:** HireProof contributors and maintainers
+**Source:** Cursor Deep Research export (cleaned for version control)
 **Last updated:** 2026-05-15
 
 > **Ship Cursor where it compounds developer experience and repo quality—not where it muddies fraud verdicts.**
@@ -14,14 +14,14 @@
 **Priority:** Highest  
 **Effort:** Medium (product implementation Phase 2)
 
-Cursor's official TypeScript SDK (`@cursor/sdk`) lets HireProof expose programmatic agent runs from the existing developer portal. The target shape is a secured `POST /api/developer/cursor/runs` route backed by `lib/cursor`, streaming run logs to the developer UI via SSE—aligned with patterns from `app/api/developer/provider-credentials` (origin validation, rate limits, BYOK).
+Cursor's official TypeScript SDK (`@cursor/sdk`) lets HireProof expose programmatic agent runs from the existing developer portal. The implemented shape is a secured `POST /api/developer/cursor/runs` route backed by `lib/cursor`, recording run metadata/status in the developer UI, and aligned with existing developer-route patterns: authenticated session, mutation-origin validation, rate limits, and secret redaction.
 
-Gate the panel behind a feature flag (e.g. `NEXT_PUBLIC_CURSOR_AGENTS_ENABLED=false`) until the feature has passed QA. Apply the same mutation-origin, rate-limit, and request-IP controls already used by the provider-credentials route. The safest fallback is simple: if Cursor is unavailable or the key is missing, the UI should degrade to static docs/examples and the existing API playground.
+Gate the panel behind `CURSOR_INTEGRATION_ENABLED=false` until the feature has passed QA. Use server-side `CURSOR_API_KEY` for the current implementation; per-user Cursor key vaulting and streaming run logs remain future work. The safest fallback is simple: if Cursor is unavailable or the key is missing, the UI should degrade to static docs/examples and the existing API playground.
 
 This is the data flow I would implement first.
 
 ```mermaid
-flowchart LR U[Developer using /developer or /docs] --> R[/api/developer/cursor/runs] R --> A[lib/cursor client via @cursor/sdk] A --> C[Cursor local or cloud agent] C --> G[Iron-Mark/Hackathon-HireProof repo] C --> M[Optional HireProof MCP tools] C --> S[SSE event stream] S --> UI[Developer portal log pane] R --> T[Existing usage and analytics layer]
+flowchart LR U[Developer using /developer or /docs] --> R[/api/developer/cursor/runs] R --> A[lib/cursor client via @cursor/sdk] A --> C[Cursor local or cloud agent] C --> G[Iron-Mark/Hackathon-HireProof repo] C --> M[Optional HireProof MCP tools] C --> S[Run metadata and status] S --> UI[Developer portal pane] R --> T[Existing usage and analytics layer]
 
 ```
 
@@ -42,7 +42,7 @@ flowchart LR U[Developer using /developer or /docs] --> R[/api/developer/cursor/
 
 ```
 
-A simple Node-based pre-tool guard script can provide a strong last line of defense even before you tune more advanced agent policies. The exact `hooks.json` wiring schema was not available in the parsed docs I could read, but Cursor’s official docs index and security page clearly treat hooks as a first-class secure-agent surface, so the safe move is to keep your logic in a script like the one below and wire it through the documented hooks entry. ([cursor.com](https://cursor.com/llms.txt))
+A simple Node-based pre-tool guard script can provide a strong last line of defense even before you tune more advanced agent policies. Current Cursor hooks docs support `beforeShellExecution` with permission JSON responses and `failClosed: true`; HireProof uses that pattern in `.cursor/hooks.json` and `scripts/cursor-pretool-guard.mjs`.
 
 ```js
 // scripts/cursor-pretool-guard.mjs
@@ -232,7 +232,7 @@ flowchart LR H[HireProof internal trigger] --> CP[Cursor control plane] CP --> S
 
 ## Environment, config, CI/CD, and alternatives
 
-### Environment variables and config HireProof already documents core environment variables such as search/model keys, Slack credentials, Redis, and workflow secrets, and it already relies on `SESSION_SECRET` and `BYOK_ENCRYPTION_KEY` in its auth system. Cursor should be added to that model plainly and without magic. | Variable or config | Status | Purpose |
+### Environment variables and config HireProof already documents core environment variables such as search/model keys, Slack credentials, Redis, and workflow secrets, and it already relies on `SESSION_SECRET` and `BYOK_ENCRYPTION_KEY` in its auth system. Cursor should be added to that model plainly and without magic. Current Cursor runs use a server-side `CURSOR_API_KEY`; user-scoped Cursor key vaulting is future work. | Variable or config | Status | Purpose |
 |
 | --- |
 | --- |
@@ -244,7 +244,7 @@ flowchart LR H[HireProof internal trigger] --> CP[Cursor control plane] CP --> S
 | `CURSOR_MAX_CONCURRENT_RUNS` | New, recommended | Protects spend and resource contention |
 | `CURSOR_ALLOWED_REPO_URL` | New, recommended | Pin runs to the HireProof repo by default |
 | `SESSION_SECRET` | Existing | Required to protect user sessions for developer portal routes |
-| `BYOK_ENCRYPTION_KEY` | Existing | Required if you store user-scoped Cursor keys in the existing encrypted provider vault |
+| `BYOK_ENCRYPTION_KEY` | Existing | Required only if future user-scoped Cursor keys are stored in the existing encrypted provider vault |
 | `APP_BASE_URL` | Existing/recommended | Needed for QA prompts and preview/staging targeting |
 | `.cursor/BUGBOT.md` | New repo config | Project review rules for Bugbot |
 | `.cursor/skills/*` | New repo config | Repo-owned knowledge and task recipes |

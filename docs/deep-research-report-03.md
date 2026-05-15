@@ -95,7 +95,7 @@ Each task above is **straightforward**: just do it.  No need for “five options
 
 **Vote-Day Checklist (Community Votes):**
 - **Announce it:** At voting start (May 4, 7:00AM PT), immediately post on Twitter/LinkedIn/Discord with the project link and ask friends/colleagues to vote. (“Hey folks, HireProof is live on @vercel hackathon showcase – please support by voting!”).
-- **Social blitz:** Use personal and relevant group accounts. Do **not** spam; a single friendly reminder is fine. Provide instructions (“Vote for HireProof in Zero-to-Agent showcase”).
+- **Social blitz:** Use personal and relevant group accounts. Do **not** spam; a single friendly reminder is fine. Provide instructions (“Vote for HireProof in Cursor Hackathon showcase”).
 - **Monitor & pivot:** If votes seem low midday, perhaps share a new angle (e.g. a specific beneficiary like “This just saved me from a scam” story).
 - **Supporters rally:** Encourage at least 20-30 people in your network to cast their one vote. (One per person rule.)
 - **Stay available:** Be online to answer any community questions or bugs reported. If someone says “it broke for me”, fix it ASAP and comment back “Done.”

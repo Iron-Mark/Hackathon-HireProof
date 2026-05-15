@@ -43,11 +43,18 @@ const nextConfig = {
   },
   // Don't expose server-side errors in production
   productionBrowserSourceMaps: false,
+  serverExternalPackages: ['@cursor/sdk'],
   // Optimized output for Docker self-hosting
   output: 'standalone',
   turbopack: {
     resolveAlias: {
       'zlib-sync': optionalZlibSyncStub,
+    },
+    // @cursor/sdk bundles ship index.js.LICENSE.txt sidecars; treat as raw text.
+    rules: {
+      '*.LICENSE.txt': {
+        type: 'raw',
+      },
     },
   },
   webpack(config) {

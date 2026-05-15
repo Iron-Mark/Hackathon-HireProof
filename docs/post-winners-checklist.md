@@ -21,7 +21,7 @@ Use this after hackathon results are announced. Keep this local until public upd
 
 Suggested line:
 
-> HireProof placed in the Vercel Zero to Agent global hackathon: a solo one-week build that turned suspicious job-post verification into a proof-backed AI agent workflow.
+> HireProof placed in the Cursor Hackathon: a solo one-week build that turned suspicious job-post verification into a proof-backed AI agent workflow.
 
 ## If HireProof Is Not Selected
 
@@ -29,11 +29,11 @@ Suggested line:
 - Do not apologize for the result.
 - Lead with what shipped: production app, proof-backed audit flow, release assets, packages, docs, and multi-surface agent coverage.
 - Post the portfolio-focused LinkedIn version instead of winner wording.
-- Add a short "Built and shipped for Zero to Agent" note, not a negative result note.
+- Add a short "Built and shipped for Cursor Hackathon" note, not a negative result note.
 
 Suggested line:
 
-> HireProof shipped as a production-facing Zero to Agent build. The community-vote format meant placement was not fully within the product team's control, but the controllable work is clear: app, API, proof pages, docs, and a pilot path.
+> HireProof shipped as a production-facing Cursor Hackathon build. The community-vote format meant placement was not fully within the product team's control, but the controllable work is clear: app, API, proof pages, docs, and a pilot path.
 
 ## Product Follow-Up
 

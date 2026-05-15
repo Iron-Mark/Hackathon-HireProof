@@ -4,6 +4,8 @@
 
 Bugbot reviews pull requests using project rules, learned rules, and optional Autofix. HireProof uses it for **security and trust regressions**, not for replacing tests or human judgment on verdict logic.
 
+Manual PR triggers documented by Cursor: `cursor review`, `bugbot run`, and `cursor run`.
+
 ## Philosophy
 
 1. **Blocking rules** — SSRF, auth, secrets, demo honesty, missing tests on API changes.

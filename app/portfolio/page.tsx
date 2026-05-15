@@ -58,7 +58,7 @@ export default function PortfolioPage() {
                 A shipped AI trust product for suspicious job opportunities.
               </h1>
               <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-muted md:text-lg">
-                HireProof was built and shipped by Mark Siazon for Vercel Zero to Agent as a production-facing
+                HireProof was built and shipped by Mark Siazon for Cursor Hackathon as a production-facing
                 job-scam verification agent. The final placement depended on community-vote reach as well as
                 product quality, but the controllable work is clear: app, API, proof pages, packages, docs, and a
                 pilot path.

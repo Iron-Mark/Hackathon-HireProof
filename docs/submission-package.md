@@ -105,7 +105,7 @@ Close:
 
 ### X / LinkedIn
 
-I built **HireProof** for Zero to Agent.
+I built **HireProof** for Cursor Hackathon.
 
 Paste a job post, recruiter message, or suspicious listing, and it investigates whether the opportunity looks legit using live evidence, not vibes.
 
@@ -119,7 +119,7 @@ I built an AI agent that checks sketchy job posts before you apply. Paste the li
 
 ### Group Chat / Community Copy
 
-Hey, I built HireProof for Zero to Agent. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
+Hey, I built HireProof for Cursor Hackathon. It checks suspicious job posts with live evidence and gives a clear risk verdict before someone applies. If the demo feels useful, I would appreciate your vote when voting opens.
 
 ## Voting-Day Plan
 

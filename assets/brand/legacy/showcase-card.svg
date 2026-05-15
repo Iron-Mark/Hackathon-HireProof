@@ -56,6 +56,6 @@
     <rect x="38" y="352" width="376" height="42" rx="14" fill="#F8FAF7" stroke="#D9E2D6"/>
     <text x="62" y="380" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">Off-platform contact request</text>
   </g>
-  <text x="104" y="812" fill="#167C5C" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="30" font-weight="850">Built for Zero to Agent with v0, MCP, AI SDK, SerpApi, and Vercel.</text>
+  <text x="104" y="812" fill="#167C5C" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="30" font-weight="850">Built for Cursor Hackathon with v0, MCP, AI SDK, SerpApi, and Vercel.</text>
 </svg>
 

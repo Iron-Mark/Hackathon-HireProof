@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { Code2, Network, ShieldCheck, FlaskConical, FileText, ChevronRight } from 'lucide-react'
+import { Code2, Network, ShieldCheck, FlaskConical, FileText, ChevronRight, ServerCog } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Cursor Integration | HireProof Docs',
@@ -12,7 +12,7 @@ const pages = [
   {
     href: '/docs/cursor/sdk',
     title: 'SDK (developer portal)',
-    desc: 'Planned @cursor/sdk flow, BYOK, and example prompts for /developer (Phase 2).',
+    desc: '@cursor/sdk flow, server-side key model, and example prompts for /developer.',
     icon: Code2,
   },
   {
@@ -33,6 +33,12 @@ const pages = [
     desc: 'Exploratory Cursor QA vs Playwright as the deterministic release blocker.',
     icon: FlaskConical,
   },
+  {
+    href: '/docs/cursor/cloud-environments',
+    title: 'Cloud environments',
+    desc: 'Cloud Agent install/start setup, scoped secrets, and environment governance.',
+    icon: ServerCog,
+  },
 ]
 
 export default function CursorIntegrationPage() {
@@ -52,7 +58,7 @@ export default function CursorIntegrationPage() {
           Product truth stays on <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">/api/audit</code>,{' '}
           <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">/api/v1/audit</code>, and{' '}
           <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">/api/mcp</code>. Cursor handles skills, hooks,
-          Bugbot, and (later) optional developer-portal agent runs—not end-user fraud decisions.
+          Bugbot, and optional developer-portal agent runs, not end-user fraud decisions.
         </p>
       </section>
 
@@ -87,6 +93,10 @@ export default function CursorIntegrationPage() {
             <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">.cursor/skills/hireproof-architecture/</code> —
             contributor constraints for this repository (live-vs-demo, SSRF, secrets).
           </li>
+          <li>
+            <code className="rounded bg-surface px-1.5 py-0.5 text-foreground">.cursor/rules/hireproof-architecture.mdc</code> —
+            always-on Cursor project rules for Agent and Inline Edit.
+          </li>
         </ul>
       </section>
 
@@ -99,7 +109,8 @@ export default function CursorIntegrationPage() {
               <code className="text-foreground">docs/cursor/deep-research-report-HPROOF.md</code> in the repository.
             </p>
             <p className="mt-2 text-sm font-medium text-muted">
-              Phase 1 in repo today: <code className="text-foreground">.cursor/BUGBOT.md</code>, architecture skill,{' '}
+              In repo today: <code className="text-foreground">.cursor/BUGBOT.md</code>, architecture skill, project rule,{' '}
+              <code className="text-foreground">.cursor/environment.json</code>,{' '}
               <code className="text-foreground">scripts/cursor-pretool-guard.mjs</code>, and{' '}
               <code className="text-foreground">.cursor/hooks.json</code>.
             </p>

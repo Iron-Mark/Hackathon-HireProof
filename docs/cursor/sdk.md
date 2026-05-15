@@ -1,10 +1,10 @@
-# Cursor TypeScript SDK (developer portal)
+# Cursor SDK (developer portal)
 
-**Status:** Spec / Phase 2 — routes and `@cursor/sdk` are not in this repo yet. Use this page for intended design and example prompts.
+**Status:** Implemented behind feature flags. The repo includes `@cursor/sdk`, `lib/cursor/*`, `POST /api/developer/cursor/runs`, and secured internal Cursor routes. Use this page for the current developer-portal contract and safe example prompts.
 
 ## Goal
 
-Expose **optional** Cursor agent runs from `/developer` so builders can scaffold integrations, review docs drift, or run safe repo tasks—without routing end-user audits through Cursor.
+Expose **optional** Cursor SDK agent runs from `/developer` so builders can scaffold integrations, review docs drift, or run safe repo tasks - without routing end-user audits through Cursor.
 
 ## Target flow
 
@@ -12,39 +12,51 @@ Expose **optional** Cursor agent runs from `/developer` so builders can scaffold
 flowchart LR
   U[Developer on /developer] --> R[POST /api/developer/cursor/runs]
   R --> A[lib/cursor via @cursor/sdk]
-  A --> C[Cursor local or cloud agent]
+  A --> C[Cursor local or Cloud Agent]
   C --> G[HireProof repo]
   C --> M[Optional HireProof MCP]
-  C --> S[SSE log stream]
+  C --> S[Run metadata and status]
   S --> UI[Developer portal pane]
   R --> T[Usage / analytics]
 ```
 
-## Security (match existing developer routes)
+## Security
 
 - Reuse patterns from `app/api/developer/provider-credentials`: origin validation, rate limits, authenticated session.
-- **BYOK:** Store user Cursor keys in the existing encrypted provider vault (`BYOK_ENCRYPTION_KEY`), never log raw keys.
-- **Feature flag:** e.g. `NEXT_PUBLIC_CURSOR_AGENTS_ENABLED=false` until QA passes.
-- **Repo pin:** `CURSOR_ALLOWED_REPO_URL` fixed to this repository—no arbitrary repo targets from user input.
+- **Current key model:** Use server-side `CURSOR_API_KEY`; never expose it to browsers or logs.
+- **Future user-key model:** If per-user Cursor keys are added later, store them through the hosted encrypted vault and require `BYOK_ENCRYPTION_KEY`.
+- **Feature flag:** `CURSOR_INTEGRATION_ENABLED=false` until QA passes. Keep any client-side flags display-only.
+- **Repo pin:** `CURSOR_ALLOWED_REPO_URL` fixed to this repository. Do not accept arbitrary repo targets from user input.
+- **Run output:** The current portal stores run metadata/status. Streaming logs and artifact ingestion are future work.
 
-## Environment variables (Phase 2+)
+## Environment variables
 
 | Variable | Purpose |
 | --- | --- |
-| `CURSOR_API_KEY` | Platform-managed runs (server-side only) |
-| `CURSOR_MODEL_ID` | Configurable model id |
-| `CURSOR_RUNTIME_DEFAULT` | `local` \| `cloud` \| later `self-hosted` |
+| `CURSOR_INTEGRATION_ENABLED` | Server-side feature flag |
+| `CURSOR_API_KEY` | Platform-managed runs, server-side only |
+| `CURSOR_MODEL_ID` | Configurable model id, default `composer-2` |
+| `CURSOR_RUNTIME_DEFAULT` | `local` or `cloud` |
 | `CURSOR_WEBHOOK_SECRET` | Internal cron / webhook auth |
 | `CURSOR_MAX_CONCURRENT_RUNS` | Spend and contention cap |
+| `CURSOR_ALLOWED_REPO_URL` | Cloud Agent repo pin |
+
+## Runtime notes
+
+- Local runtime uses `Agent.create({ local: { cwd } })` from the server process.
+- Cloud runtime uses `Agent.create({ cloud: { repos: [...] } })` and requires `CURSOR_ALLOWED_REPO_URL` or `GITHUB_REPO_URL`.
+- SDK runs may use `.cursor/skills/`, `.cursor/rules/`, `.cursor/hooks.json`, and MCP configuration.
+- HireProof keeps product verdicts in `/api/audit`, `/api/v1/audit`, `/api/mcp`, and `lib/mcp-tools.ts`.
 
 ## Degradation
 
-When the key is missing or Cursor is down:
+When the key is missing, the flag is off, or Cursor is down:
 
-- Show static docs and example prompts (below).
+- Show static docs and example prompts.
 - Keep the existing API playground as the primary integration path.
+- Let `scripts/cursor-smoke.mjs` exit `0` with a skip message when the integration is intentionally off.
 
-## Example prompts (copy into Cursor or future portal presets)
+## Example prompts
 
 **Generate Next.js integration**
 
@@ -58,7 +70,7 @@ Read app/docs/headless-api and lib/schemas.ts. Propose a minimal Next.js App Rou
 Compare README.md, DEPLOYMENT.md, .env.example, and docs/automation-integrations.md for stale routes, env vars, or API examples. List mismatches only; propose minimal doc fixes in a separate branch.
 ```
 
-**Security-focused diff review (local agent)**
+**Security-focused diff review**
 
 ```text
 Review the current branch diff under app/api/ and lib/ for: SSRF on user URLs, weakened rate limits, secret logging, demo-vs-live disclosure regressions. Cite file paths; do not change product verdict logic.
@@ -66,6 +78,7 @@ Review the current branch diff under app/api/ and lib/ for: SSRF on user URLs, w
 
 ## References
 
-- Cursor TypeScript SDK: [cursor.com/blog/typescript-sdk](https://cursor.com/blog/typescript-sdk)
+- Cursor SDK changelog: [cursor.com/changelog/sdk-release](https://cursor.com/changelog/sdk-release)
+- Cursor SDK blog: [cursor.com/blog/typescript-sdk](https://cursor.com/blog/typescript-sdk)
 - HireProof developer portal: `/developer`
 - Phase 1 config: [bugbot.md](./bugbot.md), [mcp.md](./mcp.md)

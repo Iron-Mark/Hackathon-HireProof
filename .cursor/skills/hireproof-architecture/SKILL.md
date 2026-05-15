@@ -19,6 +19,7 @@ This skill is **not** the job-investigation skill. For verifying job listings wi
 - Never log API keys, `SESSION_SECRET`, webhook secrets, `WORKFLOW_SECRET`, or decrypted provider payloads.
 - Prefer **evidence-backed** user-facing copy; avoid certainty language the scorer cannot support.
 - **Cursor does not own verdicts** — do not route product fraud decisions through Cursor; use `/api/audit`, `/api/v1/audit`, and `lib/mcp-tools.ts`.
+- Cursor project rules live in `.cursor/rules/`; keep this skill focused on SDK agent behavior and repo-specific task execution.
 
 ## Where to look
 
@@ -53,4 +54,5 @@ Do not run destructive shell commands against production; hooks may block them (
 
 - `docs/cursor/overview.md` — architecture boundaries
 - `docs/cursor/mcp.md` — MCP grounding for agents
+- `.cursor/rules/hireproof-architecture.mdc` — Cursor project rule
 - `.cursor/BUGBOT.md` — PR review rules

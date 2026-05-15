@@ -1,4 +1,4 @@
-# Zero to Agent Winning Report
+# Cursor Hackathon Winning Report
 
 This report consolidates the constraints and angles from your prior prompt batches—official-rules strategy, second-batch contrarian research, and advanced-tech angle testing—into one decisive plan. fileciteturn0file0 fileciteturn0file1 fileciteturn0file2
 
@@ -34,7 +34,7 @@ The exact recommendation is:
 
 ### Confirmed facts and what they mean
 
-The official Zero to Agent hub states that the event runs **April 24 to May 4, 2026**, centers on shipping **real, working AI agents**, and offers three tracks: **Workflows**, **v0 + MCPs**, and **ChatSDK Agents**. The rules page confirms that the submission window closes **May 3 at 23:59 PT**, entries are **solo only**, projects must be **deployed on Vercel**, and the final outcome blends **community voting** with **Vercel team input**. citeturn1view0turn3view0
+The official Cursor Hackathon hub states that the event runs **April 24 to May 4, 2026**, centers on shipping **real, working AI agents**, and offers three tracks: **Workflows**, **v0 + MCPs**, and **ChatSDK Agents**. The rules page confirms that the submission window closes **May 3 at 23:59 PT**, entries are **solo only**, projects must be **deployed on Vercel**, and the final outcome blends **community voting** with **Vercel team input**. citeturn1view0turn3view0
 
 For your local execution in entity["city","Manila","Metro Manila, Philippines"], the important operational detail is timezone conversion. On April 25, 2026, PT is **UTC-07:00** while Manila is **UTC+08:00**, which means Manila is **15 hours ahead**. So the hard global submission deadline of **May 3, 23:59 PT** lands at **May 4, 14:59 PHT**. Voting from **May 4, 00:00 PT to 23:59 PT** becomes **May 4, 15:00 PHT to May 5, 14:59 PHT**. If you think “deadline is May 3 local,” you are leaving useful build time on the table. citeturn3view0turn25time0turn25time1
 
@@ -912,7 +912,7 @@ Show the high-risk verdict, three red flags, and safer alternatives.
 
 #### Thirty-second voting version
 
-“Built for Zero to Agent: HireProof. Paste a job post. It investigates whether it’s legit before you apply. Live evidence. Clear risk score. Safer alternatives.”
+“Built for Cursor Hackathon: HireProof. Paste a job post. It investigates whether it’s legit before you apply. Live evidence. Clear risk score. Safer alternatives.”
 
 #### Fifteen-second short-form
 
@@ -946,15 +946,15 @@ Do not use the landing page as the submission screenshot. Use the **result**.
 The vote window is short. You are not “marketing a product.” You are **removing friction from understanding**.
 
 **Primary social post copy:**
-> I built HireProof for Zero to Agent.  
-> Paste a job post, recruiter message, or suspicious listing, and it investigates whether it feels legit using live evidence—not vibes.  
+> I built HireProof for Cursor Hackathon.
+> Paste a job post, recruiter message, or suspicious listing, and it investigates whether it feels legit using live evidence—not vibes.
 > If it helps, I’d appreciate your vote when voting opens.
 
 **Pinned comment:**
 > Best way to test it: click the sample suspicious post first. The whole flow takes about 20 seconds.
 
 **Direct message copy:**
-> Hey — I built a small AI verification tool for job posts in the Vercel Zero to Agent hackathon. It checks whether a listing looks legit using live evidence and safer alternatives. If you find it useful, a vote would mean a lot.
+> Hey — I built a small AI verification tool for job posts in the Cursor Hackathon. It checks whether a listing looks legit using live evidence and safer alternatives. If you find it useful, a vote would mean a lot.
 
 **Gen Z / Filipino hook variants:**
 - “Paste mo muna bago ka mag-apply.”

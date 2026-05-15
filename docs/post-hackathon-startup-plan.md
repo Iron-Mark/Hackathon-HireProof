@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-10, Asia/Manila
 
-HireProof shipped as a complete, production-facing Zero to Agent build. The final ranking was shaped by factors outside the product itself, including community-vote reach and distribution timing, so the right post-hackathon read is "validated a serious product direction and moved into pilot mode."
+HireProof shipped as a complete, production-facing Cursor Hackathon build. The final ranking was shaped by factors outside the product itself, including community-vote reach and distribution timing, so the right post-hackathon read is "validated a serious product direction and moved into pilot mode."
 
 The next phase should keep the proof stable, protect provider spend, and validate whether real users want this as a community safety tool, developer API, or hiring-page trust signal.
 

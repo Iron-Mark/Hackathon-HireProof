@@ -93,16 +93,16 @@ Invoke-RestMethod -Method Post `
 
 Register tasks in **Task Scheduler** → Create Task → Triggers (daily / weekly) → Action: `powershell.exe` with `-File` pointing to a private `.ps1` that sets `$env:CURSOR_WEBHOOK_SECRET` from secure storage.
 
-## Vercel Cron (optional)
+## Vercel Cron (optional, verify first)
 
-If you use [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs), add a `vercel.json` cron entry that hits your **deployment URL** (each environment has its own URL). Protect routes only with `x-cursor-job-secret`—do not disable auth by making these routes public without the header.
+If you use [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs), first verify the current plan/runtime can deliver the required `x-cursor-job-secret` header or can call a small server-side wrapper that adds it. Protect routes only with `x-cursor-job-secret`—do not disable auth by making these routes public without the header.
 
 Example shape (adjust schedule and path; store `CURSOR_WEBHOOK_SECRET` in Vercel env, inject in a small Route Handler or use an external worker that adds the header):
 
 - Schedule: `15 2 * * *` → `GET /api/internal/cursor/nightly-repo-health`
 - Schedule: `0 9 * * 1` → `POST /api/internal/cursor/ui-qa` with Preview `baseUrl` in body
 
-Vercel’s cron invoker may not send custom headers on all plans; if unsupported, use an external scheduler (cron, GitHub Actions, Azure Logic Apps) that calls the public HTTPS URL with `x-cursor-job-secret`.
+If custom headers are unsupported, use an external scheduler (cron, GitHub Actions, Azure Logic Apps) that calls the public HTTPS URL with `x-cursor-job-secret`.
 
 ## GitHub Actions (scheduled workflow)
 
@@ -154,5 +154,6 @@ Optional: `APP_BASE_URL` or `HIREPROOF_CURSOR_SMOKE_BASE_URL` for UI QA target (
 ## Related docs
 
 - [deploy.md](./deploy.md) — Vercel variables and enablement
+- [cloud-environments.md](./cloud-environments.md) — Cloud Agent environment setup
 - [qa.md](./qa.md) — release checklist vs advisory Cursor QA
 - [overview.md](./overview.md) — what Cursor must not own

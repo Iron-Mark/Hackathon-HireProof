@@ -1,9 +1,14 @@
 # Archived Hackathon Strategy & Planning
 
-This directory contains the historical research, strategy, and planning documents generated during the **Zero to Agent** hackathon workstream. These files are preserved for context and process transparency.
+This directory contains the historical research, strategy, and planning documents generated during the **Cursor Hackathon** workstream. These files are preserved for context and process transparency.
 
 ## Live Documentation
 For the most up-to-date technical documentation, visit the **[Live Documentation Portal](https://hireproof.tech/docs)**.
+
+### Cursor integration
+- [`cursor/README.md`](./cursor/README.md): Index for Cursor SDK, MCP, Bugbot, QA, and architecture boundaries.
+- [`cursor/overview.md`](./cursor/overview.md): What Cursor must never own (verdicts) vs dev acceleration.
+- [`cursor/deep-research-report-HPROOF.md`](./cursor/deep-research-report-HPROOF.md): Full strategic research export (cleaned).
 
 ## Archived Contents
 

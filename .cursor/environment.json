@@ -1,0 +1,9 @@
+{
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "HireProof Next.js dev server",
+      "command": "npm run dev"
+    }
+  ]
+}

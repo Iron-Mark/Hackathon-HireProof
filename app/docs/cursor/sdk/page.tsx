@@ -5,7 +5,7 @@ import { Code2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Cursor SDK (developer portal) | HireProof Docs',
-  description: 'Planned @cursor/sdk integration for the HireProof developer portal with BYOK and example prompts.',
+  description: '@cursor/sdk integration for the HireProof developer portal with server-side keys and example prompts.',
 }
 
 export default function CursorSdkPage() {
@@ -17,8 +17,8 @@ export default function CursorSdkPage() {
           <h1 className="text-4xl font-black tracking-tight lg:text-5xl">Cursor SDK (developer portal)</h1>
         </div>
         <p className="text-xl font-medium leading-relaxed text-muted">
-          <strong className="text-foreground">Phase 2 — not implemented yet.</strong> This page describes the intended design.
-          See <Link href="/docs/cursor" className="text-safe underline">Cursor integration overview</Link> for Phase 1 config.
+          <strong className="text-foreground">Implemented behind a feature flag.</strong> Cursor runs are optional developer
+          and ops helpers, not part of HireProof audit verdicts.
         </p>
       </section>
 
@@ -27,13 +27,14 @@ export default function CursorSdkPage() {
         <p className="text-sm font-medium text-muted">
           Secured <code className="rounded bg-surface px-1.5 py-0.5">POST /api/developer/cursor/runs</code> →{' '}
           <code className="rounded bg-surface px-1.5 py-0.5">lib/cursor</code> via{' '}
-          <code className="rounded bg-surface px-1.5 py-0.5">@cursor/sdk</code> → SSE log pane in{' '}
+          <code className="rounded bg-surface px-1.5 py-0.5">@cursor/sdk</code> → run metadata in{' '}
           <code className="rounded bg-surface px-1.5 py-0.5">/developer</code>.
         </p>
         <p className="text-sm font-medium text-muted">
-          Reuse origin validation, rate limits, and BYOK from{' '}
-          <code className="rounded bg-surface px-1.5 py-0.5">app/api/developer/provider-credentials</code>. Gate with{' '}
-          <code className="rounded bg-surface px-1.5 py-0.5">NEXT_PUBLIC_CURSOR_AGENTS_ENABLED=false</code> until QA passes.
+          Reuse authenticated sessions, mutation-origin checks, and rate limits from developer routes. Gate with{' '}
+          <code className="rounded bg-surface px-1.5 py-0.5">CURSOR_INTEGRATION_ENABLED=false</code> until QA passes. The
+          current key model uses server-side <code className="rounded bg-surface px-1.5 py-0.5">CURSOR_API_KEY</code>;
+          per-user Cursor key storage and streaming logs remain future work.
         </p>
       </section>
 

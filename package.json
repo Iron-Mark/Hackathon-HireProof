@@ -33,7 +33,8 @@
     "integrations:package": "node scripts/package-integrations.mjs",
     "proof:chat-live": "node scripts/check-live-chat-proof.mjs",
     "proof:chat-live:strict": "node scripts/check-live-chat-proof.mjs --require-live",
-    "discord:commands": "node scripts/register-discord-commands.mjs"
+    "discord:commands": "node scripts/register-discord-commands.mjs",
+    "cursor:orchestrate": "node scripts/orchestrate-cursor-phases.mjs"
   },
   "repository": {
     "type": "git",
@@ -47,13 +48,13 @@
   },
   "homepage": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent#readme",
   "dependencies": {
+    "@cursor/sdk": "^1.0.13",
     "@ai-sdk/gateway": "^3.0.105",
     "@ai-sdk/openai": "^3.0.53",
     "@chat-adapter/discord": "^4.26.0",
     "@chat-adapter/slack": "^4.26.0",
     "@chat-adapter/state-redis": "^4.26.0",
     "@chat-adapter/telegram": "^4.26.0",
-    "@cursor/sdk": "^1.0.13",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",

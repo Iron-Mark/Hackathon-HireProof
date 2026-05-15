@@ -8,6 +8,7 @@ Use this page when enabling Cursor on **Vercel** (or another Node host). Never c
 
 - Vercel project linked to this repo (see [DEPLOYMENT.md](../../DEPLOYMENT.md) for project metadata).
 - A **Cursor Cloud Agents API key** from the Cursor dashboard (server-side only).
+- Cursor Cloud Agent environment reviewed for install/start commands, scoped secrets, and audit visibility (see [cloud-environments.md](./cloud-environments.md)).
 - **Redis / Upstash** already configured if you rely on durable run history (same as other developer features).
 - `GITHUB_REPO_URL` set to the canonical GitHub remote (required for **cloud** runs when `CURSOR_ALLOWED_REPO_URL` is unset).
 
@@ -46,6 +47,7 @@ CI does **not** need Cursor variables: [`.github/workflows/cursor-integration.ym
 4. Set `CURSOR_ALLOWED_REPO_URL` to your canonical GitHub repo URL (same value as `GITHUB_REPO_URL` in [`.env.example`](../../.env.example)).
 5. Set `APP_BASE_URL` on Preview to the deployment’s preview domain (e.g. `https://hireproof-git-<branch>-<team>.vercel.app`), not production user traffic.
 6. Leave `CURSOR_INTEGRATION_ENABLED` unset or `false` until step 3.
+7. Confirm the Cursor Cloud Agent environment uses safe install/start commands and scoped secrets before starting scheduled runs.
 
 ### 2. Generate `CURSOR_WEBHOOK_SECRET`
 
@@ -113,6 +115,7 @@ Do not treat Bugbot as a substitute for `npm run lint`, `npm run build`, `node -
 | Use Preview `APP_BASE_URL` for UI QA cron | Point UI QA at production for exploratory agents |
 | Pin repo with `CURSOR_ALLOWED_REPO_URL` | Allow user-supplied repo URLs in production |
 | Store keys only in Vercel / host secrets | Log `CURSOR_API_KEY`, webhook secret, or Bearer tokens |
+| Keep Cursor environment secrets scoped and auditable | Reuse broad production secrets across agent environments |
 | Cap runs with `CURSOR_MAX_CONCURRENT_RUNS` | Trigger Cursor on every end-user audit |
 
 ## Rollback
@@ -125,6 +128,7 @@ Do not treat Bugbot as a substitute for `npm run lint`, `npm run build`, `node -
 ## Related docs
 
 - [automation.md](./automation.md) — cron, Preview URL workflow, smoke script
+- [cloud-environments.md](./cloud-environments.md) — Cloud Agent environment setup
 - [overview.md](./overview.md) — architecture boundaries
 - [bugbot.md](./bugbot.md) — rule philosophy
 - [qa.md](./qa.md) — release checklist

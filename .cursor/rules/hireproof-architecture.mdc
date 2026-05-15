@@ -1,0 +1,35 @@
+---
+description: HireProof architecture, safety, and verification rules for Cursor Agent work
+globs:
+alwaysApply: true
+---
+
+# HireProof Architecture Rules
+
+HireProof is a focused employment-fraud trust product. Keep the product story centered on suspicious job posts, recruiter messages, and apply links.
+
+## Product Truth
+
+- Do not route public verdicts through Cursor. Verdict truth belongs to `/api/audit`, `/api/v1/audit`, `/api/mcp`, `lib/mcp-tools.ts`, schemas, and scorer logic.
+- Preserve live-vs-demo disclosures in UI, API output, docs, and examples.
+- Do not broaden claims into generic fraud, ML, continuous learning, or deepfake detection unless implementation and verification prove it.
+
+## Security
+
+- Preserve origin/referrer validation, same-origin mutation checks, rate limits, payload limits, and SSRF protections.
+- Never log or expose API keys, `SESSION_SECRET`, webhook secrets, BYOK payloads, provider credentials, or decrypted values.
+- Keep `CURSOR_API_KEY` server-side only. Do not expose it through client bundles or public docs.
+- Pin Cloud Agent repository targets with `CURSOR_ALLOWED_REPO_URL` or `GITHUB_REPO_URL`.
+
+## Cursor Boundaries
+
+- Use `.cursor/BUGBOT.md` for PR review priorities.
+- Use `.cursor/skills/` for Cursor SDK agent skills.
+- Use `.cursor/rules/` for Cursor project rules.
+- Use `.cursor/hooks.json` and `scripts/cursor-pretool-guard.mjs` as guardrails, not as replacements for code review.
+
+## Verification
+
+- For non-trivial changes, run the narrowest relevant checks before claiming done.
+- Prefer `npm run lint`, `node --test test/cursor*.test.mjs`, `node --test test/runtime-wiring.test.mjs`, and `npm run build` depending on scope.
+- Cloud Agent QA is advisory. Playwright, deterministic tests, and human review remain release blockers.
