@@ -50,21 +50,11 @@ function run(command, commandArgs, options = {}) {
 }
 
 function npmRun(script) {
-  const npmExecPath = process.env.npm_execpath
-  const result = npmExecPath
-    ? spawnSync(process.execPath, [npmExecPath, 'run', script], {
-        cwd: root,
-        stdio: 'inherit',
-      })
-    : process.platform === 'win32'
-      ? spawnSync('cmd.exe', ['/d', '/s', '/c', `npm run ${script}`], {
-          cwd: root,
-          stdio: 'inherit',
-        })
-      : spawnSync('npm', ['run', script], {
-          cwd: root,
-          stdio: 'inherit',
-        })
+  const result = spawnSync('npm', ['run', script], {
+    cwd: root,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
   if (result.error) throw result.error
   if (result.status !== 0) {
     throw new Error(`npm run ${script} exited with code ${result.status ?? 1}`)
@@ -84,7 +74,7 @@ async function runCursorTests() {
   if (files.length === 0) {
     throw new Error('No test/cursor*.test.mjs files found')
   }
-  run(process.execPath, ['--test', ...files])
+  run(process.execPath, ['--experimental-strip-types', '--test', ...files])
 }
 
 async function loadPhases() {
@@ -198,7 +188,7 @@ function reportCursorConfigFiles(step) {
     }
     log('files', `ok ${relative}`)
   }
-  log('phase-1', 'Cursor hooks, environment.json, BUGBOT.md, rules, hireproof-architecture skill, and pretool guard present.')
+  log('phase-1', 'Cursor hooks, BUGBOT.md, hireproof-architecture skill, and pretool guard present.')
 }
 
 function reportInternalRoutes() {
