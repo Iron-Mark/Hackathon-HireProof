@@ -1,4 +1,4 @@
-# HireProof — Interactive Cursor secrets setup for Vercel (Preview + Production)
+﻿# HireProof - Interactive Cursor secrets setup for Vercel (Preview + Production)
 # Requires: Vercel CLI logged in (`vercel whoami`), repo linked (`vercel link`).
 # NEVER commits or writes secrets to repo files.
 #
@@ -33,7 +33,7 @@ function Get-AllowedRepoUrlFromGit {
         }
     }
     catch {
-        # ignore — use fallback
+        # ignore - use fallback
     }
     return $Fallback
 }
@@ -98,7 +98,7 @@ Write-Host @"
 
 === HireProof Cursor secrets -> Vercel ===
 Targets: preview, production (each variable)
-Secrets are sent to Vercel only — not written to disk in this repo.
+Secrets are sent to Vercel only - not written to disk in this repo.
 
 "@ -ForegroundColor White
 
@@ -150,13 +150,13 @@ Set on preview + production:
   CURSOR_RUNTIME_DEFAULT  = $RuntimeDefault
   CURSOR_MAX_CONCURRENT_RUNS = $MaxConcurrentRuns
   CURSOR_API_KEY          = (encrypted in Vercel)
-  CURSOR_WEBHOOK_SECRET   = (encrypted in Vercel — copy from Dashboard if schedulers need it)
+  CURSOR_WEBHOOK_SECRET   = (encrypted in Vercel - copy from Dashboard if schedulers need it)
   CURSOR_INTEGRATION_ENABLED = true
 
 Next steps:
   1. Redeploy Preview (and Production when ready) so serverless functions pick up env changes.
   2. Run smoke: node scripts/cursor-smoke.mjs (Preview / .env.local).
-  3. Cron jobs: use header x-cursor-job-secret with the same webhook secret — see docs/cursor/automation.md
+  3. Cron jobs: use header x-cursor-job-secret with the same webhook secret - see docs/cursor/automation.md
 
 Runbook: $deployDoc
 Verify names: vercel env ls
@@ -164,5 +164,5 @@ Verify names: vercel env ls
 "@ -ForegroundColor Green
 
 if ($DryRun) {
-    Write-Host "Dry run complete — re-run without -DryRun after you have a real API key." -ForegroundColor Yellow
+    Write-Host 'Dry run complete - re-run without -DryRun after you have a real API key.' -ForegroundColor Yellow
 }
