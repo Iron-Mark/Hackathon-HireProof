@@ -1,5 +1,10 @@
 {
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "middleware.js": {
+      "includeFiles": "node_modules/@swc/helpers/esm/**"
+    }
+  }
 }
