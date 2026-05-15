@@ -46,6 +46,10 @@ const nextConfig = {
   serverExternalPackages: ['@cursor/sdk'],
   // Optimized output for Docker self-hosting
   output: 'standalone',
+  // Proxy/middleware is compiled to ESM @swc/helpers imports; NFT only traced CJS by default.
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/@swc/helpers/esm/**/*'],
+  },
   turbopack: {
     resolveAlias: {
       'zlib-sync': optionalZlibSyncStub,
