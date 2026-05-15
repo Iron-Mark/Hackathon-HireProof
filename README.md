@@ -8,7 +8,7 @@ Employment-fraud trust and safety for suspicious job posts, recruiter messages, 
 
 HireProof helps a job seeker decide whether an opportunity is worth trusting before they apply or share personal data. Paste the post, message, screenshot, or URL. The agent extracts the claims, checks evidence, and returns a `Safe`, `Caution`, or `High-Risk` verdict with visible red flags, green flags, source receipts, and next steps.
 
-Built as a solo global hackathon project by [Mark Siazon](https://www.marksiazon.dev/) in just over one week for the [Vercel Zero to Agent Hackathon](https://community.vercel.com/hackathons/zero-to-agent).
+Built as a solo global hackathon project by [Mark Siazon](https://www.marksiazon.dev/) in just over one week for Cursor Hackathon.
 
 [![Production Demo](https://img.shields.io/badge/Production-hireproof.tech-111827?style=for-the-badge)](https://hireproof.tech)
 [![Docs](https://img.shields.io/badge/Docs-Live-2563eb?style=for-the-badge)](https://hireproof.tech/docs)
@@ -225,6 +225,22 @@ Demo fixtures work without provider keys. Live evidence mode needs model/search 
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `TELEGRAM_BOT_USERNAME` |
 | Optional provider adapters | `ZERNIO_API_KEY`, `ZERNIO_WEBHOOK_SECRET` |
 | Workflow | `WORKFLOW_SECRET` |
+| Cursor (optional) | `CURSOR_INTEGRATION_ENABLED`, `CURSOR_API_KEY`, `CURSOR_MODEL_ID`, `CURSOR_RUNTIME_DEFAULT`, `CURSOR_WEBHOOK_SECRET`, `CURSOR_MAX_CONCURRENT_RUNS`, `CURSOR_ALLOWED_REPO_URL` |
+
+## Cursor integration
+
+Cursor accelerates **contributor workflows** (repo health, docs drift, exploratory UI QA) from `/developer` and secured internal cron routes. It does **not** participate in public audit verdicts (`/api/audit`, `/api/v1/audit`, or MCP investigation truth paths).
+
+1. Copy Cursor variables from [`.env.example`](.env.example) into `.env.local`.
+2. Set `CURSOR_INTEGRATION_ENABLED=true` only after `CURSOR_API_KEY` is configured server-side.
+3. Pin cloud runs with `CURSOR_ALLOWED_REPO_URL` (falls back to `GITHUB_REPO_URL` when unset).
+4. Use **Developer portal → Cursor Agents** for preset runs, or call `POST /api/developer/cursor/runs` (session auth + same-origin CSRF).
+5. Schedule ops jobs with `x-cursor-job-secret` on:
+   - `GET /api/internal/cursor/nightly-repo-health`
+   - `POST /api/internal/cursor/ui-qa` (body: `{ "baseUrl": "https://your-preview.example" }`)
+6. Enable **Cursor Bugbot** in the Cursor dashboard and require its GitHub check on protected branches (see [`.github/workflows/cursor-integration.yml`](.github/workflows/cursor-integration.yml) comments).
+
+CI runs `npm run lint`, `npm run build`, and `node --test test/cursor*.test.mjs` without a Cursor API key.
 
 ## Architecture
 

@@ -74,6 +74,16 @@ const docsSidebar = [
     ],
   },
   {
+    title: 'Cursor Integration',
+    items: [
+      { label: 'Overview', href: '/docs/cursor' },
+      { label: 'SDK (portal)', href: '/docs/cursor/sdk' },
+      { label: 'MCP grounding', href: '/docs/cursor/mcp' },
+      { label: 'Bugbot rules', href: '/docs/cursor/bugbot' },
+      { label: 'QA checklist', href: '/docs/cursor/qa' },
+    ],
+  },
+  {
     title: 'Open Skills',
     items: [
       { label: 'Agent Skills', href: '/docs/skills' },

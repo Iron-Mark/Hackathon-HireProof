@@ -16,7 +16,8 @@ import {
   Code2, 
   RefreshCcw,
   Webhook,
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles,
 } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { showToast } from '@/components/system/toast'
@@ -62,6 +63,26 @@ type VerifiedDomain = {
   badgeUrl: string
   scriptUrl: string
 }
+type CursorRun = {
+  id: string
+  status: string
+  preset?: string
+  promptSummary: string
+  runtime: string
+  cursorRunId: string | null
+  cursorAgentId: string | null
+  createdAt: string
+  completedAt: string | null
+}
+type CursorIntegrationStatus = {
+  enabled: boolean
+  configured: boolean
+  operational: boolean
+  runtimeDefault: string
+  allowedRepoPinned: boolean
+  maxConcurrentRuns: number
+}
+type CursorPreset = { id: string; label: string }
 
 export function DeveloperClient() {
   const [user, setUser] = useState<User | null>(null)
@@ -89,6 +110,10 @@ export function DeveloperClient() {
   const [systemLogs, setSystemLogs] = useState<Array<{ msg: string; type: 'info' | 'success' | 'error'; time: string }>>([
     { msg: 'System initialized. Waiting for investigator...', type: 'info', time: new Date().toLocaleTimeString() }
   ])
+  const [cursorStatus, setCursorStatus] = useState<CursorIntegrationStatus | null>(null)
+  const [cursorRuns, setCursorRuns] = useState<CursorRun[]>([])
+  const [cursorPresets, setCursorPresets] = useState<CursorPreset[]>([])
+  const [cursorLaunching, setCursorLaunching] = useState<string | null>(null)
 
   async function load() {
     try {
@@ -100,11 +125,17 @@ export function DeveloperClient() {
           fetch('/api/developer/usage').then((res) => res.json()),
           fetch('/api/developer/domains').then((res) => res.json()),
         ])
-        const credentialRes = await fetch('/api/developer/provider-credentials').then((res) => res.json())
+        const [credentialRes, cursorRes] = await Promise.all([
+          fetch('/api/developer/provider-credentials').then((res) => res.json()),
+          fetch('/api/developer/cursor/runs').then((res) => res.json()),
+        ])
         setKeys(keyRes.keys || [])
         setUsage(usageRes)
         setDomains(domainRes.domains || [])
         setProviderCredentials(credentialRes.credentials || [])
+        setCursorStatus(cursorRes.status || null)
+        setCursorRuns(cursorRes.runs || [])
+        setCursorPresets(cursorRes.presets || [])
       }
     } catch (e) {
       console.error('Failed to load developer portal state')
@@ -160,6 +191,33 @@ export function DeveloperClient() {
   async function copy(value: string) {
     await navigator.clipboard.writeText(value)
     showToast('Copied to clipboard.', 'success')
+  }
+
+  async function launchCursorRun(preset: string) {
+    setCursorLaunching(preset)
+    addLog(`Starting Cursor preset: ${preset}`, 'info')
+    try {
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+      const res = await fetch('/api/developer/cursor/runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preset, baseUrl }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        showToast(json.error || json.message || 'Cursor run could not be started.', 'info')
+        addLog(json.error || json.message || 'Cursor run failed to start.', 'error')
+        return
+      }
+      showToast('Cursor run accepted.', 'success')
+      addLog(`Cursor run accepted (${json.run?.id || 'pending'}).`, 'success')
+      await load()
+    } catch {
+      showToast('Network error while starting Cursor run.', 'info')
+      addLog('Network error during Cursor orchestration.', 'error')
+    } finally {
+      setCursorLaunching(null)
+    }
   }
 
   async function testWebhook() {
@@ -526,6 +584,72 @@ export function DeveloperClient() {
                 <p className="text-center text-[10px] font-black text-muted uppercase tracking-tighter opacity-50">
                   SECRETS ARE NEVER RETURNED TO THE BROWSER AFTER SAVE
                 </p>
+              </div>
+            </section>
+
+            {/* Cursor Agents */}
+            <section className="rounded-3xl border border-border-soft bg-surface shadow-sm overflow-hidden">
+              <div className="border-b border-border-soft bg-background/50 px-8 py-6">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-5 w-5 text-evidence" />
+                  <h2 className="text-xl font-black">Cursor Agents</h2>
+                </div>
+                <p className="mt-1 text-[10px] font-black text-muted uppercase tracking-widest">
+                  Repo health, docs drift, and exploratory UI QA — not audit verdicts
+                </p>
+              </div>
+              <div className="p-8 space-y-6">
+                {!cursorStatus?.operational ? (
+                  <div className="rounded-2xl border border-border-soft bg-background/50 p-6 text-sm font-semibold text-muted leading-relaxed">
+                    Cursor integration is {!cursorStatus?.enabled ? 'disabled' : 'not fully configured'} on this deployment.
+                    Set <code className="rounded bg-surface px-1 py-0.5 text-xs">CURSOR_INTEGRATION_ENABLED=true</code> and
+                    <code className="rounded bg-surface px-1 py-0.5 text-xs"> CURSOR_API_KEY</code> server-side to launch cloud agents from this panel.
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-safe/30 bg-safe/10 p-4 text-xs font-bold leading-relaxed text-safe">
+                    Cloud agents are pinned to the configured HireProof repository. Runs are rate-limited and never touch public audit verdict paths.
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-3">
+                  {(cursorPresets.length > 0 ? cursorPresets : [
+                    { id: 'docs-drift', label: 'Docs drift review' },
+                    { id: 'repo-health', label: 'Repo health check' },
+                    { id: 'qa-walkthrough', label: 'UI QA walkthrough' },
+                  ]).map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => launchCursorRun(preset.id)}
+                      disabled={!cursorStatus?.operational || cursorLaunching === preset.id}
+                      className="rounded-xl border border-border-soft bg-background px-4 py-3 text-xs font-black uppercase tracking-widest transition-all hover:border-evidence hover:bg-evidence/5 disabled:opacity-50"
+                    >
+                      {cursorLaunching === preset.id ? 'Starting...' : preset.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  {cursorRuns.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-border-soft p-8 text-center text-xs font-bold text-muted">
+                      No Cursor runs yet for this account.
+                    </div>
+                  ) : (
+                    cursorRuns.slice(0, 8).map((run) => (
+                      <div key={run.id} className="rounded-2xl border border-border-soft bg-background p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-sm font-black">{run.preset || 'custom'}</span>
+                          <span className="rounded-md bg-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-muted">
+                            {run.status}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs font-semibold text-muted line-clamp-2">{run.promptSummary}</p>
+                        <p className="mt-2 text-[10px] font-mono text-muted">
+                          {run.runtime} · {new Date(run.createdAt).toLocaleString()}
+                          {run.cursorRunId ? ` · run ${run.cursorRunId}` : ''}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </section>
 

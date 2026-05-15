@@ -1,0 +1,36 @@
+name: Cursor Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-build-cursor-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Cursor integration unit tests
+        run: node --test test/cursor*.test.mjs
+
+  # Cursor Bugbot is enabled in the Cursor dashboard and branch protection rules.
+  # It is not invoked from this workflow because it requires Cursor-side configuration.
+  # After merging, require the "Cursor Bugbot" GitHub check on protected branches manually.

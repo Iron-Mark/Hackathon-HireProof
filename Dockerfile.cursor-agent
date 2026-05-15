@@ -1,0 +1,15 @@
+# Minimal Cursor cloud-agent / dev-environment image for HireProof maintenance jobs.
+FROM node:20-alpine
+
+WORKDIR /workspace/hireproof
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+
+ENV NODE_ENV=development
+ENV PORT=3002
+
+# Default smoke: lint only. Override CMD for QA or repo-health agent tasks.
+CMD ["npm", "run", "lint"]
