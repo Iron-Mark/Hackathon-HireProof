@@ -16,6 +16,7 @@
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
+    "postbuild": "node scripts/patch-middleware-swc-trace.mjs",
     "start": "next start",
     "prepublishOnly": "node scripts/prevent-root-publish.mjs",
     "lint": "tsc --noEmit --project tsconfig.lint.json",

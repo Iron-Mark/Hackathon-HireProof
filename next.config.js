@@ -2,6 +2,10 @@ const { withWorkflow } = require('workflow/next')
 
 const optionalZlibSyncStub = './lib/optional-zlib-sync-stub.js'
 const optionalZlibSyncWebpackStub = require.resolve('./lib/optional-zlib-sync-stub.js')
+const isVercelBuild = process.env.VERCEL === '1'
+const swcInteropRequireDefaultCjs = require.resolve(
+  '@swc/helpers/cjs/_interop_require_default.cjs',
+)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -44,15 +48,20 @@ const nextConfig = {
   // Don't expose server-side errors in production
   productionBrowserSourceMaps: false,
   serverExternalPackages: ['@cursor/sdk'],
-  // Optimized output for Docker self-hosting
-  output: 'standalone',
-  // Proxy/middleware is compiled to ESM @swc/helpers imports; NFT only traced CJS by default.
-  outputFileTracingIncludes: {
-    '/*': ['./node_modules/@swc/helpers/esm/**/*'],
-  },
+  // Optimized output for Docker self-hosting. Vercel uses its own Next.js
+  // builder output and should not receive the standalone Docker bundle.
+  ...(isVercelBuild
+    ? {}
+    : {
+        output: 'standalone',
+        outputFileTracingIncludes: {
+          '/*': ['node_modules/@swc/helpers/**/*'],
+        },
+      }),
   turbopack: {
     resolveAlias: {
       'zlib-sync': optionalZlibSyncStub,
+      '@swc/helpers/esm/_interop_require_default.js': swcInteropRequireDefaultCjs,
     },
     // @cursor/sdk bundles ship index.js.LICENSE.txt sidecars; treat as raw text.
     rules: {
@@ -65,6 +74,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       'zlib-sync': optionalZlibSyncWebpackStub,
+      '@swc/helpers/esm/_interop_require_default.js': swcInteropRequireDefaultCjs,
     }
     return config
   },
