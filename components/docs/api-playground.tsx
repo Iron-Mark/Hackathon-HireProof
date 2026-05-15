@@ -2,13 +2,33 @@
 
 import { useState } from 'react'
 import { CodeBlock } from '@/components/ui/code-block'
-import { Play, Terminal, Zap, Loader2 } from 'lucide-react'
+import { Play, Terminal, Loader2, Copy, Check } from 'lucide-react'
+
+const CURSOR_PROMPT_PRESETS = [
+  {
+    id: 'nextjs-integration',
+    label: 'Generate Next.js integration with Cursor',
+    prompt: `Read app/docs/headless-api and lib/schemas.ts. Propose a minimal Next.js App Router example that calls POST /api/v1/audit with x-api-key from env. Do not weaken origin or SSRF patterns from existing routes.`,
+  },
+  {
+    id: 'docs-drift',
+    label: 'Run repo docs-drift review',
+    prompt: `Compare README.md, DEPLOYMENT.md, .env.example, and docs/automation-integrations.md for stale routes, env vars, or API examples. List mismatches only; propose minimal doc fixes in a separate branch.`,
+  },
+] as const
 
 export function ApiPlayground() {
   const [text, setText] = useState('Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.')
   const [apiKey, setApiKey] = useState('hireproof_agent_demo_key')
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState<any>(null)
+  const [copiedPresetId, setCopiedPresetId] = useState<string | null>(null)
+
+  async function copyCursorPrompt(presetId: string, prompt: string) {
+    await navigator.clipboard.writeText(prompt)
+    setCopiedPresetId(presetId)
+    window.setTimeout(() => setCopiedPresetId(null), 2000)
+  }
 
   const handleTest = async () => {
     setLoading(true)
@@ -100,8 +120,33 @@ export function ApiPlayground() {
         </div>
       </div>
       
-      <div className="border-t border-border-soft bg-background/30 p-4 text-center">
-        <p className="text-[10px] font-bold text-muted uppercase tracking-widest">
+      <div className="border-t border-border-soft bg-background/30 p-6 space-y-4">
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-wider text-muted">
+            Cursor workflow presets
+          </p>
+          <p className="text-xs text-muted">
+            Copy into Cursor IDE or Developer portal → Cursor Agents. These are not sent to the audit API.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {CURSOR_PROMPT_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => copyCursorPrompt(preset.id, preset.prompt)}
+              className="inline-flex items-center gap-2 rounded-xl border border-border-soft bg-surface px-4 py-2 text-left text-[11px] font-bold text-foreground hover:border-safe/30 transition-colors"
+            >
+              {copiedPresetId === preset.id ? (
+                <Check className="h-3.5 w-3.5 shrink-0 text-safe" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 shrink-0 text-muted" />
+              )}
+              {preset.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] font-bold text-muted uppercase tracking-widest text-center">
           Powered by the HireProof Headless API v1.0
         </p>
       </div>
