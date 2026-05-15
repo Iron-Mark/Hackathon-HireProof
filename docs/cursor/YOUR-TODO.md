@@ -1,23 +1,23 @@
-# Cursor integration — YOUR-TODO
+# Cursor integration - YOUR-TODO
 
-Last updated: 2026-05-15 (`feature/cursor-integration`).
+Last updated: 2026-05-15 (`main` @ `416b597`).
 
 ## Done by agent
 
 - [x] Cursor integration code, docs, Bugbot rules, orchestrator, pretool guard
-- [x] `scripts/setup-cursor-secrets.ps1` — interactive Vercel env (Preview + Production)
-- [x] `.cursor/skills/security-reviewer/SKILL.md` — points at BUGBOT rules
+- [x] `scripts/setup-cursor-secrets.ps1` - interactive Vercel env (Preview + Production)
+- [x] `.cursor/skills/security-reviewer/SKILL.md` - points at BUGBOT rules
 - [x] API playground Cursor preset copy buttons (`components/docs/api-playground.tsx`)
 - [x] CI: merged `package.json` overrides + `package-lock.json` sync for `npm ci` (npm 10.8.2)
 
-PR: [#2](https://github.com/Iron-Mark/Hackathon-HireProof/pull/2)
+PR: [#2](https://github.com/Iron-Mark/Hackathon-HireProof/pull/2) — **merged** on `main` (`416b597`)
 
 ## You must do (manual)
 
-- [ ] **Merge PR #2** when `lint-build-cursor-tests` is green — [PR #2](https://github.com/Iron-Mark/Hackathon-HireProof/pull/2)
-- [ ] **Set secrets** — from repo root: `.\scripts\setup-cursor-secrets.ps1`
-- [ ] **Enable Bugbot** — [Cursor dashboard](https://cursor.com/dashboard) → your repo → enable Bugbot (rules: `.cursor/BUGBOT.md`)
-- [ ] **Branch protection** — GitHub → Settings → Branches → require `lint-build-cursor-tests` (and Bugbot when enabled)
+- [x] **Merge PR #2** — merged on `main` (`416b597`)
+- [ ] **Set secrets** - from repo root: `.\scripts\setup-cursor-secrets.ps1`
+- [ ] **Enable Bugbot** - [Cursor dashboard](https://cursor.com/dashboard) → your repo → enable Bugbot (rules: `.cursor/BUGBOT.md`)
+- [ ] **Branch protection** - GitHub → Settings → Branches → require `lint-build-cursor-tests` (and Bugbot when enabled)
 - [ ] **Redeploy Preview** after env changes; smoke Developer portal → Cursor Agents
 - [ ] **Optional:** schedule cron per [automation.md](./automation.md) (`x-cursor-job-secret`)
 
@@ -52,4 +52,4 @@ Get **CURSOR_API_KEY**: [Cursor dashboard](https://cursor.com/dashboard) → Clo
 | --- | --- |
 | `lint-build-cursor-tests` | `npm ci`, lint, build, `node --experimental-strip-types --test test/cursor*.test.mjs` |
 | Vercel Preview | Deploy on PR |
-| Cursor Bugbot | Manual — dashboard only |
+| Cursor Bugbot | Manual - dashboard only |
