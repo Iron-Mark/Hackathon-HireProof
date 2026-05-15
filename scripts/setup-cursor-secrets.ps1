@@ -10,7 +10,8 @@
 
 [CmdletBinding()]
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$CursorApiKeyPlain
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,12 +20,15 @@ Set-Location $RepoRoot
 
 $DefaultRepoUrl = "https://github.com/Iron-Mark/Hackathon-HireProof"
 $Environments = @("preview", "production")
+$SensitiveEnvNames = @(
+    "CURSOR_API_KEY",
+    "CURSOR_WEBHOOK_SECRET"
+)
 
 function Get-AllowedRepoUrlFromGit {
     param([string]$Fallback)
     try {
         $remote = & git remote get-url origin 2>$null
-        $remote = ($remote -replace "`r`n|`n|`r", '').Trim()
         if (-not $remote) { return $Fallback }
         if ($remote -match '^git@github\.com:(.+?)(?:\.git)?$') {
             return "https://github.com/$($Matches[1])"
@@ -42,8 +46,11 @@ function Get-AllowedRepoUrlFromGit {
 function New-CursorWebhookSecret {
     if (Get-Command node -ErrorAction SilentlyContinue) {
         $hex = & node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" 2>$null
-        if ($hex -and ($hex = $hex.Trim())) {
-            return $hex
+        if ($hex) {
+            $hex = $hex.Trim()
+            if ($hex) {
+                return $hex
+            }
         }
     }
     $bytes = [byte[]]::new(32)
@@ -69,11 +76,54 @@ function Test-VercelCliReady {
     if (-not (Get-Command vercel -ErrorAction SilentlyContinue)) {
         throw "Vercel CLI not found. Install: npm i -g vercel, then run 'vercel login' and 'vercel link' from the repo root."
     }
-    $whoami = & vercel whoami 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "Vercel CLI not authenticated. Run: vercel login"
+    $whoamiLines = @(& vercel whoami 2>&1)
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        $detail = ($whoamiLines | Out-String).Trim()
+        if ($detail) {
+            throw "Vercel CLI not authenticated (exit ${exitCode}): $detail`nRun: vercel login"
+        }
+        throw "Vercel CLI not authenticated (exit $exitCode). Run: vercel login"
     }
+    $whoami = ($whoamiLines | Select-Object -Last 1).ToString().Trim()
     Write-Host "Vercel CLI: logged in as $whoami" -ForegroundColor DarkGray
+}
+
+function Invoke-VercelEnvAdd {
+    param(
+        [string]$Name,
+        [string]$Value,
+        [string]$Target,
+        [switch]$Sensitive
+    )
+
+    $trimmedValue = if ($null -eq $Value) { "" } else { $Value.Trim() }
+    if (-not $trimmedValue) {
+        throw "Value for $Name is empty after trim."
+    }
+
+    $vercelArgs = @(
+        "env", "add", $Name, $Target,
+        "--value", $trimmedValue,
+        "--yes",
+        "--force"
+    )
+    if ($Sensitive) {
+        $vercelArgs += "--sensitive"
+    }
+
+    $output = @(& vercel @vercelArgs 2>&1)
+    $exitCode = $LASTEXITCODE
+    if ($output) {
+        $output | ForEach-Object { Write-Host $_ }
+    }
+    if ($exitCode -ne 0) {
+        $detail = ($output | Out-String).Trim()
+        if ($detail) {
+            throw "vercel env add failed for $Name ($Target) with exit code ${exitCode}: $detail"
+        }
+        throw "vercel env add failed for $Name ($Target) with exit code $exitCode"
+    }
 }
 
 function Add-VercelEnv {
@@ -82,17 +132,32 @@ function Add-VercelEnv {
         [string]$Value,
         [string[]]$Targets
     )
+
+    $isSensitive = $SensitiveEnvNames -contains $Name
     foreach ($target in $Targets) {
         if ($DryRun) {
             Write-Host "[DryRun] Would add $Name -> $target" -ForegroundColor Yellow
             continue
         }
         Write-Host "Adding $Name to $target..." -ForegroundColor Cyan
-        $Value = ($Value -replace "`r`n|`n|`r", '').Trim()
-        $Value | & vercel env add $Name $target
-        if ($LASTEXITCODE -ne 0) {
-            throw "vercel env add failed for $Name ($target) with exit code $LASTEXITCODE"
-        }
+        Invoke-VercelEnvAdd -Name $Name -Value $Value -Target $target -Sensitive:($isSensitive)
+    }
+}
+
+function Set-VercelEnvVariable {
+    param(
+        [string]$Name,
+        [string]$Value,
+        [string[]]$Targets
+    )
+
+    try {
+        Add-VercelEnv -Name $Name -Value $Value -Targets $Targets
+    }
+    catch {
+        Write-Host "ERROR: Failed to set $Name on Vercel." -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        throw
     }
 }
 
@@ -105,39 +170,72 @@ Secrets are sent to Vercel only - not written to disk in this repo.
 "@ -ForegroundColor White
 
 if ($DryRun) {
-    Write-Host "DRY RUN: no vercel env add commands will run.`n" -ForegroundColor Yellow
+    Write-Host "DRY RUN: no vercel env add commands will run." -ForegroundColor Yellow
+    Write-Host ""
 }
 
 Test-VercelCliReady
 
-$AllowedRepoUrl = Get-AllowedRepoUrlFromGit -Fallback $DefaultRepoUrl
+$AllowedRepoUrl = (Get-AllowedRepoUrlFromGit -Fallback $DefaultRepoUrl).Trim()
 $ModelId = "composer-2"
 $RuntimeDefault = "cloud"
 $MaxConcurrentRuns = "2"
-$WebhookSecret = New-CursorWebhookSecret
+$WebhookSecret = (New-CursorWebhookSecret).Trim()
 
 Write-Host "Detected repo URL: $AllowedRepoUrl" -ForegroundColor DarkGray
 Write-Host "Generated CURSOR_WEBHOOK_SECRET (32-byte hex, not shown)." -ForegroundColor DarkGray
 Write-Host ""
 
-$secureKey = Read-Host "Paste CURSOR_API_KEY (Cloud Agents API key)" -AsSecureString
-$CursorApiKey = ConvertFrom-SecureStringPlain -Secure $secureKey
-$secureKey = $null
+if ($DryRun) {
+    if ($CursorApiKeyPlain) {
+        $CursorApiKey = $CursorApiKeyPlain.Trim()
+    }
+    else {
+        $CursorApiKey = "dry-run-placeholder-key"
+        Write-Host "[DryRun] Skipping CURSOR_API_KEY prompt (placeholder used)." -ForegroundColor Yellow
+    }
+}
+elseif ($CursorApiKeyPlain) {
+    $CursorApiKey = $CursorApiKeyPlain.Trim()
+    if (-not $CursorApiKey) {
+        throw "CURSOR_API_KEY parameter cannot be empty."
+    }
+}
+else {
+    $secureKey = Read-Host "Paste CURSOR_API_KEY (Cloud Agents API key)" -AsSecureString
+    $CursorApiKey = (ConvertFrom-SecureStringPlain -Secure $secureKey).Trim()
+    $secureKey = $null
+}
 
-$confirm = Read-Host "Proceed to set Preview + Production env vars on linked Vercel project? [y/N]"
-if ($confirm -notmatch '^[yY]') {
-    Write-Host "Cancelled. No changes made." -ForegroundColor Yellow
-    exit 0
+if (-not $CursorApiKey) {
+    throw "CURSOR_API_KEY cannot be empty."
+}
+
+if ($DryRun) {
+    Write-Host "[DryRun] Skipping confirmation prompt (auto-proceed)." -ForegroundColor Yellow
+}
+else {
+    $confirm = Read-Host "Proceed to set Preview + Production env vars on linked Vercel project? [y/N]"
+    if ($confirm -notmatch '^[yY]') {
+        Write-Host "Cancelled. No changes made." -ForegroundColor Yellow
+        exit 0
+    }
 }
 
 # Order: config first, secrets, feature flag last (Preview + Production together per task spec)
-Add-VercelEnv -Name "CURSOR_ALLOWED_REPO_URL" -Value $AllowedRepoUrl -Targets $Environments
-Add-VercelEnv -Name "CURSOR_MODEL_ID" -Value $ModelId -Targets $Environments
-Add-VercelEnv -Name "CURSOR_RUNTIME_DEFAULT" -Value $RuntimeDefault -Targets $Environments
-Add-VercelEnv -Name "CURSOR_MAX_CONCURRENT_RUNS" -Value $MaxConcurrentRuns -Targets $Environments
-Add-VercelEnv -Name "CURSOR_API_KEY" -Value $CursorApiKey -Targets $Environments
-Add-VercelEnv -Name "CURSOR_WEBHOOK_SECRET" -Value $WebhookSecret -Targets $Environments
-Add-VercelEnv -Name "CURSOR_INTEGRATION_ENABLED" -Value "true" -Targets $Environments
+$envVars = @(
+    @{ Name = "CURSOR_ALLOWED_REPO_URL"; Value = $AllowedRepoUrl },
+    @{ Name = "CURSOR_MODEL_ID"; Value = $ModelId },
+    @{ Name = "CURSOR_RUNTIME_DEFAULT"; Value = $RuntimeDefault },
+    @{ Name = "CURSOR_MAX_CONCURRENT_RUNS"; Value = $MaxConcurrentRuns },
+    @{ Name = "CURSOR_API_KEY"; Value = $CursorApiKey },
+    @{ Name = "CURSOR_WEBHOOK_SECRET"; Value = $WebhookSecret },
+    @{ Name = "CURSOR_INTEGRATION_ENABLED"; Value = "true" }
+)
+
+foreach ($entry in $envVars) {
+    Set-VercelEnvVariable -Name $entry.Name -Value $entry.Value -Targets $Environments
+}
 
 $CursorApiKey = $null
 $WebhookSecret = $null
@@ -166,5 +264,5 @@ Verify names: vercel env ls
 "@ -ForegroundColor Green
 
 if ($DryRun) {
-    Write-Host 'Dry run complete - re-run without -DryRun after you have a real API key.' -ForegroundColor Yellow
+    Write-Host "Dry run complete - re-run without -DryRun after you have a real API key." -ForegroundColor Yellow
 }
