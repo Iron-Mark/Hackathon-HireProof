@@ -1,12 +1,17 @@
 import type { CursorRunRuntime } from './types'
 
+function trimEnv(value: string | undefined): string | null {
+  if (!value) return null
+  const trimmed = value.replace(/\r\n|\n|\r/g, '').trim()
+  return trimmed || null
+}
+
 export function isCursorIntegrationEnabled() {
-  return process.env.CURSOR_INTEGRATION_ENABLED === 'true'
+  return trimEnv(process.env.CURSOR_INTEGRATION_ENABLED) === 'true'
 }
 
 export function getCursorApiKey() {
-  const key = process.env.CURSOR_API_KEY?.trim()
-  return key || null
+  return trimEnv(process.env.CURSOR_API_KEY)
 }
 
 export interface CursorIntegrationConfig {
@@ -20,15 +25,15 @@ export interface CursorIntegrationConfig {
 }
 
 export function getCursorConfig(): CursorIntegrationConfig {
-  const runtimeRaw = process.env.CURSOR_RUNTIME_DEFAULT?.trim().toLowerCase()
+  const runtimeRaw = trimEnv(process.env.CURSOR_RUNTIME_DEFAULT)?.toLowerCase()
   return {
     enabled: isCursorIntegrationEnabled(),
     apiKey: getCursorApiKey(),
-    modelId: process.env.CURSOR_MODEL_ID?.trim() || 'composer-2',
+    modelId: trimEnv(process.env.CURSOR_MODEL_ID) || 'composer-2',
     runtimeDefault: runtimeRaw === 'local' ? 'local' : 'cloud',
-    allowedRepoUrl: process.env.CURSOR_ALLOWED_REPO_URL?.trim() || null,
-    maxConcurrentRuns: Math.max(1, Number.parseInt(process.env.CURSOR_MAX_CONCURRENT_RUNS || '2', 10) || 2),
-    webhookSecret: process.env.CURSOR_WEBHOOK_SECRET?.trim() || null,
+    allowedRepoUrl: trimEnv(process.env.CURSOR_ALLOWED_REPO_URL),
+    maxConcurrentRuns: Math.max(1, Number.parseInt(trimEnv(process.env.CURSOR_MAX_CONCURRENT_RUNS) || '2', 10) || 2),
+    webhookSecret: trimEnv(process.env.CURSOR_WEBHOOK_SECRET),
   }
 }
 
@@ -38,5 +43,5 @@ export function isCursorOperational() {
 }
 
 export function resolveAllowedRepoUrl(config: CursorIntegrationConfig) {
-  return config.allowedRepoUrl || process.env.GITHUB_REPO_URL?.trim() || null
+  return config.allowedRepoUrl || trimEnv(process.env.GITHUB_REPO_URL)
 }

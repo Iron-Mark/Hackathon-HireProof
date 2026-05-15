@@ -54,16 +54,27 @@ const DOWNLOAD_ROUTE_FILES = new Set([
   'hireproof-native-integrations.zip',
 ])
 
-export function proxy(request: NextRequest) {
+const CANONICAL_HOST = 'hireproof.tech'
+
+function canonicalRedirect(request: NextRequest) {
+  try {
+    const target = new URL(
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+      `https://${CANONICAL_HOST}`,
+    )
+    return NextResponse.redirect(target, 308)
+  } catch {
+    return NextResponse.redirect(`https://${CANONICAL_HOST}`, 308)
+  }
+}
+
+function proxyHandler(request: NextRequest) {
   const ua = request.headers.get('user-agent') || ''
   const pathname = request.nextUrl.pathname
-  const host = request.headers.get('host')?.toLowerCase().split(':')[0] || ''
+  const host = request.headers.get('host')?.toLowerCase().split(':')[0]?.trim() || ''
 
   if (host === 'hireproof-sigma.vercel.app' || host === 'www.hireproof.tech') {
-    const url = request.nextUrl.clone()
-    url.hostname = 'hireproof.tech'
-    url.protocol = 'https'
-    return NextResponse.redirect(url, 308)
+    return canonicalRedirect(request)
   }
 
   const isApiOrIntegrationRoute = (
@@ -95,9 +106,9 @@ export function proxy(request: NextRequest) {
 
   // 2. Prevent Large Header Attacks
   let headersSize = 0
-  request.headers.forEach((value, key) => {
-    headersSize += key.length + value.length
-  })
+  for (const [key, value] of request.headers.entries()) {
+    headersSize += key.length + String(value).length
+  }
 
   if (headersSize > 16384) { // 16KB limit
     return new NextResponse('Header Too Large', { status: 431 })
@@ -105,13 +116,17 @@ export function proxy(request: NextRequest) {
 
   const legacyDownloadMatch = pathname.match(/^\/downloads\/([^/]+)$/)
   if (legacyDownloadMatch && DOWNLOAD_ROUTE_FILES.has(legacyDownloadMatch[1])) {
-    const url = request.nextUrl.clone()
-    url.pathname = `/api/downloads/${legacyDownloadMatch[1]}`
-    return NextResponse.rewrite(url)
+    try {
+      const url = request.nextUrl.clone()
+      url.pathname = `/api/downloads/${legacyDownloadMatch[1]}`
+      return NextResponse.rewrite(url)
+    } catch {
+      return NextResponse.next()
+    }
   }
 
   const response = NextResponse.next()
-  
+
   // 3. Apply global security & SEO hardening headers
   Object.entries(SECURITY_HEADERS).forEach(([k, v]) => {
     // Only apply noindex to API routes or archived report pages
@@ -129,7 +144,16 @@ export function proxy(request: NextRequest) {
   return response
 }
 
-// Apply proxy to all routes except static assets, icons, and next internals
+export function proxy(request: NextRequest) {
+  try {
+    return proxyHandler(request)
+  } catch (error) {
+    console.error('[proxy] unhandled error:', error instanceof Error ? error.message : 'unknown')
+    return NextResponse.next()
+  }
+}
+
+// Apply proxy to all routes except static assets, icons, workflow internals, and next internals
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|icons/|favicon.ico|icon.svg|apple-icon.png|og-image.png).*)'],
+  matcher: ['/((?!_next/static|_next/image|icons/|favicon.ico|icon.svg|apple-icon.png|og-image.png|.well-known/workflow/).*)'],
 }
