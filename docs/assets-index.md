@@ -28,6 +28,7 @@ Use this file as the source of truth for current launch, store, and social asset
 | Main Open Graph image | `public/og-image.png` |
 | High-risk demo OG image | `public/og-high-risk-demo.png` |
 | Proof-pack OG image | `public/og-proof-pack.png` |
+| Live demo preview | `public/HireProof Live Demo.png` |
 | GitHub social preview | `public/social/github-social-preview-1280x640.png` |
 | LinkedIn/X launch image | `public/social/hireproof-x-1600x900.png` |
 | Instagram/Facebook square | `public/social/hireproof-square-1080.png` |

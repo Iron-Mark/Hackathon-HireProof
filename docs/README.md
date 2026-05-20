@@ -13,6 +13,7 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 ## Archived Contents
 
 ### Strategy Reports
+- `deep-research-report-00.md`: Initial war-room strategy prompt and source-research checklist.
 - `deep-research-report-01.md`: Primary consolidated strategy and execution recommendation.
 - `deep-research-report-02.md`: Contrarian strategy report focused on competition positioning.
 - `deep-research-report-03.md`: Final competitive audit, vote-day checklist, and judge-proofing plan.

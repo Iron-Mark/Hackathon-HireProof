@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const blocked = [
@@ -19,13 +18,7 @@ function emitDecision(decision) {
 }
 
 async function main() {
-  const input = (() => {
-    try {
-      return readFileSync(0, 'utf8')
-    } catch {
-      return ''
-    }
-  })()
+  const input = await readStdinWithTimeout()
 
   if (evaluateCursorPretoolInput(input)) {
     emitDecision({
@@ -39,6 +32,32 @@ async function main() {
   emitDecision({
     permission: 'allow',
     agent_message: 'Command allowed by HireProof Cursor pretool guard.',
+  })
+}
+
+function readStdinWithTimeout() {
+  if (process.stdin.isTTY) return Promise.resolve('')
+
+  const timeoutMs = Number(process.env.CURSOR_PRETOOL_STDIN_TIMEOUT_MS || 250)
+
+  return new Promise((resolve) => {
+    let input = ''
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(input)
+    }
+    const timer = setTimeout(finish, timeoutMs)
+
+    process.stdin.setEncoding('utf8')
+    process.stdin.on('data', (chunk) => {
+      input += chunk
+    })
+    process.stdin.on('end', finish)
+    process.stdin.on('error', finish)
+    process.stdin.resume()
   })
 }
 

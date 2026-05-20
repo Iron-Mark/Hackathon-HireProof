@@ -34,12 +34,14 @@
     "integrations:package": "node scripts/package-integrations.mjs",
     "proof:chat-live": "node scripts/check-live-chat-proof.mjs",
     "proof:chat-live:strict": "node scripts/check-live-chat-proof.mjs --require-live",
+    "research:agent": "node scripts/research-agent.mjs",
+    "test:research-agent": "node --test test/research-agent.test.mjs",
     "discord:commands": "node scripts/register-discord-commands.mjs",
     "cursor:orchestrate": "node scripts/orchestrate-cursor-phases.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Iron-Mark/hackathon-v0-zero_to_agent.git"
+    "url": "git+https://github.com/Iron-Mark/Hackathon-HireProof.git"
   },
   "keywords": [],
   "author": "",
@@ -48,17 +50,17 @@
     "node": "20.x"
   },
   "bugs": {
-    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues"
+    "url": "https://github.com/Iron-Mark/Hackathon-HireProof/issues"
   },
-  "homepage": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent#readme",
+  "homepage": "https://github.com/Iron-Mark/Hackathon-HireProof#readme",
   "dependencies": {
-    "@cursor/sdk": "^1.0.13",
     "@ai-sdk/gateway": "^3.0.105",
     "@ai-sdk/openai": "^3.0.53",
     "@chat-adapter/discord": "^4.26.0",
     "@chat-adapter/slack": "^4.26.0",
     "@chat-adapter/state-redis": "^4.26.0",
     "@chat-adapter/telegram": "^4.26.0",
+    "@cursor/sdk": "^1.0.13",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@swc/helpers": "0.5.21",
     "@upstash/ratelimit": "^2.0.8",
@@ -73,7 +75,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.11.0",
-    "next": "16.2.4",
+    "next": "16.2.6",
     "next-themes": "^0.4.6",
     "react": "19.2.5",
     "react-dom": "19.2.5",
@@ -86,17 +88,27 @@
   },
   "overrides": {
     "@swc/helpers": "0.5.21",
+    "@tootallnate/once": "3.0.1",
+    "brace-expansion": "5.0.6",
     "chokidar": "5.0.0",
-    "devalue": "^5.7.1",
+    "cacache": "21.0.0",
+    "devalue": "5.8.1",
     "express-rate-limit": "^8.5.1",
     "fast-uri": "^3.1.2",
     "fast-xml-builder": "^1.2.0",
     "hono": "^4.12.18",
+    "http-proxy-agent": "9.0.0",
     "ip-address": "^10.2.0",
+    "make-fetch-happen": "16.0.0",
+    "node-gyp": "12.3.0",
     "postcss": "^8.5.10",
-    "undici": "^7.25.0"
+    "sqlite3": "6.0.1",
+    "tar": "7.5.15",
+    "undici": "^7.25.0",
+    "ws": "8.20.1"
   },
   "devDependencies": {
+    "@openai/codex-sdk": "^0.132.0",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",

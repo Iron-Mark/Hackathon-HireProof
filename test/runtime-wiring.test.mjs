@@ -868,7 +868,7 @@ test('robots and proxy discourage common AI crawlers from scraping public pages'
   assert.match(robots, /hireproof\.tech\/sitemap\.xml/)
   assert.match(proxy, /hireproof-sigma\.vercel\.app/)
   assert.match(proxy, /www\.hireproof\.tech/)
-  assert.match(proxy, /NextResponse\.redirect\(url, 308\)/)
+  assert.match(proxy, /NextResponse\.redirect\([^,]+, 308\)/)
   assert.match(proxy, /noai, noimageai/)
   assert.match(proxy, /isApiOrIntegrationRoute/)
   assert.match(proxy, /API, MCP, webhook, and headless agent routes stay reachable/)

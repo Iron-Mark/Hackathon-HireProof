@@ -27,6 +27,7 @@ yarn-debug.log*
 yarn-error.log*
 scratch/*.log
 artifacts/**/*.log
+artifacts/research-agent/
 
 # local env files
 .env*.local

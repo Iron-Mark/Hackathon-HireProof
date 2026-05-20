@@ -61,6 +61,26 @@ function riskBar(score) {
   return `[${'#'.repeat(filled)}${'-'.repeat(total - filled)}]`
 }
 
+function compactBar(value, total = 14) {
+  const safeValue = Math.max(0, Math.min(100, Number(value || 0)))
+  const filled = Math.round((safeValue / 100) * total)
+  return `${'#'.repeat(filled)}${'.'.repeat(total - filled)}`
+}
+
+function verdictTone(verdict) {
+  const normalized = String(verdict || '').toLowerCase()
+  if (normalized === 'safe') return '#12864f'
+  if (normalized === 'caution') return '#b7791f'
+  if (normalized === 'high-risk') return '#b42318'
+  return 'gray'
+}
+
+function statusTone(value) {
+  if (value === true || value === 'ok' || value === 'ready') return '#12864f'
+  if (value === 'error' || value === false) return '#b42318'
+  return 'gray'
+}
+
 function commandMatch(input) {
   const normalized = String(input || '').trim().toLowerCase().replace(/^\/+/, '')
   if (!normalized) return null
@@ -80,15 +100,38 @@ function ScreenTitle({ children }) {
   return React.createElement(Text, { color: useInkColor('#12864f'), bold: true }, children)
 }
 
+function Panel({ title, children, borderColor = '#12864f', minWidth }) {
+  return React.createElement(Box, {
+    flexDirection: 'column',
+    borderStyle: 'round',
+    borderColor: useInkColor(borderColor),
+    paddingX: 1,
+    paddingY: 0,
+    marginBottom: 1,
+    minWidth,
+  }, [
+    title ? React.createElement(Text, { key: 'title', color: useInkColor(borderColor), bold: true }, ` ${title} `) : null,
+    children,
+  ])
+}
+
+function Chip({ label, value, tone = '#12864f' }) {
+  return React.createElement(Text, { color: useInkColor(tone) }, `[${label}: ${value}]`)
+}
+
 function Header({ baseUrl, mode, keyStatus }) {
   const brand = useInkColor('#12864f')
   const lime = useInkColor('#55f06f')
   const muted = useInkColor('gray')
-  return React.createElement(Box, { flexDirection: 'column', marginBottom: 1 }, [
-    React.createElement(Text, { key: 'brand', color: brand, bold: true }, 'HIREPROOF'),
-    React.createElement(Text, { key: 'sub', color: lime }, 'Shield Sentinel terminal console'),
-    React.createElement(Text, { key: 'target', color: muted }, `Target ${baseUrl}  Mode ${mode}  Key ${keyStatus}`),
-  ])
+  return React.createElement(Panel, { title: 'HIREPROOF', borderColor: '#12864f' }, React.createElement(Box, { flexDirection: 'column' }, [
+    React.createElement(Text, { key: 'brand', color: brand, bold: true }, 'HIREPROOF  /  Shield Sentinel terminal console'),
+    React.createElement(Box, { key: 'chips', gap: 1, flexWrap: 'wrap' }, [
+      React.createElement(Chip, { key: 'target', label: 'target', value: baseUrl, tone: '#1d4ed8' }),
+      React.createElement(Chip, { key: 'mode', label: 'mode', value: mode, tone: lime }),
+      React.createElement(Chip, { key: 'key', label: 'key', value: keyStatus, tone: keyStatus === 'configured' ? '#12864f' : '#b42318' }),
+    ]),
+    React.createElement(Text, { key: 'target-line', color: muted }, `Target ${baseUrl}  Mode ${mode}  Key ${keyStatus}`),
+  ]))
 }
 
 function Mascot() {
@@ -102,10 +145,15 @@ function Mascot() {
 
 function Menu({ selected }) {
   const lime = useInkColor('#55f06f')
-  return React.createElement(Box, { flexDirection: 'column' }, MENU.map((item, index) => {
+  const muted = useInkColor('gray')
+  return React.createElement(Panel, { title: 'Command Deck', borderColor: '#1d4ed8', minWidth: 58 }, React.createElement(Box, { flexDirection: 'column' }, MENU.map((item, index) => {
     const active = index === selected
-    return React.createElement(Text, { key: item.id, color: active ? lime : undefined }, `${active ? '>' : ' '} ${item.label} - ${item.description}`)
-  }))
+    const marker = active ? '>' : ' '
+    const number = String(index + 1).padStart(2, '0')
+    return React.createElement(Text, { key: item.id, color: active ? lime : undefined }, `${marker} ${item.label.padEnd(14)} [${number}] - ${item.description}`)
+  }).concat([
+    React.createElement(Text, { key: 'menu-hint', color: muted }, 'Use arrows, Enter, shortcuts, or / commands.'),
+  ])))
 }
 
 function CommandConsole({ value }) {
@@ -114,18 +162,29 @@ function CommandConsole({ value }) {
   const completion = commandCompletion(value)
   const hint = value && completion && completion !== value ? `Tab -> ${completion}` : 'Try: health, paste, reports, ask, config'
 
-  return React.createElement(Box, { flexDirection: 'column', marginTop: 1 }, [
+  return React.createElement(Panel, { title: 'Command Console', borderColor: '#12864f', minWidth: 58 }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(Text, { key: 'label', color: muted }, 'Command console  Tab autocomplete  Enter run'),
     React.createElement(Text, { key: 'input', color: lime }, `> ${value}`),
     React.createElement(Text, { key: 'hint', color: muted }, hint),
-  ])
+  ]))
 }
 
 function StatusBar({ health, mode, keyStatus, report }) {
   const muted = useInkColor('gray')
+  const safe = useInkColor('#12864f')
+  const risk = useInkColor('#b42318')
+  const latestTone = useInkColor(report ? verdictTone(report.verdict) : 'gray')
   const latest = report ? `${normalizeVerdict(report.verdict)} ${Number(report.riskScore ?? 0)}/100` : 'none'
   const api = health?.status === 'ok' ? 'API ok' : health?.status === 'error' ? 'API error' : 'API not checked'
-  return React.createElement(Text, { color: muted }, `${api} | mode ${mode} | key ${keyStatus} | latest ${latest} | / commands | Tab complete | ? help`)
+  return React.createElement(Box, { flexDirection: 'column', marginBottom: 1 }, [
+    React.createElement(Text, { key: 'plain', color: muted }, `${api} | mode ${mode} | key ${keyStatus} | latest ${latest} | / commands | Tab complete | ? help`),
+    React.createElement(Box, { key: 'visual', gap: 1, flexWrap: 'wrap' }, [
+      React.createElement(Text, { key: 'api', color: health?.status === 'ok' ? safe : health?.status === 'error' ? risk : muted }, `[${api}]`),
+      React.createElement(Text, { key: 'mode', color: safe }, `[mode ${mode}]`),
+      React.createElement(Text, { key: 'key', color: keyStatus === 'configured' ? safe : risk }, `[key ${keyStatus}]`),
+      React.createElement(Text, { key: 'latest', color: latestTone }, `[latest ${latest}]`),
+    ]),
+  ])
 }
 
 function HelpScreen() {
@@ -145,29 +204,41 @@ function HelpScreen() {
 
 function ConfigScreen({ baseUrl, apiKey }) {
   const muted = useInkColor('gray')
-  return React.createElement(Box, { flexDirection: 'column' }, [
+  return React.createElement(Panel, { title: 'Config', borderColor: '#1d4ed8' }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Config'),
     React.createElement(Text, { key: 'base' }, `Base URL: ${baseUrl}`),
     React.createElement(Text, { key: 'key' }, `API key: ${apiKey ? 'configured' : 'missing'}`),
     React.createElement(Text, { key: 'hint', color: muted }, 'Use hireproof config set baseUrl <url> or hireproof config set apiKey <key>.'),
-  ])
+  ]))
 }
 
 function HealthScreen({ health }) {
   const gateway = health?.modelProvider?.aiGateway
   const muted = useInkColor('gray')
-  return React.createElement(Box, { flexDirection: 'column' }, [
+  const apiTone = useInkColor(statusTone(health?.status))
+  const searchTone = useInkColor(statusTone(health?.liveSearch))
+  const modelTone = useInkColor(statusTone(health?.model))
+  const gatewayTone = useInkColor(statusTone(gateway))
+  const rows = [
+    ['API', health?.status || 'not checked', apiTone],
+    ['Live search', health?.liveSearch ? 'ready' : 'not checked', searchTone],
+    ['Model', health?.model ? 'ready' : 'not checked', modelTone],
+    ['AI Gateway', gateway ? 'ready' : 'not checked', gatewayTone],
+  ]
+  return React.createElement(Panel, { title: 'Health Matrix', borderColor: '#12864f' }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Health'),
     React.createElement(Text, { key: 'api' }, `API: ${health?.status || 'not checked'}`),
     React.createElement(Text, { key: 'search' }, `Live search: ${health?.liveSearch ? 'ready' : 'not checked'}`),
     React.createElement(Text, { key: 'model' }, `Model: ${health?.model ? 'ready' : 'not checked'}`),
     React.createElement(Text, { key: 'gateway' }, `AI Gateway: ${gateway ? 'ready' : 'not checked'}`),
+    ...rows.map(([label, value, color]) => React.createElement(Text, { key: `row-${label}`, color }, `${label.padEnd(12)} ${value}`)),
     React.createElement(Text, { key: 'hint', color: muted }, 'Run health from the menu or command: hireproof health.'),
-  ])
+  ]))
 }
 
 function ReportScreen({ report, reports = [] }) {
   const activeReport = report || reports[0]
+  const meterTone = useInkColor(activeReport ? verdictTone(activeReport.verdict) : 'gray')
   if (!activeReport) {
     return React.createElement(Box, { flexDirection: 'column' }, [
       React.createElement(ScreenTitle, { key: 'title' }, 'Recent reports'),
@@ -179,10 +250,11 @@ function ReportScreen({ report, reports = [] }) {
     React.createElement(ScreenTitle, { key: 'title' }, 'Recent reports'),
     React.createElement(Text, { key: 'id' }, `Report: ${activeReport.id || 'unknown'}`),
     React.createElement(Text, { key: 'verdict' }, `Verdict: ${normalizeVerdict(activeReport.verdict)}  Score: ${Number(activeReport.riskScore ?? 0)}/100 ${riskBar(activeReport.riskScore)}`),
+    React.createElement(Text, { key: 'meter', color: meterTone }, `Risk meter ${compactBar(activeReport.riskScore)} ${Number(activeReport.riskScore ?? 0)}/100`),
     React.createElement(Text, { key: 'summary' }, activeReport.summary || 'No summary returned.'),
   ]
 
-  return React.createElement(Box, { flexDirection: 'column' }, lines)
+  return React.createElement(Panel, { title: 'Report Snapshot', borderColor: verdictTone(activeReport.verdict) }, React.createElement(Box, { flexDirection: 'column' }, lines))
 }
 
 function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileText, onReport }) {
@@ -197,6 +269,7 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
   const brand = useInkColor('#12864f')
   const evidence = useInkColor('#1d4ed8')
   const muted = useInkColor('gray')
+  const reportTone = useInkColor(report ? verdictTone(report.verdict) : 'gray')
 
   function updateInput(value) {
     inputRef.current = value
@@ -242,10 +315,11 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
   })
 
   if (report) {
-    return React.createElement(Box, { flexDirection: 'column' }, [
+    return React.createElement(Panel, { title: 'Audit Result', borderColor: verdictTone(report.verdict) }, React.createElement(Box, { flexDirection: 'column' }, [
       React.createElement(ScreenTitle, { key: 'title' }, 'Audit result'),
       ...progressSteps.map(step => React.createElement(Text, { key: step, color: muted }, step)),
       React.createElement(Text, { key: 'verdict' }, `Verdict: ${normalizeVerdict(report.verdict)}  Score: ${Number(report.riskScore ?? 0)}/100 ${riskBar(report.riskScore)}`),
+      React.createElement(Text, { key: 'meter', color: reportTone }, `Risk meter ${compactBar(report.riskScore)} ${Number(report.riskScore ?? 0)}/100`),
       React.createElement(Text, { key: 'summary' }, report.summary || 'No summary returned.'),
       React.createElement(Text, { key: 'claims', color: lime }, 'Claims'),
       React.createElement(Text, { key: 'company' }, `Company: ${report.extractedClaims?.company || 'Not specified'}`),
@@ -256,11 +330,11 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
       ...((report.nextSteps || []).slice(0, 3).map((item, index) => React.createElement(Text, { key: `step-${index}` }, `- ${item}`))),
       React.createElement(Text, { key: 'evidence', color: evidence }, 'Evidence'),
       ...((report.evidence || []).slice(0, 3).map((item, index) => React.createElement(Text, { key: `ev-${index}` }, `- ${item.snippet || item.source || item.type}`))),
-    ])
+    ]))
   }
 
   const prompt = kind === 'file' ? 'File path' : kind === 'url' ? 'Job URL' : 'Job text'
-  return React.createElement(Box, { flexDirection: 'column' }, [
+  return React.createElement(Panel, { title: 'Audit Workbench', borderColor: '#1d4ed8' }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Audit'),
     React.createElement(Text, { key: 'mode' }, `Mode: ${mode}`),
     React.createElement(Text, { key: 'prompt' }, `${prompt}: ${input}`),
@@ -268,7 +342,7 @@ function AuditScreen({ mode, kind = 'audit', auditClient, saveReport, readFileTe
     error ? React.createElement(Text, { key: 'error', color: risk }, error) : null,
     ...progressSteps.map(step => React.createElement(Text, { key: step, color: muted }, step)),
     React.createElement(Text, { key: 'hint', color: muted }, 'Enter submits. Esc returns home. Direct hireproof audit commands remain unchanged.'),
-  ])
+  ]))
 }
 
 function answerReportQuestion(question, report) {
@@ -311,7 +385,7 @@ function AskScreen({ report }) {
     if (value && !key.ctrl && !key.meta) updateInput(`${inputRef.current}${value}`)
   })
 
-  return React.createElement(Box, { flexDirection: 'column' }, [
+  return React.createElement(Panel, { title: 'Ask HireProof', borderColor: '#1d4ed8' }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Ask HireProof'),
     React.createElement(Text, { key: 'hint', color: muted }, 'Local report Q&A. No AI request is sent from this panel.'),
     ...messages.flatMap((message, index) => [
@@ -319,7 +393,7 @@ function AskScreen({ report }) {
       React.createElement(Text, { key: `a-${index}` }, `HireProof: ${message.answer}`),
     ]),
     React.createElement(Text, { key: 'input' }, `> ${input}`),
-  ])
+  ]))
 }
 
 function MainPanel({ screen, baseUrl, apiKey, mode, health, report, reports, auditClient, saveReport, readFileText, onReport }) {
@@ -490,7 +564,7 @@ export function HireProofTuiApp({
     React.createElement(Header, { key: 'header', baseUrl, mode, keyStatus }),
     React.createElement(StatusBar, { key: 'status', health, mode, keyStatus, report: activeReport }),
     screen === 'home'
-      ? React.createElement(Box, { key: 'home' }, [
+      ? React.createElement(Box, { key: 'home', gap: 1 }, [
         React.createElement(Mascot, { key: 'mascot' }),
         React.createElement(Box, { key: 'home-main', flexDirection: 'column' }, [
           React.createElement(Menu, { key: 'menu', selected }),
