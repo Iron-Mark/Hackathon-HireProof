@@ -163,6 +163,7 @@ Full proof notes:
 - [`docs/triple-track-coverage.md`](docs/triple-track-coverage.md)
 - [`docs/final-live-vs-pending-status.md`](docs/final-live-vs-pending-status.md)
 - [`docs/current-audit-behavior.md`](docs/current-audit-behavior.md)
+- [`docs/production-hardening-proof-2026-05-20.md`](docs/production-hardening-proof-2026-05-20.md)
 
 ![HireProof proof pack preview](public/og-proof-pack.png)
 
@@ -208,6 +209,8 @@ npm run lint
 npm run build
 node --test test/runtime-wiring.test.mjs
 ```
+
+The repository is consolidated on `main`. The current protected-branch and production hardening proof is recorded in [`docs/production-hardening-proof-2026-05-20.md`](docs/production-hardening-proof-2026-05-20.md).
 
 Demo fixtures work without provider keys. Live evidence mode needs model/search credentials such as AI Gateway or an OpenAI-compatible provider plus SerpApi. See [`docs/credentials-setup.md`](docs/credentials-setup.md).
 

@@ -37,6 +37,7 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 - `after-hackathon-cost-safety.md`: Cost-safety and provider-cap runbook for keeping production live after judging.
 - `post-hackathon-startup-plan.md`: 90-day startup/pilot plan for keeping HireProof alive after the hackathon.
 - `post-hackathon-checkpoint-summary.md`: current E2E checkpoint summary for portfolio, pilot, demo, and verification work.
+- `production-hardening-proof-2026-05-20.md`: current main-only branch, Vercel, GitHub security, Dependabot, live smoke, and browser QA proof.
 - `post-hackathon-public-posts.md`: copy-ready LinkedIn, X/Twitter, community, and portfolio card drafts using the positive post-result frame.
 - `post-hackathon-proof-assets.md`: proof screenshot index and sharing order for post-hackathon portfolio/pilot use.
 - `portfolio-case-study.md`: Portfolio-ready solo global hackathon case study for Mark Siazon.
