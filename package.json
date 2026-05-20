@@ -58,7 +58,7 @@
     "@ai-sdk/openai": "^3.0.53",
     "@chat-adapter/discord": "^4.26.0",
     "@chat-adapter/slack": "^4.26.0",
-    "@chat-adapter/state-redis": "^4.26.0",
+    "@chat-adapter/state-redis": "^4.29.0",
     "@chat-adapter/telegram": "^4.26.0",
     "@cursor/sdk": "^1.0.13",
     "@modelcontextprotocol/sdk": "^1.29.0",
