@@ -30,9 +30,10 @@ Recent consolidation commits:
 | Deployment commit | `1224f7b8d5902703b19e6961d5f3663ddc51c087` |
 | Public alias | `https://hireproof.tech` |
 | Vercel framework | `nextjs` |
+| Vercel project Node setting | `20.x` |
 | Repo Node pin | `package.json` `engines.node = 20.x`; `.node-version = 20` |
 
-Vercel project metadata still reports a project-level `nodeVersion` of `24.x`, but Vercel documentation says `package.json` `engines.node` overrides the project-level selector for deployments. The repo now also includes `.node-version` so local and CI tooling have the same runtime signal.
+The Vercel project-level `nodeVersion` setting, `package.json` `engines.node`, `.node-version`, and GitHub Actions workflow now all point at Node 20.
 
 ## Production Environment Presence
 
@@ -148,6 +149,38 @@ Assertions:
 - No browser console errors were emitted.
 
 Note: desktop `/explore` had a few aborted React Server Component prefetch requests for report links. The page itself loaded, rendered, and passed with no console errors.
+
+## Deeper App QA Follow-Up
+
+Additional production Playwright checks covered auth boundaries, developer/API-key surfaces, report history, export controls, and mobile navigation.
+
+| Check | Result |
+| --- | --- |
+| `/api/auth/me` anonymous boundary | `200` with `user: null`, no private user object |
+| `/api/auth/demo-login` cross-origin guard | `403`, expected for direct cross-origin-style request |
+| `/developer` | Pass; developer/API/key/credential surface rendered |
+| `/settings` | Pass; settings/API-key surface rendered without auth crash |
+| `/history` | Pass; report history route rendered |
+| `/audit?demo=high-risk` | Pass; export/share controls visible, including PDF/share actions |
+| Mobile navigation | Pass; menu opens and key routes remain reachable |
+| Mobile `/audit`, `/developer`, `/history` | Pass |
+
+## Production Log Review
+
+Checked Vercel production logs for the last 2 hours after the hardening deployment.
+
+| Pattern | Result |
+| --- | --- |
+| Parsed log rows | `200` |
+| `5xx` or error/fatal logs | `0` |
+| `4xx` logs | `28` |
+| Observed `4xx` paths | `/reach-us`, `/get-in-touch`, `/team`, `/help`, `/support`, `/about-us`, `/about` |
+
+The `4xx` entries are predictable informational/support routes, not server failures. `next.config.js` now redirects these paths to existing pages:
+
+- `/about`, `/about-us`, `/team` -> `/portfolio`
+- `/help`, `/support` -> `/docs`
+- `/reach-us`, `/get-in-touch` -> `/pilot`
 
 ## Local Verification Commands
 

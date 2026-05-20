@@ -11,6 +11,17 @@ const nextConfig = {
   // Prevent information disclosure about the tech stack
   poweredByHeader: false,
   // Security headers for all responses
+  async redirects() {
+    return [
+      { source: '/about', destination: '/portfolio', permanent: true },
+      { source: '/about-us', destination: '/portfolio', permanent: true },
+      { source: '/team', destination: '/portfolio', permanent: true },
+      { source: '/help', destination: '/docs', permanent: true },
+      { source: '/support', destination: '/docs', permanent: true },
+      { source: '/reach-us', destination: '/pilot', permanent: true },
+      { source: '/get-in-touch', destination: '/pilot', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

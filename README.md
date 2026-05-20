@@ -11,6 +11,7 @@ HireProof helps a job seeker decide whether an opportunity is worth trusting bef
 Built as a solo global hackathon project by [Mark Siazon](https://www.marksiazon.dev/) in just over one week for Cursor Hackathon.
 
 [![Production Demo](https://img.shields.io/badge/Production-hireproof.tech-111827?style=for-the-badge)](https://hireproof.tech)
+[![Stable Tag](https://img.shields.io/badge/Stable-v1--main--consolidated-16a34a?style=for-the-badge)](https://github.com/Iron-Mark/Hackathon-HireProof/tree/v1-main-consolidated)
 [![Docs](https://img.shields.io/badge/Docs-Live-2563eb?style=for-the-badge)](https://hireproof.tech/docs)
 [![Case Study](https://img.shields.io/badge/Case%20Study-Live-0f766e?style=for-the-badge)](https://hireproof.tech/portfolio)
 [![Pilot Intake](https://img.shields.io/badge/Pilot-Open-f97316?style=for-the-badge)](https://hireproof.tech/pilot)
