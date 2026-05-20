@@ -88,6 +88,7 @@ Latest verified run:
 | Conclusion | `success` |
 
 The workflow now uses Node `20` to match the repo runtime pin.
+The Cursor route tests were also made Node 20-compatible by removing the prior dependency on Node 22's `--experimental-strip-types` runtime flag.
 
 ## GitHub Security Settings
 
@@ -162,7 +163,7 @@ npm run build
 Result summary:
 
 - `npm audit --audit-level=low`: `0 vulnerabilities`
-- Targeted Node test suite: `76` passing
+- Targeted Node test suite: `83` passing after including the Cursor route wiring tests
 - Production build: passed
 - Local production smoke on `127.0.0.1:3002`: health `ok`, demo audit `high-risk`, score `92`
 

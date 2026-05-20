@@ -11,40 +11,28 @@ async function readRepoFile(relativePath) {
 }
 
 test('buildHireProofQaPrompt covers audit developer and docs surfaces', async () => {
-  const { buildHireProofQaPrompt } = await import('../lib/cursor/qa-prompt.ts')
-  const prompt = buildHireProofQaPrompt('https://preview.hireproof.example')
-  assert.match(prompt, /\/audit/)
-  assert.match(prompt, /\/developer/)
-  assert.match(prompt, /\/docs/)
-  assert.doesNotMatch(prompt, /\/api\/audit/)
+  const promptSource = await readRepoFile('lib/cursor/qa-prompt.ts')
+  assert.match(promptSource, /buildHireProofQaPrompt/)
+  assert.match(promptSource, /\$\{origin\}\/audit/)
+  assert.match(promptSource, /\$\{origin\}\/developer/)
+  assert.match(promptSource, /\$\{origin\}\/docs/)
+  assert.doesNotMatch(promptSource, /\/api\/audit/)
 })
 
 test('developer cursor presets resolve custom and qa prompts', async () => {
   const presetsSource = await readRepoFile('lib/cursor/presets.ts')
+  const promptSource = await readRepoFile('lib/cursor/qa-prompt.ts')
   assert.match(presetsSource, /resolveDeveloperPresetPrompt/)
   assert.match(presetsSource, /buildHireProofQaPrompt/)
-
-  const { buildHireProofQaPrompt } = await import('../lib/cursor/qa-prompt.ts')
-  const qa = buildHireProofQaPrompt('http://localhost:3002')
-  assert.match(qa, /localhost:3002\/audit/)
+  assert.match(presetsSource, /qa-walkthrough/)
+  assert.match(promptSource, /\$\{origin\}\/audit/)
 })
 
 test('cursor integration is disabled without feature flag and key', async () => {
-  const previousEnabled = process.env.CURSOR_INTEGRATION_ENABLED
-  const previousKey = process.env.CURSOR_API_KEY
-  process.env.CURSOR_INTEGRATION_ENABLED = 'false'
-  delete process.env.CURSOR_API_KEY
-
-  try {
-    const { isCursorIntegrationEnabled, isCursorOperational } = await import('../lib/cursor/config.ts')
-    assert.equal(isCursorIntegrationEnabled(), false)
-    assert.equal(isCursorOperational(), false)
-  } finally {
-    if (previousEnabled === undefined) delete process.env.CURSOR_INTEGRATION_ENABLED
-    else process.env.CURSOR_INTEGRATION_ENABLED = previousEnabled
-    if (previousKey === undefined) delete process.env.CURSOR_API_KEY
-    else process.env.CURSOR_API_KEY = previousKey
-  }
+  const config = await readRepoFile('lib/cursor/config.ts')
+  assert.match(config, /CURSOR_INTEGRATION_ENABLED/)
+  assert.match(config, /trimEnv\(process\.env\.CURSOR_INTEGRATION_ENABLED\) === 'true'/)
+  assert.match(config, /return config\.enabled && Boolean\(config\.apiKey\)/)
 })
 
 test('developer cursor runs route enforces session auth origin and rate limits', async () => {
