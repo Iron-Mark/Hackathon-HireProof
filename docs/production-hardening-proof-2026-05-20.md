@@ -180,7 +180,7 @@ The `4xx` entries are predictable informational/support routes, not server failu
 
 - `/about`, `/about-us`, `/team` -> `/portfolio`
 - `/help`, `/support` -> `/docs`
-- `/reach-us`, `/get-in-touch` -> `/pilot`
+- `/contact`, `/contact-us`, `/reach-us`, `/get-in-touch` -> `/pilot`
 
 ## Local Verification Commands
 

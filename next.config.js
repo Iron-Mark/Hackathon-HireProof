@@ -18,6 +18,8 @@ const nextConfig = {
       { source: '/team', destination: '/portfolio', permanent: true },
       { source: '/help', destination: '/docs', permanent: true },
       { source: '/support', destination: '/docs', permanent: true },
+      { source: '/contact', destination: '/pilot', permanent: true },
+      { source: '/contact-us', destination: '/pilot', permanent: true },
       { source: '/reach-us', destination: '/pilot', permanent: true },
       { source: '/get-in-touch', destination: '/pilot', permanent: true },
     ]
