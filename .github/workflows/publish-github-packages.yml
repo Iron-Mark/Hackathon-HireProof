@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Node
         if: ${{ github.event.inputs.package == 'all' || github.event.inputs.package == matrix.package }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com
