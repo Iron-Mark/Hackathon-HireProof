@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "ink": "^7.0.1",
-    "react": "^19.2.5"
+    "react": "^19.2.6"
   },
   "devDependencies": {
     "ink-testing-library": "^4.0.0"
