@@ -34,11 +34,11 @@ jobs:
 
       - name: Checkout
         if: ${{ github.event.inputs.package == 'all' || github.event.inputs.package == matrix.package }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
         if: ${{ github.event.inputs.package == 'all' || github.event.inputs.package == matrix.package }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com
