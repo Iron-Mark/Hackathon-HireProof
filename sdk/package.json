@@ -22,12 +22,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent.git",
+    "url": "https://github.com/Iron-Mark/Hackathon-HireProof.git",
     "directory": "sdk"
   },
-  "homepage": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent#readme",
+  "homepage": "https://github.com/Iron-Mark/Hackathon-HireProof#readme",
   "bugs": {
-    "url": "https://github.com/Iron-Mark/hackathon-v0-zero_to_agent/issues"
+    "url": "https://github.com/Iron-Mark/Hackathon-HireProof/issues"
   },
   "author": "Iron-Mark",
   "keywords": [
@@ -46,6 +46,6 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }

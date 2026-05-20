@@ -58,7 +58,7 @@
     "@ai-sdk/openai": "^3.0.53",
     "@chat-adapter/discord": "^4.26.0",
     "@chat-adapter/slack": "^4.26.0",
-    "@chat-adapter/state-redis": "^4.26.0",
+    "@chat-adapter/state-redis": "^4.29.0",
     "@chat-adapter/telegram": "^4.26.0",
     "@cursor/sdk": "^1.0.13",
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -77,8 +77,8 @@
     "lucide-react": "^1.11.0",
     "next": "16.2.6",
     "next-themes": "^0.4.6",
-    "react": "19.2.5",
-    "react-dom": "19.2.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "recharts": "^3.8.1",
     "sharp": "^0.34.5",
     "tesseract.js": "^7.0.0",
@@ -109,13 +109,13 @@
   },
   "devDependencies": {
     "@openai/codex-sdk": "^0.132.0",
-    "@tailwindcss/postcss": "^4.2.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.5.0",
     "playwright": "^1.59.1",
     "postcss": "^8.5.10",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.3.0"
   }
 }
