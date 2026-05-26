@@ -26,11 +26,25 @@ const result = await hireProofTool.func({
 })
 ```
 
+## Webhook callbacks
+
+Webhook callback URLs are trusted developer configuration, not model-generated tool input. If you need async delivery, pass `webhookUrl` in the tool options:
+
+```ts
+const hireProofTool = createHireProofAuditTool({
+  apiKey: process.env.HIREPROOF_API_KEY,
+  webhookUrl: process.env.HIREPROOF_WEBHOOK_URL,
+})
+```
+
+Do not place callback URLs in the job post, prompt, or tool-call arguments.
+
 ## Exports
 
 - `createHireProofAuditTool`
 - `HireProofAuditTool`
 - `HireProofAuditInputSchema`
+- `TrustedWebhookUrlSchema`
 - `runHireProofAudit`
 - `isSafeEnough`
 

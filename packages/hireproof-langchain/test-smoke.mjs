@@ -27,17 +27,42 @@ assert.equal(isSafeEnough({ verdict: 'high-risk', riskScore: 92 }), false)
 
 const tool = createHireProofAuditTool({
   DynamicStructuredTool: FakeDynamicStructuredTool,
-  apiKey: 'hireproof_agent_demo_key',
+  apiKey: 'test_hireproof_api_key',
 })
 assert.equal(tool.name, 'hireproof_job_safety_audit')
+
+const fetchCalls = []
+globalThis.fetch = async (url, options) => {
+  fetchCalls.push({ url: String(url), options })
+  return {
+    ok: true,
+    status: 200,
+    async json() {
+      return {
+        verdict: 'high-risk',
+        riskScore: 92,
+      }
+    },
+  }
+}
+
+await assert.rejects(
+  () => runHireProofAudit({ text: 'Remote frontend intern. PHP 80,000/week.', mode: 'demo' }, { baseUrl: 'https://hireproof.test' }),
+  /API key is required/
+)
 
 const report = await runHireProofAudit({
   text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
   location: 'Philippines',
   mode: 'demo',
+}, {
+  apiKey: 'test_hireproof_api_key',
+  baseUrl: 'https://hireproof.test',
 })
 
 assert.equal(report.verdict, 'high-risk')
 assert.ok(Number(report.riskScore) >= 80)
+assert.equal(fetchCalls[0].url, 'https://hireproof.test/api/v1/audit')
+assert.equal(fetchCalls[0].options.headers['x-api-key'], 'test_hireproof_api_key')
 
 console.log('@hireproof/langchain tests passed')

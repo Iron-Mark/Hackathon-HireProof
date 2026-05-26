@@ -1,6 +1,6 @@
 {
   "name": "@hireproof/langchain",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LangChain tool package for gating job-application agents with HireProof audits.",
   "license": "MIT",
   "type": "commonjs",

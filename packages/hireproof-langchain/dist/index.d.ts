@@ -1,14 +1,15 @@
 import type { z } from 'zod'
 
 export declare const DEFAULT_BASE_URL = "https://hireproof.tech"
-export declare const DEFAULT_API_KEY = "hireproof_agent_demo_key"
+export declare const DEFAULT_API_KEY = ""
 
 export declare const HireProofAuditInputSchema: z.ZodObject<{
   text: z.ZodString
   location: z.ZodOptional<z.ZodString>
   mode: z.ZodDefault<z.ZodEnum<["demo", "live"]>>
-  webhookUrl: z.ZodOptional<z.ZodString>
 }>
+
+export declare const TrustedWebhookUrlSchema: z.ZodString
 
 export type HireProofAuditInput = z.infer<typeof HireProofAuditInputSchema>
 
@@ -26,6 +27,7 @@ export interface HireProofAuditReport {
 export interface HireProofToolOptions {
   apiKey?: string
   baseUrl?: string
+  webhookUrl?: string
   safeRiskThreshold?: number
   name?: string
   description?: string

@@ -1,14 +1,15 @@
 const { z } = require('zod')
 
 const DEFAULT_BASE_URL = 'https://hireproof.tech'
-const DEFAULT_API_KEY = 'hireproof_agent_demo_key'
+const DEFAULT_API_KEY = ''
 
 const HireProofAuditInputSchema = z.object({
   text: z.string().min(10, 'Job post or recruiter message must be at least 10 characters.'),
   location: z.string().optional(),
   mode: z.enum(['demo', 'live']).default('demo'),
-  webhookUrl: z.string().url().optional(),
 })
+
+const TrustedWebhookUrlSchema = z.string().url()
 
 function normalizeBaseUrl(baseUrl) {
   return String(baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '')
@@ -22,13 +23,16 @@ async function runHireProofAudit(input, options = {}) {
   const parsed = HireProofAuditInputSchema.parse(input)
   const baseUrl = normalizeBaseUrl(options.baseUrl || process.env.HIREPROOF_URL)
   const apiKey = options.apiKey || process.env.HIREPROOF_API_KEY || DEFAULT_API_KEY
+  if (!apiKey) {
+    throw new Error('HireProof API key is required. Set HIREPROOF_API_KEY or pass apiKey to runHireProofAudit/createHireProofAuditTool.')
+  }
   const body = {
     text: parsed.text,
     location: parsed.location,
     mode: parsed.mode,
   }
 
-  if (parsed.webhookUrl) body.webhook_url = parsed.webhookUrl
+  if (options.webhookUrl) body.webhook_url = TrustedWebhookUrlSchema.parse(options.webhookUrl)
 
   const response = await fetch(`${baseUrl}/api/v1/audit`, {
     method: 'POST',
@@ -91,6 +95,7 @@ module.exports = {
   DEFAULT_BASE_URL,
   DEFAULT_API_KEY,
   HireProofAuditInputSchema,
+  TrustedWebhookUrlSchema,
   HireProofAuditTool,
   createHireProofAuditTool,
   isSafeEnough,
