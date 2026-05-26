@@ -791,7 +791,7 @@ test('screenshot audits are excluded from public explore and trends listings by 
   const publicReports = await fs.readFile(new URL('../lib/public-intelligence-reports.mjs', import.meta.url), 'utf8')
   const omniDocs = await fs.readFile(new URL('../app/docs/omni-modal/page.tsx', import.meta.url), 'utf8')
 
-  assert.match(uiRoute, /publiclyListed:\s*!validated\.image/)
+  assert.match(uiRoute, /publiclyListed:\s*!demoMode && !validated\.image/)
   assert.match(v1Route, /publiclyListed:\s*!validated\.image/)
   assert.match(reportsRoute, /filterPublicIntelligenceReports/)
   assert.match(db, /buildPublicReportTrends/)

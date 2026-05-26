@@ -25,6 +25,7 @@ type BuildReportV2Input = {
   evidence: EvidenceItem[]
   enrichmentEvidence?: EvidenceItem[]
   enrichmentRedFlags?: string[]
+  mode?: AuditReport['mode']
   credentialMode?: AuditReport['credentialMode']
   ownerId?: string
   apiKeyId?: string
@@ -935,7 +936,7 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
     alternatives: buildVerifiedAlternativeJobs(reportEvidence),
     nextSteps: buildNextSteps(verdict, input.extractedClaims.company),
     timestamp: new Date().toISOString(),
-    mode: 'live',
+    mode: input.mode || 'live',
     credentialMode: input.credentialMode,
     ownerId: input.ownerId,
     apiKeyId: input.apiKeyId,

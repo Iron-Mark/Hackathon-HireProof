@@ -24,6 +24,16 @@ import {
 } from 'lucide-react'
 import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 import { SiteHeader } from '@/components/layout/site-header'
+import { DEMO_FIXTURES } from '@/lib/fixtures'
+
+const LINKEDIN_DEMO_REPORT = {
+  ...DEMO_FIXTURES.highRisk,
+  id: 'demo_linkedin_high_risk',
+  timestamp: '2026-04-30T00:00:00.000Z',
+  mode: 'demo',
+  source: 'demo',
+  publiclyListed: false,
+}
 
 export default function ExtensionDemo() {
   const [isExtensionOpen, setIsExtensionOpen] = useState(true)
@@ -37,60 +47,28 @@ export default function ExtensionDemo() {
       setStreamLogs(['Extracting linguistic and contextual signals...'])
       setReport(null)
 
-      const runAudit = async () => {
-        try {
-          const res = await fetch('/api/audit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: 'Remote Frontend Intern - PHP 80,000/week. To apply, message our manager on Telegram: @ApexHiringManager. Do not apply through LinkedIn. Instant start, no interview required.',
-              location: 'Remote',
-              mode: 'live' // Force live pipeline
-            })
-          })
-
-          if (!res.ok) {
-             if (isMounted) setStreamLogs(prev => [...prev, `Error: API returned ${res.status}`])
-             return
+      const timers = [
+        window.setTimeout(() => {
+          if (isMounted) setStreamLogs(prev => [...prev.slice(-3), 'Reading visible job content...'])
+        }, 600),
+        window.setTimeout(() => {
+          if (isMounted) setStreamLogs(prev => [...prev.slice(-3), 'Checking deterministic demo signals...'])
+        }, 1400),
+        window.setTimeout(() => {
+          if (isMounted) setStreamLogs(prev => [...prev.slice(-3), 'Preparing seeded demo verdict...'])
+        }, 2200),
+        window.setTimeout(() => {
+          if (isMounted) {
+            setReport(LINKEDIN_DEMO_REPORT)
+            setActiveStage('result')
           }
-          if (!res.body) return
+        }, 2800),
+      ]
 
-          const reader = res.body.getReader()
-          const decoder = new TextDecoder()
-          let buffer = ''
-
-          while (isMounted) {
-            const { done, value } = await reader.read()
-            buffer += decoder.decode(value, { stream: !done })
-            const chunks = buffer.split('\n\n')
-            buffer = chunks.pop() ?? ''
-
-            for (const chunk of chunks) {
-              const dataLine = chunk.split('\n').find((line) => line.startsWith('data:'))
-              if (!dataLine) continue
-              const parsed = JSON.parse(dataLine.slice(5).trim())
-              
-              if (parsed.type === 'log') {
-                setStreamLogs(prev => [...prev.slice(-3), parsed.message])
-              } else if (parsed.type === 'result') {
-                if (isMounted) {
-                  setReport(parsed.data)
-                  setActiveStage('result')
-                }
-              } else if (parsed.type === 'error') {
-                setStreamLogs(prev => [...prev, `Error: ${parsed.message}`])
-              }
-            }
-            if (done) break
-          }
-        } catch (e) {
-          if (isMounted) setStreamLogs(prev => [...prev, 'Network error occurred'])
-        }
+      return () => {
+        isMounted = false
+        timers.forEach(window.clearTimeout)
       }
-
-      runAudit()
-
-      return () => { isMounted = false }
     }
   }, [activeStage, isExtensionOpen])
 

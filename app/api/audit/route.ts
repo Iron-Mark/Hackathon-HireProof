@@ -317,8 +317,9 @@ export async function POST(request: Request) {
       }
       sendEvent('log', { message: 'Extracting role, pay, company, and contact claims...', phase: 'extract', status: 'active', label: 'Claim extraction' })
 
-      if (true) {
-        let modelAllowed = publicLiveEnabled && hasHireProofModelProvider()
+      {
+        const demoMode = validated.mode === 'demo'
+        let modelAllowed = publicLiveEnabled && !demoMode && hasHireProofModelProvider()
         if (modelAllowed) {
           const modelGuard = await checkProviderCostGuard('model')
           modelAllowed = modelGuard.allowed
@@ -448,8 +449,8 @@ export async function POST(request: Request) {
           text: validated.text,
           existingEvidence: evidence,
         }, {
-          liveSearchAllowed: liveSearchRequested,
-          externalEvidenceAllowed: validated.mode !== 'demo',
+          liveSearchAllowed: liveSearchAllowed && !demoMode,
+          externalEvidenceAllowed: !demoMode,
         })
         evidence = broker.evidence
 
@@ -473,9 +474,11 @@ export async function POST(request: Request) {
           evidence,
           enrichmentEvidence: [...buildEnrichmentEvidence(requestEnrichment), ...ocrEvidence],
           enrichmentRedFlags: [...enrichmentRedFlags, ...routeRedFlags],
-          ownerId: 'web',
-          source: 'web',
-          publiclyListed: !validated.image,
+          mode: demoMode ? 'demo' : 'live',
+          credentialMode: demoMode ? 'demo' : undefined,
+          ownerId: demoMode ? 'demo' : 'web',
+          source: demoMode ? 'demo' : 'web',
+          publiclyListed: !demoMode && !validated.image,
           operations: {
             ...broker.operations,
             liveSearch: broker.operations.liveSearch || guardrail.status,
@@ -483,7 +486,9 @@ export async function POST(request: Request) {
           },
         })
 
-        await persistReportSafely(report)
+        if (!demoMode) {
+          await persistReportSafely(report)
+        }
         sendEvent('log', { message: 'Report assembled and ready to review.', phase: 'report', status: 'complete', label: 'Report ready' })
         sendEvent('result', { data: report })
         return
