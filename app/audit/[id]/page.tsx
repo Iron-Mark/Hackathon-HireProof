@@ -1,16 +1,18 @@
-import { getReport } from '@/lib/db'
+import { getReport, isPublicReportId } from '@/lib/db'
 import ResultScreen from '@/components/audit/result-screen'
 import { SiteHeader } from '@/components/layout/site-header'
 import { redirect } from 'next/navigation'
 import { ErrorBoundary } from '@/components/system/error-boundary'
 import type { Metadata } from 'next'
 import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
+import { sanitizeAuditPermalinkReport } from '@/lib/public-report-view.mjs'
 
 export const runtime = 'nodejs'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const report = await getReport(id)
+  const safeId = typeof id === 'string' ? id.trim() : ''
+  const report = isPublicReportId(safeId) ? await getReport(safeId) : null
   const verdict = report?.verdict?.toUpperCase() || 'UNKNOWN'
   const risk = report?.riskScore || 0
 
@@ -41,9 +43,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function AuditPermalinkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  // Input validation: ensure ID only contains valid characters to guard against path traversal or injections
   const safeId = typeof id === 'string' ? id.trim() : ''
-  if (!safeId || !/^(report|chat)_[a-zA-Z0-9_-]+$/.test(safeId) || safeId.length > 100) {
+  if (!isPublicReportId(safeId)) {
     redirect('/audit')
   }
 
@@ -53,7 +54,7 @@ export default async function AuditPermalinkPage({ params }: { params: Promise<{
     redirect('/audit')
   }
 
-  const repaired = repairAuditReportForDisplay(report).report
+  const repaired = sanitizeAuditPermalinkReport(repairAuditReportForDisplay(report).report)
 
   return (
     <div className="bg-background min-h-screen">
