@@ -152,7 +152,7 @@ This repo also uses Upstash REST variables elsewhere, but ChatSDK currently expe
 
 ## 3. Workflow Secret
 
-`WORKFLOW_SECRET` is not purchased from Vercel. Generate it yourself.
+`WORKFLOW_SECRET` is not purchased from Vercel. Generate it yourself. Do not use a placeholder or short demo value; the workflow route rejects public placeholders and low-entropy secrets.
 
 Run:
 
@@ -160,10 +160,10 @@ Run:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Save the output as:
+Save the generated output as the value:
 
 ```env
-WORKFLOW_SECRET=generated-random-hex
+WORKFLOW_SECRET=
 ```
 
 This protects `/api/workflows/audit` when you want to start workflow runs from external callers.
@@ -278,7 +278,7 @@ Create or update `.env.local`:
 SLACK_BOT_TOKEN=xoxb-your-token
 SLACK_SIGNING_SECRET=your-signing-secret
 REDIS_URL=redis://default:password@host:port
-WORKFLOW_SECRET=generated-random-hex
+WORKFLOW_SECRET=
 BYOK_ENCRYPTION_KEY=generated-random-hex
 AI_GATEWAY_API_KEY=gw_your_key
 HIREPROOF_MODEL=openai/gpt-4o-mini

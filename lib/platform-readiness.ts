@@ -1,3 +1,5 @@
+import { getWorkflowSecretStatus } from './workflow-secret'
+
 export type ReadinessState = 'ready' | 'credential-gated'
 
 function present(value?: string) {
@@ -5,6 +7,7 @@ function present(value?: string) {
 }
 
 export function getPlatformReadiness() {
+  const workflowSecretStatus = getWorkflowSecretStatus()
   const slack = {
     track: 'ChatSDK Agents',
     state: (present(process.env.SLACK_BOT_TOKEN) && present(process.env.SLACK_SIGNING_SECRET) && present(process.env.REDIS_URL)
@@ -62,10 +65,10 @@ export function getPlatformReadiness() {
 
   const workflow = {
     track: 'Vercel Workflow / WDK',
-    state: (present(process.env.WORKFLOW_SECRET) ? 'ready' : 'credential-gated') as ReadinessState,
+    state: (workflowSecretStatus.valid ? 'ready' : 'credential-gated') as ReadinessState,
     endpoint: '/api/workflows/audit',
     required: {
-      WORKFLOW_SECRET: present(process.env.WORKFLOW_SECRET),
+      WORKFLOW_SECRET: workflowSecretStatus.valid,
     },
   }
 

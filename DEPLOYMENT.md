@@ -77,7 +77,8 @@ MODEL_PROVIDER_KEY=your_openai_compatible_fallback_key
 SLACK_BOT_TOKEN=your_slack_bot_token
 SLACK_SIGNING_SECRET=your_slack_signing_secret
 REDIS_URL=your_chat_state_redis_url
-WORKFLOW_SECRET=your_workflow_secret
+# Generate a private 64-character hex value before enabling workflows.
+WORKFLOW_SECRET=
 ```
 
 ### Build Configuration

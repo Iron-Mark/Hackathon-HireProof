@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { start } from 'workflow/api'
 import { startAuditWorkflow } from '@/lib/workflows/audit-workflow'
+import { getWorkflowSecret, getWorkflowSecretStatus } from '@/lib/workflow-secret'
 
 export const runtime = 'nodejs'
 
 function workflowCredentialsReady() {
-  return Boolean(process.env.WORKFLOW_SECRET)
+  return getWorkflowSecretStatus().valid
 }
 
 export async function GET() {
@@ -27,7 +28,18 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (process.env.WORKFLOW_SECRET && request.headers.get('x-workflow-secret') !== process.env.WORKFLOW_SECRET) {
+  const workflowSecretStatus = getWorkflowSecretStatus()
+
+  if (workflowSecretStatus.present && !workflowSecretStatus.valid) {
+    return NextResponse.json({
+      status: 'credential-misconfigured',
+      track: 'Vercel Workflow',
+      error: 'WORKFLOW_SECRET must be a private high-entropy value before workflow runs can be accepted.',
+    }, { status: 503 })
+  }
+
+  const workflowSecret = getWorkflowSecret()
+  if (workflowSecretStatus.valid && request.headers.get('x-workflow-secret') !== workflowSecret) {
     return NextResponse.json({ error: 'Invalid workflow secret.' }, { status: 401 })
   }
 
