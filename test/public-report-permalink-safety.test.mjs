@@ -44,3 +44,13 @@ test('audit permalinks strip chat adapter metadata before client rendering', asy
   assert.equal(Object.prototype.hasOwnProperty.call(sanitized, 'chatChannelId'), false)
   assert.doesNotMatch(serialized, /private-thread-SECRET|channel-SECRET|chatThreadId|chatChannelId|chatPlatform/)
 })
+
+test('audit permalinks reject legacy timestamp chat ids', async () => {
+  const page = await fs.readFile(new URL('../app/audit/[id]/page.tsx', import.meta.url), 'utf8')
+  const idHelper = await fs.readFile(new URL('../lib/public-report-id.ts', import.meta.url), 'utf8')
+
+  assert.match(page, /isPublicReportId\(safeId\)/)
+  assert.match(idHelper, /chat_\[0-9a-f\]\{8\}/)
+  assert.doesNotMatch(idHelper, /chat_\[a-zA-Z0-9_-\]\+/)
+  assert.doesNotMatch(idHelper, /chat_\[0-9\]\+/)
+})

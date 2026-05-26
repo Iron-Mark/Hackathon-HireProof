@@ -8,6 +8,7 @@ import { createZernioAdapter } from '@zernio/chat-sdk-adapter'
 import { DEMO_FIXTURES } from '@/lib/fixtures'
 import { formatChatVerdict } from '@/lib/chat-verdict'
 import { saveReport } from '@/lib/db'
+import { createPublicReportId } from '@/lib/public-report-id'
 import type { AuditReport } from '@/lib/schemas'
 
 export type ChatPlatform = 'slack' | 'discord' | 'telegram' | 'whatsapp' | 'local'
@@ -534,7 +535,7 @@ export async function createChatReply(text: string, baseUrl: string, platform: C
   const safeText = normalizeChatText(text)
   const report: AuditReport = {
     ...pickFixture(safeText),
-    id: `chat_${now}`,
+    id: createPublicReportId('chat'),
     timestamp: new Date(now).toISOString(),
     source: 'chat' as const,
     mode: 'demo' as const,
@@ -587,7 +588,7 @@ export async function createDiscordAuditReply(text: string, baseUrl: string, met
   const apiReport = await response.json() as AuditReport
   const report: AuditReport = {
     ...apiReport,
-    id: `chat_${now}`,
+    id: createPublicReportId('chat'),
     timestamp: new Date(now).toISOString(),
     source: 'chat',
     publiclyListed: false,

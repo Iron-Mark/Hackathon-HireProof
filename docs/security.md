@@ -73,10 +73,10 @@ The filesystem database (`reports.json`) uses a mutex-locked atomic write patter
 All dynamic routes and database lookups implement strict regex guards and character stripping (`/`, `\`, `..`) to ensure that an attacker cannot read arbitrary files from the server environment.
 
 ### 🔗 Public Report Permalinks
-Report and chat permalinks use UUID-backed public IDs instead of timestamp IDs. Public rendering also strips chat adapter metadata such as platform thread and channel identifiers before the report is serialized to the client.
+Chat permalinks use UUID-backed public IDs instead of timestamp IDs. Public rendering also strips chat adapter metadata such as platform thread and channel identifiers before the report is serialized to the client.
 
 ### 🆔 High-Entropy UUIDs
-Report IDs are generated using `crypto.randomUUID()`. With 128-bit entropy, these IDs are mathematically impossible to guess or brute-force, ensuring the privacy of user investigations.
+Chat report IDs are generated using `crypto.randomUUID()`. With 128-bit entropy, these IDs are mathematically impractical to guess or brute-force, reducing exposure from timestamp-window enumeration.
 
 ---
 

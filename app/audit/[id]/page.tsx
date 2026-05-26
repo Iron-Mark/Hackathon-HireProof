@@ -1,4 +1,5 @@
-import { getReport, isPublicReportId } from '@/lib/db'
+import { getReport } from '@/lib/db'
+import { isPublicReportId } from '@/lib/public-report-id'
 import ResultScreen from '@/components/audit/result-screen'
 import { SiteHeader } from '@/components/layout/site-header'
 import { redirect } from 'next/navigation'
