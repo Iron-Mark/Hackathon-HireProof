@@ -436,7 +436,9 @@ export async function updatePilotRequestStatus(id: unknown, status: unknown) {
 }
 
 function csvCell(value: unknown) {
-  return `"${String(value ?? '').replace(/"/g, '""')}"`
+  const text = String(value ?? '')
+  const safeText = /^[\s\u0000-\u001f\u007f]*[=+\-@]/.test(text) ? `'${text}` : text
+  return `"${safeText.replace(/"/g, '""')}"`
 }
 
 export function buildPilotRequestsCsv(requests: PilotRequestRecord[]) {
