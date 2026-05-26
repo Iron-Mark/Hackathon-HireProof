@@ -63,6 +63,7 @@ The evidence broker is designed to preserve API limits and keep reports honest.
 - Known-bad phishing, malware, or social-engineering hits are high-risk evidence.
 - Newly registered apply/recruiter domains, recruiter-domain mismatch, missing custom mail DNS, and very recent certificate activity can increase risk.
 - Official apply domains, trusted job boards/ATS hosts, recruiter domains matching the official root, and active registry matches can add trust, but they do not override strong scam signals by themselves.
+- Generic public HTML job pages are retained as evidence but do not count as trusted job-board or ATS evidence, so they cannot remove missing-evidence warnings by themselves.
 
 ## Timeline Meaning
 

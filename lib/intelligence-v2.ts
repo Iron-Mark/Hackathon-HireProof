@@ -187,22 +187,14 @@ function attachEvidenceMetadata(evidence: EvidenceItem[]) {
   })
 }
 
+const TRUSTED_JOB_PAGE_PATTERN = /\b(linkedin|indeed|jobstreet|greenhouse|lever|ashby|smartrecruiters|workday|myworkdayjobs)\b/i
+
 function hasTrustedJobPageEvidence(evidence: EvidenceItem[]) {
   return evidence.some(item => {
     const text = normalizeText(`${item.source} ${item.type} ${item.snippet} ${item.url || ''}`)
     return (
       item.sourceQuality === 'reputable' ||
-      text.includes('linkedin') ||
-      text.includes('indeed') ||
-      text.includes('jobstreet') ||
-      text.includes('greenhouse') ||
-      text.includes('lever') ||
-      text.includes('ashby') ||
-      text.includes('smartrecruiters') ||
-      text.includes('workday') ||
-      text.includes('public job page') ||
-      text.includes('job post source') ||
-      text.includes('resolved job page')
+      TRUSTED_JOB_PAGE_PATTERN.test(text)
     )
   })
 }

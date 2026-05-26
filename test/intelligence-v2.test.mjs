@@ -393,6 +393,36 @@ test('v2 intelligence does not claim no supporting evidence when a trusted job p
   assert.doesNotMatch(report.summary, /No supporting evidence/i)
 })
 
+test('v2 intelligence keeps missing-evidence warnings for generic public job pages', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_generic_public_job_page',
+    extractedClaims: {
+      company: 'Apex Remote Hiring',
+      role: 'Remote Payroll Assistant',
+      salary: 'PHP 80,000/week',
+      location: 'Remote',
+      contactMethod: 'Telegram',
+      applicationPath: 'https://attacker.example/jobs/payroll-assistant',
+    },
+    evidence: [
+      {
+        source: 'public job page',
+        type: 'Job Post Source',
+        url: 'https://attacker.example/jobs/payroll-assistant',
+        snippet: 'HireProof read public job content from https://attacker.example/jobs/payroll-assistant.',
+        sourceQuality: 'public',
+        trustLevel: 'low',
+      },
+    ],
+    enrichmentRedFlags: ['No supporting evidence found from live search'],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.ok(report.redFlags.some((flag) => /no supporting evidence/i.test(flag)))
+  assert.doesNotMatch(report.summary, /trusted job page/i)
+})
 test('v2 intelligence ignores stale comparable-host apply mismatch for trusted LinkedIn job pages', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({

@@ -123,6 +123,39 @@ test('repairAuditReportForDisplay recovers LinkedIn title and location from arch
   assert.ok(changedFields.includes('summary'))
 })
 
+test('repairAuditReportForDisplay keeps missing-evidence warnings for generic public job pages', () => {
+  const input = {
+    ...baseReport,
+    id: 'report_generic_public_job_page_repair',
+    summary: 'No supporting evidence found from live search. Treat this as unverified.',
+    extractedClaims: {
+      company: 'Apex Remote Hiring',
+      role: 'Remote Payroll Assistant',
+      salary: 'PHP 80,000/week',
+      location: 'Remote',
+      contactMethod: 'Telegram',
+      applicationPath: 'https://attacker.example/jobs/payroll-assistant',
+    },
+    redFlags: ['No supporting evidence found from live search'],
+    evidence: [
+      {
+        source: 'public job page',
+        type: 'Job Post Source',
+        url: 'https://attacker.example/jobs/payroll-assistant',
+        snippet: 'HireProof read public job content from https://attacker.example/jobs/payroll-assistant.',
+        sourceQuality: 'public',
+        trustLevel: 'low',
+      },
+    ],
+  }
+
+  const { report, changedFields } = repairAuditReportForDisplay(input)
+
+  assert.ok(report.redFlags.some((flag) => /no supporting evidence/i.test(flag)))
+  assert.match(report.summary, /No supporting evidence/i)
+  assert.ok(!changedFields.includes('redFlags'))
+  assert.ok(!changedFields.includes('summary'))
+})
 test('developer report repair endpoint is authenticated, same-origin guarded, and dry-run capable', async () => {
   const source = await fs.readFile(new URL('../app/api/developer/repair-reports/route.ts', import.meta.url), 'utf8')
 
