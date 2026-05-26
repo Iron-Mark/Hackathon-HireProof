@@ -528,6 +528,7 @@ function createCredentialGateResponse(platform: WebhookPlatform) {
 export async function createChatReply(text: string, baseUrl: string, platform: ChatPlatform = 'local', metadata?: {
   threadId?: string
   channelId?: string
+  persist?: boolean
 }) {
   const now = Date.now()
   const safeText = normalizeChatText(text)
@@ -537,15 +538,18 @@ export async function createChatReply(text: string, baseUrl: string, platform: C
     timestamp: new Date(now).toISOString(),
     source: 'chat' as const,
     mode: 'demo' as const,
+    publiclyListed: false,
     chatPlatform: platform,
     chatThreadId: metadata?.threadId,
     chatChannelId: metadata?.channelId,
   }
 
-  try {
-    await saveReport(report)
-  } catch (error) {
-    console.error('[ChatSDK] Report persistence failed:', error instanceof Error ? error.message : 'Unknown persistence error')
+  if (metadata?.persist !== false) {
+    try {
+      await saveReport(report)
+    } catch (error) {
+      console.error('[ChatSDK] Report persistence failed:', error instanceof Error ? error.message : 'Unknown persistence error')
+    }
   }
   const verdict = formatChatVerdict(report, baseUrl)
 
@@ -586,6 +590,7 @@ export async function createDiscordAuditReply(text: string, baseUrl: string, met
     id: `chat_${now}`,
     timestamp: new Date(now).toISOString(),
     source: 'chat',
+    publiclyListed: false,
     chatPlatform: 'discord',
     chatThreadId: metadata?.threadId,
     chatChannelId: metadata?.channelId,
