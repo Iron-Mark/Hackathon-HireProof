@@ -13,6 +13,7 @@ import {
 } from './auth-core.mjs'
 import type { ApiKeyRecord } from './auth-core'
 import { decryptSecret, encryptSecret, redactSecret } from './byok-crypto.mjs'
+import { isDemoAccountEmail } from './demo-account'
 
 interface EncryptedSecretPayload {
   algorithm: 'aes-256-gcm'
@@ -27,6 +28,10 @@ export interface UserAccount {
   name: string
   passwordHash: string
   createdAt: string
+}
+
+interface DemoAccountOptions {
+  allowDemoAccount?: boolean
 }
 
 export interface PublicUser {
@@ -213,9 +218,10 @@ function publicUser(user: UserAccount): PublicUser {
   }
 }
 
-export async function createUser(email: string, password: string, name?: string) {
+export async function createUser(email: string, password: string, name?: string, options: DemoAccountOptions = {}) {
   const normalizedEmail = email.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)) throw new Error('Enter a valid email address.')
+  if (isDemoAccountEmail(normalizedEmail) && !options.allowDemoAccount) throw new Error('The shared demo account is reserved.')
   if (password.length < 8) throw new Error('Password must be at least 8 characters.')
 
   const users = await readJson<Record<string, UserAccount>>('users', {})
@@ -235,7 +241,7 @@ export async function createUser(email: string, password: string, name?: string)
   return publicUser(user)
 }
 
-export async function authenticateUser(email: string, password: string) {
+export async function authenticateUser(email: string, password: string, options: DemoAccountOptions = {}) {
   const normalizedEmail = email.trim().toLowerCase()
   const users = await readJson<Record<string, UserAccount>>('users', {})
   const user = Object.values(users).find((item) => item.email === normalizedEmail)
@@ -247,6 +253,7 @@ export async function authenticateUser(email: string, password: string) {
   }
   
   if (!(await verifyPassword(password, user.passwordHash))) return null
+  if (isDemoAccountEmail(normalizedEmail) && !options.allowDemoAccount) return null
   return publicUser(user)
 }
 
@@ -256,8 +263,8 @@ export async function getUserById(id: string) {
   return user ? publicUser(user) : null
 }
 
-export function makeSessionToken(userId: string) {
-  return createSessionToken(userId, sessionSecret(), SESSION_TTL_SECONDS)
+export function makeSessionToken(userId: string, ttlSeconds = SESSION_TTL_SECONDS) {
+  return createSessionToken(userId, sessionSecret(), ttlSeconds)
 }
 
 export async function getUserFromSessionToken(token?: string) {

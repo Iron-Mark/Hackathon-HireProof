@@ -35,6 +35,7 @@ The headless API implements multi-layer SSRF protection for outgoing webhooks:
 We implement a multi-layer rate limiting strategy to protect against "Denial of Wallet" and credential stuffing attacks.
 - **Enterprise Layer (Upstash Redis):** If configured, HireProof uses distributed sliding-window rate limiting via Upstash Redis. This ensures that limits are synchronized across all serverless edge instances, providing global protection.
 - **Portability Layer (In-Memory):** If Redis is not configured, the app gracefully degrades to an in-memory token bucket. This maintains the "zero-cost" portability model for local developers while still providing per-instance protection.
+- **Demo Account Gate:** The shared judge demo account can only authenticate through `/api/auth/demo-login`, receives the demo session lifetime, and is blocked from developer resource mutations such as API keys, provider credentials, verified domains, repair jobs, and Cursor runs.
 
 ---
 

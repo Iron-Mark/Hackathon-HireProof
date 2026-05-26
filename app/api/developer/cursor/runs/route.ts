@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getUserFromSessionToken } from '@/lib/auth-store'
+import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { getCursorPublicStatus, startCursorRun } from '@/lib/cursor/client'
@@ -56,6 +57,9 @@ export async function POST(request: Request) {
 
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (isDemoAccountEmail(user.email)) {
+    return NextResponse.json({ error: 'Demo accounts cannot start developer runs.' }, { status: 403 })
+  }
 
   const rateLimitError = await validateCursorRunRateLimit(request, user.id)
   if (rateLimitError) return rateLimitError

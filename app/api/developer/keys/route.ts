@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getUserFromSessionToken, issueApiKey, listApiKeys } from '@/lib/auth-store'
+import { isDemoAccountEmail } from '@/lib/demo-account'
 
 async function requireUser() {
   const cookieStore = await cookies()
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
   // Demo accounts are sandboxed — they cannot create real API keys
-  if (user.email === 'judge@hackathon.com') {
+  if (isDemoAccountEmail(user.email)) {
     return NextResponse.json({ error: 'Demo accounts cannot create API keys.' }, { status: 403 })
   }
   const body = await request.json().catch(() => ({}))

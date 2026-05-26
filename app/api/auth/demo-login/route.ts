@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
 import { cookies, headers } from 'next/headers'
 import { authenticateUser, createUser, makeSessionToken } from '@/lib/auth-store'
+import {
+  DEMO_ACCOUNT_EMAIL,
+  DEMO_ACCOUNT_NAME,
+  DEMO_ACCOUNT_PASSWORD,
+  DEMO_SESSION_TTL_SECONDS,
+} from '@/lib/demo-account'
 import { Redis } from '@upstash/redis'
 
-const DEMO_EMAIL = 'judge@hackathon.com'
-const DEMO_PASSWORD = 'hireproof2026'
-const DEMO_NAME = 'Demo Judge'
-
-// Demo sessions last 2 hours — short enough to limit window of misuse
-const DEMO_SESSION_TTL = 60 * 60 * 2
+const DEMO_EMAIL = DEMO_ACCOUNT_EMAIL
+const DEMO_PASSWORD = DEMO_ACCOUNT_PASSWORD
+const DEMO_NAME = DEMO_ACCOUNT_NAME
+const DEMO_SESSION_TTL = DEMO_SESSION_TTL_SECONDS
 // Rate limit: max 5 logins per IP per hour
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_S = 60 * 60
@@ -94,18 +98,18 @@ export async function POST(request: Request) {
 
   try {
     // Try login first (account may already exist)
-    let user = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD)
+    let user = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD, { allowDemoAccount: true })
 
     // If not found, seed the account then log in
     if (!user) {
       try {
-        await createUser(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME)
+        await createUser(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NAME, { allowDemoAccount: true })
       } catch (e) {
         // Ignore "already exists" errors from a race condition
         const msg = e instanceof Error ? e.message : ''
         if (!msg.includes('already exists')) throw e
       }
-      user = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD)
+      user = await authenticateUser(DEMO_EMAIL, DEMO_PASSWORD, { allowDemoAccount: true })
     }
 
     if (!user) {
@@ -113,7 +117,7 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set('hireproof_session', makeSessionToken(user.id), {
+    cookieStore.set('hireproof_session', makeSessionToken(user.id, DEMO_SESSION_TTL), {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',

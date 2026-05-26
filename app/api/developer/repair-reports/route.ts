@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getUserFromSessionToken } from '@/lib/auth-store'
+import { isDemoAccountEmail } from '@/lib/demo-account'
 import { getReport, saveReport } from '@/lib/db'
 import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
 
@@ -55,6 +56,9 @@ export async function POST(request: Request) {
 
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (isDemoAccountEmail(user.email)) {
+    return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
+  }
 
   const body = await request.json().catch(() => ({}))
   const ids = normalizeIds(body.ids)

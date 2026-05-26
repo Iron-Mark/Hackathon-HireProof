@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { authenticateUser, makeSessionToken } from '@/lib/auth-store'
+import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { requestIp, validateMutationOrigin } from '@/lib/request-security'
 
@@ -28,6 +29,13 @@ export async function POST(request: Request) {
   const email = String(body.email || '')
   const rateLimitError = await validateLoginRateLimit(request, email)
   if (rateLimitError) return rateLimitError
+
+  if (isDemoAccountEmail(email)) {
+    return NextResponse.json(
+      { error: 'Use the gated demo login flow for the shared demo account.' },
+      { status: 403 },
+    )
+  }
 
   const user = await authenticateUser(email, String(body.password || ''))
   if (!user) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 })

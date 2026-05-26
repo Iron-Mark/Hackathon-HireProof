@@ -6,6 +6,7 @@ import {
   revokeProviderCredential,
   saveProviderCredential,
 } from '@/lib/auth-store'
+import { isDemoAccountEmail } from '@/lib/demo-account'
 import { normalizeProviderInput, verifyProviderCredential } from '@/lib/provider-verification'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { requestIp, validateMutationOrigin } from '@/lib/request-security'
@@ -45,6 +46,9 @@ export async function PATCH(request: Request) {
 
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (isDemoAccountEmail(user.email)) {
+    return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
+  }
 
   const rateLimitError = await validateCredentialSaveRateLimit(request, user.id)
   if (rateLimitError) return rateLimitError
@@ -75,6 +79,9 @@ export async function DELETE(request: Request) {
 
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (isDemoAccountEmail(user.email)) {
+    return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(request.url)
   const provider = normalizeProviderInput(searchParams.get('provider'))
