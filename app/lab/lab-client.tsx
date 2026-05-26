@@ -38,7 +38,7 @@ type StreamEvent =
 const INITIAL_STEPS: LabStep[] = [
   { id: 'intake', label: 'Intake', status: 'pending', msg: 'Awaiting job post details...' },
   { id: 'claims', label: 'Claim extraction', status: 'pending', msg: 'Role, pay, company, and contact claims will appear here.' },
-  { id: 'evidence', label: 'Evidence gathering', status: 'pending', msg: 'Official web, news, comparable jobs, and local signals will stream in.' },
+  { id: 'evidence', label: 'Evidence gathering', status: 'pending', msg: 'Demo-safe evidence and deterministic signals will stream in.' },
   { id: 'risk', label: 'Risk scoring', status: 'pending', msg: 'Signals will be scored after evidence is collected.' },
   { id: 'report', label: 'Report synthesis', status: 'pending', msg: 'The final AuditReport will render when the stream completes.' },
 ]
@@ -209,10 +209,10 @@ export function LabClient() {
     setError(null)
     setEventCount(0)
     setStepActive('intake', 'Submitting job post to the audit stream...')
-    addLog(`Starting live audit stream.`)
+    addLog(`Starting demo audit stream.`)
 
     try {
-      const request: AuditRequest = { text: trimmed, mode: 'live' }
+      const request: AuditRequest = { text: trimmed, mode: 'demo' }
       const response = await fetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -558,7 +558,7 @@ export function LabClient() {
 
               <div className="space-y-4">
                 {[
-                  { label: 'Mode', value: titleCase('live') },
+                  { label: 'Mode', value: titleCase('demo') },
                   { label: 'Events', value: eventCount.toString() },
                   { label: 'Evidence', value: report ? report.evidence.length.toString() : '-' },
                   { label: 'Red flags', value: report ? report.redFlags.length.toString() : '-' },

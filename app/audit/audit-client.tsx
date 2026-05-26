@@ -241,7 +241,7 @@ function AuditContent() {
   const [error, setError] = useState<string | null>(null)
   const [streamLogs, setStreamLogs] = useState<string[]>([])
   const [streamEvents, setStreamEvents] = useState<AuditProgressEvent[]>([])
-  const [liveMode, setLiveMode] = useState(true)
+  const [liveMode, setLiveMode] = useState(false)
   const [costPosture, setCostPosture] = useState<CostPosture | null>(null)
   const loadedDemoRef = useRef<string | null>(null)
   const activeAuditRef = useRef<AbortController | null>(null)

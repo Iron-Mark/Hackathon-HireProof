@@ -20,6 +20,7 @@ If a provider is unavailable, the report should show a clear operational boundar
 
 Demo fixture mode is for walkthroughs and credential-offline testing. It is separate from live evidence mode.
 
+- The public audit and lab UIs default to demo-safe mode so opening the product or running a public lab stream does not spend hosted provider quota.
 - Demo fixture mode shows a visible warning and snackbar.
 - Demo evidence text is labeled as fixture evidence.
 - Demo fixture evidence should not be described as live evidence.

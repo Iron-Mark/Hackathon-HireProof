@@ -46,7 +46,7 @@ HireProof turns that manual investigation into one evidence-backed workflow. It 
 
 | Action | Link |
 | --- | --- |
-| Open the live audit | [Run HireProof](https://hireproof.tech/audit) |
+| Open the demo-safe audit UI | [Run HireProof](https://hireproof.tech/audit) |
 | Install the CLI | [`npx @hireproof/cli`](https://www.npmjs.com/package/@hireproof/cli) |
 | Download the Chrome extension ZIP | [`hireproof-extension.zip`](public/downloads/hireproof-extension.zip) |
 | Download native integration source pack | [`hireproof-native-integrations.zip`](public/downloads/hireproof-native-integrations.zip) |
@@ -120,7 +120,7 @@ curl -X POST https://hireproof.tech/api/v1/audit \
   -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'
 ```
 
-Demo mode is fixture-based and explicitly labeled. Live evidence mode uses provider-backed checks when credentials are configured.
+The public audit and lab UIs default to demo-safe mode so ordinary browsing does not spend hosted provider quota. Demo mode is fixture-based and explicitly labeled. Live evidence mode uses provider-backed checks when credentials are configured.
 
 ## What HireProof Checks
 
