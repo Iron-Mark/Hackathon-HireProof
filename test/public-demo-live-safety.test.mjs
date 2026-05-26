@@ -19,6 +19,7 @@ test('public audit route keeps demo mode out of live providers and public storag
 
   assert.match(route, /const demoMode = validated\.mode === 'demo'/)
   assert.match(route, /publicLiveEnabled && !demoMode && hasHireProofModelProvider\(\)/)
+  assert.match(route, /Demo mode selected; skipping provider budget checks and live evidence\./)
   assert.match(route, /liveSearchAllowed: liveSearchAllowed && !demoMode/)
   assert.match(route, /externalEvidenceAllowed: !demoMode/)
   assert.match(route, /mode: demoMode \? 'demo' : 'live'/)

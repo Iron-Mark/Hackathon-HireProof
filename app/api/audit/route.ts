@@ -332,7 +332,14 @@ export async function POST(request: Request) {
         const hasCompany = !extractedClaims.company.toLowerCase().includes('unknown')
         let evidence: EvidenceItem[] = []
         sendEvent('log', { message: `Claims extracted for ${extractedClaims.company || 'unknown company'} and ${extractedClaims.role || 'unknown role'}.`, phase: 'extract', status: 'complete', label: 'Claim extraction' })
-        sendEvent('log', { message: 'Checking live audit throttles and provider health...', phase: 'guardrail', status: liveSearchAllowed ? 'complete' : 'blocked', label: 'Guardrails' })
+        sendEvent('log', {
+          message: demoMode
+            ? 'Demo mode selected; skipping provider budget checks and live evidence.'
+            : 'Checking live audit throttles and provider health...',
+          phase: 'guardrail',
+          status: demoMode || liveSearchAllowed ? 'complete' : 'blocked',
+          label: 'Guardrails',
+        })
 
         if (hasCompany && liveSearchAllowed && modelAllowed) {
           try {
