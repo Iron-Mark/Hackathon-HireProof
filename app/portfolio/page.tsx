@@ -3,11 +3,14 @@ import Link from 'next/link'
 import { ArrowRight, Bot, Boxes, CheckCircle2, Code2, ExternalLink, FileText, ShieldCheck, Target, UsersRound } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { ProductEventTracker } from '@/components/analytics/product-event-tracker'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/portfolio',
   title: 'Portfolio Case Study | HireProof',
-  description: 'A portfolio case study for HireProof, a production-facing AI agent for checking suspicious job posts with visible evidence.',
-}
+  description: 'A solo-developed portfolio case study by Mark Siazon for HireProof, a production-facing AI agent for checking suspicious job posts with visible evidence.',
+  image: '/social/github-social-preview-1280x640.png',
+})
 
 const proofPoints = [
   'Production app on hireproof.tech with demo and API proof paths.',

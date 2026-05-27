@@ -4,11 +4,13 @@ import { ArrowRight } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { ProductEventTracker } from '@/components/analytics/product-event-tracker'
 import { PilotIntakeClient } from './pilot-intake-client'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/pilot',
   title: 'Pilot Intake | HireProof',
   description: 'Request a small HireProof pilot for job-seeker communities, schools, recruiters, job boards, or developer integrations.',
-}
+})
 
 export default function PilotPage() {
   return (

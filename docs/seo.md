@@ -5,8 +5,10 @@ HireProof uses `https://hireproof.tech` as the canonical public origin.
 ## Source of truth
 
 - `lib/seo.ts` centralizes the canonical site URL, default metadata, shared Open Graph image, structured-data graph, and sitemap entries.
-- `app/layout.tsx` owns global metadata and site-level JSON-LD for Organization, WebSite, and SoftwareApplication.
+- `app/layout.tsx` owns global metadata and site-level JSON-LD for Organization, Person, WebSite, and SoftwareApplication. Authorship should identify Mark Siazon as the solo developer, not a generic HireProof team.
 - `app/page.tsx` owns the homepage canonical URL and homepage Open Graph metadata.
+- Public top-level pages use `pageMetadata()` from `lib/seo.ts` so canonical URLs, Open Graph, Twitter cards, and robots directives stay consistent.
+- Client-only private sections use route layouts with `privatePageMetadata()` because client pages cannot export Next.js metadata directly.
 - `app/sitemap.ts` exposes public indexable routes and intentionally excludes authenticated, private, report-history, and admin surfaces.
 - `app/robots.ts` blocks API, admin, private report, settings, and pilot-admin paths while pointing crawlers to the canonical sitemap.
 - `public/manifest.json` gives search surfaces and install surfaces a complete app identity, shortcuts, icons, and screenshot metadata.
@@ -18,6 +20,7 @@ Index:
 
 Do not index:
 - API routes, admin routes, private report IDs, report history, settings, and pilot-admin/export surfaces.
+- Demo-only presentation pages that are not intended as landing pages.
 
 ## Content policy
 

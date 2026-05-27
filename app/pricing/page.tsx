@@ -2,11 +2,13 @@ import { Metadata } from 'next'
 import { SiteHeader } from '@/components/layout/site-header'
 import { AlertTriangle, Camera, CheckCircle2, Database, Key, MessageSquare, PackageCheck, Server, ShieldCheck, Store, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/pricing',
   title: 'Pricing | HireProof',
   description: 'Free individual job-scam checks plus suggested managed API and enterprise tiers for job boards, schools, recruiters, and community groups.',
-}
+})
 
 export default function PricingPage() {
   return (

@@ -21,11 +21,13 @@ import {
   Workflow,
 } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/proof',
   title: 'Proof Pack | HireProof',
   description: 'Public proof that HireProof is production-deployed, API-smoke-tested, CLI-screenshot-proven, Slack-screenshot-proven, and WDK accepted-run proven.',
-}
+})
 
 const readyProof = [
   {

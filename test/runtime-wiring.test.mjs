@@ -611,19 +611,26 @@ test('security regression suite includes evidence and export hardening tests', a
   const securityScript = packageJson.scripts['test:security'] || ''
 
   for (const testFile of [
+    'test/alternative-jobs.test.mjs',
     'test/audit-signals.test.mjs',
     'test/audit-calibration-cases.test.mjs',
     'test/claim-extraction.test.mjs',
     'test/csv-formula-injection.test.mjs',
+    'test/cursor-pretool-guard.test.mjs',
     'test/cursor-routes.test.mjs',
     'test/evidence-broker.test.mjs',
+    'test/hireproof-cli.test.mjs',
     'test/intelligence-v2.test.mjs',
     'test/live-guardrails.test.mjs',
     'test/ocr.test.mjs',
+    'test/postbuild-node-compat.test.mjs',
     'test/proxy-canonical-redirect.test.mjs',
     'test/public-audit-live-default-safety.test.mjs',
     'test/public-demo-live-safety.test.mjs',
+    'test/report-repair.test.mjs',
+    'test/research-agent.test.mjs',
     'test/risk-scorer.test.mjs',
+    'test/polish-hardening.test.mjs',
     'test/salary-benchmarks.test.mjs',
   ]) {
     assert.match(securityScript, new RegExp(testFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
@@ -811,6 +818,7 @@ test('authenticated account and operator read routes send no-store cache headers
   for (const routePath of jsonRoutes) {
     const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
     assert.match(source, /noStoreJson/, `${routePath} should use noStoreJson for authenticated JSON responses`)
+    assert.doesNotMatch(source, /NextResponse\.json/, `${routePath} should not return cacheable authenticated JSON`)
   }
 
   for (const routePath of [
@@ -818,6 +826,8 @@ test('authenticated account and operator read routes send no-store cache headers
     '../app/api/pilot/requests/export/route.ts',
   ]) {
     const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /noStoreJson/, `${routePath} should use noStoreJson for authenticated CSV errors`)
+    assert.doesNotMatch(source, /NextResponse\.json/, `${routePath} should not return cacheable authenticated CSV errors`)
     assert.match(source, /Cache-Control['"]:\s*['"]no-store['"]/, `${routePath} should disable caching for operator CSV exports`)
   }
 })
@@ -1224,6 +1234,17 @@ test('feedback endpoint accepts structured reason metadata', async () => {
   assert.match(route, /salary_wrong/)
   assert.match(schemas, /userFeedbackReason/)
   assert.match(resultScreen, /feedbackReason/)
+})
+
+test('public mutation JSON routes send no-store responses', async () => {
+  for (const routePath of [
+    '../app/api/analytics/events/route.ts',
+    '../app/api/intelligence/feedback/route.ts',
+  ]) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /noStoreJson/, `${routePath} should use noStoreJson for mutation responses`)
+    assert.doesNotMatch(source, /NextResponse\.json/, `${routePath} should not return cacheable mutation JSON`)
+  }
 })
 
 test('demo fixtures do not ship fake safer alternatives', async () => {

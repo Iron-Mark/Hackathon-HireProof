@@ -1,7 +1,8 @@
-import type { MetadataRoute } from 'next'
+import type { Metadata, MetadataRoute } from 'next'
 
 export const SITE_URL = 'https://hireproof.tech'
 export const SITE_NAME = 'HireProof'
+export const SITE_AUTHOR = 'Mark Siazon'
 export const DEFAULT_OG_IMAGE = '/og-image.png'
 export const DEFAULT_TITLE = 'HireProof | Verify Job Posts Before Applying'
 export const DEFAULT_DESCRIPTION =
@@ -100,6 +101,76 @@ export function defaultOpenGraph(path = '/', title = DEFAULT_TITLE, description 
   }
 }
 
+export function pageMetadata({
+  path,
+  title,
+  description,
+  image = DEFAULT_OG_IMAGE,
+  index = true,
+}: {
+  path: string
+  title: string
+  description: string
+  image?: string
+  index?: boolean
+}): Metadata {
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalFor(path),
+    },
+    openGraph: {
+      ...defaultOpenGraph(path, title, description),
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${SITE_NAME} - ${title}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+      creator: '@hireproof',
+    },
+    robots: index
+      ? {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+          },
+        }
+      : {
+          index: false,
+          follow: false,
+          googleBot: {
+            index: false,
+            follow: false,
+            noimageindex: true,
+          },
+        },
+  }
+}
+
+export function privatePageMetadata(title: string, description: string): Metadata {
+  return pageMetadata({
+    path: '/',
+    title,
+    description,
+    index: false,
+  })
+}
+
 export function buildSiteJsonLd() {
   return {
     '@context': 'https://schema.org',
@@ -110,7 +181,15 @@ export function buildSiteJsonLd() {
         name: SITE_NAME,
         url: SITE_URL,
         logo: absoluteUrl('/apple-touch-icon.png'),
+        founder: { '@id': `${SITE_URL}/#mark-siazon` },
         sameAs: ['https://github.com/Iron-Mark/Hackathon-HireProof'],
+      },
+      {
+        '@type': 'Person',
+        '@id': `${SITE_URL}/#mark-siazon`,
+        name: SITE_AUTHOR,
+        url: 'https://marksiazon.dev',
+        jobTitle: 'Solo developer and creator of HireProof',
       },
       {
         '@type': 'WebSite',

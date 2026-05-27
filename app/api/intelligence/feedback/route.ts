@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
 import { getReport, isPublicReportId, saveReport } from '@/lib/db'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
 
 const FEEDBACK_PAYLOAD_LIMIT_BYTES = 8 * 1024
 
@@ -29,29 +29,29 @@ export async function POST(request: Request) {
     ])
 
     if (!id || typeof id !== 'string') {
-      return NextResponse.json({ error: 'Missing or invalid report ID' }, { status: 400 })
+      return noStoreJson({ error: 'Missing or invalid report ID' }, { status: 400 })
     }
     const safeId = id.trim()
     if (!isPublicReportId(safeId)) {
-      return NextResponse.json({ error: 'Missing or invalid report ID' }, { status: 400 })
+      return noStoreJson({ error: 'Missing or invalid report ID' }, { status: 400 })
     }
 
     const rateLimit = await checkRateLimit(`feedback_${requestIp(request)}_${safeId}`, { limit: 10, windowMs: 60000 })
     if (!rateLimit.success) {
-      return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+      return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
     }
 
     if (feedback !== 'helpful' && feedback !== 'incorrect') {
-      return NextResponse.json({ error: 'Feedback must be either helpful or incorrect' }, { status: 400 })
+      return noStoreJson({ error: 'Feedback must be either helpful or incorrect' }, { status: 400 })
     }
     if (reason !== undefined && (!validReasons.has(reason) || typeof reason !== 'string')) {
-      return NextResponse.json({ error: 'Invalid feedback reason' }, { status: 400 })
+      return noStoreJson({ error: 'Invalid feedback reason' }, { status: 400 })
     }
 
     const report = await getReport(safeId)
     
     if (!report) {
-      return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+      return noStoreJson({ error: 'Report not found' }, { status: 404 })
     }
 
     // Update the report with the user's feedback
@@ -62,9 +62,9 @@ export async function POST(request: Request) {
     // Persist to Upstash / Local FS
     await saveReport(report)
 
-    return NextResponse.json({ success: true, message: 'Feedback recorded successfully' })
+    return noStoreJson({ success: true, message: 'Feedback recorded successfully' })
   } catch (error) {
     console.error('Failed to save feedback:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return noStoreJson({ error: 'Internal server error' }, { status: 500 })
   }
 }

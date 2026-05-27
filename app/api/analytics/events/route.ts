@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
 import { recordProductEvent } from '@/lib/auth-store'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
 
 const ANALYTICS_EVENT_PAYLOAD_LIMIT_BYTES = 16_384
 
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     windowMs: 60000,
   })
   if (!rateLimit.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
   try {
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
       path: body.path,
       metadata: body.metadata,
     })
-    return NextResponse.json({ ok: true })
+    return noStoreJson({ ok: true })
   } catch {
-    return NextResponse.json({ error: 'Could not record event.' }, { status: 400 })
+    return noStoreJson({ error: 'Could not record event.' }, { status: 400 })
   }
 }
