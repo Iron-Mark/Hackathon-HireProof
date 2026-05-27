@@ -2,10 +2,20 @@
   "name": "HireProof",
   "short_name": "HireProof",
   "description": "Proof-backed AI job verification. Detect scams before you apply.",
+  "id": "/",
   "start_url": "/audit",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#05140f",
   "theme_color": "#167C5C",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -36,6 +46,38 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Audit a job post",
+      "short_name": "Audit",
+      "description": "Paste a suspicious job post and get an evidence-backed verdict.",
+      "url": "/audit",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Explore scam patterns",
+      "short_name": "Explore",
+      "description": "Review public recruitment scam patterns and evidence-backed reports.",
+      "url": "/explore",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Read API docs",
+      "short_name": "Docs",
+      "description": "Use the HireProof API, MCP tools, SDK, and automation packages.",
+      "url": "/docs",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "HireProof job verification report preview"
     }
   ]
 }

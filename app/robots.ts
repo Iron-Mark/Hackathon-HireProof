@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { SITE_URL } from '@/lib/seo'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -6,7 +7,15 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/audit/report_', '/history/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/audit/report_',
+          '/audit/chat_',
+          '/history/',
+          '/settings',
+          '/pilot/admin',
+        ],
       },
       ...[
         'GPTBot',
@@ -32,6 +41,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       })),
     ],
-    sitemap: 'https://hireproof.tech/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   }
 }

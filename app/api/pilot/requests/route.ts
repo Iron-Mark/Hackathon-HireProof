@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createPilotRequest, getUserFromSessionToken, isOperatorUser, listPilotRequests, recordProductEvent, updatePilotRequestStatus } from '@/lib/auth-store'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -14,8 +13,8 @@ async function requireUser() {
 
 export async function GET() {
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
-  if (!isOperatorUser(user)) return NextResponse.json({ error: 'Operator access required.' }, { status: 403 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
+  if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
   return noStoreJson({ requests: await listPilotRequests() })
 }
 
@@ -28,7 +27,7 @@ export async function POST(request: Request) {
     windowMs: 60000,
   })
   if (!rateLimit.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
   try {
@@ -52,9 +51,9 @@ export async function POST(request: Request) {
         hasOrganization: record.organization ? 'yes' : 'no',
       },
     }).catch(() => null)
-    return NextResponse.json({ request: record }, { status: 201 })
+    return noStoreJson({ request: record }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not save pilot request.' }, { status: 400 })
+    return noStoreJson({ error: error instanceof Error ? error.message : 'Could not save pilot request.' }, { status: 400 })
   }
 }
 
@@ -63,15 +62,15 @@ export async function PATCH(request: Request) {
   if (originError) return originError
 
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
-  if (!isOperatorUser(user)) return NextResponse.json({ error: 'Operator access required.' }, { status: 403 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
+  if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
 
   const rateLimit = await checkRateLimit(`pilot_request_status:${user.id}:${requestIp(request)}`, {
     limit: 60,
     windowMs: 60000,
   })
   if (!rateLimit.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
   try {
@@ -85,8 +84,8 @@ export async function PATCH(request: Request) {
       path: '/pilot/admin',
       metadata: { status: updated.status },
     }).catch(() => null)
-    return NextResponse.json({ request: updated })
+    return noStoreJson({ request: updated })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not update pilot request.' }, { status: 400 })
+    return noStoreJson({ error: error instanceof Error ? error.message : 'Could not update pilot request.' }, { status: 400 })
   }
 }

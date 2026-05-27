@@ -321,6 +321,7 @@ function contentLengthFrom(response: Response) {
 async function readBoundedResponseText(response: Response, url: string, maxBytes: number) {
   const contentLength = contentLengthFrom(response)
   if (typeof contentLength === 'number' && contentLength > maxBytes) {
+    await response.body?.cancel().catch(() => undefined)
     throw new ProviderResponseTooLargeError(url, maxBytes)
   }
 

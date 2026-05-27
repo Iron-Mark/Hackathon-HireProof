@@ -224,6 +224,7 @@ test('evidence broker falls through to DNS and certificates when RDAP is throttl
 
 test('evidence broker rejects oversized certificate transparency responses before buffering', async () => {
   let readBody = false
+  let cancelled = false
   const { runEvidenceBroker } = await loadEvidenceBrokerModule({
     fetchImpl: async (url) => {
       assert.match(String(url), /crt\.sh/)
@@ -231,6 +232,11 @@ test('evidence broker rejects oversized certificate transparency responses befor
         ok: true,
         status: 200,
         headers: { get: (name) => name.toLowerCase() === 'content-length' ? String(2 * 1024 * 1024) : null },
+        body: {
+          async cancel() {
+            cancelled = true
+          },
+        },
         text: async () => {
           readBody = true
           throw new Error('unbounded CT response body was read')
@@ -260,6 +266,7 @@ test('evidence broker rejects oversized certificate transparency responses befor
   })
 
   assert.equal(readBody, false)
+  assert.equal(cancelled, true)
   assert.equal(result.operations.evidenceProviders.certificateTransparency.status, 'degraded')
   assert.match(result.operations.evidenceProviders.certificateTransparency.message, /too large/i)
   assert.ok(!result.evidence.some((item) => item.type === 'Certificate Transparency'))

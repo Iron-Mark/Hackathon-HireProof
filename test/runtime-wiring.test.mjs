@@ -606,6 +606,30 @@ test('live chat proof script fails loudly but keeps controlled credential gates 
   assert.match(proofArchive, /live-chat-proof-check-latest\.json/)
 })
 
+test('security regression suite includes evidence and export hardening tests', async () => {
+  const packageJson = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const securityScript = packageJson.scripts['test:security'] || ''
+
+  for (const testFile of [
+    'test/audit-signals.test.mjs',
+    'test/audit-calibration-cases.test.mjs',
+    'test/claim-extraction.test.mjs',
+    'test/csv-formula-injection.test.mjs',
+    'test/cursor-routes.test.mjs',
+    'test/evidence-broker.test.mjs',
+    'test/intelligence-v2.test.mjs',
+    'test/live-guardrails.test.mjs',
+    'test/ocr.test.mjs',
+    'test/proxy-canonical-redirect.test.mjs',
+    'test/public-audit-live-default-safety.test.mjs',
+    'test/public-demo-live-safety.test.mjs',
+    'test/risk-scorer.test.mjs',
+    'test/salary-benchmarks.test.mjs',
+  ]) {
+    assert.match(securityScript, new RegExp(testFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+})
+
 test('ai gateway is the primary model provider when configured', async () => {
   const model = await fs.readFile(new URL('../lib/ai-model.ts', import.meta.url), 'utf8')
   const auditRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
@@ -761,6 +785,8 @@ test('developer resource mutation routes send no-store responses', async () => {
     '../app/api/developer/domains/route.ts',
     '../app/api/developer/domains/verify/route.ts',
     '../app/api/developer/cursor/runs/route.ts',
+    '../app/api/developer/repair-reports/route.ts',
+    '../app/api/pilot/requests/route.ts',
   ]
 
   for (const routePath of routePaths) {
@@ -1172,7 +1198,8 @@ test('robots and proxy discourage common AI crawlers from scraping public pages'
   }
 
   assert.match(robots, /disallow:\s*'\/'/)
-  assert.match(robots, /hireproof\.tech\/sitemap\.xml/)
+  assert.match(robots, /sitemap:\s*`\$\{SITE_URL\}\/sitemap\.xml`/)
+  assert.match(robots, /host:\s*SITE_URL/)
   assert.match(proxy, /hireproof-sigma\.vercel\.app/)
   assert.match(proxy, /www\.hireproof\.tech/)
   assert.match(proxy, /NextResponse\.redirect\([^,]+, 308\)/)

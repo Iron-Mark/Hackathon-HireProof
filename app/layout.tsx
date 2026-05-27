@@ -8,17 +8,36 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { ThemeScanner } from '@/components/system/theme-scanner'
 import { DemoLoginSnackbar } from '@/components/system/demo-login-snackbar'
 import { Analytics } from '@vercel/analytics/next'
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_TITLE,
+  SEO_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+  buildSiteJsonLd,
+} from '@/lib/seo'
 
 export const metadata: Metadata = {
+  applicationName: SITE_NAME,
   title: {
-    default: 'HireProof | Verify Job Posts Before Applying',
+    default: DEFAULT_TITLE,
     template: '%s | HireProof'
   },
-  description: 'Paste a job post or recruiter message. HireProof checks the claims with live evidence and returns a Safe, Caution, or High-Risk verdict before you apply.',
-  metadataBase: new URL('https://hireproof.tech'),
-  keywords: ['job search', 'scam detector', 'hireproof', 'job verification', 'recruitment scam', 'recruitment fraud'],
+  description: DEFAULT_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  keywords: SEO_KEYWORDS,
   authors: [{ name: 'HireProof Team' }],
+  creator: 'HireProof Team',
+  publisher: SITE_NAME,
+  category: 'employment safety',
+  classification: 'Job post verification and recruitment scam detection',
   manifest: '/manifest.json',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -44,13 +63,13 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
-    title: 'HireProof - Job Verification',
-    description: 'Paste a job post. Know if it\'s legit before you apply. HireProof checks the claims and returns a verdict with receipts.',
-    url: 'https://hireproof.tech',
-    siteName: 'HireProof',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
-        url: '/og-image.png',
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
         alt: 'HireProof - Verify job posts before applying',
@@ -61,9 +80,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'HireProof - Job Verification',
-    description: 'Know if it\'s legit before you apply.',
-    images: ['/og-image.png'],
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
     site: '@hireproof',
     creator: '@hireproof',
   },
@@ -90,52 +109,10 @@ export default function RootLayout({
             <ScrollToTopControl />
             <DemoLoginSnackbar />
             <script
-              id="json-ld"
+              id="site-json-ld"
               type="application/ld+json"
               dangerouslySetInnerHTML={{
-                __html: JSON.stringify({
-                  '@context': 'https://schema.org',
-                  '@type': 'SoftwareApplication',
-                  name: 'HireProof',
-                  applicationCategory: 'BusinessApplication',
-                  operatingSystem: 'Web, Chrome',
-                  description: 'AI-powered job post verification and recruitment scam detection.',
-                  offers: {
-                    '@type': 'Offer',
-                    price: '0',
-                    priceCurrency: 'USD',
-                  },
-                }),
-              }}
-            />
-            <script
-              id="breadcrumb-json-ld"
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{
-                __html: JSON.stringify({
-                  "@context": "https://schema.org",
-                  "@type": "BreadcrumbList",
-                  "itemListElement": [
-                    {
-                      "@type": "ListItem",
-                      "position": 1,
-                      "name": "Home",
-                      "item": "https://hireproof.tech"
-                    },
-                    {
-                      "@type": "ListItem",
-                      "position": 2,
-                      "name": "Audit",
-                      "item": "https://hireproof.tech/audit"
-                    },
-                    {
-                      "@type": "ListItem",
-                      "position": 3,
-                      "name": "Intelligence",
-                      "item": "https://hireproof.tech/explore"
-                    }
-                  ]
-                }),
+                __html: JSON.stringify(buildSiteJsonLd()),
               }}
             />
             <main className="min-h-screen">

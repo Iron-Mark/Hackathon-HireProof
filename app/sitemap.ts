@@ -1,25 +1,13 @@
 import { MetadataRoute } from 'next'
+import { PUBLIC_SITEMAP_ENTRIES, absoluteUrl } from '@/lib/seo'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://hireproof.tech'
   const lastModified = new Date()
 
-  const routes = [
-    '',
-    '/audit',
-    '/explore',
-    '/lab',
-    '/developer',
-    '/portfolio',
-    '/pilot',
-    '/pilot/admin',
-    '/trends',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
+  return PUBLIC_SITEMAP_ENTRIES.map((entry) => ({
+    url: absoluteUrl(entry.path),
     lastModified,
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1 : 0.8,
+    changeFrequency: entry.changeFrequency,
+    priority: entry.priority,
   }))
-
-  return routes
 }

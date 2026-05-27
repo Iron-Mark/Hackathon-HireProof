@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getUserFromSessionToken, isOperatorUser } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
@@ -6,6 +5,7 @@ import { getReport, saveReport } from '@/lib/db'
 import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
 
 export const runtime = 'nodejs'
 const REPAIR_REPORTS_PAYLOAD_LIMIT_BYTES = 32 * 1024
@@ -38,9 +38,9 @@ export async function POST(request: Request) {
   if (csrfError) return csrfError
 
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
-    return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
+    return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
   }
 
   const rateLimit = await checkRateLimit(`developer_repair_reports:${user.id}:${requestIp(request)}`, {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     windowMs: 60_000,
   })
   if (!rateLimit.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
   const parsedJson = await readJsonRequest(request, REPAIR_REPORTS_PAYLOAD_LIMIT_BYTES, 'Repair payload')
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   const dryRun = body.dryRun !== false
 
   if (ids.length === 0) {
-    return NextResponse.json({ error: 'At least one valid report id is required.' }, { status: 400 })
+    return noStoreJson({ error: 'At least one valid report id is required.' }, { status: 400 })
   }
 
   const results = []
@@ -90,5 +90,5 @@ export async function POST(request: Request) {
     })
   }
 
-  return NextResponse.json({ dryRun, results })
+  return noStoreJson({ dryRun, results })
 }

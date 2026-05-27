@@ -205,7 +205,7 @@ Result summary:
 This state is suitable for tagging as:
 
 ```text
-v1-main-hardened-2026-05-27
+v1-main-hardened-2026-05-27-final
 ```
 
 The tag should point at the commit that includes this proof report and the Node 20 workflow alignment.
