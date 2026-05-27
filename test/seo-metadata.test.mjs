@@ -47,6 +47,7 @@ test('portfolio metadata and case-study JSON-LD are discoverable and aligned to 
   const layout = await fs.readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8')
   const seo = await fs.readFile(new URL('../lib/seo.ts', import.meta.url), 'utf8')
   const portfolio = await fs.readFile(new URL('../app/portfolio/page.tsx', import.meta.url), 'utf8')
+  const footer = await fs.readFile(new URL('../components/layout/site-footer.tsx', import.meta.url), 'utf8')
 
   assert.match(seo, /AUTHOR_PROFILE_URL = 'https:\/\/marksiazon\.dev'/)
   assert.match(seo, /PORTFOLIO_CASE_STUDY_PUBLISHED_AT/)
@@ -59,6 +60,9 @@ test('portfolio metadata and case-study JSON-LD are discoverable and aligned to 
   assert.match(portfolio, /marksiazon\.dev/)
   assert.match(portfolio, /rel=\"noopener noreferrer\"/)
   assert.match(portfolio, /portfolio-case-study-json-ld/)
+  assert.match(footer, /href=\"https:\/\/marksiazon\.dev\"/)
+  assert.match(footer, /rel=\"noopener noreferrer\"/)
+  assert.doesNotMatch(footer, /noreferrer me/)
 })
 
 test('top-level public pages use shared page metadata for canonical and social tags', async () => {
