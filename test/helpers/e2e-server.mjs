@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const DEFAULT_E2E_PORT = process.env.HIREPROOF_E2E_PORT || '3308'
+const DEFAULT_E2E_PORT = process.env.HIREPROOF_E2E_PORT || '3307'
 export const BASE_URL = process.env.HIREPROOF_E2E_URL || `http://localhost:${DEFAULT_E2E_PORT}`
 const LOCAL_TEST_AGENT_KEY = 'local-test-agent-key-32-char-minimum-value'
 
@@ -95,8 +95,18 @@ async function waitForServer(pathname) {
 function checkServer(pathname = '/') {
   return new Promise((resolve) => {
     const req = httpRequest(`${BASE_URL}${pathname}`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500 && res.statusCode !== 404))
+      let body = ''
+      res.setEncoding('utf8')
+      res.on('data', chunk => {
+        if (body.length < 4096) body += chunk
+      })
+      res.on('end', () => {
+        const statusIsHealthy = Boolean(res.statusCode && res.statusCode < 500 && res.statusCode !== 404)
+        const bodyIsHealthy = pathname === '/api/health'
+          ? body.includes('"readiness"') && body.includes('"costPosture"')
+          : true
+        resolve(statusIsHealthy && bodyIsHealthy)
+      })
     })
     req.on('error', () => resolve(false))
     req.on('timeout', () => {
