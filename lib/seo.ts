@@ -190,6 +190,11 @@ export function buildSiteJsonLd() {
         name: SITE_AUTHOR,
         url: 'https://marksiazon.dev',
         jobTitle: 'Solo developer and creator of HireProof',
+        sameAs: [
+          'https://github.com/Iron-Mark/hackathon-v0-zero_to_agent',
+          'https://www.linkedin.com/in/mark-siazon/',
+          'https://marksiazon.dev',
+        ],
       },
       {
         '@type': 'WebSite',
@@ -219,5 +224,29 @@ export function buildSiteJsonLd() {
         },
       },
     ],
+  }
+}
+
+export function buildPortfolioCaseStudyJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: 'HireProof Portfolio Case Study',
+    url: `${SITE_URL}/portfolio`,
+    description: 'A solo-developed HireProof portfolio case study by Mark Siazon.',
+    author: {
+      '@type': 'Person',
+      '@id': `${SITE_URL}/#mark-siazon`,
+      name: SITE_AUTHOR,
+      url: 'https://marksiazon.dev',
+    },
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+    },
+    about: {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE_URL}/#software`,
+    },
   }
 }

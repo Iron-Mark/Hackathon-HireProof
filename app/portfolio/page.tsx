@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { ArrowRight, Bot, Boxes, CheckCircle2, Code2, ExternalLink, FileText, ShieldCheck, Target, UsersRound } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { ProductEventTracker } from '@/components/analytics/product-event-tracker'
-import { pageMetadata } from '@/lib/seo'
+import { buildPortfolioCaseStudyJsonLd, pageMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = pageMetadata({
   path: '/portfolio',
-  title: 'Portfolio Case Study | HireProof',
-  description: 'A solo-developed portfolio case study by Mark Siazon for HireProof, a production-facing AI agent for checking suspicious job posts with visible evidence.',
+  title: 'Mark Siazon — HireProof Portfolio Case Study',
+  description: 'Mark Siazon portfolio case study for HireProof, a production-facing AI agent for checking suspicious job posts with visible evidence.',
   image: '/social/github-social-preview-1280x640.png',
 })
 
@@ -47,6 +47,11 @@ const buildTimeline = [
 export default function PortfolioPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        id="portfolio-case-study-json-ld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildPortfolioCaseStudyJsonLd()) }}
+      />
       <SiteHeader />
       <ProductEventTracker eventName="case_study_view" metadata={{ surface: 'portfolio_page' }} />
       <main>
@@ -65,6 +70,13 @@ export default function PortfolioPage() {
                 job-scam verification agent. The final placement depended on community-vote reach as well as
                 product quality, but the controllable work is clear: app, API, proof pages, packages, docs, and a
                 pilot path.
+              </p>
+              <p className="mt-4 text-sm font-semibold leading-7 text-safe">
+                Mark’s portfolio and broader work are published at{' '}
+                <a href="https://marksiazon.dev" target="_blank" rel="noopener noreferrer me" className="hover:underline">
+                  marksiazon.dev
+                </a>
+                .
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link href="/audit?demo=high-risk" className="hireproof-focus hireproof-cta-primary inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-black">

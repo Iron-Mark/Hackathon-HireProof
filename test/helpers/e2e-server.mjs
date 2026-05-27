@@ -2,18 +2,22 @@ import { spawn, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { request as httpRequest } from 'node:http'
+import { tmpdir } from 'node:os'
 import { setTimeout as delay } from 'node:timers/promises'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
-export const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
+const DEFAULT_E2E_PORT = process.env.HIREPROOF_E2E_PORT || '3308'
+export const BASE_URL = process.env.HIREPROOF_E2E_URL || `http://localhost:${DEFAULT_E2E_PORT}`
 const LOCAL_TEST_AGENT_KEY = 'local-test-agent-key-32-char-minimum-value'
 
 const repoRoot = new URL('../../', import.meta.url)
 const repoRootPath = fileURLToPath(repoRoot)
 const nextBinPath = fileURLToPath(new URL('../../node_modules/next/dist/bin/next', import.meta.url))
-const stateFile = new URL('.next/e2e-server-state.json', repoRoot)
-const lockDir = new URL('.next/e2e-server.lock', repoRoot)
+const e2eStateDir = path.join(tmpdir(), 'hireproof-e2e', Buffer.from(repoRootPath).toString('hex').slice(0, 32))
+const stateFile = path.join(e2eStateDir, 'server-state.json')
+const lockDir = path.join(e2eStateDir, 'server.lock')
 const ownerId = `${process.pid}:${randomUUID()}`
 const agentApiKey = process.env.AGENT_API_KEY || readLocalEnvValue('AGENT_API_KEY') || LOCAL_TEST_AGENT_KEY
 
@@ -43,7 +47,8 @@ export async function ensureE2eServer(pathname = '/') {
       stopProcessTree(state.pid)
     }
 
-    const child = spawn(process.execPath, [nextBinPath, 'dev', '-p', '3002'], {
+    const serverPort = new URL(BASE_URL).port || (BASE_URL.startsWith('https:') ? '443' : '80')
+    const child = spawn(process.execPath, [nextBinPath, 'dev', '-p', serverPort], {
       cwd: repoRootPath,
       stdio: 'ignore',
       env: { ...process.env, AGENT_API_KEY: agentApiKey },
@@ -91,7 +96,7 @@ function checkServer(pathname = '/') {
   return new Promise((resolve) => {
     const req = httpRequest(`${BASE_URL}${pathname}`, { method: 'GET', timeout: 1500 }, (res) => {
       res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
+      resolve(Boolean(res.statusCode && res.statusCode < 500 && res.statusCode !== 404))
     })
     req.on('error', () => resolve(false))
     req.on('timeout', () => {
@@ -112,6 +117,7 @@ async function withLock(task) {
 }
 
 async function acquireLock() {
+  await mkdir(e2eStateDir, { recursive: true })
   for (let attempt = 0; attempt < 2400; attempt += 1) {
     try {
       await mkdir(lockDir, { recursive: false })
@@ -133,7 +139,7 @@ async function readState() {
 }
 
 async function writeState(state) {
-  await mkdir(new URL('.next/', repoRoot), { recursive: true })
+  await mkdir(e2eStateDir, { recursive: true })
   await writeFile(stateFile, `${JSON.stringify(state)}\n`)
 }
 

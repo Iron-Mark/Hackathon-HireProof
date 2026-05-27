@@ -231,14 +231,14 @@ export function SiteFooter() {
                   <LinkedinIcon className="h-5 w-5" />
                 </a>
               </Tooltip>
-              <Tooltip content="View builder portfolio">
-                <a
-                  href="https://www.marksiazon.dev/"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Mark Siazon Portfolio"
-                  className={socialLinkClass}
-                >
+                <Tooltip content="View builder portfolio">
+                  <a
+                    href="https://marksiazon.dev"
+                    target="_blank"
+                    rel="noopener noreferrer me"
+                    aria-label="Mark Siazon Portfolio"
+                    className={socialLinkClass}
+                  >
                   <Globe className="h-5 w-5" />
                 </a>
               </Tooltip>
