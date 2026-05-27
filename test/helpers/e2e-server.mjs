@@ -1,8 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { request as httpRequest } from 'node:http'
-import { tmpdir } from 'node:os'
 import { setTimeout as delay } from 'node:timers/promises'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
@@ -15,7 +14,7 @@ const LOCAL_TEST_AGENT_KEY = 'local-test-agent-key-32-char-minimum-value'
 const repoRoot = new URL('../../', import.meta.url)
 const repoRootPath = fileURLToPath(repoRoot)
 const nextBinPath = fileURLToPath(new URL('../../node_modules/next/dist/bin/next', import.meta.url))
-const e2eStateDir = path.join(tmpdir(), 'hireproof-e2e', Buffer.from(repoRootPath).toString('hex').slice(0, 32))
+const e2eStateDir = path.join(repoRootPath, '.next', 'hireproof-e2e', Buffer.from(repoRootPath).toString('hex').slice(0, 32))
 const stateFile = path.join(e2eStateDir, 'server-state.json')
 const lockDir = path.join(e2eStateDir, 'server.lock')
 const ownerId = `${process.pid}:${randomUUID()}`
@@ -158,6 +157,9 @@ async function acquireLock() {
 
 async function readState() {
   try {
+    const stat = await lstat(stateFile)
+    if (!stat.isFile()) return null
+
     return JSON.parse(await readFile(stateFile, 'utf8'))
   } catch {
     return null
@@ -166,7 +168,9 @@ async function readState() {
 
 async function writeState(state) {
   await mkdir(e2eStateDir, { recursive: true })
-  await writeFile(stateFile, `${JSON.stringify(state)}\n`)
+  const tempStateFile = `${stateFile}.tmp-${randomUUID()}`
+  await writeFile(tempStateFile, `${JSON.stringify(state)}\n`)
+  await rename(tempStateFile, stateFile)
 }
 
 function cleanupOwners(owners) {
