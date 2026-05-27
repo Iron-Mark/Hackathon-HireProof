@@ -80,11 +80,17 @@ test('LangChain audit helper rejects oversized API responses before parsing JSON
   const { runHireProofAudit } = require('../packages/hireproof-langchain/dist/index.js')
   const originalFetch = globalThis.fetch
   let jsonParsed = false
+  let cancelled = false
 
   globalThis.fetch = async () => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-length': String((256 * 1024) + 1) }),
+    body: {
+      async cancel() {
+        cancelled = true
+      },
+    },
     async json() {
       jsonParsed = true
       return { verdict: 'safe', riskScore: 1 }
@@ -103,6 +109,7 @@ test('LangChain audit helper rejects oversized API responses before parsing JSON
       /HireProof audit response too large/,
     )
     assert.equal(jsonParsed, false)
+    assert.equal(cancelled, true)
   } finally {
     globalThis.fetch = originalFetch
   }

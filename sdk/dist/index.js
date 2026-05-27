@@ -40,6 +40,7 @@ function apiResponseTooLargeError(status, requestId) {
 async function readBoundedJsonResponse(res, requestId) {
     const contentLength = Number(res.headers?.get?.('content-length') || '0');
     if (Number.isFinite(contentLength) && contentLength > MAX_API_RESPONSE_BYTES) {
+        await res.body?.cancel().catch(() => undefined);
         throw apiResponseTooLargeError(res.status, requestId);
     }
     if (!res.body?.getReader) {

@@ -8,11 +8,17 @@ const { default: HireProof, HireProofError } = require('../sdk/dist/index.js')
 test('SDK rejects oversized API responses before parsing JSON', async () => {
   const originalFetch = globalThis.fetch
   let parsed = false
+  let cancelled = false
 
   globalThis.fetch = async () => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-length': String((256 * 1024) + 1) }),
+    body: {
+      async cancel() {
+        cancelled = true
+      },
+    },
     async text() {
       parsed = true
       return JSON.stringify({ verdict: 'safe', riskScore: 1 })
@@ -35,6 +41,7 @@ test('SDK rejects oversized API responses before parsing JSON', async () => {
         /HireProof API response too large/.test(error.message),
     )
     assert.equal(parsed, false)
+    assert.equal(cancelled, true)
   } finally {
     globalThis.fetch = originalFetch
   }

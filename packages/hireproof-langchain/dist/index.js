@@ -26,6 +26,7 @@ function auditResponseTooLargeError() {
 async function readBoundedAuditResponseJson(response) {
   const contentLength = Number(response.headers?.get?.('content-length') || '0')
   if (Number.isFinite(contentLength) && contentLength > MAX_AUDIT_RESPONSE_BYTES) {
+    await response.body?.cancel().catch(() => undefined)
     throw auditResponseTooLargeError()
   }
 

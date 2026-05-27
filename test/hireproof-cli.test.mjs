@@ -186,6 +186,7 @@ test('HireProof TUI default API clients use bounded response parsing', async () 
 
   assert.match(source, /MAX_API_RESPONSE_BYTES\s*=\s*256\s*\*\s*1024/)
   assert.match(source, /readBoundedJsonResponse/)
+  assert.match(source, /response\.body\?\.cancel\(\)\.catch\(\(\) => undefined\)/)
   assert.match(source, /reader\.cancel\(\)\.catch\(\(\) => undefined\)/)
   assert.doesNotMatch(source, /return response\.json\(\)/)
 })
@@ -194,6 +195,7 @@ test('HireProof CLI default API client cancels oversized streaming responses', a
   const source = await readFile(new URL('../packages/hireproof-cli/bin/hireproof.mjs', import.meta.url), 'utf8')
 
   assert.match(source, /readBoundedJsonResponse/)
+  assert.match(source, /response\.body\?\.cancel\(\)\.catch\(\(\) => undefined\)/)
   assert.match(source, /reader\.cancel\(\)\.catch\(\(\) => undefined\)/)
   assert.doesNotMatch(source, /return response\.json\(\)/)
 })

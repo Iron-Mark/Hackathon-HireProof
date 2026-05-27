@@ -117,7 +117,7 @@ test('cursor QA target resolution does not trust inbound request origin in produ
     delete process.env.HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS
     delete process.env.CURSOR_QA_ALLOWED_ORIGINS
 
-    const { resolveCursorQaBaseUrl } = await import(`../lib/cursor/qa-target.ts?case=${Date.now()}`)
+    const { resolveCursorQaBaseUrl } = await import(`../lib/cursor/qa-target.mjs?case=${Date.now()}`)
     assert.equal(
       resolveCursorQaBaseUrl(undefined, 'https://evil.example/api/internal/cursor/ui-qa'),
       'https://hireproof.tech',
