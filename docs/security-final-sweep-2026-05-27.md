@@ -87,16 +87,13 @@ Retention rule:
 
 After cleanup:
 
-- Total deployment records: `4`
-- Remaining records:
-  - `4832535237` - `Production` - `92ffedf` - current documented security sweep deployment
-  - `4832433114` - `Production` - `86e8f19` - PR/dependency/security consolidation deployment
-  - `4832337607` - `Production` - `56b8c2f` - production hardening deployment
-  - `4830773850` - `Production` - `c7dac7a` - prior release proof deployment
+- Total deployment records retained after each pruning pass: newest `4`
+- Remaining environment type: `Production`
+- Exact retained deployment IDs can change whenever a documentation or code commit triggers a new Vercel deployment.
 
 Post-cleanup verification:
 
-- Commit status for `92ffedf8d6765532b79e4fbf556e81bb821aad62`: Vercel success
+- Latest retained deployment commit status: Vercel success
 - `https://hireproof.tech/api/health`: HTTP `200`
 
 ## Verification Commands
@@ -121,7 +118,7 @@ gh api 'repos/Iron-Mark/Hackathon-HireProof/actions/runs?branch=main&per_page=1'
 gh api --paginate repos/Iron-Mark/Hackathon-HireProof/deployments
 gh api -X POST repos/Iron-Mark/Hackathon-HireProof/deployments/<id>/statuses -f state=inactive -F auto_inactive=false
 gh api -X DELETE repos/Iron-Mark/Hackathon-HireProof/deployments/<id>
-gh api repos/Iron-Mark/Hackathon-HireProof/commits/92ffedf8d6765532b79e4fbf556e81bb821aad62/status
+gh api repos/Iron-Mark/Hackathon-HireProof/commits/<sha>/status
 ```
 
 ## Residual Recommendations
