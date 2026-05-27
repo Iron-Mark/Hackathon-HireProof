@@ -26,6 +26,10 @@ $RuntimeDefault      = "cloud"
 $MaxConcurrentRuns   = "2"
 
 $Environments = @("preview", "production")
+$SensitiveEnvNames = @(
+    "CURSOR_API_KEY",
+    "CURSOR_WEBHOOK_SECRET"
+)
 
 function Add-VercelEnv {
     param(
@@ -34,12 +38,22 @@ function Add-VercelEnv {
         [string[]]$Targets
     )
     foreach ($env in $Targets) {
+        $isSensitive = $SensitiveEnvNames -contains $Name
         if ($DryRun) {
             Write-Host "[DryRun] Would add $Name -> $env" -ForegroundColor Yellow
             continue
         }
         Write-Host "Adding $Name to $env..." -ForegroundColor Cyan
-        $Value | vercel env add $Name $env
+        $vercelArgs = @(
+            "env",
+            "add",
+            $Name,
+            $env
+        )
+        if ($isSensitive) {
+            $vercelArgs += "--sensitive"
+        }
+        $Value | & vercel @vercelArgs
         if ($LASTEXITCODE -ne 0) {
             throw "vercel env add failed for $Name ($env)"
         }

@@ -160,6 +160,27 @@ test('cursor secret setup avoids putting secrets in process arguments', async ()
   assert.doesNotMatch(example, /echo '<CURSOR_(?:API_KEY|WEBHOOK_SECRET)>'/)
 })
 
+test('non-interactive cursor env setup marks Cursor secrets sensitive without argv values', async () => {
+  const deployDoc = await readRepoFile('docs/cursor/deploy.md')
+  assert.match(deployDoc, /Cursor API and webhook secrets are added with Vercel's `--sensitive` flag/)
+
+  for (const scriptPath of [
+    'scripts/vercel-cursor-env-setup.ps1',
+    'scripts/vercel-cursor-env-setup.ps1.example',
+  ]) {
+    const script = await readRepoFile(scriptPath)
+
+    assert.match(script, /\$SensitiveEnvNames/)
+    assert.match(script, /"CURSOR_API_KEY"/)
+    assert.match(script, /"CURSOR_WEBHOOK_SECRET"/)
+    assert.match(script, /\$vercelArgs\s*=\s*@\(/)
+    assert.match(script, /\$vercelArgs\s*\+=\s*"--sensitive"/)
+    assert.match(script, /\$Value\s*\|\s*&\s*vercel\s+@vercelArgs/)
+    assert.doesNotMatch(script, /"--value"\s*,\s*\$Value/)
+    assert.doesNotMatch(script, /\$Value\s+.*--value/)
+  }
+})
+
 test('cursor client pins cloud repo when allowed url is configured', async () => {
   const client = await readRepoFile('lib/cursor/client.ts')
   const config = await readRepoFile('lib/cursor/config.ts')

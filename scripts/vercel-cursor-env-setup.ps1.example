@@ -20,6 +20,10 @@ $MaxConcurrentRuns   = "2"
 
 # Preview first, then Production after QA (recommended order).
 $Environments = @("preview", "production")
+$SensitiveEnvNames = @(
+    "CURSOR_API_KEY",
+    "CURSOR_WEBHOOK_SECRET"
+)
 
 function Add-VercelEnv {
     param(
@@ -29,8 +33,17 @@ function Add-VercelEnv {
     )
     foreach ($env in $Targets) {
         Write-Host "Adding $Name to $env (you will confirm in CLI prompts)..." -ForegroundColor Cyan
-        # Pipe value into vercel env add (non-interactive value; still prompts for env scope)
-        $Value | vercel env add $Name $env
+        # Pipe value into vercel env add so secrets stay out of argv.
+        $vercelArgs = @(
+            "env",
+            "add",
+            $Name,
+            $env
+        )
+        if ($SensitiveEnvNames -contains $Name) {
+            $vercelArgs += "--sensitive"
+        }
+        $Value | & vercel @vercelArgs
     }
 }
 

@@ -47,7 +47,7 @@ Preferred CLI path from the repo root:
 .\scripts\setup-cursor-secrets.ps1
 ```
 
-The setup script prompts for `CURSOR_API_KEY` as a secure input and pipes env values to `vercel env add` through stdin. Do not pass Cursor secrets as PowerShell parameters or Vercel `--value` arguments.
+The setup script prompts for `CURSOR_API_KEY` as a secure input and pipes env values to `vercel env add` through stdin. Cursor API and webhook secrets are added with Vercel's `--sensitive` flag. Do not pass Cursor secrets as PowerShell parameters or Vercel `--value` arguments.
 
 1. Open [Vercel](https://vercel.com) → your HireProof project → **Settings** → **Environment Variables**.
 2. Add `CURSOR_API_KEY` (value from Cursor dashboard). Scope: **Preview** only for the first pass.
