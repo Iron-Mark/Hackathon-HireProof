@@ -705,6 +705,50 @@ test('official apply URL is recognized by company host match, not keywords only'
   assert.ok(report.intelligence.signals.some((signal) => signal.id === 'apply_path_professional'))
 })
 
+test('official apply URL host match ignores company-domain tokens in query params', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_official_apply_query_token_guard',
+    extractedClaims: {
+      company: 'Acme Health',
+      role: 'Remote Frontend Developer',
+      salary: '$100,000 per year',
+      location: 'Remote United States',
+      contactMethod: 'Email',
+      applicationPath: 'https://evil.example/apply?next=acmehealth.example',
+    },
+    evidence: [
+      {
+        source: 'Acme Health careers',
+        type: 'Official Company Presence',
+        url: 'https://www.acmehealth.example/careers',
+        snippet: 'Trust: official | Remote Frontend Developer at Acme Health.',
+      },
+      {
+        source: 'LinkedIn',
+        type: 'Comparable Jobs',
+        url: 'https://www.linkedin.com/jobs/view/987654321',
+        snippet: 'Trust: reputable-job-board | Remote Frontend Developer at Example Co | Location: Remote United States | Salary: $100,000 per year',
+      },
+      {
+        source: 'HireProof domain broker',
+        type: 'Domain Mismatch',
+        snippet: 'Risk signal: submitted apply domain evil.example does not match official company root acmehealth.example.',
+        sourceType: 'domain',
+        trustLevel: 'risk',
+        sourceQuality: 'risky',
+      },
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.equal(report.intelligence.applyPath.status, 'mismatch')
+  assert.notEqual(report.verdict, 'safe')
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'apply_path_mismatch'))
+  assert.ok(report.intelligence.signals.every((signal) => signal.id !== 'official_source_role_reconciliation'))
+})
+
 test('official source role match does not launder unverified apply path', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({

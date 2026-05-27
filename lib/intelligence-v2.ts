@@ -276,6 +276,18 @@ function hostnamesFromText(value?: string) {
   return [...hosts]
 }
 
+function urlHostnamesFromText(value?: string) {
+  const text = String(value || '')
+  const hosts = new Set<string>()
+
+  for (const match of text.matchAll(/https?:\/\/[^\s"'<>),]+/gi)) {
+    const host = hostnameFromUrl(match[0].replace(/[.,;:!?]+$/g, ''))
+    if (host) hosts.add(host)
+  }
+
+  return [...hosts]
+}
+
 function officialRootDomainsFromEvidence(evidence: EvidenceItem[]) {
   const roots = new Set<string>()
   for (const item of evidence) {
@@ -291,13 +303,14 @@ function officialRootDomainsFromEvidence(evidence: EvidenceItem[]) {
 
 function deriveSubmittedApplyPathTrust(applicationPath: string, officialEvidence: EvidenceItem[]) {
   const text = normalizeText(applicationPath)
-  const submittedHosts = hostnamesFromText(applicationPath)
+  const urlHosts = urlHostnamesFromText(applicationPath)
+  const submittedHosts = urlHosts.length > 0 ? urlHosts : hostnamesFromText(applicationPath)
   const officialRoots = officialRootDomainsFromEvidence(officialEvidence)
   const hasSubmittedTrustedApplyPath = (
     TRUSTED_JOB_PAGE_PATTERN.test(applicationPath) ||
     submittedHosts.some(host => isTrustedJobBoardHost(host))
   )
-  const hasOfficialKeyword = /\b(official|careers?|company website|employer website)\b/.test(text)
+  const hasOfficialKeyword = urlHosts.length === 0 && /\b(official|careers?|company website|employer website)\b/.test(text)
   const hasOfficialRootMatch = submittedHosts.some(host => {
     if (isTrustedJobBoardHost(host)) return false
     const root = rootDomain(host)
@@ -468,6 +481,14 @@ function isActionableApplyPathMismatch(item: EvidenceItem, officialHost?: string
   return true
 }
 
+function isActionableDomainMismatch(item: EvidenceItem) {
+  return (
+    item.trustLevel === 'risk' ||
+    item.sourceQuality === 'risky' ||
+    /risk signal|does not match|different domain|off domain|impersonat|phishing/i.test(`${item.source} ${item.type} ${item.snippet || ''}`)
+  )
+}
+
 function addSignal(signals: IntelligenceSignal[], signal: IntelligenceSignal) {
   if (!signals.some(existing => existing.id === signal.id)) signals.push(signal)
 }
@@ -521,7 +542,9 @@ function deriveIntelligence(
   const verifiedLocalEvidence = byType('Verified Local Presence')
   const comparableEvidence = byType('Comparable Jobs')
   const officialHost = hostnameFromUrl(officialEvidence.find(item => item.url)?.url)
-  const mismatchEvidence = byType('Apply Path Mismatch').filter(item => isActionableApplyPathMismatch(item, officialHost))
+  const applyPathMismatchEvidence = byType('Apply Path Mismatch').filter(item => isActionableApplyPathMismatch(item, officialHost))
+  const domainMismatchEvidence = byType('Domain Mismatch').filter(isActionableDomainMismatch)
+  const mismatchEvidence = [...applyPathMismatchEvidence, ...domainMismatchEvidence]
   const inputConflictEvidence = byType('Input Conflict')
   const hasInputConflict = inputConflictEvidence.length > 0 || redFlags.some(flag => /input conflict|resolved job page|submitted .* does not match/i.test(flag))
   const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
@@ -830,8 +853,12 @@ function deriveIntelligence(
     )
   const finalDelta = hasTrustedHiringSurface ? Math.min(rawFinalDelta, 12) : rawFinalDelta
   score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
+  if (mismatchEvidence.length > 0 && score < 35) {
+    score = applyTrace(scoreTrace, score, 'Apply path floor', 35 - score, 'Actionable apply-domain mismatch prevents a safe verdict.')
+  }
 
-  const submittedHost = hostnameFromUrl(mismatchEvidence.find(item => item.url)?.url)
+  const mismatchHostPair = mismatchEvidence.map(mismatchHostsFromEvidence).find(item => item.submittedHost || item.claimedOfficialHost)
+  const submittedHost = hostnameFromUrl(mismatchEvidence.find(item => item.url)?.url) || mismatchHostPair?.submittedHost
   const companyCoverage: IntelligenceSummary['coverage']['company'] = officialEvidence.length > 0 ? 'verified' : byType('Company Check').length > 0 ? 'partial' : 'missing'
   const localCoverage: IntelligenceSummary['coverage']['local'] = verifiedLocalEvidence.length > 0 ? 'verified' : localEvidence.length > 0 ? 'partial' : 'missing'
   const reputationCoverage: IntelligenceSummary['coverage']['reputation'] = reputationRiskEvidence.length > 0 ? 'risk' : byType('Reputation').length > 0 ? 'clear' : 'missing'
