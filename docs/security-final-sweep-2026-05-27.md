@@ -70,6 +70,35 @@ Code scanning:
 - API result: no analysis found
 - Status: no code-scanning analysis is currently uploaded/configured for this repository
 
+## Deployment Record Cleanup
+
+GitHub deployment records were pruned after PR consolidation to keep the repository Deployments page focused on important production evidence.
+
+Before cleanup:
+
+- Total deployment records: `236`
+- Environments included stale `Preview`, `Production`, `Preview - hireproof`, `Preview - hackathon-v0-zero-to-agent`, `Production - hireproof`, and `Production - hackathon-v0-zero-to-agent` records.
+
+Retention rule:
+
+- Keep the current successful `Production` deployment for `main`.
+- Keep the previous three successful `Production` deployments as rollback/proof history.
+- Delete stale preview, legacy environment, and older production deployment records.
+
+After cleanup:
+
+- Total deployment records: `4`
+- Remaining records:
+  - `4832535237` - `Production` - `92ffedf` - current documented security sweep deployment
+  - `4832433114` - `Production` - `86e8f19` - PR/dependency/security consolidation deployment
+  - `4832337607` - `Production` - `56b8c2f` - production hardening deployment
+  - `4830773850` - `Production` - `c7dac7a` - prior release proof deployment
+
+Post-cleanup verification:
+
+- Commit status for `92ffedf8d6765532b79e4fbf556e81bb821aad62`: Vercel success
+- `https://hireproof.tech/api/health`: HTTP `200`
+
 ## Verification Commands
 
 Commands run:
@@ -89,6 +118,10 @@ gh api 'repos/Iron-Mark/Hackathon-HireProof/code-scanning/alerts?state=open&per_
 gh secret list --repo Iron-Mark/Hackathon-HireProof
 gh variable list --repo Iron-Mark/Hackathon-HireProof
 gh api 'repos/Iron-Mark/Hackathon-HireProof/actions/runs?branch=main&per_page=1'
+gh api --paginate repos/Iron-Mark/Hackathon-HireProof/deployments
+gh api -X POST repos/Iron-Mark/Hackathon-HireProof/deployments/<id>/statuses -f state=inactive -F auto_inactive=false
+gh api -X DELETE repos/Iron-Mark/Hackathon-HireProof/deployments/<id>
+gh api repos/Iron-Mark/Hackathon-HireProof/commits/92ffedf8d6765532b79e4fbf556e81bb821aad62/status
 ```
 
 ## Residual Recommendations
