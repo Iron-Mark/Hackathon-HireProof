@@ -16,6 +16,8 @@ test('SEO source of truth uses canonical HireProof domain and public sitemap cov
   assert.match(sitemap, /absoluteUrl\(entry\.path\)/)
   assert.match(robots, /\/pilot\/admin/)
   assert.match(robots, /\/api\//)
+  assert.doesNotMatch(robots, /disallow: .*'\/portfolio'/)
+  assert.ok(robots.includes("sitemap: `${SITE_URL}/sitemap.xml`"))
   assert.match(robots, /host: SITE_URL/)
 })
 
@@ -25,7 +27,7 @@ test('root metadata exposes rich search and social graph without page-specific b
   const seo = await fs.readFile(new URL('../lib/seo.ts', import.meta.url), 'utf8')
 
   assert.match(layout, /applicationName: SITE_NAME/)
-  assert.match(layout, /authors: \[\{ name: SITE_AUTHOR, url: 'https:\/\/marksiazon\.dev' \}\]/)
+  assert.match(layout, /authors: \[\{ name: SITE_AUTHOR, url: AUTHOR_PROFILE_URL \}\]/)
   assert.match(layout, /creator: SITE_AUTHOR/)
   assert.match(layout, /formatDetection/)
   assert.match(layout, /buildSiteJsonLd/)
@@ -39,6 +41,24 @@ test('root metadata exposes rich search and social graph without page-specific b
   assert.match(seo, /SearchAction/)
   assert.match(home, /alternates:\s*{\s*canonical: canonicalFor\('\/'\)/)
   assert.equal(home.includes("defaultOpenGraph('/',"), true)
+})
+
+test('portfolio metadata and case-study JSON-LD are discoverable and aligned to the same author profile URL', async () => {
+  const layout = await fs.readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8')
+  const seo = await fs.readFile(new URL('../lib/seo.ts', import.meta.url), 'utf8')
+  const portfolio = await fs.readFile(new URL('../app/portfolio/page.tsx', import.meta.url), 'utf8')
+
+  assert.match(seo, /AUTHOR_PROFILE_URL = 'https:\/\/marksiazon\.dev'/)
+  assert.match(seo, /PORTFOLIO_CASE_STUDY_PUBLISHED_AT/)
+  assert.match(seo, /PORTFOLIO_CASE_STUDY_KEYWORDS/)
+  assert.match(seo, /buildPortfolioCaseStudyJsonLd/)
+  assert.match(layout, /AUTHOR_PROFILE_URL/)
+  assert.match(layout, /authors: \[\{ name: SITE_AUTHOR, url: AUTHOR_PROFILE_URL \}\]/)
+  assert.match(portfolio, /path: '\/portfolio'/)
+  assert.match(portfolio, /keywords:\s*'Mark Siazon,\s*HireProof portfolio case study/)
+  assert.match(portfolio, /marksiazon\.dev/)
+  assert.match(portfolio, /rel=\"noopener noreferrer\"/)
+  assert.match(portfolio, /portfolio-case-study-json-ld/)
 })
 
 test('top-level public pages use shared page metadata for canonical and social tags', async () => {

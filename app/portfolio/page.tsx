@@ -9,6 +9,7 @@ export const metadata: Metadata = pageMetadata({
   path: '/portfolio',
   title: 'Mark Siazon — HireProof Portfolio Case Study',
   description: 'Mark Siazon portfolio case study for HireProof, a production-facing AI agent for checking suspicious job posts with visible evidence.',
+  keywords: 'Mark Siazon, HireProof portfolio case study, job post verification, API evidence tooling',
   image: '/social/github-social-preview-1280x640.png',
 })
 
@@ -73,7 +74,7 @@ export default function PortfolioPage() {
               </p>
               <p className="mt-4 text-sm font-semibold leading-7 text-safe">
                 Mark’s portfolio and broader work are published at{' '}
-                <a href="https://marksiazon.dev" target="_blank" rel="noopener noreferrer me" className="hover:underline">
+                <a href="https://marksiazon.dev" target="_blank" rel="noopener noreferrer" className="hover:underline">
                   marksiazon.dev
                 </a>
                 .
@@ -85,7 +86,7 @@ export default function PortfolioPage() {
                 <Link href="/pilot" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-safe/30 bg-safe/10 px-4 py-2.5 text-sm font-black text-safe hover:bg-background">
                   Join pilot <UsersRound className="h-4 w-4" />
                 </Link>
-                <a href="https://github.com/Iron-Mark/hackathon-v0-zero_to_agent" target="_blank" rel="noreferrer" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border-soft bg-background px-4 py-2.5 text-sm font-black hover:bg-surface">
+                <a href="https://github.com/Iron-Mark/hackathon-v0-zero_to_agent" target="_blank" rel="noopener noreferrer" className="hireproof-focus inline-flex items-center justify-center gap-2 rounded-lg border border-border-soft bg-background px-4 py-2.5 text-sm font-black hover:bg-surface">
                   Source <ExternalLink className="h-4 w-4" />
                 </a>
               </div>

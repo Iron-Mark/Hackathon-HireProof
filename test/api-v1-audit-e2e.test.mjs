@@ -37,7 +37,7 @@ async function postAudit(body) {
   return { response, payload }
 }
 
-test('/api/v1/audit returns an explicit demo report for mode=demo', { timeout: 180_000 }, async () => {
+test('/api/v1/audit returns an explicit demo report for mode=demo', { timeout: 240_000 }, async () => {
   const server = await ensureE2eServer('/api/health')
 
   try {

@@ -213,7 +213,7 @@ export function SiteFooter() {
                 <a
                   href="https://github.com/Iron-Mark/hackathon-v0-zero_to_agent"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label="HireProof GitHub repository"
                   className={socialLinkClass}
                 >
@@ -224,21 +224,21 @@ export function SiteFooter() {
                 <a
                   href="https://www.linkedin.com/in/mark-siazon/"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   aria-label="Mark Siazon LinkedIn"
                   className={socialLinkClass}
                 >
                   <LinkedinIcon className="h-5 w-5" />
                 </a>
               </Tooltip>
-                <Tooltip content="View builder portfolio">
-                  <a
-                    href="https://marksiazon.dev"
-                    target="_blank"
-                    rel="noopener noreferrer me"
-                    aria-label="Mark Siazon Portfolio"
-                    className={socialLinkClass}
-                  >
+              <Tooltip content="View builder portfolio">
+                <a
+                  href="https://marksiazon.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Mark Siazon Portfolio"
+                  className={socialLinkClass}
+                >
                   <Globe className="h-5 w-5" />
                 </a>
               </Tooltip>
@@ -350,7 +350,7 @@ export function SiteFooter() {
             <a
               href="https://www.linkedin.com/in/mark-siazon/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center rounded-full border border-safe/20 bg-safe/5 px-3 text-safe shadow-sm shadow-safe/10 transition-colors hover:border-safe/40 hover:bg-safe/10 hover:text-safe-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               M.Siazon

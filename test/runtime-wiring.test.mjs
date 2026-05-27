@@ -619,6 +619,7 @@ test('security regression suite includes evidence and export hardening tests', a
     'test/csv-formula-injection.test.mjs',
     'test/cursor-pretool-guard.test.mjs',
     'test/cursor-routes.test.mjs',
+    'test/e2e-server-helper.test.mjs',
     'test/evidence-broker.test.mjs',
     'test/hireproof-cli.test.mjs',
     'test/intelligence-v2.test.mjs',

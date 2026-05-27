@@ -3,10 +3,15 @@ import type { Metadata, MetadataRoute } from 'next'
 export const SITE_URL = 'https://hireproof.tech'
 export const SITE_NAME = 'HireProof'
 export const SITE_AUTHOR = 'Mark Siazon'
+export const AUTHOR_PROFILE_URL = 'https://marksiazon.dev'
 export const DEFAULT_OG_IMAGE = '/og-image.png'
 export const DEFAULT_TITLE = 'HireProof | Verify Job Posts Before Applying'
 export const DEFAULT_DESCRIPTION =
   'Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.'
+
+export const PORTFOLIO_CASE_STUDY_PUBLISHED_AT = '2026-05-19'
+export const PORTFOLIO_CASE_STUDY_KEYWORDS =
+  'Mark Siazon, HireProof portfolio case study, job post verification, employment safety, AI audit, anti-fraud tooling'
 
 export const SEO_KEYWORDS = [
   'job scam detector',
@@ -106,17 +111,20 @@ export function pageMetadata({
   title,
   description,
   image = DEFAULT_OG_IMAGE,
+  keywords,
   index = true,
 }: {
   path: string
   title: string
   description: string
   image?: string
+  keywords?: string | string[]
   index?: boolean
 }): Metadata {
   return {
     title,
     description,
+    keywords,
     alternates: {
       canonical: canonicalFor(path),
     },
@@ -142,7 +150,7 @@ export function pageMetadata({
       ? {
           index: true,
           follow: true,
-          googleBot: {
+        googleBot: {
             index: true,
             follow: true,
             'max-video-preview': -1,
@@ -188,12 +196,12 @@ export function buildSiteJsonLd() {
         '@type': 'Person',
         '@id': `${SITE_URL}/#mark-siazon`,
         name: SITE_AUTHOR,
-        url: 'https://marksiazon.dev',
+        url: AUTHOR_PROFILE_URL,
         jobTitle: 'Solo developer and creator of HireProof',
         sameAs: [
           'https://github.com/Iron-Mark/hackathon-v0-zero_to_agent',
           'https://www.linkedin.com/in/mark-siazon/',
-          'https://marksiazon.dev',
+          AUTHOR_PROFILE_URL,
         ],
       },
       {
@@ -228,17 +236,37 @@ export function buildSiteJsonLd() {
 }
 
 export function buildPortfolioCaseStudyJsonLd() {
+  const dateModified = new Date().toISOString().split('T')[0]
   return {
     '@context': 'https://schema.org',
-    '@type': 'CreativeWork',
-    name: 'HireProof Portfolio Case Study',
+    '@type': 'TechArticle',
+    '@id': `${SITE_URL}/portfolio#case-study`,
+    headline: 'HireProof Portfolio Case Study',
+    name: 'HireProof Portfolio Case Study by Mark Siazon',
     url: `${SITE_URL}/portfolio`,
+    inLanguage: 'en-US',
+    datePublished: PORTFOLIO_CASE_STUDY_PUBLISHED_AT,
+    dateModified,
+    keywords: PORTFOLIO_CASE_STUDY_KEYWORDS,
     description: 'A solo-developed HireProof portfolio case study by Mark Siazon.',
+    image: {
+      '@type': 'ImageObject',
+      url: absoluteUrl('/social/github-social-preview-1280x640.png'),
+      width: 1280,
+      height: 640,
+      caption: 'HireProof case study visual and product evidence',
+    },
+    mainEntityOfPage: `${SITE_URL}/portfolio`,
     author: {
       '@type': 'Person',
       '@id': `${SITE_URL}/#mark-siazon`,
       name: SITE_AUTHOR,
-      url: 'https://marksiazon.dev',
+      url: AUTHOR_PROFILE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
     },
     isPartOf: {
       '@type': 'WebSite',

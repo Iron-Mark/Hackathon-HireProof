@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const DEFAULT_E2E_PORT = process.env.HIREPROOF_E2E_PORT || '3307'
+const DEFAULT_E2E_PORT = process.env.HIREPROOF_E2E_PORT || '3308'
 export const BASE_URL = process.env.HIREPROOF_E2E_URL || `http://localhost:${DEFAULT_E2E_PORT}`
 const LOCAL_TEST_AGENT_KEY = 'local-test-agent-key-32-char-minimum-value'
 
@@ -40,7 +40,10 @@ export async function ensureE2eServer(pathname = '/') {
     }
 
     if (healthy) {
-      return { release: async () => undefined }
+      throw new Error(
+        `E2E port ${new URL(BASE_URL).port || BASE_URL} is already serving but is not managed by this helper. ` +
+        'Set HIREPROOF_E2E_URL to reuse it explicitly or choose a free HIREPROOF_E2E_PORT.'
+      )
     }
 
     if (state?.pid && isProcessAlive(state.pid)) {
@@ -80,12 +83,18 @@ async function releaseE2eServer(owner) {
       if (owners[owner] <= 0) delete owners[owner]
     }
 
+    if (Object.keys(owners).length === 0) {
+      stopProcessTree(state.pid)
+      await rm(stateFile, { force: true })
+      return
+    }
+
     await writeState({ pid: state.pid, owners })
   })
 }
 
 async function waitForServer(pathname) {
-  for (let attempt = 0; attempt < 90; attempt += 1) {
+  for (let attempt = 0; attempt < 180; attempt += 1) {
     if (await checkServer(pathname)) return
     await delay(1000)
   }
@@ -102,9 +111,7 @@ function checkServer(pathname = '/') {
       })
       res.on('end', () => {
         const statusIsHealthy = Boolean(res.statusCode && res.statusCode < 500 && res.statusCode !== 404)
-        const bodyIsHealthy = pathname === '/api/health'
-          ? body.includes('"readiness"') && body.includes('"costPosture"')
-          : true
+        const bodyIsHealthy = pathname === '/api/health' ? isHireProofHealthResponse(body) : true
         resolve(statusIsHealthy && bodyIsHealthy)
       })
     })
@@ -115,6 +122,15 @@ function checkServer(pathname = '/') {
     })
     req.end()
   })
+}
+
+export function isHireProofHealthResponse(body) {
+  try {
+    const parsed = JSON.parse(String(body || ''))
+    return Boolean(parsed?.readiness && parsed?.costPosture)
+  } catch {
+    return false
+  }
 }
 
 async function withLock(task) {
