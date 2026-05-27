@@ -612,6 +612,7 @@ test('security regression suite includes evidence and export hardening tests', a
 
   for (const testFile of [
     'test/alternative-jobs.test.mjs',
+    'test/api-v1-audit-e2e.test.mjs',
     'test/audit-signals.test.mjs',
     'test/audit-calibration-cases.test.mjs',
     'test/claim-extraction.test.mjs',
