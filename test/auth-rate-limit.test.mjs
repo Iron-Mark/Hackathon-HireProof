@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import vm from 'node:vm'
 import ts from 'typescript'
+import net from 'node:net'
 
 async function loadRequestSecurityModule(env = {}) {
   const source = await fs.readFile(new URL('../lib/request-security.ts', import.meta.url), 'utf8')
@@ -24,6 +25,9 @@ async function loadRequestSecurityModule(env = {}) {
     require: (id) => {
       if (id === 'next/server') {
         return { NextResponse: { json: (body, init) => new Response(JSON.stringify(body), init) } }
+      }
+      if (id === 'node:net') {
+        return { default: net, ...net }
       }
       throw new Error(`Unexpected require: ${id}`)
     },
@@ -114,6 +118,29 @@ test('requestIp ignores spoofable forwarding headers unless trusted proxy mode i
 
   const trusted = await loadRequestSecurityModule({ TRUST_PROXY_CLIENT_IP_HEADERS: 'true' })
   assert.equal(trusted.requestIp(request), '203.0.113.10')
+})
+
+test('trusted proxy client IP parsing rejects malformed forwarding header identities', async () => {
+  const trusted = await loadRequestSecurityModule({ TRUST_PROXY_CLIENT_IP_HEADERS: 'true' })
+  const markdownSecurity = await fs.readFile(new URL('../docs/security.md', import.meta.url), 'utf8')
+  const appSecurity = await fs.readFile(new URL('../app/docs/security/page.tsx', import.meta.url), 'utf8')
+
+  assert.equal(trusted.requestIp(new Request('http://localhost:3002/api/auth/login', {
+    headers: {
+      'x-real-ip': 'deadbeef',
+      'x-forwarded-for': '198.51.100.20',
+    },
+  })), '198.51.100.20')
+
+  assert.equal(trusted.requestIp(new Request('http://localhost:3002/api/auth/login', {
+    headers: {
+      'x-real-ip': '999.999.999.999',
+      'x-forwarded-for': 'also-not-an-ip',
+    },
+  })), 'direct-client')
+
+  assert.match(markdownSecurity, /malformed forwarding values are rejected unless they parse as real IP literals/)
+  assert.match(appSecurity, /trusted-proxy mode only accepts syntactically valid IP literals/)
 })
 
 test('public audit and demo login rate limits use the shared request IP helper', async () => {

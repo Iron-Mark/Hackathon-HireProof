@@ -1,3 +1,4 @@
+import net from 'node:net'
 import { NextResponse } from 'next/server'
 
 const JSON_ERROR_HEADERS = {
@@ -69,7 +70,7 @@ function trustsProxyClientIpHeaders() {
 function cleanClientIp(value: string | null) {
   const first = value?.split(',')[0]?.trim()
   if (!first || first.length > 64) return ''
-  if (!/^[a-f0-9:.]+$/i.test(first)) return ''
+  if (!net.isIP(first)) return ''
   return first.toLowerCase()
 }
 

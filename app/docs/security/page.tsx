@@ -88,6 +88,7 @@ const controls = [
       'The web audit route is limited to 5 requests per minute per IP.',
       'The headless audit route is limited to 20 requests per minute per API key.',
       'The MCP route is limited to 30 tool calls per minute per API key.',
+      'Forwarded client IP headers are ignored by default; trusted-proxy mode only accepts syntactically valid IP literals from X-Real-IP or X-Forwarded-For.',
       'Upstash Redis provides distributed limits when configured; otherwise an in-memory fallback keeps local demos usable.',
     ],
   },
