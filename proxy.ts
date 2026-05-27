@@ -58,10 +58,9 @@ const CANONICAL_HOST = 'hireproof.tech'
 
 function canonicalRedirect(request: NextRequest) {
   try {
-    const target = new URL(
-      `${request.nextUrl.pathname}${request.nextUrl.search}`,
-      `https://${CANONICAL_HOST}`,
-    )
+    const target = new URL(`https://${CANONICAL_HOST}`)
+    target.pathname = request.nextUrl.pathname
+    target.search = request.nextUrl.search
     return NextResponse.redirect(target, 308)
   } catch {
     return NextResponse.redirect(`https://${CANONICAL_HOST}`, 308)

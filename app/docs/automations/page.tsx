@@ -293,7 +293,7 @@ npx @hireproof/cli --help`}
           <div className="rounded-2xl border border-safe/30 bg-safe/5 p-5">
             <h3 className="mb-2 text-sm font-black uppercase tracking-widest text-safe">Import path</h3>
             <p className="text-sm font-semibold leading-relaxed text-muted">
-              Download <a href="/api/downloads/hireproof-n8n-workflow.json" download className="font-black text-safe hover:underline">hireproof-n8n-workflow.json</a>, then use n8n's import-from-file flow. Set <code className="rounded bg-surface px-1.5 py-0.5">HIREPROOF_API_KEY</code> in n8n env for live keys, or leave it unset to use the public demo fixture key.
+              Download <a href="/api/downloads/hireproof-n8n-workflow.json" download className="font-black text-safe hover:underline">hireproof-n8n-workflow.json</a>, then use n8n's import-from-file flow. Set <code className="rounded bg-surface px-1.5 py-0.5">HIREPROOF_API_KEY</code> in n8n env for account-issued or private self-hosted API access.
             </p>
           </div>
 
@@ -314,7 +314,7 @@ npx @hireproof/cli --help`}
                 </li>
                 <li className="flex flex-wrap items-center gap-3">
                   <span className="w-24 text-sm font-bold text-foreground">Header:</span>
-                  <span className="text-sm"><code className="rounded-md bg-surface px-1.5 py-0.5">x-api-key</code> with your key or the public demo key for demo fixtures</span>
+                  <span className="text-sm"><code className="rounded-md bg-surface px-1.5 py-0.5">x-api-key</code> with your account-issued or private self-hosted API key</span>
                 </li>
               </ul>
             </div>
@@ -469,7 +469,7 @@ npx @hireproof/cli --help`}
   }'`}
         />
         <p className="text-sm font-semibold leading-relaxed text-muted">
-          If <code className="rounded bg-surface px-1.5 py-0.5">WORKFLOW_SECRET</code> is not configured, the route returns an honest credential-required response instead of pretending a durable run was started.
+          If <code className="rounded bg-surface px-1.5 py-0.5">WORKFLOW_SECRET</code> is missing, weak, or a placeholder, the route rejects workflow starts with a credential-required or credential-misconfigured error before accepting a durable run.
         </p>
       </section>
     </div>

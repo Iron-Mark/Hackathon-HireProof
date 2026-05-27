@@ -1,7 +1,7 @@
 const { z } = require('zod')
 
 const DEFAULT_BASE_URL = 'https://hireproof.tech'
-const DEFAULT_API_KEY = ''
+const MAX_AUDIT_RESPONSE_BYTES = 256 * 1024
 
 const HireProofAuditInputSchema = z.object({
   text: z.string().min(10, 'Job post or recruiter message must be at least 10 characters.'),
@@ -19,10 +19,64 @@ function isSafeEnough(report, threshold = 40) {
   return report?.verdict === 'safe' && Number(report?.riskScore ?? 100) < threshold
 }
 
+function auditResponseTooLargeError() {
+  return new Error(`HireProof audit response too large (max ${MAX_AUDIT_RESPONSE_BYTES} bytes).`)
+}
+
+async function readBoundedAuditResponseJson(response) {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > MAX_AUDIT_RESPONSE_BYTES) {
+    throw auditResponseTooLargeError()
+  }
+
+  if (!response.body?.getReader) {
+    if (typeof response.text === 'function') {
+      const text = await response.text()
+      if (Buffer.byteLength(text, 'utf8') > MAX_AUDIT_RESPONSE_BYTES) throw auditResponseTooLargeError()
+      try {
+        return text ? JSON.parse(text) : {}
+      } catch {
+        return {}
+      }
+    }
+    throw new Error('HireProof audit response body is not readable.')
+  }
+
+  const reader = response.body.getReader()
+  const chunks = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (!value) continue
+    totalBytes += value.byteLength
+    if (totalBytes > MAX_AUDIT_RESPONSE_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      throw auditResponseTooLargeError()
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  try {
+    const text = new TextDecoder().decode(merged)
+    return text ? JSON.parse(text) : {}
+  } catch {
+    return {}
+  }
+}
+
 async function runHireProofAudit(input, options = {}) {
   const parsed = HireProofAuditInputSchema.parse(input)
   const baseUrl = normalizeBaseUrl(options.baseUrl || process.env.HIREPROOF_URL)
-  const apiKey = options.apiKey || process.env.HIREPROOF_API_KEY || DEFAULT_API_KEY
+  const apiKey = options.apiKey || process.env.HIREPROOF_API_KEY
   if (!apiKey) {
     throw new Error('HireProof API key is required. Set HIREPROOF_API_KEY or pass apiKey to runHireProofAudit/createHireProofAuditTool.')
   }
@@ -43,7 +97,7 @@ async function runHireProofAudit(input, options = {}) {
     body: JSON.stringify(body),
   })
 
-  const payload = await response.json().catch(() => ({}))
+  const payload = await readBoundedAuditResponseJson(response)
   if (!response.ok) {
     throw new Error(`HireProof audit failed with HTTP ${response.status}: ${JSON.stringify(payload)}`)
   }
@@ -93,7 +147,6 @@ class HireProofAuditTool {
 
 module.exports = {
   DEFAULT_BASE_URL,
-  DEFAULT_API_KEY,
   HireProofAuditInputSchema,
   TrustedWebhookUrlSchema,
   HireProofAuditTool,

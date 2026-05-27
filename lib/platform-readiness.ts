@@ -101,3 +101,28 @@ export function getPlatformReadiness() {
     surfaces,
   }
 }
+
+export function getPublicPlatformReadiness() {
+  const readiness = getPlatformReadiness()
+  const publicSurfaces = Object.fromEntries(
+    Object.entries(readiness.surfaces).map(([key, surface]) => [
+      key,
+      {
+        track: surface.track,
+        state: surface.state,
+        endpoint: 'endpoint' in surface ? surface.endpoint : undefined,
+        adapter: 'adapter' in surface ? surface.adapter : undefined,
+      },
+    ]),
+  )
+
+  return {
+    status: readiness.status,
+    coreStatus: readiness.coreStatus,
+    optionalStatus: readiness.optionalStatus,
+    checkedAt: readiness.checkedAt,
+    requiredSurfaces: readiness.requiredSurfaces,
+    optionalSurfaces: readiness.optionalSurfaces,
+    publicSurfaces,
+  }
+}

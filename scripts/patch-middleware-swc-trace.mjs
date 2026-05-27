@@ -4,8 +4,10 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const repoRoot = path.resolve(import.meta.dirname, '..')
+const scriptDir = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.resolve(scriptDir, '..')
 const esmDir = path.join(repoRoot, 'node_modules', '@swc', 'helpers', 'esm')
 
 if (!fs.existsSync(esmDir)) {

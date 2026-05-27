@@ -1,7 +1,9 @@
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const domain = JSON.stringify(url.searchParams.get('domain') || '')
-  const token = JSON.stringify(url.searchParams.get('token') || '')
+  const rawDomain = url.searchParams.get('domain') || ''
+  const rawToken = url.searchParams.get('token') || ''
+  const domain = JSON.stringify(rawDomain.length <= 253 ? rawDomain : '')
+  const token = JSON.stringify(rawToken.length <= 128 ? rawToken : '')
 
   const script = `
 (async function(){
@@ -26,6 +28,7 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': 'application/javascript; charset=utf-8',
       'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
     },
   })
 }

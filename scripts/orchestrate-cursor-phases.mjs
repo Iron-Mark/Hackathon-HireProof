@@ -196,13 +196,13 @@ function reportInternalRoutes() {
   console.log(`
 Routes (require header x-cursor-job-secret = CURSOR_WEBHOOK_SECRET; never commit secrets):
 
-  GET  /api/internal/cursor/nightly-repo-health
+  POST /api/internal/cursor/nightly-repo-health
   POST /api/internal/cursor/ui-qa   body: { "baseUrl": "https://your-preview.example" }
 
 PowerShell (local dev on port 3002; set secret in env first):
 
   $env:CURSOR_WEBHOOK_SECRET = '<from Vercel or .env.local>'
-  Invoke-RestMethod -Method Get \`
+  Invoke-RestMethod -Method Post \`
     -Uri "http://127.0.0.1:3002/api/internal/cursor/nightly-repo-health" \`
     -Headers @{ "x-cursor-job-secret" = $env:CURSOR_WEBHOOK_SECRET }
 

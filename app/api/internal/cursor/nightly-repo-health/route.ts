@@ -2,12 +2,20 @@ import { NextResponse } from 'next/server'
 import { getCursorPublicStatus, startCursorRun } from '@/lib/cursor/client'
 import { validateCursorJobSecret } from '@/lib/cursor/internal-auth'
 import { CURSOR_DEVELOPER_PRESETS } from '@/lib/cursor/presets'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { requestIp } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 
 const SYSTEM_OWNER_ID = 'system:cursor-nightly'
+const jobName = 'nightly-repo-health'
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit(`cursor_internal_job:${jobName}:${requestIp(request)}`, { limit: 10, windowMs: 60000 })
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 })
+  }
+
   const authError = validateCursorJobSecret(request)
   if (authError) return authError
 
@@ -22,7 +30,7 @@ export async function GET(request: Request) {
 
   const started = await startCursorRun({
     ownerId: SYSTEM_OWNER_ID,
-    kind: 'nightly-repo-health',
+    kind: jobName,
     preset: 'repo-health',
     prompt: CURSOR_DEVELOPER_PRESETS['repo-health'].buildPrompt(),
     runtime: 'cloud',

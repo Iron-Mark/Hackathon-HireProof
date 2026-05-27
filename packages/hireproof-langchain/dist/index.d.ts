@@ -1,7 +1,6 @@
 import type { z } from 'zod'
 
 export declare const DEFAULT_BASE_URL = "https://hireproof.tech"
-export declare const DEFAULT_API_KEY = ""
 
 export declare const HireProofAuditInputSchema: z.ZodObject<{
   text: z.ZodString

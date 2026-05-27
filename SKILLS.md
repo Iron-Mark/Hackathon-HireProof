@@ -4,7 +4,7 @@ These are the 4 open investigation skills exposed by HireProof via its MCP (Mode
 Any AI agent or LLM client that supports MCP can call these tools directly.
 
 **MCP Server Endpoint:** `https://hireproof.tech/api/mcp`
-**Authentication:** `x-api-key: hireproof_agent_demo_key` (public demo key)
+**Authentication:** `x-api-key: <your-account-api-key>`
 
 ---
 
@@ -138,12 +138,12 @@ Any AI agent or LLM client that supports MCP can call these tools directly.
 ```bash
 # List all available skills
 curl https://hireproof.tech/api/mcp \
-  -H "x-api-key: hireproof_agent_demo_key"
+  -H "x-api-key: $HIREPROOF_API_KEY"
 
 # Call a specific skill
 curl -X POST https://hireproof.tech/api/mcp \
   -H "Content-Type: application/json" \
-  -H "x-api-key: hireproof_agent_demo_key" \
+  -H "x-api-key: $HIREPROOF_API_KEY" \
   -d '{"method":"tools/call","name":"search_company","arguments":{"company_name":"Accenture"}}'
 ```
 
@@ -153,7 +153,7 @@ curl -X POST https://hireproof.tech/api/mcp \
 import HireProof from 'hireproof-sdk'
 
 const client = new HireProof({
-  apiKey: 'hireproof_agent_demo_key',
+  apiKey: process.env.HIREPROOF_API_KEY,
   baseUrl: 'https://hireproof.tech',
 })
 
@@ -175,7 +175,7 @@ Add this to your MCP configuration:
     "hireproof": {
       "url": "https://hireproof.tech/api/mcp",
       "headers": {
-        "x-api-key": "hireproof_agent_demo_key"
+        "x-api-key": "${HIREPROOF_API_KEY}"
       }
     }
   }

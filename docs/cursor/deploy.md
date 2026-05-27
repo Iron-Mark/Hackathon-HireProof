@@ -41,6 +41,14 @@ CI does **not** need Cursor variables: [`.github/workflows/cursor-integration.ym
 
 ### 1. Add secrets in Vercel (Preview first)
 
+Preferred CLI path from the repo root:
+
+```powershell
+.\scripts\setup-cursor-secrets.ps1
+```
+
+The setup script prompts for `CURSOR_API_KEY` as a secure input and pipes env values to `vercel env add` through stdin. Do not pass Cursor secrets as PowerShell parameters or Vercel `--value` arguments.
+
 1. Open [Vercel](https://vercel.com) → your HireProof project → **Settings** → **Environment Variables**.
 2. Add `CURSOR_API_KEY` (value from Cursor dashboard). Scope: **Preview** only for the first pass.
 3. Generate `CURSOR_WEBHOOK_SECRET` locally (see below) and add it to Preview (and later Production).
@@ -76,7 +84,7 @@ Copy the single line into Vercel as `CURSOR_WEBHOOK_SECRET`. The same value must
 
 With dev server or Preview URL running and env configured:
 
-- `GET /api/internal/cursor/nightly-repo-health` + header `x-cursor-job-secret: <your secret>` → expect `202` and a `runId` when operational.
+- `POST /api/internal/cursor/nightly-repo-health` + header `x-cursor-job-secret: <your secret>` → expect `202` and a `runId` when operational.
 - `POST /api/internal/cursor/ui-qa` with JSON `{ "baseUrl": "https://your-preview.example" }` and the same header → expect `202`.
 
 Without the header: `401`. Without `CURSOR_WEBHOOK_SECRET` on the deployment: `503`. With flag off or missing API key: `503` with `credential-required`.

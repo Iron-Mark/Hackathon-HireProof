@@ -11,9 +11,9 @@ class HireProofApi {
         typeOptions: {
           password: true,
         },
-        default: 'hireproof_agent_demo_key',
+        default: '',
         required: true,
-        description: 'Use hireproof_agent_demo_key for demo fixtures, or a real HireProof API key for live/provider-backed audits.',
+        description: 'Use an account-issued or private self-hosted HireProof API key. Demo fixtures still require an API key.',
       },
       {
         displayName: 'Base URL',

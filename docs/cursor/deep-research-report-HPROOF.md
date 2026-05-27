@@ -68,7 +68,23 @@ flowchart LR P[Prompt or task] --> AG[Cursor agent] AG --> IDX[Code indexing / s
 ```ts
 // app/api/internal/cursor/nightly-repo-health/route.ts
 import { NextResponse } from 'next/server'
-import { Agent } from '@cursor/sdk' export async function GET(request: Request) { const secret = request.headers.get('x-cursor-job-secret') if (secret !== process.env.CURSOR_WEBHOOK_SECRET) { return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 }) } const agent = await Agent.create({ apiKey: process.env.CURSOR_API_KEY!, model: { id: process.env.CURSOR_MODEL_ID ?? 'composer-2' }, cloud: { repos: [{ url: 'https://github.com/Iron-Mark/Hackathon-HireProof', startingRef: 'main' }], autoCreatePR: true, }, }) const run = await agent.send(`
+import { Agent } from '@cursor/sdk'
+import { validateCursorJobSecret } from '@/lib/cursor/internal-auth'
+
+export async function POST(request: Request) {
+  const authError = validateCursorJobSecret(request)
+  if (authError) return authError
+
+  const agent = await Agent.create({
+    apiKey: process.env.CURSOR_API_KEY!,
+    model: { id: process.env.CURSOR_MODEL_ID ?? 'composer-2' },
+    cloud: {
+      repos: [{ url: 'https://github.com/Iron-Mark/Hackathon-HireProof', startingRef: 'main' }],
+      autoCreatePR: true,
+    },
+  })
+
+  const run = await agent.send(`
 You are performing HireProof nightly repo health.
 Tasks:
 1. Run: npm run lint
@@ -78,7 +94,9 @@ Tasks:
 5. If everything passes, summarize findings only.
 6. If there is a real issue, create a branch and open a PR with the minimal fix.
 Do not change product behavior unless a failing test or stale doc requires it.
-`) return NextResponse.json({ ok: true, runId: run.id, agentId: run.agentId, })
+  `)
+
+  return NextResponse.json({ ok: true, runId: run.id, agentId: run.agentId })
 }
 
 ```

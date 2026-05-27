@@ -2,7 +2,7 @@
 set -euo pipefail
 
 HIREPROOF_URL="${HIREPROOF_URL:-https://hireproof.tech}"
-HIREPROOF_API_KEY="${HIREPROOF_API_KEY:-hireproof_agent_demo_key}"
+: "${HIREPROOF_API_KEY:?Set HIREPROOF_API_KEY to your account-issued or self-hosted API key}"
 JOB_TEXT="${JOB_TEXT:-Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.}"
 JOB_LOCATION="${JOB_LOCATION:-Philippines}"
 HIREPROOF_MODE="${HIREPROOF_MODE:-demo}"

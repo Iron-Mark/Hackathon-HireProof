@@ -1,5 +1,6 @@
 import { sleep } from 'workflow'
 import { DEMO_FIXTURES } from '@/lib/fixtures'
+import { createPublicReportId } from '@/lib/public-report-id'
 import type { AuditReport } from '@/lib/schemas'
 
 export interface AuditWorkflowInput {
@@ -28,7 +29,7 @@ export async function startAuditWorkflow(input: AuditWorkflowInput): Promise<Aud
   const now = Date.now()
   const report: AuditReport = {
     ...pickFixture(input.text),
-    id: `workflow_${now}`,
+    id: createPublicReportId('report'),
     timestamp: new Date(now).toISOString(),
     source: 'api' as const,
     mode: 'demo' as const,

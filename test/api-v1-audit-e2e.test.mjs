@@ -1,53 +1,26 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
-import { spawn } from 'node:child_process'
-import { request as httpRequest } from 'node:http'
-import { setTimeout as delay } from 'node:timers/promises'
+import { BASE_URL, ensureE2eServer } from './helpers/e2e-server.mjs'
 
-const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
+const LOCAL_TEST_AGENT_KEY = 'local-test-agent-key-32-char-minimum-value'
+
+function isStrongEnoughLocalKey(value) {
+  const key = String(value || '').trim()
+  return key.length >= 32 && new Set(key).size >= 8 && !/^paste_|^replace_|^your_|^<paste/i.test(key)
+}
 
 async function readAgentApiKey() {
+  if (process.env.AGENT_API_KEY?.trim()) return process.env.AGENT_API_KEY.trim()
+
   try {
     const env = await fs.readFile(new URL('../.env.local', import.meta.url), 'utf8')
     const line = env.split(/\r?\n/).find((item) => item.startsWith('AGENT_API_KEY='))
-    return line ? line.replace(/^AGENT_API_KEY=/, '').trim() : 'hireproof_agent_demo_key'
+    const configured = line ? line.replace(/^AGENT_API_KEY=/, '').trim() : ''
+    return isStrongEnoughLocalKey(configured) ? configured : LOCAL_TEST_AGENT_KEY
   } catch {
-    return 'hireproof_agent_demo_key'
+    return LOCAL_TEST_AGENT_KEY
   }
-}
-
-function checkServer() {
-  return new Promise((resolve) => {
-    const req = httpRequest(`${BASE_URL}/api/health`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
-    })
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => {
-      req.destroy()
-      resolve(false)
-    })
-    req.end()
-  })
-}
-
-async function ensureServer() {
-  if (await checkServer()) return null
-
-  const child = spawn('npm', ['run', 'dev'], {
-    cwd: new URL('..', import.meta.url),
-    shell: true,
-    stdio: 'ignore',
-  })
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await delay(1000)
-    if (await checkServer()) return child
-  }
-
-  child.kill()
-  throw new Error(`Timed out waiting for ${BASE_URL}`)
 }
 
 async function postAudit(body) {
@@ -65,7 +38,7 @@ async function postAudit(body) {
 }
 
 test('/api/v1/audit returns an explicit demo report for mode=demo', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/api/health')
 
   try {
     const { response, payload } = await postAudit({
@@ -79,12 +52,12 @@ test('/api/v1/audit returns an explicit demo report for mode=demo', { timeout: 9
     assert.equal(payload.verdict, 'high-risk')
     assert.ok(Number(payload.riskScore) >= 80)
   } finally {
-    server?.kill()
+    await server.release()
   }
 })
 
 test('/api/v1/audit keeps live mode credential-backed with clear missing-key errors', { timeout: 120_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/api/health')
 
   try {
     const { response, payload } = await postAudit({
@@ -94,8 +67,12 @@ test('/api/v1/audit keeps live mode credential-backed with clear missing-key err
     })
 
     if (response.status === 503) {
-      assert.match(payload.error, /Live audit credentials not configured/)
+      assert.match(payload.error, /Live audit credentials not configured|Platform live audit credentials are disabled/)
       assert.ok(Array.isArray(payload.missing))
+      assert.ok(
+        payload.missing.some((item) => /MODEL_PROVIDER_KEY|SERPAPI_API_KEY|live credential/i.test(String(item))),
+        'missing list should identify model/search live credential requirements'
+      )
       assert.match(payload.recovery, /mode=demo/)
       return
     }
@@ -106,6 +83,6 @@ test('/api/v1/audit keeps live mode credential-backed with clear missing-key err
     assert.equal(payload.verdict, 'high-risk')
     assert.ok(Number(payload.riskScore) >= 80)
   } finally {
-    server?.kill()
+    await server.release()
   }
 })

@@ -110,22 +110,24 @@ data: {"message":"Investigation failed"}`} />
         ]} />
         <CodeBlock title="Request (Synchronous)" code={`curl -X POST https://yourapp.vercel.app/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
-    "text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram."
+    "text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.",
+    "mode": "demo"
   }'`} />
         <CodeBlock title="Request (Async with Webhook)" code={`curl -X POST https://yourapp.vercel.app/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "text": "Join our team as a data analyst...",
+    "mode": "live",
     "webhook_url": "https://myagent.example.com/callback"
   }'
 
 # Response: 202 Accepted
 # {"status":"processing","message":"Investigation started..."}`} />
         <CodeBlock title="Response (200 OK)" code={`{
-  "id": "report_1714300000000",
+  "id": "report_6f97f79a-92f0-4b54-8b1a-bc2ec9d5e7d1",
   "verdict": "high-risk",
   "riskScore": 85,
   "confidence": "Very High",
@@ -171,7 +173,7 @@ local_presence   — Verify local business footprint
   args: { company_name: string, location?: string }`} />
         <CodeBlock title="Example: Call a Tool" code={`curl -X POST https://yourapp.vercel.app/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "method": "tools/call",
     "name": "search_company",

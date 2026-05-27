@@ -9,7 +9,7 @@
       "label": "API Key",
       "type": "password",
       "required": true,
-      "help": "Use hireproof_agent_demo_key for demo fixtures, or a real HireProof API key for live/provider-backed audits."
+      "help": "Use an account-issued or private self-hosted HireProof API key. Demo fixtures still require an API key."
     },
     {
       "name": "baseUrl",

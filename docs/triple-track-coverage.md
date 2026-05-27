@@ -55,7 +55,7 @@ Implemented and accepted in production.
 - `workflow` is installed and enabled through `workflow/next` in `next.config.js`.
 - `lib/workflows/audit-workflow.ts` exports `startAuditWorkflow`.
 - `/api/workflows/audit` imports `start` from `workflow/api` and starts the workflow when `WORKFLOW_SECRET` is configured.
-- Without workflow credentials, the route returns an honest `credential-required` response instead of pretending a live WDK run happened.
+- Without a valid workflow secret, the route rejects start requests with `credential-required` or `credential-misconfigured` before accepting body work or pretending a live WDK run happened.
 - Production WDK proof was captured on April 30, 2026: `/api/workflows/audit` accepted run `wrun_01KQD9H6AND3W7YZBHHKAH2KV5`.
 - The existing `/api/v1/audit` webhook behavior is the natural bridge.
 - The roadmap version should expose a durable investigation timeline with intake, evidence checks, scoring, report creation, callback delivery, and retry history.

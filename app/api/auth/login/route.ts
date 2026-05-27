@@ -3,14 +3,19 @@ import { cookies } from 'next/headers'
 import { authenticateUser, makeSessionToken } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
+
+const AUTH_PAYLOAD_LIMIT_BYTES = 16 * 1024
 
 async function validateLoginRateLimit(request: Request, email: string) {
   const normalizedEmail = email.trim().toLowerCase() || 'unknown'
-  const result = await checkRateLimit(`auth_login:${requestIp(request)}:${normalizedEmail}`, {
-    limit: 10,
-    windowMs: 15 * 60 * 1000,
-  })
+  const options = { limit: 10, windowMs: 15 * 60 * 1000 }
+  const [emailResult, clientResult] = await Promise.all([
+    checkRateLimit(`auth_login:email:${normalizedEmail}`, options),
+    checkRateLimit(`auth_login:client:${requestIp(request)}:${normalizedEmail}`, options),
+  ])
+  const result = emailResult.success ? clientResult : emailResult
 
   if (result.success) return null
 
@@ -25,7 +30,10 @@ export async function POST(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const body = await request.json().catch(() => ({}))
+  const parsedJson = await readJsonRequest(request, AUTH_PAYLOAD_LIMIT_BYTES, 'Auth payload')
+  if (!parsedJson.ok) return parsedJson.response
+
+  const body = parsedJson.value
   const email = String(body.email || '')
   const rateLimitError = await validateLoginRateLimit(request, email)
   if (rateLimitError) return rateLimitError
@@ -38,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   const user = await authenticateUser(email, String(body.password || ''))
-  if (!user) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Invalid email or password.' }, { status: 401 })
 
   const cookieStore = await cookies()
   cookieStore.set('hireproof_session', makeSessionToken(user.id), {
@@ -48,5 +56,5 @@ export async function POST(request: Request) {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
   })
-  return NextResponse.json({ user })
+  return noStoreJson({ user })
 }

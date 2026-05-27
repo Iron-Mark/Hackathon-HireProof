@@ -26,7 +26,7 @@ export default function Page() {
       {/* Auth reminder */}
       <div className="mb-10 rounded-lg border border-caution/20 bg-caution/5 px-4 py-3 text-xs font-bold text-caution-text">
         All requests require an <code className="font-mono">x-api-key</code> header.
-        The public demo key is <code className="font-mono">hireproof_agent_demo_key</code>.{' '}
+        Use an account-issued API key from the Developer Portal or set a private <code className="font-mono">AGENT_API_KEY</code> for self-hosted deployments.{' '}
         <Link href="/docs/authentication" className="underline">See Authentication →</Link>
       </div>
 
@@ -47,10 +47,10 @@ export default function Page() {
         </p>
         <CodeBlock title="Request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
-  -d '{"text": "Remote frontend intern. PHP 80,000/week. Message us on Telegram."}'`} />
+  -H "x-api-key: <your-account-api-key>" \\
+  -d '{"text": "Remote frontend intern. PHP 80,000/week. Message us on Telegram.", "mode": "demo"}'`} />
         <CodeBlock title="Response (200 OK)" code={`{
-  "id": "report_1714300000000",
+  "id": "report_6f97f79a-92f0-4b54-8b1a-bc2ec9d5e7d1",
   "version": "2",
   "verdict": "high-risk",
   "riskScore": 85,
@@ -92,11 +92,12 @@ export default function Page() {
         </p>
         <CodeBlock title="Screenshot + URL request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "url": "https://www.linkedin.com/jobs/view/example",
     "image": "data:image/png;base64,...",
-    "location": "Philippines"
+    "location": "Philippines",
+    "mode": "live"
   }'`} />
       </section>
 
@@ -106,7 +107,7 @@ export default function Page() {
         <p className="mb-4 text-sm font-semibold text-muted leading-6">
           Live SerpApi evidence is cached by normalized search parameters and by similar audit context: company, role, location, and apply host.
           Configure <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">UPSTASH_REDIS_REST_URL</code> and <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">UPSTASH_REDIS_REST_TOKEN</code> to persist repeated SerpApi responses across cold starts and Vercel instances.
-          Runtime cache telemetry is exposed from <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">/api/health</code>, <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">/api/audit</code>, and authenticated developer usage.
+          Public status routes expose only coarse readiness and cost-posture flags. Runtime cache telemetry is available through authenticated developer usage.
           Expensive live audits also use per-user or per-IP queue throttling and a SerpApi circuit breaker so quota spikes and repeated failures become explicit operational states.
         </p>
         <CodeBlock title="Telemetry Shape" code={`{
@@ -134,9 +135,10 @@ export default function Page() {
         </p>
         <CodeBlock title="Async Request" code={`curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "text": "We are hiring data analysts...",
+    "mode": "live",
     "webhook_url": "https://myagent.example.com/callback"
   }'`} />
         <CodeBlock title="Immediate Response (202 Accepted)" code={`{ "status": "processing", "message": "Investigation started. Result will be sent to your webhook." }`} />

@@ -28,6 +28,8 @@ cd "C:\Codes Local\Hackathons (Workspace)\HireProof"
 .\scripts\setup-cursor-secrets.ps1
 ```
 
+The script prompts for the Cursor API key. Do not pass `CURSOR_API_KEY` or `CURSOR_WEBHOOK_SECRET` on the PowerShell command line.
+
 Dry-run (no `vercel env add`):
 
 ```powershell

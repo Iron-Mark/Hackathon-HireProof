@@ -218,6 +218,43 @@ test('v2 intelligence ranks source quality, freshness, and salary ratio explanat
   assert.ok(report.intelligence.signals.some((signal) => signal.id === 'stale_evidence'))
 })
 
+test('v2 intelligence does not treat job-board lookalike hosts as reputable sources', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_job_board_lookalike',
+    extractedClaims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'PHP 90,000 per month',
+      location: 'Manila',
+      contactMethod: 'Email',
+      applicationPath: 'Job board link',
+    },
+    evidence: [
+      {
+        source: 'SerpApi Google Jobs',
+        type: 'Comparable Jobs',
+        url: 'https://linkedin.com.attacker.test/jobs/view/123',
+        snippet: 'Frontend Developer at Example Co | Location: Manila | Salary: PHP 90,000 per month',
+      },
+      {
+        source: 'SerpApi Google Jobs',
+        type: 'Comparable Jobs',
+        url: 'https://www.linkedin.com/jobs/view/456',
+        snippet: 'Frontend Developer at Real Co | Location: Manila | Salary: PHP 90,000 per month',
+      },
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  const spoofed = report.evidence.find((item) => item.url === 'https://linkedin.com.attacker.test/jobs/view/123')
+  const real = report.evidence.find((item) => item.url === 'https://www.linkedin.com/jobs/view/456')
+
+  assert.equal(spoofed?.sourceQuality, 'public')
+  assert.equal(real?.sourceQuality, 'reputable')
+})
+
 test('v2 safer alternatives only include sourced comparable jobs', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
 
@@ -423,6 +460,7 @@ test('v2 intelligence keeps missing-evidence warnings for generic public job pag
   assert.ok(report.redFlags.some((flag) => /no supporting evidence/i.test(flag)))
   assert.doesNotMatch(report.summary, /trusted job page/i)
 })
+
 test('v2 intelligence ignores stale comparable-host apply mismatch for trusted LinkedIn job pages', async () => {
   const { buildAuditReportV2 } = await loadIntelligenceModule()
   const report = buildAuditReportV2({
@@ -573,6 +611,63 @@ test('trusted LinkedIn staffing report does not overinflate policy reconciliatio
   assert.ok(report.riskScore <= 35)
   assert.equal(report.intelligence.applyPath.status, 'trusted-board')
   assert.ok(report.redFlags.every((flag) => !/scam|fraud|fake|apply path/i.test(flag)))
+})
+
+test('trusted job-board reports preserve input-conflict risk from URL enrichment', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_conflicted_trusted_board',
+    extractedClaims: {
+      company: 'Acme Corp',
+      role: 'Software Engineer',
+      salary: '$100,000 per year',
+      location: 'Remote United States',
+      contactMethod: 'LinkedIn',
+      applicationPath: 'LinkedIn Easy Apply',
+    },
+    evidence: [
+      {
+        source: 'LinkedIn public job page',
+        type: 'Job Post Source',
+        url: 'https://www.linkedin.com/jobs/view/123456789',
+        snippet: 'HireProof read public job content from https://www.linkedin.com/jobs/view/123456789.',
+      },
+      {
+        source: 'LinkedIn public job page',
+        type: 'Input Conflict',
+        snippet: 'Submitted company says "Evil Staffing LLC", but the resolved job page says "Acme Corp".',
+      },
+      {
+        source: 'LinkedIn public job page',
+        type: 'Input Conflict',
+        snippet: 'Submitted role says "Crypto Payroll Assistant", but the resolved job page says "Software Engineer".',
+      },
+      {
+        source: 'SerpApi Google Search',
+        type: 'Official Company Presence',
+        url: 'https://acme.com/careers/software-engineer',
+        snippet: 'Trust: official | Software Engineer at Acme Corp.',
+      },
+      {
+        source: 'LinkedIn',
+        type: 'Comparable Jobs',
+        url: 'https://www.linkedin.com/jobs/view/987654321',
+        snippet: 'Trust: reputable-job-board | Software Engineer at Example Co | Location: Remote United States | Salary: $100,000 per year',
+      },
+    ],
+    enrichmentRedFlags: [
+      'Submitted company does not match the resolved job page',
+      'Submitted role does not match the resolved job page',
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  const policyTrace = report.intelligence.scoreTrace.find((item) => item.step === 'Policy reconciliation')
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'input_conflict'))
+  assert.ok(policyTrace && policyTrace.delta > 12)
+  assert.ok(report.riskScore >= 45)
+  assert.equal(report.verdict, 'caution')
 })
 
 test('remote recruiter free-mail identity remains risky even with a real company footprint', async () => {

@@ -62,6 +62,7 @@ The evidence broker is designed to preserve API limits and keep reports honest.
 - An old domain or no phishing feed hit is neutral. It is not proof that a job is safe.
 - Known-bad phishing, malware, or social-engineering hits are high-risk evidence.
 - Newly registered apply/recruiter domains, recruiter-domain mismatch, missing custom mail DNS, and very recent certificate activity can increase risk.
+- Input conflicts between submitted text and the resolved public job page are caution-level integrity evidence, even when the URL is a trusted job board or ATS.
 - Official apply domains, trusted job boards/ATS hosts, recruiter domains matching the official root, and active registry matches can add trust, but they do not override strong scam signals by themselves.
 - Generic public HTML job pages are retained as evidence but do not count as trusted job-board or ATS evidence, so they cannot remove missing-evidence warnings by themselves.
 

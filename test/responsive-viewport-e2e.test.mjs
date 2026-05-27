@@ -1,11 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { request as httpRequest } from 'node:http'
-import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-
-const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
+import { setTimeout as delay } from 'node:timers/promises'
+import { BASE_URL, ensureE2eServer } from './helpers/e2e-server.mjs'
 
 const ROUTES = [
   '/',
@@ -81,42 +78,27 @@ const VIEWPORTS = [
   { name: 'wide desktop', width: 1920, height: 1080 },
 ]
 
-function checkServer() {
-  return new Promise((resolve) => {
-    const req = httpRequest(`${BASE_URL}/`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
-    })
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => {
-      req.destroy()
-      resolve(false)
-    })
-    req.end()
-  })
-}
+async function gotoRoute(page, route) {
+  let lastError
 
-async function ensureServer() {
-  if (await checkServer()) return null
-
-  const child = spawn('npm', ['run', 'dev'], {
-    cwd: new URL('..', import.meta.url),
-    shell: true,
-    stdio: 'ignore',
-  })
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await delay(1000)
-    if (await checkServer()) return child
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined)
+      await page.waitForFunction(() => document.readyState === 'complete', null, { timeout: 10_000 }).catch(() => undefined)
+      return response
+    } catch (error) {
+      lastError = error
+      await delay(1000)
+    }
   }
 
-  child.kill()
-  throw new Error(`Timed out waiting for ${BASE_URL}`)
+  throw lastError
 }
 
 for (const routeGroup of ROUTE_GROUPS) {
   test(`${routeGroup.name} fit phone, tablet, desktop, and orientation viewports without page-level horizontal overflow`, { timeout: 300_000 }, async () => {
-    const server = await ensureServer()
+    const server = await ensureE2eServer('/')
     const browser = await chromium.launch()
     const page = await browser.newPage()
     const failures = []
@@ -126,7 +108,7 @@ for (const routeGroup of ROUTE_GROUPS) {
         await page.setViewportSize({ width: viewport.width, height: viewport.height })
 
         for (const route of routeGroup.routes) {
-          const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'load', timeout: 30_000 })
+          const response = await gotoRoute(page, route)
           assert.ok(response?.status() && response.status() < 400, `${route} returned ${response?.status()}`)
 
           await page.evaluate(() => window.scrollTo(0, 0))
@@ -146,13 +128,13 @@ for (const routeGroup of ROUTE_GROUPS) {
       assert.deepEqual(failures, [])
     } finally {
       await browser.close()
-      server?.kill()
+      await server.release()
     }
   })
 }
 
 test('docs tables scroll internally instead of clipping on narrow viewports', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/')
   const browser = await chromium.launch()
   const page = await browser.newPage()
   const failures = []
@@ -163,7 +145,7 @@ test('docs tables scroll internally instead of clipping on narrow viewports', { 
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
 
       for (const route of TABLE_ROUTES) {
-        const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'load', timeout: 30_000 })
+        const response = await gotoRoute(page, route)
         assert.ok(response?.status() && response.status() < 400, `${route} returned ${response?.status()}`)
         await page.waitForTimeout(100)
 
@@ -194,6 +176,6 @@ test('docs tables scroll internally instead of clipping on narrow viewports', { 
     assert.deepEqual(failures, [])
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })

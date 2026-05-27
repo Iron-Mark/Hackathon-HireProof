@@ -8,6 +8,6 @@
 - [ ] Screenshot captured for credential setup.
 - [ ] Screenshot captured for `Run Audit`.
 - [ ] Screenshot captured for `Run Async Audit`.
-- [ ] README describes demo key and live credential boundaries.
+- [ ] README describes account-issued/private API keys and live credential boundaries.
 - [x] npm publish completed with the maintainer account: `https://www.npmjs.com/package/n8n-nodes-hireproof`.
 - [ ] n8n community verification submitted after npm publish.

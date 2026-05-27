@@ -1,16 +1,17 @@
 import fs from 'fs/promises'
 import path from 'path'
-import crypto from 'crypto'
 import { AuditReport, AuditReportSchema } from './schemas'
 import { Redis } from '@upstash/redis'
 import { buildPublicReportTrends } from './public-intelligence-reports.mjs'
+export { createPublicReportId, isPublicReportId, type PublicReportIdPrefix } from './public-report-id'
+import { createPublicReportId } from './public-report-id'
 
 const dataDir = path.join(process.cwd(), 'data')
 const dbFile = path.join(dataDir, 'reports.json')
 const redisIndexKey = 'hireproof:report-index'
 
-// Maximum reports to keep in the JSON file (prevent unbounded growth)
-const MAX_REPORTS = 500
+// Maximum reports to include in list-oriented indexes; report permalinks remain retrievable by id.
+const MAX_REPORT_INDEX_ENTRIES = 500
 // 30 days in seconds for Redis TTL
 const REDIS_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -50,7 +51,7 @@ function getRedis() {
 }
 
 export async function saveReport(report: AuditReport) {
-  if (!report.id) report.id = `report_${crypto.randomUUID()}`
+  if (!report.id) report.id = createPublicReportId('report')
   
   // Cryptographically guarantee DB structural integrity before write
   const safeReport = AuditReportSchema.parse(report)
@@ -62,7 +63,7 @@ export async function saveReport(report: AuditReport) {
       // Save directly to Redis with a 30-day TTL to auto-manage storage
       await redis.set(safeReport.id!, JSON.stringify(safeReport), { ex: REDIS_TTL_SECONDS })
       const index = parseRedisIndex(await redis.get(redisIndexKey))
-      const nextIndex = [safeReport.id!, ...index.filter((id) => id !== safeReport.id)].slice(0, MAX_REPORTS)
+      const nextIndex = [safeReport.id!, ...index.filter((id) => id !== safeReport.id)].slice(0, MAX_REPORT_INDEX_ENTRIES)
       await redis.set(redisIndexKey, nextIndex)
       return // Successfully saved to Redis, skip local FS
     } catch (e) {
@@ -84,18 +85,6 @@ export async function saveReport(report: AuditReport) {
         }
       } catch {
         // file doesn't exist or is corrupted
-      }
-
-      // Evict oldest reports if over limit
-      const keys = Object.keys(reports)
-      if (keys.length >= MAX_REPORTS) {
-        const sorted = keys.sort((a, b) => {
-          const tA = reports[a]?.timestamp || ''
-          const tB = reports[b]?.timestamp || ''
-          return tA.localeCompare(tB)
-        })
-        const toRemove = sorted.slice(0, keys.length - MAX_REPORTS + 1)
-        for (const key of toRemove) delete reports[key]
       }
 
       reports[safeReport.id!] = safeReport
@@ -139,7 +128,7 @@ export async function listReports(limit = 100): Promise<AuditReport[]> {
 }
 
 export async function getReportTrends() {
-  return buildPublicReportTrends(await listReports(500))
+  return buildPublicReportTrends(await listReports(MAX_REPORT_INDEX_ENTRIES))
 }
 
 export async function getReport(id: string): Promise<AuditReport | null> {

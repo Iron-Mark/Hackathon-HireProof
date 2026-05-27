@@ -67,6 +67,12 @@ Bundled helper:
 python3 scripts/render_docx.py /path/to/file.docx --output_dir /tmp/docx_pages
 ```
 
+The bundled helper is intentionally bounded for local safety:
+- `word/document.xml` is read with a decompressed-size cap.
+- DOCX/PDF page dimensions must be within sane physical bounds.
+- Computed or user-supplied DPI is limited to 50-300.
+- Rasterization is capped to the first 20 pages, two worker threads, and 60-second conversion timeouts.
+
 ## Quality expectations
 - Deliver a client-ready document: consistent typography, spacing, margins, and clear hierarchy.
 - Avoid formatting defects: clipped/overlapping text, broken tables, unreadable characters, or default-template styling.

@@ -37,7 +37,7 @@ Verified API result:
 - Confidence: `Very High`
 - Evidence items: `3`
 - Red flags: `7`
-- Report ID from latest check: `report_1778274729194`
+- Report ID format: `report_<UUID>`; timestamp-style report IDs are no longer valid public permalinks.
 
 ## Short Speaking Flow
 

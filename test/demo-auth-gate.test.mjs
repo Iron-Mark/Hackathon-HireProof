@@ -41,7 +41,20 @@ async function loadLoginRoute({ authenticateUser, makeSessionToken = () => 'sess
         return {
           validateMutationOrigin: () => null,
           requestIp: () => 'direct-client',
+          readJsonRequest: async (request) => {
+            try {
+              return { ok: true, value: await request.json() }
+            } catch {
+              return {
+                ok: false,
+                response: new Response(JSON.stringify({ error: 'Invalid request format.' }), { status: 400 }),
+              }
+            }
+          },
         }
+      }
+      if (id === '@/lib/response-security') {
+        return { noStoreJson: (body, init) => new Response(JSON.stringify(body), init) }
       }
       if (id === '@/lib/demo-account') {
         return { isDemoAccountEmail: (email) => String(email || '').trim().toLowerCase() === DEMO_EMAIL }
@@ -95,6 +108,7 @@ test('demo login creates a short server-valid session token for the shared accou
 test('demo account sessions are sandboxed away from developer resource mutations', async () => {
   const routes = [
     '../app/api/developer/keys/route.ts',
+    '../app/api/developer/keys/[id]/route.ts',
     '../app/api/developer/domains/route.ts',
     '../app/api/developer/domains/verify/route.ts',
     '../app/api/developer/provider-credentials/route.ts',

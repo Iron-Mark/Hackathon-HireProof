@@ -39,7 +39,7 @@ const readyProof = [
     icon: CheckCircle2,
     title: 'API smoke proof',
     status: 'verified',
-    body: 'The public demo key returns a High-Risk report through the headless audit API.',
+    body: 'A configured API key returns a High-Risk report through the headless audit API.',
     href: '/api/health',
   },
   {

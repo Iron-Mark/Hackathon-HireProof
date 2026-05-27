@@ -9,6 +9,7 @@ const SERPAPI_CIRCUIT_FAILURE_LIMIT = Number(process.env.SERPAPI_CIRCUIT_FAILURE
 const SERPAPI_CIRCUIT_FAILURE_WINDOW_MS = Number(process.env.SERPAPI_CIRCUIT_FAILURE_WINDOW_MS || 2 * 60 * 1000)
 const SERPAPI_CIRCUIT_COOLDOWN_MS = Number(process.env.SERPAPI_CIRCUIT_COOLDOWN_MS || 5 * 60 * 1000)
 const SERPAPI_CIRCUIT_NETWORK_CALL_LIMIT_10M = Number(process.env.SERPAPI_CIRCUIT_NETWORK_CALL_LIMIT_10M || 80)
+const SERPAPI_MAX_RESPONSE_BYTES = Number(process.env.SERPAPI_MAX_RESPONSE_BYTES || 1024 * 1024)
 
 interface SerpApiSearchResult {
   title: string
@@ -340,6 +341,51 @@ function recordSerpApiNetworkCall() {
   }
 }
 
+async function readSerpApiResponseJson(response: Response): Promise<SerpApiResponse> {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (contentLength > SERPAPI_MAX_RESPONSE_BYTES) {
+    await response.body?.cancel().catch(() => undefined)
+    throw new Error(`SerpApi response exceeded ${SERPAPI_MAX_RESPONSE_BYTES} bytes`)
+  }
+
+  if (!response.body?.getReader) {
+    const text = await response.text()
+    if (new TextEncoder().encode(text).byteLength > SERPAPI_MAX_RESPONSE_BYTES) {
+      throw new Error(`SerpApi response exceeded ${SERPAPI_MAX_RESPONSE_BYTES} bytes`)
+    }
+    return JSON.parse(text || '{}')
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let received = 0
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = value instanceof Uint8Array ? value : new Uint8Array(value)
+      received += chunk.byteLength
+      if (received > SERPAPI_MAX_RESPONSE_BYTES) {
+        await reader.cancel().catch(() => undefined)
+        throw new Error(`SerpApi response exceeded ${SERPAPI_MAX_RESPONSE_BYTES} bytes`)
+      }
+      chunks.push(chunk)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const merged = new Uint8Array(received)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  return JSON.parse(new TextDecoder().decode(merged) || '{}')
+}
+
 export function getSerpApiOperationalStatus(): OperationalStatus {
   if (Date.now() < circuitOpenUntil) {
     return {
@@ -485,6 +531,12 @@ function hostnameFromUrl(url?: string) {
   }
 }
 
+function hostMatchesDomain(host: string, domain: string) {
+  const normalizedHost = host.replace(/^www\./i, '').toLowerCase()
+  const normalizedDomain = domain.toLowerCase()
+  return normalizedHost === normalizedDomain || normalizedHost.endsWith(`.${normalizedDomain}`)
+}
+
 function hasCompanyToken(value: string, companyName: string) {
   const haystack = normalizeSearchText(value)
   const tokens = companyTokens(companyName)
@@ -518,7 +570,7 @@ function isReputableJobBoard(url?: string, source?: string) {
     'greenhouse.io',
     'lever.co',
     'smartrecruiters.com',
-  ].some(domain => host.includes(domain) || label.includes(domain.replace('.com', '')))
+  ].some(domain => hostMatchesDomain(host, domain) || label.includes(domain.replace('.com', '')))
 }
 
 function rootDomainFromHost(host: string) {
@@ -538,7 +590,7 @@ function isTrustedSubmittedApplyHost(host: string) {
     'smartrecruiters.com',
     'workdayjobs.com',
     'myworkdayjobs.com',
-  ].some(domain => host.includes(domain))
+  ].some(domain => hostMatchesDomain(host, domain))
 }
 
 function compareApplyHost(
@@ -551,8 +603,8 @@ function compareApplyHost(
   if (!submittedHost || !officialHost) return null
   if (options.allowTrustedJobBoard && isTrustedSubmittedApplyHost(submittedHost)) return null
   const officialRoot = rootDomainFromHost(officialHost)
-  const submittedMatchesOfficial = submittedHost.includes(officialRoot)
-  const applyMatchesOfficial = applyLinks.some(link => hostnameFromUrl(link).includes(officialRoot))
+  const submittedMatchesOfficial = hostMatchesDomain(submittedHost, officialRoot)
+  const applyMatchesOfficial = applyLinks.some(link => hostMatchesDomain(hostnameFromUrl(link), officialRoot))
   if (!submittedMatchesOfficial && applyMatchesOfficial) {
     return `Risk signal: submitted apply domain ${submittedHost} does not match official company domain ${officialHost}.`
   }
@@ -698,7 +750,7 @@ async function fetchSerpApi(params: Record<string, any>, serpapiKey?: string): P
     }
 
     recordSerpApiNetworkCall()
-    const data = await response.json()
+    const data = await readSerpApiResponseJson(response)
     writeSerpApiCache(cacheKey, data)
     await writePersistentSerpApiCache(cacheKey, data)
     return data
@@ -751,7 +803,7 @@ async function fetchSerpApiUrl(url: string, serpapiKey?: string): Promise<SerpAp
     }
 
     recordSerpApiNetworkCall()
-    const data = await response.json()
+    const data = await readSerpApiResponseJson(response)
     writeSerpApiCache(cacheKey, data)
     await writePersistentSerpApiCache(cacheKey, data)
     return data

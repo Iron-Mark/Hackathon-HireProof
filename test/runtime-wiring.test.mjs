@@ -15,8 +15,40 @@ test('audit report permalinks await dynamic params before lookup', async () => {
 
   assert.match(source, /params:\s*Promise<\{\s*id:\s*string\s*\}>/)
   assert.match(source, /const\s+\{\s*id\s*\}\s*=\s*await\s+params/)
-  assert.match(source, /\^\(report\|chat\)_\[a-zA-Z0-9_-\]\+\$/)
+  assert.match(source, /isPublicReportId\(safeId\)/)
   assert.doesNotMatch(source, /params\.id/)
+})
+
+test('public report permalinks use unguessable ids and reject legacy timestamp ids', async () => {
+  const db = await fs.readFile(new URL('../lib/db.ts', import.meta.url), 'utf8')
+  const uiRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
+  const v1Route = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')
+  const bot = await fs.readFile(new URL('../lib/hireproof-bot.ts', import.meta.url), 'utf8')
+  const page = await fs.readFile(new URL('../app/audit/[id]/page.tsx', import.meta.url), 'utf8')
+  const cliHistory = await fs.readFile(new URL('../packages/hireproof-cli/lib/report-history.mjs', import.meta.url), 'utf8')
+  const browserHistory = await fs.readFile(new URL('../hooks/useAuditHistory.ts', import.meta.url), 'utf8')
+  const apiDocs = await fs.readFile(new URL('../app/docs/api-reference/page.tsx', import.meta.url), 'utf8')
+  const headlessDocs = await fs.readFile(new URL('../app/docs/headless-api/page.tsx', import.meta.url), 'utf8')
+  const publicReportId = await fs.readFile(new URL('../lib/public-report-id.ts', import.meta.url), 'utf8')
+
+  assert.match(db, /createPublicReportId/)
+  assert.match(publicReportId, /globalThis\.crypto\.randomUUID\(\)/)
+  assert.match(db, /isPublicReportId/)
+  assert.match(publicReportId, /\^\(report\|chat\)_\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[1-5\]\[0-9a-f\]\{3\}/)
+  assert.doesNotMatch(publicReportId, /report_\[a-zA-Z0-9_-\]\+/)
+  assert.doesNotMatch(publicReportId, /report_\[0-9\]\+/)
+  assert.match(uiRoute, /createPublicReportId\('report'\)/)
+  assert.match(v1Route, /createPublicReportId\('report'\)/)
+  assert.match(bot, /createPublicReportId\('chat'\)/)
+  assert.match(page, /isPublicReportId\(safeId\)/)
+  assert.doesNotMatch(uiRoute, /report_\$\{Date\.now\(\)\}/)
+  assert.doesNotMatch(v1Route, /report_\$\{Date\.now\(\)\}/)
+  assert.doesNotMatch(bot, /chat_\$\{now\}|chat_\$\{Date\.now\(\)\}/)
+  assert.doesNotMatch(page, /\^\(report\|chat\)_\[a-zA-Z0-9_-\]\+\$/)
+  assert.doesNotMatch(cliHistory, /report_\$\{Date\.now\(\)\}/)
+  assert.match(browserHistory, /globalThis\.crypto\.randomUUID\(\)/)
+  assert.doesNotMatch(browserHistory, /report_\$\{Date\.now\(\)\}/)
+  assert.doesNotMatch(`${apiDocs}\n${headlessDocs}`, /"id":\s*"report_\d+"/)
 })
 
 test('missing-user auth dummy hash uses the scrypt verifier format', async () => {
@@ -24,6 +56,14 @@ test('missing-user auth dummy hash uses the scrypt verifier format', async () =>
 
   assert.match(source, /scrypt:hireproof_dummy_salt_2026:/)
   assert.doesNotMatch(source, /\$2b\$10\$dummyhashplaceholder/)
+})
+
+test('API authentication does not accept the public demo key as an implicit fallback', async () => {
+  const source = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(source, /process\.env\.AGENT_API_KEY\s*\|\|\s*['"]hireproof_agent_demo_key['"]/)
+  assert.doesNotMatch(source, /return PUBLIC_DEMO_API_KEY/)
+  assert.match(source, /configuredKey !== PUBLIC_DEMO_API_KEY/)
 })
 
 test('trends view model maps stored audit API shape into UI sections', () => {
@@ -127,6 +167,73 @@ test('public intelligence listings exclude demo fixture reports by default', asy
   ]
 
   assert.deepEqual(filterPublicIntelligenceReports(reports).map((report) => report.id), ['report_live'])
+})
+
+test('public intelligence feeds sanitize stored reports before exposure', async () => {
+  const {
+    buildPublicReportTrends,
+    sanitizePublicIntelligenceReport,
+  } = await import('../lib/public-intelligence-reports.mjs')
+  const reportsRoute = await fs.readFile(new URL('../app/api/intelligence/reports/route.ts', import.meta.url), 'utf8')
+  const sensitiveReport = {
+    id: 'report_sensitive_public_summary',
+    version: '2',
+    verdict: 'caution',
+    riskScore: 48,
+    confidence: 'Medium',
+    summary: 'Candidate pasted recruiter.private@example.test and internal note SECRET_TOKEN_123.',
+    extractedClaims: {
+      company: 'ConfidentialCo',
+      role: 'Backend Engineer',
+      salary: 'USD 220000 per year',
+      location: 'Remote',
+      contactMethod: 'Email recruiter.private@example.test',
+      applicationPath: 'https://private.example.test/apply',
+    },
+    redFlags: ['Apply path mismatch', 'Private evidence marker SECRET_TOKEN_123'],
+    greenFlags: ['Some public evidence'],
+    evidence: [
+      {
+        source: 'Private OCR',
+        type: 'Screenshot OCR',
+        url: 'https://private.example.test/admin',
+        snippet: 'OCR_TOKEN=SECRET-PII-12345',
+      },
+    ],
+    alternatives: [{ title: 'Private alternative' }],
+    nextSteps: ['Email recruiter.private@example.test with private context'],
+    timestamp: '2026-05-04T00:00:00.000Z',
+    mode: 'live',
+    credentialMode: 'platform-env',
+    ownerId: 'user_sensitive',
+    apiKeyId: 'api_key_sensitive',
+    source: 'web',
+    publiclyListed: true,
+    intelligence: {
+      coverage: {},
+      companyIdentity: { status: 'matched', evidenceIds: [] },
+      localPresence: { status: 'missing', evidenceIds: [] },
+      marketBenchmark: { status: 'missing', evidenceIds: [] },
+      applyPath: { status: 'unknown', evidenceIds: [] },
+      signals: [],
+      scoreTrace: [],
+    },
+  }
+
+  const publicCard = sanitizePublicIntelligenceReport(sensitiveReport)
+  const trends = buildPublicReportTrends([sensitiveReport])
+  const serialized = JSON.stringify({ publicCard, recentReports: trends.recentReports })
+
+  for (const field of ['ownerId', 'apiKeyId', 'source', 'evidence', 'greenFlags', 'alternatives', 'nextSteps', 'credentialMode', 'mode']) {
+    assert.equal(Object.prototype.hasOwnProperty.call(publicCard, field), false)
+  }
+  assert.doesNotMatch(serialized, /OCR_TOKEN|SECRET-PII|api_key_sensitive|user_sensitive|private\.example\.test|recruiter\.private@example\.test/)
+  assert.equal(trends.recentReports.length, 1)
+  assert.equal(Object.prototype.hasOwnProperty.call(trends.recentReports[0], 'evidence'), false)
+  assert.match(reportsRoute, /checkRateLimit/)
+  assert.match(reportsRoute, /public_intelligence_reports:\$\{requestIp\(request\)\}/)
+  assert.match(reportsRoute, /Rate limit exceeded/)
+  assert.ok(reportsRoute.indexOf('checkRateLimit') < reportsRoute.indexOf('listReports(200)'), 'public reports rate limit should run before stored report enumeration')
 })
 
 test('trend intelligence collapses repeated demo-run signatures', async () => {
@@ -347,11 +454,18 @@ test('global scroll-to-top control is mobile and desktop friendly', async () => 
 test('chat and workflow status endpoints expose honest track readiness', async () => {
   const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
   const workflowRoute = await fs.readFile(new URL('../app/api/workflows/audit/route.ts', import.meta.url), 'utf8')
+  const workflow = await fs.readFile(new URL('../lib/workflows/audit-workflow.ts', import.meta.url), 'utf8')
+  const publicReportId = await fs.readFile(new URL('../lib/public-report-id.ts', import.meta.url), 'utf8')
 
   assert.match(chatRoute, /ChatSDK Agents/)
   assert.match(chatRoute, /\/api\/webhooks\/slack/)
   assert.match(workflowRoute, /Vercel Workflow/)
   assert.match(workflowRoute, /startAuditWorkflow/)
+  assert.match(workflowRoute, /validateWebhookUrl\(body\.webhook_url\)/)
+  assert.match(publicReportId, /globalThis\.crypto\.randomUUID\(\)/)
+  assert.match(workflow, /createPublicReportId\('report'\)/)
+  assert.doesNotMatch(workflow, /from '@\/lib\/db'/)
+  assert.doesNotMatch(workflow, /id:\s*`workflow_\$\{now\}`/)
 })
 
 test('chat verdict formatter strips accidental whitespace from report URLs', async () => {
@@ -410,7 +524,16 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   assert.doesNotMatch(bot, /enrichJobUrlInput/)
   assert.match(bot, /updateDiscordInteraction/)
   assert.match(bot, /\/api\/v1\/audit/)
+  assert.match(bot, /DISCORD_AUDIT_ERROR_DETAIL_LIMIT_BYTES/)
+  assert.match(bot, /DISCORD_AUDIT_SUCCESS_LIMIT_BYTES/)
+  assert.match(bot, /readDiscordAuditErrorDetails/)
+  assert.match(bot, /readDiscordAuditReport/)
+  assert.doesNotMatch(bot, /response\.text\(\)/)
+  assert.doesNotMatch(bot, /await response\.json\(\)/)
   assert.match(bot, /handleTelegramStartCommand/)
+  assert.match(bot, /timingSafeSecretEqual/)
+  assert.match(bot, /timingSafeEqual/)
+  assert.doesNotMatch(bot, /providedSecret !== expectedSecret/)
   assert.match(bot, /Welcome to HireProof/)
   assert.match(bot, /sendTelegramMessage/)
   assert.match(bot, /DEFAULT_PRODUCTION_BASE_URL = 'https:\/\/hireproof\.tech'/)
@@ -429,19 +552,24 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   assert.match(bot, /getChatConfigFingerprint/)
   assert.match(bot, /botFingerprint/)
   assert.match(bot, /platform: chatPlatform/)
-  assert.match(bot, /required: requiredEnvironmentByPlatform/)
+  assert.match(bot, /getPublicChatReadiness/)
+  assert.match(bot, /readiness: getPublicChatReadiness\(chatPlatform\)/)
   assert.match(bot, /mode: 'live'/)
   assert.match(bot, /source: 'chat'/)
   assert.match(bot, /publiclyListed: false/)
   assert.match(bot, /persist\?: boolean/)
   assert.match(bot, /metadata\?\.persist !== false/)
   assert.match(discordWebhook, /handleDiscordWebhook/)
+  assert.match(discordWebhook, /getPublicChatReadiness\('discord'\)/)
   assert.match(discordWebhook, /waitUntil/)
   assert.match(telegramWebhook, /handleTelegramWebhook/)
+  assert.match(telegramWebhook, /getPublicChatReadiness\('telegram'\)/)
   assert.match(telegramWebhook, /waitUntil/)
   assert.match(zernioWebhook, /handleZernioWebhook/)
+  assert.match(zernioWebhook, /getPublicChatReadiness\('whatsapp'\)/)
   assert.match(zernioWebhook, /waitUntil/)
   assert.match(chatRoute, /supportedPlatforms/)
+  assert.match(chatRoute, /getPublicChatReadiness\(\)/)
   assert.match(chatRoute, /'discord'/)
   assert.match(chatRoute, /'telegram'/)
   assert.match(chatRoute, /'whatsapp'/)
@@ -468,6 +596,8 @@ test('live chat proof script fails loudly but keeps controlled credential gates 
   assert.match(script, /collectValidationErrors/)
   assert.match(script, /coreStatus/)
   assert.match(script, /optionalStatus/)
+  assert.match(script, /publicSurfaces/)
+  assert.match(script, /value\.body\?\.readiness\?\.ready/)
   assert.match(script, /shared ChatSDK reply path did not return the expected high-risk production report/)
   assert.match(script, /live platform proof is still pending for/)
   assert.match(script, /HIREPROOF_PROOF_OUTPUT_PATH/)
@@ -494,8 +624,9 @@ test('ai gateway is the primary model provider when configured', async () => {
   assert.match(v1AuditRoute, /getHireProofModel/)
   assert.match(v1AuditRoute, /hasHireProofModelProvider/)
   assert.doesNotMatch(v1AuditRoute, /createOpenAI/)
-  assert.match(healthRoute, /getModelProviderStatus/)
-  assert.match(healthRoute, /hasHireProofModelProvider/)
+  assert.match(healthRoute, /readiness/)
+  assert.doesNotMatch(healthRoute, /hasHireProofModelProvider/)
+  assert.doesNotMatch(healthRoute, /getModelProviderStatus/)
 })
 
 test('workflow route uses the WDK package and next plugin is enabled', async () => {
@@ -513,12 +644,20 @@ test('workflow route uses the WDK package and next plugin is enabled', async () 
   assert.match(workflow, /sleep\(/)
   assert.match(route, /from 'workflow\/api'/)
   assert.match(route, /start\(/)
-  assert.match(route, /WORKFLOW_SECRET/)
-  assert.match(nextConfig, /withWorkflow/)
+  assert.match(route, /getWorkflowSecretStatus/)
+  assert.match(route, /readiness/)
+  assert.doesNotMatch(route, /credentialStatus/)
+  assert.doesNotMatch(route, /WORKFLOW_SECRET/)
   assert.match(route, /credential-misconfigured/)
-  assert.match(route, /workflowSecretStatus\.present && !workflowSecretStatus\.valid/)
-  assert.match(route, /workflowSecretStatus\.valid && request\.headers\.get\('x-workflow-secret'\) !== workflowSecret/)
+  assert.match(route, /if \(!workflowSecretStatus\.valid\) \{/)
+  assert.match(route, /Workflow protection must be configured before workflow runs can be accepted/)
+  assert.match(route, /validateWorkflowSecretHeader\(request\)/)
+  assert.doesNotMatch(route, /request\.headers\.get\('x-workflow-secret'\) !== workflowSecret/)
+  assert.doesNotMatch(route, /status: 'credential-required'[\s\S]*\}, \{ status: 202 \}/)
+  assert.ok(route.indexOf('if (!workflowSecretStatus.valid) {') < route.indexOf('readJsonRequest(request'))
   assert.match(workflowSecret, /paste_generated_workflow_secret_here/)
+  assert.match(workflowSecret, /timingSafeEqual/)
+  assert.match(workflowSecret, /validateWorkflowSecretHeader/)
   assert.match(workflowSecret, /WORKFLOW_SECRET_MIN_LENGTH = 32/)
   assert.match(workflowSecret, /WORKFLOW_SECRET_MIN_DISTINCT_CHARS = 8/)
   assert.match(platformReadiness, /workflowSecretStatus\.valid \? 'ready' : 'credential-gated'/)
@@ -528,6 +667,7 @@ test('workflow route uses the WDK package and next plugin is enabled', async () 
   assert.doesNotMatch(envExample, /WORKFLOW_SECRET=paste_generated_workflow_secret_here/)
   assert.doesNotMatch(deployment, /WORKFLOW_SECRET=your_workflow_secret/)
   assert.doesNotMatch(credentialsDocs, /WORKFLOW_SECRET=generated-random-hex/)
+  assert.match(nextConfig, /withWorkflow/)
 })
 
 test('next config stubs optional discord zlib dependency for server builds', async () => {
@@ -550,8 +690,12 @@ test('verified badge requires owned verified domains and public embed tokens', a
 
   assert.doesNotMatch(badgeRoute, /Boolean\(auth && domain\)/)
   assert.match(badgeRoute, /getVerifiedDomainByToken/)
+  assert.match(badgeRoute, /escapeHtml/)
+  assert.match(badgeRoute, /checkRateLimit\(`verified_badge_check:\$\{requestIp\(request\)\}:\$\{domainInput\.slice\(0, 120\)\.toLowerCase\(\)\}`/)
+  assert.match(badgeRoute, /Rate limit exceeded/)
   assert.match(statusRoute, /getVerifiedDomainByToken/)
   assert.match(scriptRoute, /application\/javascript/)
+  assert.match(scriptRoute, /rawDomain\.length <= 253/)
   assert.match(domainRoute, /createVerifiedDomain/)
   assert.match(verifyRoute, /verifyDomainOwnership/)
   assert.match(authStore, /VerifiedDomainRecord/)
@@ -560,11 +704,133 @@ test('verified badge requires owned verified domains and public embed tokens', a
   assert.match(authStore, /resolveTxt/)
 })
 
+test('developer portal mutation routes enforce same-origin csrf checks', async () => {
+  const routeFiles = [
+    '../app/api/developer/keys/route.ts',
+    '../app/api/developer/keys/[id]/route.ts',
+    '../app/api/developer/domains/route.ts',
+    '../app/api/developer/domains/verify/route.ts',
+    '../app/api/developer/verify-infrastructure/route.ts',
+    '../app/api/developer/webhook-test/route.ts',
+    '../app/api/developer/provider-credentials/route.ts',
+    '../app/api/developer/cursor/runs/route.ts',
+    '../app/api/developer/repair-reports/route.ts',
+  ]
+
+  for (const routeFile of routeFiles) {
+    const source = await fs.readFile(new URL(routeFile, import.meta.url), 'utf8')
+    assert.match(source, /validateMutationOrigin/, `${routeFile} should import or define validateMutationOrigin`)
+    assert.match(source, /const csrfError = validateMutationOrigin\((request|req)\)/, `${routeFile} should validate mutation origin`)
+    assert.match(source, /if \(csrfError\) return csrfError/, `${routeFile} should reject csrf failures`)
+  }
+})
+
+test('developer resource mutation routes rate-limit key and domain operations', async () => {
+  const keysRoute = await fs.readFile(new URL('../app/api/developer/keys/route.ts', import.meta.url), 'utf8')
+  const keyDeleteRoute = await fs.readFile(new URL('../app/api/developer/keys/[id]/route.ts', import.meta.url), 'utf8')
+  const domainsRoute = await fs.readFile(new URL('../app/api/developer/domains/route.ts', import.meta.url), 'utf8')
+  const domainVerifyRoute = await fs.readFile(new URL('../app/api/developer/domains/verify/route.ts', import.meta.url), 'utf8')
+
+  assert.match(keysRoute, /checkRateLimit/)
+  assert.match(keysRoute, /developer_keys:\$\{user\.id\}:\$\{requestIp\(request\)\}/)
+  assert.match(keysRoute, /Rate limit exceeded/)
+  assert.ok(keysRoute.indexOf('checkRateLimit') < keysRoute.indexOf('readJsonRequest(request'), 'key creation should rate-limit before body parsing')
+  assert.ok(keysRoute.indexOf('checkRateLimit') < keysRoute.indexOf('const { rawKey, record } = await issueApiKey'), 'key creation should rate-limit before minting an API key')
+  assert.match(keyDeleteRoute, /checkRateLimit/)
+  assert.match(keyDeleteRoute, /developer_key_revoke:\$\{user\.id\}:\$\{requestIp\(request\)\}/)
+  assert.match(keyDeleteRoute, /Rate limit exceeded/)
+  assert.ok(keyDeleteRoute.indexOf('checkRateLimit') < keyDeleteRoute.indexOf('const revoked = await revokeApiKey'), 'key deletion should rate-limit before revoking an API key')
+
+  assert.match(domainsRoute, /checkRateLimit/)
+  assert.match(domainsRoute, /developer_domains:\$\{user\.id\}:\$\{requestIp\(request\)\}/)
+  assert.match(domainsRoute, /Rate limit exceeded/)
+  assert.ok(domainsRoute.indexOf('checkRateLimit') < domainsRoute.indexOf('readJsonRequest(request'), 'domain creation should rate-limit before body parsing')
+  assert.ok(domainsRoute.indexOf('checkRateLimit') < domainsRoute.indexOf('const record = await createVerifiedDomain'), 'domain creation should rate-limit before storing a domain token')
+
+  assert.match(domainVerifyRoute, /checkRateLimit/)
+  assert.match(domainVerifyRoute, /developer_domain_verify:\$\{user\.id\}:\$\{requestIp\(request\)\}/)
+  assert.match(domainVerifyRoute, /Rate limit exceeded/)
+  assert.ok(domainVerifyRoute.indexOf('checkRateLimit') < domainVerifyRoute.indexOf('readJsonRequest(request'), 'domain verification should rate-limit before body parsing')
+  assert.ok(domainVerifyRoute.indexOf('checkRateLimit') < domainVerifyRoute.indexOf('const result = await verifyDomainOwnership'), 'domain verification should rate-limit before DNS checks')
+})
+
+test('developer resource mutation routes send no-store responses', async () => {
+  const routePaths = [
+    '../app/api/developer/keys/route.ts',
+    '../app/api/developer/keys/[id]/route.ts',
+    '../app/api/developer/domains/route.ts',
+    '../app/api/developer/domains/verify/route.ts',
+    '../app/api/developer/cursor/runs/route.ts',
+  ]
+
+  for (const routePath of routePaths) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /noStoreJson/, `${routePath} should use noStoreJson for developer resource responses`)
+    assert.doesNotMatch(source, /NextResponse\.json/, `${routePath} should not return cacheable developer resource JSON`)
+  }
+})
+
+test('authenticated account and operator read routes send no-store cache headers', async () => {
+  const jsonRoutes = [
+    '../app/api/auth/me/route.ts',
+    '../app/api/developer/keys/route.ts',
+    '../app/api/developer/domains/route.ts',
+    '../app/api/developer/provider-credentials/route.ts',
+    '../app/api/developer/usage/route.ts',
+    '../app/api/developer/analytics/route.ts',
+    '../app/api/developer/cursor/runs/route.ts',
+    '../app/api/pilot/requests/route.ts',
+  ]
+
+  for (const routePath of jsonRoutes) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /noStoreJson/, `${routePath} should use noStoreJson for authenticated JSON responses`)
+  }
+
+  for (const routePath of [
+    '../app/api/developer/analytics/export/route.ts',
+    '../app/api/pilot/requests/export/route.ts',
+  ]) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /Cache-Control['"]:\s*['"]no-store['"]/, `${routePath} should disable caching for operator CSV exports`)
+  }
+})
+
+test('dynamic platform readiness endpoints send no-store cache headers', async () => {
+  const routePaths = [
+    '../app/api/chat/hireproof/route.ts',
+    '../app/api/webhooks/slack/route.ts',
+    '../app/api/webhooks/discord/route.ts',
+    '../app/api/webhooks/telegram/route.ts',
+    '../app/api/webhooks/zernio/route.ts',
+    '../app/api/workflows/audit/route.ts',
+  ]
+
+  for (const routePath of routePaths) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /Cache-Control['"]:\s*['"]no-store['"]/, `${routePath} should not cache dynamic readiness state`)
+  }
+})
+
+test('protected agent JSON endpoints send no-store cache headers', async () => {
+  const routePaths = [
+    '../app/api/v1/audit/route.ts',
+    '../app/api/mcp/route.ts',
+  ]
+
+  for (const routePath of routePaths) {
+    const source = await fs.readFile(new URL(routePath, import.meta.url), 'utf8')
+    assert.match(source, /JSON_RESPONSE_HEADERS/, `${routePath} should centralize protected JSON response headers`)
+    assert.match(source, /Cache-Control['"]:\s*['"]no-store['"]/, `${routePath} should disable caching for protected agent responses`)
+  }
+})
+
 test('platform proof endpoint exposes credential-aware ChatSDK and WDK e2e state', async () => {
   const route = await fs.readFile(new URL('../app/api/integrations/proof/route.ts', import.meta.url), 'utf8')
   const readiness = await fs.readFile(new URL('../lib/platform-readiness.ts', import.meta.url), 'utf8')
 
-  assert.match(route, /getPlatformReadiness/)
+  assert.match(route, /getPublicPlatformReadiness/)
+  assert.doesNotMatch(route, /getPlatformReadiness\(\)/)
   assert.match(readiness, /SLACK_BOT_TOKEN/)
   assert.match(readiness, /SLACK_SIGNING_SECRET/)
   assert.match(readiness, /REDIS_URL/)
@@ -575,6 +841,8 @@ test('platform proof endpoint exposes credential-aware ChatSDK and WDK e2e state
   assert.match(readiness, /coreStatus/)
   assert.match(readiness, /optionalStatus/)
   assert.match(readiness, /requiredSurfaces/)
+  assert.match(readiness, /getPublicPlatformReadiness/)
+  assert.match(readiness, /publicSurfaces/)
   assert.doesNotMatch(readiness, /\[slack\.state,\s*discord\.state,\s*telegram\.state,\s*whatsapp\.state,\s*workflow\.state,\s*gateway\.state\]\.every/)
 })
 
@@ -718,6 +986,16 @@ test('audit APIs do not fail the response when report persistence fails', async 
   assert.doesNotMatch(db, /await redis\.set\(redisIndexKey, JSON\.stringify\(nextIndex\)\)/)
 })
 
+test('local report persistence does not globally evict stored permalinks', async () => {
+  const db = await fs.readFile(new URL('../lib/db.ts', import.meta.url), 'utf8')
+
+  assert.match(db, /MAX_REPORT_INDEX_ENTRIES/)
+  assert.match(db, /report permalinks remain retrievable by id/)
+  assert.doesNotMatch(db, /MAX_REPORTS/)
+  assert.doesNotMatch(db, /delete reports\[/)
+  assert.doesNotMatch(db, /Evict oldest reports/)
+})
+
 test('audit APIs enrich job URLs before claim extraction', async () => {
   const uiRoute = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
   const v1Route = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')
@@ -792,12 +1070,15 @@ test('screenshot audits are excluded from public explore and trends listings by 
   const omniDocs = await fs.readFile(new URL('../app/docs/omni-modal/page.tsx', import.meta.url), 'utf8')
 
   assert.match(uiRoute, /publiclyListed:\s*!demoMode && !validated\.image/)
-  assert.match(v1Route, /publiclyListed:\s*!validated\.image/)
+  assert.match(v1Route, /publiclyListed:\s*false/)
   assert.match(reportsRoute, /filterPublicIntelligenceReports/)
+  assert.match(reportsRoute, /sanitizePublicIntelligenceReport/)
   assert.match(db, /buildPublicReportTrends/)
   assert.match(publicReports, /publiclyListed === true/)
   assert.match(publicReports, /version === '2'/)
   assert.match(publicReports, /Boolean\(report\.intelligence\)/)
+  assert.match(publicReports, /sanitizePublicIntelligenceReport/)
+  assert.doesNotMatch(publicReports, /\.\.\.report,/)
   assert.match(omniDocs, /Google Vision OCR \+ Tesseract fallback/)
   assert.match(omniDocs, /excluded from Explore and Trends by default/)
 })
@@ -906,6 +1187,11 @@ test('feedback endpoint accepts structured reason metadata', async () => {
   const schemas = await fs.readFile(new URL('../lib/schemas.ts', import.meta.url), 'utf8')
   const resultScreen = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
 
+  assert.match(route, /validateMutationOrigin/)
+  assert.match(route, /const csrfError = validateMutationOrigin\(request\)/)
+  assert.match(route, /checkRateLimit\(`feedback_\$\{requestIp\(request\)\}_\$\{safeId\}`/)
+  assert.match(route, /isPublicReportId\(safeId\)/)
+  assert.doesNotMatch(route, /getReport\(id\)/)
   assert.match(route, /userFeedbackReason/)
   assert.match(route, /false_positive/)
   assert.match(route, /salary_wrong/)
@@ -1026,16 +1312,31 @@ test('pilot intake stores requests and exposes authenticated admin/export surfac
   const route = await fs.readFile(new URL('../app/api/pilot/requests/route.ts', import.meta.url), 'utf8')
   const exportRoute = await fs.readFile(new URL('../app/api/pilot/requests/export/route.ts', import.meta.url), 'utf8')
   const admin = await fs.readFile(new URL('../app/pilot/admin/pilot-admin-client.tsx', import.meta.url), 'utf8')
+  const envExample = await fs.readFile(new URL('../.env.example', import.meta.url), 'utf8')
+  const securityDocs = await fs.readFile(new URL('../docs/security.md', import.meta.url), 'utf8')
 
   assert.match(store, /createPilotRequest/)
   assert.match(store, /listPilotRequests/)
   assert.match(store, /updatePilotRequestStatus/)
   assert.match(store, /buildPilotRequestsCsv/)
+  assert.match(store, /export function isOperatorUser/)
+  assert.match(store, /HIREPROOF_ADMIN_EMAILS/)
+  assert.match(store, /HIREPROOF_PILOT_ADMIN_EMAILS/)
+  assert.match(envExample, /HIREPROOF_ADMIN_EMAILS=/)
+  assert.match(securityDocs, /Operator-Only Data and Agent Surfaces/)
   assert.match(intake, /fetch\('\/api\/pilot\/requests'/)
   assert.match(route, /validateMutationOrigin/)
+  assert.match(route, /checkRateLimit\(`pilot_request_submit:\$\{requestIp\(request\)\}`/)
+  assert.match(route, /const\s+PILOT_REQUEST_PAYLOAD_LIMIT_BYTES\s*=\s*65_536/)
+  assert.match(route, /readJsonRequest\(request,\s*PILOT_REQUEST_PAYLOAD_LIMIT_BYTES,\s*'Pilot request payload'\)/)
+  assert.match(route, /checkRateLimit\(`pilot_request_status:\$\{user\.id\}:\$\{requestIp\(request\)\}`/)
   assert.match(route, /getUserFromSessionToken/)
+  assert.match(route, /isOperatorUser\(user\)/)
+  assert.match(route, /Operator access required/)
   assert.match(route, /export async function PATCH/)
   assert.match(route, /pilot_request_status_updated/)
+  assert.match(exportRoute, /isOperatorUser\(user\)/)
+  assert.match(exportRoute, /Operator access required/)
   assert.match(exportRoute, /text\/csv/)
   assert.match(admin, /\/api\/pilot\/requests\/export/)
   assert.match(admin, /\/api\/developer\/analytics\/export/)
@@ -1054,13 +1355,84 @@ test('lightweight product analytics record demo, pilot, and case-study events', 
 
   assert.match(store, /recordProductEvent/)
   assert.match(store, /getProductAnalyticsSummary/)
+  assert.match(store, /HIREPROOF_ANALYTICS_OPERATOR_EMAILS/)
   assert.match(analyticsRoute, /validateMutationOrigin/)
+  assert.match(analyticsRoute, /checkRateLimit\(`analytics_events:\$\{requestIp\(request\)\}`/)
+  assert.match(analyticsRoute, /ANALYTICS_EVENT_PAYLOAD_LIMIT_BYTES = 16_384/)
+  assert.match(analyticsRoute, /readJsonRequest\(request,\s*ANALYTICS_EVENT_PAYLOAD_LIMIT_BYTES,\s*'Analytics event payload'\)/)
   assert.match(developerAnalytics, /getProductAnalyticsSummary/)
+  assert.match(developerAnalytics, /isOperatorUser\(user\)/)
+  assert.match(developerAnalytics, /Operator access required/)
   assert.match(analyticsExport, /buildProductEventsCsv/)
+  assert.match(analyticsExport, /isOperatorUser\(user\)/)
+  assert.match(analyticsExport, /Operator access required/)
   assert.match(analyticsExport, /text\/csv/)
   assert.match(tracker, /navigator\.sendBeacon/)
   assert.match(portfolio, /case_study_view/)
   assert.match(pilot, /pilot_open/)
   assert.match(audit, /demo_open/)
   assert.match(audit, /demo_click/)
+})
+
+test('Docker production defaults do not expose the public demo API key', async () => {
+  const compose = await fs.readFile(new URL('../docker-compose.yml', import.meta.url), 'utf8')
+  const packageJson = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const envExample = await fs.readFile(new URL('../.env.example', import.meta.url), 'utf8')
+  const readme = await fs.readFile(new URL('../README.md', import.meta.url), 'utf8')
+  const deployment = await fs.readFile(new URL('../DEPLOYMENT.md', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(compose, /AGENT_API_KEY:\s*\$\{AGENT_API_KEY:-hireproof_agent_demo_key\}/)
+  assert.match(compose, /AGENT_API_KEY:\s*\$\{AGENT_API_KEY:\?Set a private AGENT_API_KEY/)
+  assert.equal(compose.includes('REQUIRE_BYOK_FOR_LIVE_API: ${REQUIRE_BYOK_FOR_LIVE_API:-true}'), true)
+  assert.doesNotMatch(packageJson.scripts['docker:run'], /AGENT_API_KEY=hireproof_agent_demo_key/)
+  assert.match(packageJson.scripts['docker:run'], /--env AGENT_API_KEY/)
+  assert.match(envExample, /production\/Docker installs must set a private random value/)
+  assert.match(readme, /Docker and self-hosted production installs must set a private `AGENT_API_KEY`/)
+  assert.match(deployment, /Compose fails closed if it is missing/)
+})
+
+test('public demo API key cannot spend platform live provider credentials', async () => {
+  const authStore = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+  const auditRoute = await fs.readFile(new URL('../app/api/v1/audit/route.ts', import.meta.url), 'utf8')
+  const mcpRoute = await fs.readFile(new URL('../app/api/mcp/route.ts', import.meta.url), 'utf8')
+
+  assert.match(authStore, /PUBLIC_DEMO_API_KEY = 'hireproof_agent_demo_key'/)
+  assert.match(authStore, /configuredKey && configuredKey !== PUBLIC_DEMO_API_KEY/)
+  assert.doesNotMatch(authStore, /return PUBLIC_DEMO_API_KEY/)
+  assert.match(auditRoute, /let serpapiAvailable = hasSerpApiKey/)
+  assert.match(auditRoute, /let modelAvailable = hasHireProofModelProvider/)
+  assert.match(auditRoute, /liveCredentialsAvailable \? 'platform-env' : 'demo'/)
+  assert.doesNotMatch(mcpRoute, /publicDemoFallback/)
+  assert.match(mcpRoute, /checkRateLimit\(`mcp:api_key:\$\{apiAuth\.apiKeyId\}`/)
+  assert.doesNotMatch(mcpRoute, /checkRateLimit\(`mcp_\$\{apiKey\}`/)
+})
+
+test('audit agent MCP base URL does not trust inbound Host headers', async () => {
+  const source = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /function getTrustedInternalBaseUrl/)
+  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
+  assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)
+  assert.doesNotMatch(source, /`\$\{protocol\}:\/\/\$\{host\}`/)
+})
+
+test('workflow audit handoff base URL does not trust inbound request host', async () => {
+  const source = await fs.readFile(new URL('../app/api/workflows/audit/route.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /function getTrustedInternalBaseUrl/)
+  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
+  assert.doesNotMatch(source, /new URL\(request\.url\)\.origin/)
+  assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)
+})
+
+test('chat audit endpoint report URLs do not trust inbound request origin', async () => {
+  const source = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /function getTrustedInternalBaseUrl/)
+  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
+  assert.doesNotMatch(source, /new URL\(request\.url\)\.origin/)
+  assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)
 })

@@ -25,7 +25,7 @@
     "reviewWhen": "verdict != safe OR riskScore >= 40"
   },
   "notes": [
-    "Use hireproof_agent_demo_key for deterministic demo fixtures.",
+    "Set HIREPROOF_API_KEY to an account-issued or self-hosted API key.",
     "Use mode=live only when the target deployment or account has live provider credentials.",
     "For async delivery, add webhook_url to the JSON body and receive the completed AuditReport by signed POST callback."
   ]

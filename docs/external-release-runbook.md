@@ -42,7 +42,7 @@ Production smoke:
 $base = "https://hireproof.tech"
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
-Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType "application/json" -Headers @{"x-api-key"="hireproof_agent_demo_key"} -Body (@{
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType "application/json" -Headers @{"x-api-key"=$env:HIREPROOF_API_KEY} -Body (@{
   text = "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram."
   mode = "demo"
 } | ConvertTo-Json)
@@ -361,7 +361,7 @@ Owner steps:
    - `Audit job post`
    - `Audit job post async`
    - `Get API health`
-5. Run module tests with the demo API key.
+5. Run module tests with a configured API key.
 6. Capture app, connection, module, test output, async response, and health screenshots.
 7. Submit to Make review.
 

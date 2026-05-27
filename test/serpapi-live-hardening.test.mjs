@@ -26,9 +26,11 @@ async function loadSerpApiModule() {
     URLSearchParams,
     AbortController,
     DOMException,
+    TextEncoder,
+    TextDecoder,
     setTimeout,
     clearTimeout,
-    fetch: async () => ({ ok: true, json: async () => ({}) }),
+    fetch: async () => ({ ok: true, headers: { get: () => null }, text: async () => '{}' }),
   }
   context.module = { exports: context.exports }
 
@@ -58,6 +60,8 @@ async function loadSerpApiModuleWithFetch(fetchImpl) {
     URLSearchParams,
     AbortController,
     DOMException,
+    TextEncoder,
+    TextDecoder,
     setTimeout,
     clearTimeout,
     Date,
@@ -259,6 +263,124 @@ test('SerpApi apply-path mismatch remains for suspicious submitted forms when of
   assert.ok(evidence.some(item => /acme\.com/.test(item.snippet)))
 })
 
+test('SerpApi apply-path mismatch is not suppressed by spoofed trusted board hostnames', async () => {
+  const { buildEvidenceFromSerpApiResults } = await loadSerpApiModule()
+
+  const evidence = buildEvidenceFromSerpApiResults({
+    claims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'PHP 40,000 per month',
+      location: 'Manila',
+    },
+    web: {
+      organic_results: [
+        {
+          title: 'Acme Careers - Official Careers',
+          link: 'https://acme.com/careers/frontend-developer',
+          displayed_link: 'acme.com',
+          snippet: 'Official careers page for Acme frontend developer roles.',
+        },
+      ],
+      knowledge_graph: { title: 'Acme Careers', website: 'https://acme.com' },
+    },
+    jobs: {
+      jobs_results: [
+        {
+          title: 'Frontend Developer',
+          company_name: 'Acme Careers',
+          location: 'Manila',
+          via: 'LinkedIn',
+          apply_options: [{ title: 'Apply on Acme', link: 'https://acme.com/careers/frontend-developer' }],
+          related_links: [{ link: 'https://www.linkedin.com/jobs/view/123' }],
+        },
+      ],
+    },
+    applicationUrl: 'https://linkedin.com.attacker.test/acme-form',
+  })
+
+  assert.ok(evidence.some(item => item.type === 'Apply Path Mismatch'))
+  assert.ok(evidence.some(item => /linkedin\.com\.attacker\.test/.test(item.snippet)))
+  assert.ok(evidence.some(item => /acme\.com/.test(item.snippet)))
+})
+
+test('SerpApi apply-path mismatch is not suppressed by submitted official-domain substrings', async () => {
+  const { buildEvidenceFromSerpApiResults } = await loadSerpApiModule()
+
+  const evidence = buildEvidenceFromSerpApiResults({
+    claims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'PHP 40,000 per month',
+      location: 'Manila',
+    },
+    web: {
+      organic_results: [
+        {
+          title: 'Acme Careers - Official Careers',
+          link: 'https://acme.com/careers/frontend-developer',
+          displayed_link: 'acme.com',
+          snippet: 'Official careers page for Acme frontend developer roles.',
+        },
+      ],
+      knowledge_graph: { title: 'Acme Careers', website: 'https://acme.com' },
+    },
+    jobs: {
+      jobs_results: [
+        {
+          title: 'Frontend Developer',
+          company_name: 'Acme Careers',
+          location: 'Manila',
+          via: 'Acme Careers',
+          apply_options: [{ title: 'Apply on Acme', link: 'https://acme.com/careers/frontend-developer' }],
+        },
+      ],
+    },
+    applicationUrl: 'https://evilacme.com/acme-form',
+  })
+
+  assert.ok(evidence.some(item => item.type === 'Apply Path Mismatch'))
+  assert.ok(evidence.some(item => /evilacme\.com/.test(item.snippet)))
+})
+
+test('SerpApi apply-path mismatch requires exact official apply-link host boundaries', async () => {
+  const { buildEvidenceFromSerpApiResults } = await loadSerpApiModule()
+
+  const evidence = buildEvidenceFromSerpApiResults({
+    claims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'PHP 40,000 per month',
+      location: 'Manila',
+    },
+    web: {
+      organic_results: [
+        {
+          title: 'Acme Careers - Official Careers',
+          link: 'https://acme.com/careers/frontend-developer',
+          displayed_link: 'acme.com',
+          snippet: 'Official careers page for Acme frontend developer roles.',
+        },
+      ],
+      knowledge_graph: { title: 'Acme Careers', website: 'https://acme.com' },
+    },
+    jobs: {
+      jobs_results: [
+        {
+          title: 'Frontend Developer',
+          company_name: 'Acme Careers',
+          location: 'Manila',
+          via: 'Acme Careers',
+          apply_options: [{ title: 'Apply on Acme', link: 'https://acme.com.attacker.test/careers/frontend-developer' }],
+        },
+      ],
+    },
+    applicationUrl: 'https://fake-apply.example.com/acme-form',
+  })
+
+  assert.ok(evidence.every(item => item.type !== 'Apply Path Mismatch'))
+})
+
 test('smart SerpApi orchestration uses bounded deep searches before backfill', async () => {
   const source = await fs.readFile(new URL('../lib/serpapi.ts', import.meta.url), 'utf8')
 
@@ -273,9 +395,7 @@ test('SerpApi wrapper caches equivalent searches to save repeated credits', asyn
   let fetchCount = 0
   const { clearSerpApiResponseCache, getSerpApiResponseCacheStats, searchCompanyPresence } = await loadSerpApiModuleWithFetch(async () => {
     fetchCount += 1
-    return {
-      ok: true,
-      json: async () => ({
+    const body = {
         organic_results: [
           {
             title: 'Acme Careers - Official Careers',
@@ -284,7 +404,11 @@ test('SerpApi wrapper caches equivalent searches to save repeated credits', asyn
             snippet: 'Official careers page for Acme.',
           },
         ],
-      }),
+      }
+    return {
+      ok: true,
+      headers: { get: () => null },
+      text: async () => JSON.stringify(body),
     }
   })
 
@@ -303,9 +427,7 @@ test('smart investigation similarity cache reuses equivalent company role locati
   let fetchCount = 0
   const { clearSerpApiResponseCache, getSerpApiResponseCacheStats, runSmartSerpApiInvestigation } = await loadSerpApiModuleWithFetch(async () => {
     fetchCount += 1
-    return {
-      ok: true,
-      json: async () => ({
+    const body = {
         organic_results: [
           {
             title: 'Acme Careers - Official Careers',
@@ -314,7 +436,11 @@ test('smart investigation similarity cache reuses equivalent company role locati
             snippet: 'Official careers page for Acme.',
           },
         ],
-      }),
+      }
+    return {
+      ok: true,
+      headers: { get: () => null },
+      text: async () => JSON.stringify(body),
     }
   })
 
@@ -348,4 +474,47 @@ test('SerpApi source includes persistent redis cache hooks and quota telemetry',
   assert.match(source, /writePersistentSmartInvestigationCache/)
   assert.match(source, /creditsSaved/)
   assert.match(source, /similarityHits/)
+})
+
+test('SerpApi provider responses are bounded before JSON parsing', async () => {
+  const source = await fs.readFile(new URL('../lib/serpapi.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /SERPAPI_MAX_RESPONSE_BYTES/)
+  assert.match(source, /readSerpApiResponseJson/)
+  assert.match(source, /content-length/)
+  assert.match(source, /response\.body\?\.getReader/)
+  assert.doesNotMatch(source, /await response\.json\(\)/)
+})
+
+test('SerpApi provider cancels oversized streaming responses', async () => {
+  let cancelled = false
+  const { clearSerpApiResponseCache, searchCompanyPresence } = await loadSerpApiModuleWithFetch(async () => {
+    let reads = 0
+    return {
+      ok: true,
+      headers: { get: () => null },
+      body: {
+        getReader() {
+          return {
+            async read() {
+              reads += 1
+              if (reads === 1) return { done: false, value: new Uint8Array(1024 * 1024) }
+              if (reads === 2) return { done: false, value: new Uint8Array(1) }
+              return { done: true }
+            },
+            async cancel() {
+              cancelled = true
+            },
+            releaseLock() {},
+          }
+        },
+      },
+    }
+  })
+
+  clearSerpApiResponseCache()
+  const evidence = await searchCompanyPresence('Acme Careers', 'Frontend Developer', 'test-serpapi-key', 'Manila, Philippines')
+
+  assert.equal(evidence.length, 0)
+  assert.equal(cancelled, true)
 })

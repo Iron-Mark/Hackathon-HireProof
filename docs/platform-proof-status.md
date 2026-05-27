@@ -93,7 +93,7 @@ Production route checks were run against `https://hireproof.tech`.
 
 ### Audit API
 
-`POST /api/v1/audit` with the public demo key returned:
+`POST /api/v1/audit` with a configured API key and `mode=demo` returned:
 
 - Verdict: `high-risk`
 - Risk score: `92`

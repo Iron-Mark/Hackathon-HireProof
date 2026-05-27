@@ -21,7 +21,7 @@ export default function Page() {
         </p>
         <CodeBlock title="Request Header" code={`x-api-key: your_secret_api_key`} />
         <div className="rounded-lg border border-safe/20 bg-safe/5 px-4 py-3 text-xs font-bold text-safe">
-          The public demo key <code className="font-mono">hireproof_agent_demo_key</code> remains active for demo-mode testing. Post-hackathon live provider runs should use owner BYOK credentials.
+          Demo-mode testing still requires either an account-issued key or a private self-hosted <code className="font-mono">AGENT_API_KEY</code>; public shared keys are not accepted for protected endpoints.
         </div>
       </section>
 
@@ -62,9 +62,9 @@ export default function Page() {
           If you are running your own deployment, set your own fallback key in your environment file:
         </p>
         <CodeBlock title=".env.local" code={`# Required for headless API and MCP authentication
-AGENT_API_KEY=my_super_secret_key_here`} />
+AGENT_API_KEY=<paste generated 32-byte hex>`} />
         <p className="text-xs font-semibold text-muted">
-          If this variable is not set, the system defaults to <code className="font-mono bg-surface px-1 rounded">hireproof_agent_demo_key</code> — suitable for local development and deterministic demos only. Managed production usage should issue per-account keys and store live provider credentials through hosted BYOK.
+          If this variable is not set, only account-issued keys from the Developer Portal are accepted. Managed production usage should issue per-account keys and store live provider credentials through hosted BYOK.
         </p>
       </section>
 

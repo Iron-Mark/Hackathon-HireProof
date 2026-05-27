@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
-import { createChatReply, getChatCredentialStatus, type ChatPlatform } from '@/lib/hireproof-bot'
+import { createChatReply, getPublicChatReadiness, type ChatPlatform } from '@/lib/hireproof-bot'
 import { AuditRequestSchema } from '@/lib/schemas'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 
 const supportedPlatforms = ['slack', 'discord', 'telegram', 'whatsapp', 'local'] as const
 const CHAT_TEXT_LIMIT = 10_000
 const CHAT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
+
+function getTrustedInternalBaseUrl() {
+  return (process.env.APP_BASE_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
+}
 
 function normalizePlatform(platform: unknown): ChatPlatform {
   return supportedPlatforms.includes(platform as ChatPlatform) ? platform as ChatPlatform : 'local'
@@ -19,31 +23,29 @@ function optionalMetadataValue(value: unknown) {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ChatSDK Agents local test endpoint with multi-platform webhook wiring.',
-    platformWebhooks: {
-      slack: '/api/webhooks/slack',
-      discord: '/api/webhooks/discord',
-      telegram: '/api/webhooks/telegram',
-      whatsapp: '/api/webhooks/zernio',
+  return NextResponse.json(
+    {
+      status: 'ChatSDK Agents local test endpoint with multi-platform webhook wiring.',
+      platformWebhooks: {
+        slack: '/api/webhooks/slack',
+        discord: '/api/webhooks/discord',
+        telegram: '/api/webhooks/telegram',
+        whatsapp: '/api/webhooks/zernio',
+      },
+      supportedPlatforms,
+      readiness: getPublicChatReadiness(),
+      usage: {
+        method: 'POST',
+        body: { text: 'Suspicious job post text', platform: 'discord', channel: 'demo' },
+      },
     },
-    supportedPlatforms,
-    credentialStatus: getChatCredentialStatus(),
-    usage: {
-      method: 'POST',
-      body: { text: 'Suspicious job post text', platform: 'discord', channel: 'demo' },
-    },
-  })
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 }
 
 export async function POST(request: Request) {
   const originError = validateMutationOrigin(request)
   if (originError) return originError
-
-  const contentLength = Number(request.headers.get('content-length') || '0')
-  if (contentLength > CHAT_PAYLOAD_LIMIT_BYTES) {
-    return NextResponse.json({ error: 'Payload too large (max 5MB).' }, { status: 413 })
-  }
 
   const rateLimitResult = await checkRateLimit(`chat_hireproof:${requestIp(request)}`, { limit: 5, windowMs: 60000 })
   if (!rateLimitResult.success) {
@@ -54,7 +56,10 @@ export async function POST(request: Request) {
     )
   }
 
-  const body = await request.json().catch(() => null)
+  const parsedJson = await readJsonRequest(request, CHAT_PAYLOAD_LIMIT_BYTES, 'Chat payload')
+  if (!parsedJson.ok) return parsedJson.response
+
+  const body = parsedJson.value
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ error: 'Invalid request format.' }, { status: 400 })
   }
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Job post text must be 10,000 characters or fewer.' }, { status: 400 })
   }
 
-  const baseUrl = process.env.APP_BASE_URL || new URL(request.url).origin
+  const baseUrl = getTrustedInternalBaseUrl()
   const platform = normalizePlatform(body.platform)
   const { report, verdict } = await createChatReply(normalizedText, baseUrl, platform, {
     channelId: optionalMetadataValue(body.channel),

@@ -18,13 +18,16 @@ function emitDecision(decision) {
 }
 
 async function main() {
-  const input = await readStdinWithTimeout()
+  const readResult = await readStdinWithTimeout()
+  const input = readResult.input
 
-  if (evaluateCursorPretoolInput(input)) {
+  if (readResult.timedOut || readResult.error || evaluateCursorPretoolInput(input)) {
     emitDecision({
       permission: 'deny',
       user_message: 'Blocked dangerous agent action.',
-      agent_message: 'Use preview environments and non-destructive commands only.',
+      agent_message: readResult.timedOut || readResult.error
+        ? 'Pretool guard could not read the complete shell request; retry with complete hook input.'
+        : 'Use preview environments and non-destructive commands only.',
     })
     return
   }
@@ -36,27 +39,37 @@ async function main() {
 }
 
 function readStdinWithTimeout() {
-  if (process.stdin.isTTY) return Promise.resolve('')
+  if (process.stdin.isTTY) return Promise.resolve({ input: '', complete: true })
 
-  const timeoutMs = Number(process.env.CURSOR_PRETOOL_STDIN_TIMEOUT_MS || 250)
+  const configuredTimeoutMs = Number(process.env.CURSOR_PRETOOL_STDIN_TIMEOUT_MS || 250)
+  const timeoutMs = Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0
+    ? configuredTimeoutMs
+    : 250
 
   return new Promise((resolve) => {
     let input = ''
     let settled = false
-    const finish = () => {
+    const finish = (status) => {
       if (settled) return
       settled = true
       clearTimeout(timer)
-      resolve(input)
+      process.stdin.off('data', onData)
+      process.stdin.off('end', onEnd)
+      process.stdin.off('error', onError)
+      process.stdin.pause()
+      resolve({ input, ...status })
     }
-    const timer = setTimeout(finish, timeoutMs)
+    const onData = (chunk) => {
+      input += chunk
+    }
+    const onEnd = () => finish({ complete: true })
+    const onError = () => finish({ error: true })
+    const timer = setTimeout(() => finish({ timedOut: true }), timeoutMs)
 
     process.stdin.setEncoding('utf8')
-    process.stdin.on('data', (chunk) => {
-      input += chunk
-    })
-    process.stdin.on('end', finish)
-    process.stdin.on('error', finish)
+    process.stdin.on('data', onData)
+    process.stdin.on('end', onEnd)
+    process.stdin.on('error', onError)
     process.stdin.resume()
   })
 }

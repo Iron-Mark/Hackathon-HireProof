@@ -367,6 +367,7 @@ export function SiteHeader() {
             </button>
             <Link
               href="/audit"
+              aria-label="Audit"
               aria-current={isActive('/audit') ? 'page' : undefined}
               className="hireproof-focus hireproof-cta-primary ml-1 flex cursor-pointer min-h-[38px] items-center gap-2 rounded-full px-3 text-sm font-black shadow-sm sm:px-4"
             >

@@ -33,7 +33,7 @@ The extension is built for explicit user-triggered checks. It does not scan ever
 
 1. Open the extension popup.
 2. Keep the default API server URL or set a self-hosted HireProof URL.
-3. Use `hireproof_agent_demo_key` for demo-mode API checks.
+3. Use an account-issued or private self-hosted API key for demo-mode API checks.
 4. Click "Paste & Check" and submit this sample:
 
 ```text

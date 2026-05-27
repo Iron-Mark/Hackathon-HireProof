@@ -14,6 +14,19 @@ from zipfile import ZipFile
 from pdf2image import convert_from_path, pdfinfo_from_path
 
 TWIPS_PER_INCH: int = 1440
+MAX_DOCUMENT_XML_BYTES: int = 16 * 1024 * 1024
+MIN_PAGE_DIMENSION_INCHES: float = 1.0
+MAX_PAGE_DIMENSION_INCHES: float = 200.0
+MIN_RENDER_WIDTH_PX: int = 100
+MAX_RENDER_WIDTH_PX: int = 4000
+MIN_RENDER_HEIGHT_PX: int = 100
+MAX_RENDER_HEIGHT_PX: int = 5000
+MIN_DPI: int = 50
+MAX_DPI: int = 300
+MAX_PAGES: int = 20
+PDF_RENDER_TIMEOUT_SECONDS: int = 60
+LIBREOFFICE_TIMEOUT_SECONDS: int = 60
+PDF_RENDER_THREADS: int = 2
 
 
 def ensure_system_tools() -> None:
@@ -28,6 +41,50 @@ def ensure_system_tools() -> None:
         )
 
 
+def validate_render_options(
+    width: int,
+    height: int,
+    dpi: int | None,
+) -> tuple[int, int, int | None]:
+    if width < MIN_RENDER_WIDTH_PX or width > MAX_RENDER_WIDTH_PX:
+        raise RuntimeError(
+            f"Render width must be between {MIN_RENDER_WIDTH_PX} and {MAX_RENDER_WIDTH_PX} pixels."
+        )
+    if height < MIN_RENDER_HEIGHT_PX or height > MAX_RENDER_HEIGHT_PX:
+        raise RuntimeError(
+            f"Render height must be between {MIN_RENDER_HEIGHT_PX} and {MAX_RENDER_HEIGHT_PX} pixels."
+        )
+    if dpi is not None and (dpi < MIN_DPI or dpi > MAX_DPI):
+        raise RuntimeError(f"DPI must be between {MIN_DPI} and {MAX_DPI}.")
+    return width, height, dpi
+
+
+def clamp_dpi(dpi: int) -> int:
+    return max(MIN_DPI, min(MAX_DPI, dpi))
+
+
+def validate_page_dimensions(width_in: float, height_in: float, source: str) -> None:
+    if width_in < MIN_PAGE_DIMENSION_INCHES or height_in < MIN_PAGE_DIMENSION_INCHES:
+        raise RuntimeError(f"Invalid {source} page size: dimensions are too small.")
+    if width_in > MAX_PAGE_DIMENSION_INCHES or height_in > MAX_PAGE_DIMENSION_INCHES:
+        raise RuntimeError(f"Invalid {source} page size: dimensions are too large.")
+
+
+def read_zip_member_limited(zf: ZipFile, member_name: str, max_bytes: int) -> bytes:
+    try:
+        info = zf.getinfo(member_name)
+    except KeyError as exc:
+        raise RuntimeError(f"{member_name} not found in DOCX container.") from exc
+    if info.file_size > max_bytes:
+        raise RuntimeError(f"{member_name} is too large to parse safely.")
+
+    with zf.open(info, "r") as member:
+        data = member.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise RuntimeError(f"{member_name} is too large to parse safely.")
+    return data
+
+
 def calc_dpi_via_ooxml_docx(input_path: str, max_w_px: int, max_h_px: int) -> int:
     """Calculate DPI from OOXML `word/document.xml` page size (w:pgSz in twips).
 
@@ -36,7 +93,7 @@ def calc_dpi_via_ooxml_docx(input_path: str, max_w_px: int, max_h_px: int) -> in
     that fits within the target max pixel dimensions.
     """
     with ZipFile(input_path, "r") as zf:
-        xml = zf.read("word/document.xml")
+        xml = read_zip_member_limited(zf, "word/document.xml", MAX_DOCUMENT_XML_BYTES)
     root = ET.fromstring(xml)
     ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 
@@ -63,7 +120,8 @@ def calc_dpi_via_ooxml_docx(input_path: str, max_w_px: int, max_h_px: int) -> in
     height_in = int(h_twips_str) / TWIPS_PER_INCH
     if width_in <= 0 or height_in <= 0:
         raise RuntimeError("Invalid page size values in document.xml")
-    return round(min(max_w_px / width_in, max_h_px / height_in))
+    validate_page_dimensions(width_in, height_in, "DOCX")
+    return clamp_dpi(round(min(max_w_px / width_in, max_h_px / height_in)))
 
 
 def calc_dpi_via_pdf(input_path: str, max_w_px: int, max_h_px: int) -> int:
@@ -75,7 +133,7 @@ def calc_dpi_via_pdf(input_path: str, max_w_px: int, max_h_px: int) -> int:
             if not (pdf_path and exists(pdf_path)):
                 raise RuntimeError("Failed to convert input to PDF for DPI computation.")
 
-            info = pdfinfo_from_path(pdf_path)
+            info = pdfinfo_from_path(pdf_path, timeout=PDF_RENDER_TIMEOUT_SECONDS)
             size_val = info.get("Page size")
             if not size_val:
                 for k, v in info.items():
@@ -94,17 +152,22 @@ def calc_dpi_via_pdf(input_path: str, max_w_px: int, max_h_px: int) -> int:
             height_in = height_pts / 72.0
             if width_in <= 0 or height_in <= 0:
                 raise RuntimeError("Invalid PDF page size values.")
-            return round(min(max_w_px / width_in, max_h_px / height_in))
+            validate_page_dimensions(width_in, height_in, "PDF")
+            return clamp_dpi(round(min(max_w_px / width_in, max_h_px / height_in)))
 
 
 def run_cmd_no_check(cmd: list[str]) -> None:
-    subprocess.run(
-        cmd,
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        env=os.environ.copy(),
-    )
+    try:
+        subprocess.run(
+            cmd,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=os.environ.copy(),
+            timeout=LIBREOFFICE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("LibreOffice conversion timed out.") from exc
 
 
 def convert_to_pdf(
@@ -203,10 +266,13 @@ def rasterize(
                     pdf_path,
                     dpi=dpi,
                     fmt="png",
-                    thread_count=8,
+                    thread_count=PDF_RENDER_THREADS,
                     output_folder=out_dir,
                     paths_only=True,
                     output_file="page",
+                    first_page=1,
+                    last_page=MAX_PAGES,
+                    timeout=PDF_RENDER_TIMEOUT_SECONDS,
                 ),
             )
 
@@ -267,23 +333,24 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        ensure_system_tools()
-
         input_path = abspath(expanduser(args.input_path))
         out_dir = (
             abspath(expanduser(args.output_dir)) if args.output_dir else splitext(input_path)[0]
         )
+        width, height, cli_dpi = validate_render_options(args.width, args.height, args.dpi)
 
-        if args.dpi is not None:
-            dpi = int(args.dpi)
+        ensure_system_tools()
+
+        if cli_dpi is not None:
+            dpi = cli_dpi
         else:
             try:
                 if input_path.lower().endswith((".docx", ".docm", ".dotx", ".dotm")):
-                    dpi = calc_dpi_via_ooxml_docx(input_path, args.width, args.height)
+                    dpi = calc_dpi_via_ooxml_docx(input_path, width, height)
                 else:
                     raise RuntimeError("Skip OOXML DPI; not a DOCX container")
             except Exception:
-                dpi = calc_dpi_via_pdf(input_path, args.width, args.height)
+                dpi = calc_dpi_via_pdf(input_path, width, height)
 
         rasterize(input_path, out_dir, dpi)
         print("Pages rendered to " + out_dir)

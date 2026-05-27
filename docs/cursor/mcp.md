@@ -5,7 +5,7 @@ Cursor agents should **ground investigation tasks** on HireProof’s existing MC
 ## Endpoint
 
 - **URL:** `https://hireproof.tech/api/mcp` (or your self-hosted `APP_BASE_URL/api/mcp`)
-- **Auth:** `x-api-key` header (demo key for local docs only; use your own key in production)
+- **Auth:** `x-api-key` header with an account-issued or private self-hosted API key
 
 Public docs: [/docs/mcp](https://hireproof.tech/docs/mcp) · [/docs/skills](https://hireproof.tech/docs/skills)
 

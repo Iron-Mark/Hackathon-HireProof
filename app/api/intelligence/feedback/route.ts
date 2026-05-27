@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server'
-import { getReport, saveReport } from '@/lib/db'
+import { getReport, isPublicReportId, saveReport } from '@/lib/db'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+
+const FEEDBACK_PAYLOAD_LIMIT_BYTES = 8 * 1024
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}))
+    const csrfError = validateMutationOrigin(request)
+    if (csrfError) return csrfError
+
+    const parsedJson = await readJsonRequest(request, FEEDBACK_PAYLOAD_LIMIT_BYTES, 'Feedback payload')
+    if (!parsedJson.ok) return parsedJson.response
+
+    const body = parsedJson.value
     const id = body.id
     const feedback = body.feedback
     const reason = body.reason
@@ -21,6 +31,15 @@ export async function POST(request: Request) {
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Missing or invalid report ID' }, { status: 400 })
     }
+    const safeId = id.trim()
+    if (!isPublicReportId(safeId)) {
+      return NextResponse.json({ error: 'Missing or invalid report ID' }, { status: 400 })
+    }
+
+    const rateLimit = await checkRateLimit(`feedback_${requestIp(request)}_${safeId}`, { limit: 10, windowMs: 60000 })
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    }
 
     if (feedback !== 'helpful' && feedback !== 'incorrect') {
       return NextResponse.json({ error: 'Feedback must be either helpful or incorrect' }, { status: 400 })
@@ -29,7 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid feedback reason' }, { status: 400 })
     }
 
-    const report = await getReport(id)
+    const report = await getReport(safeId)
     
     if (!report) {
       return NextResponse.json({ error: 'Report not found' }, { status: 404 })

@@ -17,7 +17,6 @@ import {
   generateSummary,
 } from '@/lib/risk-scorer'
 import {
-  getSerpApiResponseCacheStats,
   getSerpApiOperationalStatus,
   isSerpApiConfigured,
   searchCompanyPresence,
@@ -27,8 +26,8 @@ import {
 } from '@/lib/serpapi'
 import { runEvidenceBroker } from '@/lib/evidence-broker'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { saveReport } from '@/lib/db'
-import { getHireProofModel, getModelProviderStatus, hasHireProofModelProvider } from '@/lib/ai-model'
+import { createPublicReportId, saveReport } from '@/lib/db'
+import { getHireProofModel, hasHireProofModelProvider } from '@/lib/ai-model'
 import { recoverObviousClaims } from '@/lib/claim-extraction.mjs'
 import { buildAuditReportV2 } from '@/lib/intelligence-v2'
 import {
@@ -39,8 +38,11 @@ import {
 import { enrichAuditRequestWithOcr } from '@/lib/ocr.mjs'
 import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { readBoundedInternalToolJson } from '@/lib/response-security'
 
 export const runtime = 'nodejs'
+const UI_AUDIT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
 
 function extractFirstMatch(text: string, patterns: RegExp[], fallback = 'Unknown') {
   for (const pattern of patterns) {
@@ -200,40 +202,17 @@ function publicLiveAuditEnabled() {
   return process.env.PUBLIC_LIVE_AUDIT_ENABLED !== 'false'
 }
 
+function getTrustedInternalBaseUrl() {
+  return (process.env.APP_BASE_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
+}
+
 export async function POST(request: Request) {
-  // 1. CSRF Protection: Mandatory check for all non-GET requests
-  const origin = request.headers.get('origin')
-  const referer = request.headers.get('referer')
-  
-  // If both origin and referer are missing, it's a suspicious request (except for direct API calls with keys, which we handle differently)
-  if (!origin && !referer) {
-    return new Response(JSON.stringify({ error: 'Insecure Request: Missing Origin/Referer' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
-  }
+  const csrfError = validateMutationOrigin(request)
+  if (csrfError) return csrfError
 
-  const source = origin || referer || ''
-  const isAllowed = ['localhost', 'vercel.app', 'hireproof'].some(o => source.includes(o)) || 
-                    (process.env.APP_BASE_URL && source.includes(process.env.APP_BASE_URL))
-  
-  if (!isAllowed) {
-    return new Response(JSON.stringify({ error: 'Cross-Origin Request Blocked' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
-  }
-
-  // 1.5. Payload Size Limit (5MB)
-  const contentLength = Number(request.headers.get('content-length') || '0')
-  if (contentLength > 5 * 1024 * 1024) {
-    return new Response(JSON.stringify({ error: 'Payload too large (max 5MB)' }), { 
-      status: 413, 
-      headers: { 'Content-Type': 'application/json' } 
-    })
-  }
-
-  // 2. Rate Limiting (UI Tier: 5 reqs / 1 min per IP)
-  // Protect against X-Forwarded-For spoofing by checking x-real-ip first, then safely splitting forwarded-for
-  const xForwardedFor = request.headers.get('x-forwarded-for')
-  const xRealIp = request.headers.get('x-real-ip')
-  const ip = xRealIp || (xForwardedFor ? xForwardedFor.split(',')[0].trim() : '127.0.0.1')
-  
-  const rateLimitResult = await checkRateLimit(ip, { limit: 5, windowMs: 60000 })
+  // 2. Rate Limiting (UI Tier: 5 reqs / 1 min per client)
+  const clientIdentifier = requestIp(request)
+  const rateLimitResult = await checkRateLimit(`audit_ui:${clientIdentifier}`, { limit: 5, windowMs: 60000 })
   if (!rateLimitResult.success) {
     const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
     return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
@@ -250,7 +229,9 @@ export async function POST(request: Request) {
   let ocrEvidence: EvidenceItem[] = []
   
   try {
-    const body = await request.json()
+    const parsedJson = await readJsonRequest(request, UI_AUDIT_PAYLOAD_LIMIT_BYTES, 'Audit payload')
+    if (!parsedJson.ok) return parsedJson.response
+    const body = parsedJson.value
     validated = AuditRequestSchema.parse(body)
     const { request: enrichedRequest, enrichment } = await enrichAuditRequestInput(validated)
     requestEnrichment = enrichment
@@ -280,7 +261,7 @@ export async function POST(request: Request) {
   const publicLiveEnabled = publicLiveAuditEnabled()
   const liveSearchRequested = publicLiveEnabled && validated.mode !== 'demo' && isSerpApiConfigured()
   const liveSearchAllowed = liveSearchRequested && serpApiOperationalStatus.status !== 'circuit-open'
-  const guardrail = await acquireLiveAuditGuardrail({ identifier: ip, channel: 'web', live: liveSearchAllowed })
+  const guardrail = await acquireLiveAuditGuardrail({ identifier: clientIdentifier, channel: 'web', live: liveSearchAllowed })
   if (!guardrail.allowed) {
     return new Response(JSON.stringify({
       error: guardrail.status.message || 'Live audit guardrail is active.',
@@ -347,9 +328,7 @@ export async function POST(request: Request) {
             if (!agentModelGuard.allowed) {
               sendEvent('log', { message: agentModelGuard.status.message || 'Daily model platform provider limit reached. Skipping agent loop and using evidence broker fallback.', phase: 'guardrail', status: 'blocked', label: 'Agent cost guard' })
             } else {
-              const host = request.headers.get('host') || 'localhost:3000'
-              const protocol = host.includes('localhost') ? 'http' : 'https'
-              const baseUrl = process.env.APP_BASE_URL || `${protocol}://${host}`
+              const baseUrl = getTrustedInternalBaseUrl()
               
               sendEvent('log', { message: `Orchestrating agent to investigate ${extractedClaims.company}...`, phase: 'company', status: 'active', label: 'Company check' })
               
@@ -370,10 +349,10 @@ export async function POST(request: Request) {
                     execute: async (args: { company_name: string; role?: string }) => {
                       const res = await fetch(`${baseUrl}/api/mcp`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY || 'hireproof_agent_demo_key' },
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY?.trim() || '' },
                         body: JSON.stringify({ method: 'tools/call', name: 'search_company', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   news_check: tool({
@@ -382,10 +361,10 @@ export async function POST(request: Request) {
                     execute: async (args: { company_name: string; keywords?: string[] }) => {
                       const res = await fetch(`${baseUrl}/api/mcp`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY || 'hireproof_agent_demo_key' },
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY?.trim() || '' },
                         body: JSON.stringify({ method: 'tools/call', name: 'news_check', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   jobs_compare: tool({
@@ -394,10 +373,10 @@ export async function POST(request: Request) {
                     execute: async (args: { role: string; location?: string; level?: string }) => {
                       const res = await fetch(`${baseUrl}/api/mcp`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY || 'hireproof_agent_demo_key' },
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY?.trim() || '' },
                         body: JSON.stringify({ method: 'tools/call', name: 'jobs_compare', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   local_presence: tool({
@@ -406,10 +385,10 @@ export async function POST(request: Request) {
                     execute: async (args: { company_name: string; location?: string }) => {
                       const res = await fetch(`${baseUrl}/api/mcp`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY || 'hireproof_agent_demo_key' },
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.AGENT_API_KEY?.trim() || '' },
                         body: JSON.stringify({ method: 'tools/call', name: 'local_presence', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any)
                 },
@@ -476,7 +455,7 @@ export async function POST(request: Request) {
         }
 
         const report: AuditReport = buildAuditReportV2({
-          id: `report_${Date.now()}`,
+          id: createPublicReportId('report'),
           extractedClaims,
           evidence,
           enrichmentEvidence: [...buildEnrichmentEvidence(requestEnrichment), ...ocrEvidence],
@@ -521,20 +500,15 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  const serpapi = isSerpApiConfigured()
-  const modelProvider = getModelProviderStatus()
-
   return new Response(
     JSON.stringify({
       status: 'ok',
-      mode: serpapi ? 'live' : 'demo',
-      apiKeys: {
-        serpapi,
-        ai_provider: hasHireProofModelProvider(),
+      mode: 'public',
+      capabilities: {
+        demoAudit: true,
+        liveEvidence: 'credential-gated',
       },
-      modelProvider,
-      serpapiCache: getSerpApiResponseCacheStats(),
     }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
+    { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
   )
 }

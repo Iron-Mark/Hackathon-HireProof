@@ -16,7 +16,7 @@ The app uses API key header auth:
 x-api-key: {{connection.apiKey}}
 ```
 
-Use `hireproof_agent_demo_key` for deterministic demo fixtures, or a real HireProof API key for live/provider-backed audits.
+Use an account-issued or private self-hosted HireProof API key. Deterministic demo fixtures still require an API key.
 
 ## Submission Boundary
 

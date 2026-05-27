@@ -42,6 +42,16 @@ export default function RateLimitingPage() {
               Keyed by API Key. Designed for automated pipelines, HR tools, and job-verification workflows.
             </p>
           </div>
+          <div className="rounded-3xl border border-border-soft bg-surface p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="rounded-full bg-caution/10 px-3 py-1 text-[10px] font-black text-caution uppercase tracking-widest">Public Intelligence</span>
+              <code className="text-[10px] text-muted">/api/intelligence/reports</code>
+            </div>
+            <div className="text-2xl font-black mb-1">60 req/min</div>
+            <p className="text-xs font-medium text-muted leading-relaxed">
+              Keyed by client IP address before stored public-report enumeration. The endpoint returns sanitized, public-listing data only.
+            </p>
+          </div>
         </div>
       </section>
 

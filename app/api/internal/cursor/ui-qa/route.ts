@@ -2,14 +2,27 @@ import { NextResponse } from 'next/server'
 import { getCursorPublicStatus, startCursorRun } from '@/lib/cursor/client'
 import { validateCursorJobSecret } from '@/lib/cursor/internal-auth'
 import { buildHireProofQaPrompt } from '@/lib/cursor/qa-prompt'
+import { resolveCursorQaBaseUrl } from '@/lib/cursor/qa-target'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { readJsonRequest, requestIp } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 
 const SYSTEM_OWNER_ID = 'system:cursor-ui-qa'
+const CURSOR_JOB_PAYLOAD_LIMIT_BYTES = 32 * 1024
+const jobName = 'ui-qa'
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit(`cursor_internal_job:${jobName}:${requestIp(request)}`, { limit: 10, windowMs: 60000 })
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 })
+  }
+
   const authError = validateCursorJobSecret(request)
   if (authError) return authError
+
+  const parsedJson = await readJsonRequest(request, CURSOR_JOB_PAYLOAD_LIMIT_BYTES, 'Cursor job payload')
+  if (!parsedJson.ok) return parsedJson.response
 
   const status = getCursorPublicStatus()
   if (!status.operational) {
@@ -20,14 +33,18 @@ export async function POST(request: Request) {
     }, { status: 503 })
   }
 
-  const body = await request.json().catch(() => ({}))
-  const baseUrl = typeof body.baseUrl === 'string' && body.baseUrl.trim()
-    ? body.baseUrl.trim()
-    : process.env.APP_BASE_URL || new URL(request.url).origin
+  const body = parsedJson.value
+  let baseUrl: string
+  try {
+    baseUrl = resolveCursorQaBaseUrl(body.baseUrl, request.url)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid Cursor QA target.'
+    return NextResponse.json({ error: message }, { status: 400 })
+  }
 
   const started = await startCursorRun({
     ownerId: SYSTEM_OWNER_ID,
-    kind: 'ui-qa',
+    kind: jobName,
     preset: 'qa-walkthrough',
     prompt: buildHireProofQaPrompt(baseUrl),
     runtime: 'cloud',

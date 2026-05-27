@@ -45,7 +45,7 @@ Production `GET /api/health` returned:
 - Model configured: `true`
 - AI Gateway provider: `true`
 
-Production `POST /api/v1/audit` with the public demo key returned:
+Production `POST /api/v1/audit` with an account-issued API key returned:
 
 - Verdict: `high-risk`
 - Risk score: `92`
@@ -113,7 +113,7 @@ Result:
 - optional provider adapters: `backend-gated`
 - Production health: `ok`
 - Shared ChatSDK reply path: returned `200`, verdict `high-risk`
-- Shared reply proof report: see the latest `sharedChatReplyPath.reportUrl` value in the JSON artifact.
+- Shared reply proof report: checked-in legacy timestamp permalink URLs are redacted; recapture this after UUID permalink hardening before using it as current evidence.
 
 Missing production provider credentials:
 
@@ -224,7 +224,7 @@ Do not claim Make marketplace approval or n8n directory/community verification u
 
 - [x] Production URL opens: `https://hireproof-sigma.vercel.app`.
 - [x] `GET /api/health` returns `ok`.
-- [x] `POST /api/v1/audit` with `hireproof_agent_demo_key` returns the High-Risk sample report.
+- [x] `POST /api/v1/audit` with a configured API key returns the High-Risk sample report.
 - [x] Production live-mode `/api/v1/audit` returns a credential-backed High-Risk report.
 - [x] `POST /api/workflows/audit` accepts a run or the archived accepted run is cited.
 - [x] Slack screenshot proof is included: `docs/demo/Screenshot 2026-04-30 024756.jpg`.
@@ -272,6 +272,6 @@ Avoid these claims until evidence exists:
 $base='https://hireproof-sigma.vercel.app'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
-Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'=$env:HIREPROOF_API_KEY} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
 ```
 

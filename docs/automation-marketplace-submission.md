@@ -16,7 +16,7 @@ Make Custom App review and any n8n directory/community verification remain separ
 ## Prerequisites
 
 - Production URL verified: `https://hireproof.tech`
-- Demo API key verified: `hireproof_agent_demo_key`
+- Demo API check verified with a configured API key and `mode=demo`
 - Source bundle generated: `public/downloads/hireproof-native-integrations.zip`
 - Validation passed:
 
@@ -56,7 +56,7 @@ Submission steps:
 
 1. Build or pack from the source folder.
 2. Install into a local n8n instance.
-3. Add the `HireProof API` credential with the demo API key and production base URL.
+3. Add the `HireProof API` credential with an account-issued API key and production base URL.
 4. Create one workflow with `HireProof > Run audit`.
 5. Create one workflow with `HireProof > Run async audit` and a public callback URL.
 6. Capture screenshots:
@@ -92,7 +92,7 @@ Submission steps:
    - `Audit job post`
    - `Audit job post async`
    - `Get API health`
-4. Run module tests with the demo API key.
+4. Run module tests with a configured API key.
 5. Capture screenshots:
    - App metadata.
    - Connection setup.

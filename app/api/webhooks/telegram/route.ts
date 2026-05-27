@@ -1,18 +1,33 @@
 import { after } from 'next/server'
-import { handleTelegramWebhook, getTelegramCredentialStatus } from '@/lib/hireproof-bot'
+import { handleTelegramWebhook, getPublicChatReadiness } from '@/lib/hireproof-bot'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { cloneRequestWithTextBody, readTextRequest, requestIp } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 
 const waitUntil = (task: Promise<unknown>) => after(() => task)
+const WEBHOOK_PAYLOAD_LIMIT_BYTES = 1024 * 1024
+const webhookName = 'telegram'
 
 export async function GET() {
-  return Response.json({
-    status: 'ChatSDK Agents Telegram webhook',
-    endpoint: '/api/webhooks/telegram',
-    credentialStatus: getTelegramCredentialStatus(),
-  })
+  return Response.json(
+    {
+      status: 'ChatSDK Agents Telegram webhook',
+      endpoint: '/api/webhooks/telegram',
+      readiness: getPublicChatReadiness('telegram'),
+    },
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 }
 
 export async function POST(request: Request) {
-  return handleTelegramWebhook(request, { waitUntil })
+  const rateLimit = await checkRateLimit(`webhook:${webhookName}:${requestIp(request)}`, { limit: 60, windowMs: 60000 })
+  if (!rateLimit.success) {
+    return Response.json({ error: 'Rate limit exceeded.' }, { status: 429 })
+  }
+
+  const parsedBody = await readTextRequest(request, WEBHOOK_PAYLOAD_LIMIT_BYTES, 'Webhook payload')
+  if (!parsedBody.ok) return parsedBody.response
+
+  return handleTelegramWebhook(cloneRequestWithTextBody(request, parsedBody.value), { waitUntil })
 }

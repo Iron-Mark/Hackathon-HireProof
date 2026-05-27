@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createVerifiedDomain, getUserFromSessionToken, listVerifiedDomains } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
+
+const DEVELOPER_PAYLOAD_LIMIT_BYTES = 16 * 1024
 
 async function requireUser() {
   const cookieStore = await cookies()
@@ -25,23 +29,37 @@ function publicDomain(record: Awaited<ReturnType<typeof createVerifiedDomain>>) 
 
 export async function GET() {
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   const records = await listVerifiedDomains(user.id)
-  return NextResponse.json({ domains: records.map(publicDomain) })
+  return noStoreJson({ domains: records.map(publicDomain) })
 }
 
 export async function POST(request: Request) {
+  const csrfError = validateMutationOrigin(request)
+  if (csrfError) return csrfError
+
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
-    return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
+    return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
   }
 
   try {
-    const body = await request.json().catch(() => ({}))
+    const rateLimit = await checkRateLimit(`developer_domains:${user.id}:${requestIp(request)}`, {
+      limit: 12,
+      windowMs: 60_000,
+    })
+    if (!rateLimit.success) {
+      return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+    }
+
+    const parsedJson = await readJsonRequest(request, DEVELOPER_PAYLOAD_LIMIT_BYTES, 'Developer payload')
+    if (!parsedJson.ok) return parsedJson.response
+
+    const body = parsedJson.value
     const record = await createVerifiedDomain(user.id, String(body.domain || ''))
-    return NextResponse.json({ domain: publicDomain(record) }, { status: 201 })
+    return noStoreJson({ domain: publicDomain(record) }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not add domain.' }, { status: 400 })
+    return noStoreJson({ error: error instanceof Error ? error.message : 'Could not add domain.' }, { status: 400 })
   }
 }

@@ -24,6 +24,8 @@ export interface HireProofConfig {
   maxRetries?: number
 }
 
+const MAX_API_RESPONSE_BYTES = 256 * 1024
+
 export interface AuditRequest {
   /** Job post text to investigate (required, 1-10000 chars) */
   text: string
@@ -121,6 +123,59 @@ function isRetryableStatus(status: number): boolean {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function apiResponseTooLargeError(status: number, requestId: string) {
+  return new HireProofError(`HireProof API response too large (max ${MAX_API_RESPONSE_BYTES} bytes).`, status, undefined, requestId)
+}
+
+async function readBoundedJsonResponse(res: Response, requestId: string): Promise<unknown> {
+  const contentLength = Number(res.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > MAX_API_RESPONSE_BYTES) {
+    throw apiResponseTooLargeError(res.status, requestId)
+  }
+
+  if (!res.body?.getReader) {
+    const text = await res.text()
+    if (new TextEncoder().encode(text).byteLength > MAX_API_RESPONSE_BYTES) {
+      throw apiResponseTooLargeError(res.status, requestId)
+    }
+    try {
+      return text ? JSON.parse(text) : {}
+    } catch {
+      return {}
+    }
+  }
+
+  const reader = res.body.getReader()
+  const chunks: Uint8Array[] = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (!value) continue
+    totalBytes += value.byteLength
+    if (totalBytes > MAX_API_RESPONSE_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      throw apiResponseTooLargeError(res.status, requestId)
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  try {
+    const text = new TextDecoder().decode(merged)
+    return text ? JSON.parse(text) : {}
+  } catch {
+    return {}
+  }
 }
 
 function validateText(text: unknown): asserts text is string {
@@ -275,14 +330,7 @@ export default class HireProof {
           signal: controller.signal,
         })
 
-        // Parse response safely
-        let json: unknown
-        try {
-          const text = await res.text()
-          json = text ? JSON.parse(text) : {}
-        } catch {
-          json = {}
-        }
+        const json = await readBoundedJsonResponse(res, requestId)
 
         if (!res.ok) {
           const errBody = json as Record<string, unknown>

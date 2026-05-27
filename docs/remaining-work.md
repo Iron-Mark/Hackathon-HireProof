@@ -37,10 +37,10 @@ HireProof is core production-ready on the stable production URL:
 
 ## Production Proof
 
-- `GET /api/health` returns `status: ok`, Redis storage, live search, model, AI Gateway, and OpenAI-compatible fallback ready.
+- `GET /api/health` returns `status: ok`, public readiness, and public cost-posture flags only. Detailed provider readiness stays in authenticated developer surfaces.
 - `POST /api/v1/audit` with `mode=live` now smoke-proves the SerpApi/model path on production with clean Canva claim extraction and six live evidence items.
 - `GET /api/integrations/proof` returns `status: ready` / `coreStatus: ready` when Slack, Workflow, and AI Gateway are ready. Discord and Telegram now report `ready`; Optional provider adapters remain credential-gated until enabled.
-- `POST /api/v1/audit` with the public demo key returns a High-Risk demo report with score `92`.
+- `POST /api/v1/audit` with a configured API key and `mode=demo` returns a High-Risk demo report with score `92`.
 - `POST /api/audit` SSE returns a result event for the High-Risk demo.
 - `POST /api/chat/hireproof` returns a formatted ChatSDK verdict.
 - Vercel production 500-log check after the final smoke returned no new logs.
@@ -74,6 +74,6 @@ pnpm integrations:package
 $base='https://hireproof.tech'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
-Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'=$env:HIREPROOF_API_KEY} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
 ```
 

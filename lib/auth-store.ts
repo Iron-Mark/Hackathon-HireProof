@@ -122,8 +122,29 @@ export interface OwnerProviderCredentials {
 
 const dataDir = path.join(process.cwd(), 'data')
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+const SECRET_MIN_LENGTH = 32
+const SECRET_MIN_DISTINCT_CHARS = 8
 const MISSING_USER_DUMMY_PASSWORD_HASH =
   'scrypt:hireproof_dummy_salt_2026:ec273b0a4be18a6e793b8d42789329e674ea569631e1bd642b7a199b6c93090ddffa2e0d9d42b9574d75376771b0b9755d7cdfa2e3a2cfbf4673ade268a57402'
+const PUBLIC_PLACEHOLDER_SECRETS = new Set([
+  'paste_private_agent_api_key_here',
+  'paste_generated_agent_api_key_here',
+  'paste_generated_private_hex_key_here',
+  '<paste generated 32-byte hex>',
+  'paste_generated_session_secret_here',
+  'paste_generated_byok_encryption_key_here',
+  'generated-random-hex',
+  'replace_with_private_random_key',
+  'my_super_secret_key_here',
+  'your_api_key',
+  'your_secret_api_key',
+  'changeme',
+  'change-me',
+  'secret',
+  'password',
+  'hireproof_dev_session_secret',
+  'hireproof_dev_byok_encryption_secret',
+])
 
 let globalRedis: Redis | null = null
 let writeLock: Promise<void> = Promise.resolve()
@@ -142,15 +163,41 @@ function getRedis() {
   return globalRedis
 }
 
+function isWeakSharedSecret(value: string) {
+  const secret = value.trim()
+  if (!secret) return true
+  if (PUBLIC_PLACEHOLDER_SECRETS.has(secret.toLowerCase())) return true
+  if (secret.length < SECRET_MIN_LENGTH) return true
+  return new Set(secret).size < SECRET_MIN_DISTINCT_CHARS
+}
+
+function requireStrongSharedSecret(value: string, name: string) {
+  if (isWeakSharedSecret(value)) {
+    throw new Error(`${name} must be a private high-entropy value of at least ${SECRET_MIN_LENGTH} characters.`)
+  }
+  return value
+}
+
+function timingSafeStringEqual(left: string, right: string) {
+  const leftDigest = crypto.createHash('sha256').update(left).digest()
+  const rightDigest = crypto.createHash('sha256').update(right).digest()
+  return crypto.timingSafeEqual(leftDigest, rightDigest)
+}
+
 function sessionSecret() {
-  return process.env.SESSION_SECRET || process.env.AGENT_API_KEY || 'hireproof_dev_session_secret'
+  const configured = process.env.SESSION_SECRET?.trim()
+  if (configured) return requireStrongSharedSecret(configured, 'SESSION_SECRET')
+  if (process.env.NODE_ENV === 'production') throw new Error('SESSION_SECRET is required for session authentication.')
+  return process.env.AGENT_API_KEY || 'hireproof_dev_session_secret'
 }
 
 function byokEncryptionSecret() {
   const configured = process.env.BYOK_ENCRYPTION_KEY?.trim()
-  if (configured) return configured
+  if (configured) return requireStrongSharedSecret(configured, 'BYOK_ENCRYPTION_KEY')
   if (process.env.NODE_ENV === 'production') throw new Error('BYOK_ENCRYPTION_KEY is required for hosted credential storage.')
-  return process.env.SESSION_SECRET || process.env.AGENT_API_KEY || 'hireproof_dev_byok_encryption_secret'
+  const fallback = process.env.SESSION_SECRET?.trim() || process.env.AGENT_API_KEY?.trim()
+  if (fallback && !isWeakSharedSecret(fallback)) return fallback
+  return 'hireproof_dev_byok_encryption_secret'
 }
 
 function normalizeProvider(provider: string): ProviderCredentialKind {
@@ -257,6 +304,27 @@ export async function authenticateUser(email: string, password: string, options:
   return publicUser(user)
 }
 
+function configuredOperatorEmails() {
+  return new Set(
+    [
+      process.env.HIREPROOF_ADMIN_EMAILS,
+      process.env.HIREPROOF_ANALYTICS_OPERATOR_EMAILS,
+      process.env.HIREPROOF_PILOT_ADMIN_EMAILS,
+      process.env.HIREPROOF_REPAIR_OPERATOR_EMAILS,
+      process.env.HIREPROOF_CURSOR_OPERATOR_EMAILS,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .flatMap((value) => value.split(','))
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  )
+}
+
+export function isOperatorUser(user?: Pick<PublicUser, 'email'> | null) {
+  const email = String(user?.email || '').trim().toLowerCase()
+  return Boolean(email && configuredOperatorEmails().has(email))
+}
+
 export async function getUserById(id: string) {
   const users = await readJson<Record<string, UserAccount>>('users', {})
   const user = users[id]
@@ -306,16 +374,32 @@ export async function revokeApiKey(ownerId: string, keyId: string) {
   return true
 }
 
+export const PUBLIC_DEMO_API_KEY = 'hireproof_agent_demo_key'
+
+export function isPublicDemoApiKey(rawKey?: string | null) {
+  return rawKey === PUBLIC_DEMO_API_KEY
+}
+
+function getFallbackApiKey() {
+  const configuredKey = process.env.AGENT_API_KEY?.trim()
+  if (configuredKey && configuredKey !== PUBLIC_DEMO_API_KEY && !isWeakSharedSecret(configuredKey)) return configuredKey
+  return null
+}
+
+function storedApiKeyHashMatches(key: ApiKeyRecord, keyHash: string) {
+  return key.keyHash.length === keyHash.length && timingSafeStringEqual(key.keyHash, keyHash)
+}
+
 export async function authenticateApiKey(rawKey: string): Promise<AuthenticatedApiKey | null> {
-  const fallbackKey = process.env.AGENT_API_KEY || 'hireproof_agent_demo_key'
-  if (rawKey === fallbackKey) {
+  const fallbackKey = getFallbackApiKey()
+  if (fallbackKey && timingSafeStringEqual(rawKey, fallbackKey)) {
     return {
-      ownerId: 'demo',
-      apiKeyId: 'env_demo_key',
+      ownerId: 'env',
+      apiKeyId: 'env_api_key',
       key: {
-        id: 'env_demo_key',
-        ownerId: 'demo',
-        name: 'Environment Demo Key',
+        id: 'env_api_key',
+        ownerId: 'env',
+        name: 'Environment API Key',
         keyHash: hashApiKey(rawKey),
         lastFour: rawKey.slice(-4),
         createdAt: new Date(0).toISOString(),
@@ -329,7 +413,7 @@ export async function authenticateApiKey(rawKey: string): Promise<AuthenticatedA
 
   const keyHash = hashApiKey(rawKey)
   const keys = await readJson<Record<string, ApiKeyRecord>>('api-keys', {})
-  const found = Object.values(keys).find((key) => key.keyHash === keyHash && !key.revokedAt)
+  const found = Object.values(keys).find((key) => storedApiKeyHashMatches(key, keyHash) && !key.revokedAt)
   if (!found) return null
 
   keys[found.id] = { ...found, lastUsedAt: new Date().toISOString() }
@@ -655,7 +739,7 @@ export async function getVerifiedDomainByToken(domainInput: string, publicToken:
   }
 
   const domains = await readJson<Record<string, VerifiedDomainRecord>>('verified-domains', {})
-  return Object.values(domains).find((record) => record.domain === domain && record.publicToken === publicToken) || null
+  return Object.values(domains).find((record) => record.domain === domain && timingSafeStringEqual(record.publicToken, publicToken)) || null
 }
 
 export async function getVerifiedDomainForOwner(ownerId: string, domainInput: string) {

@@ -1,47 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { request as httpRequest } from 'node:http'
-import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-
-const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
-
-function checkServer() {
-  return new Promise((resolve) => {
-    const req = httpRequest(`${BASE_URL}/audit`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
-    })
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => {
-      req.destroy()
-      resolve(false)
-    })
-    req.end()
-  })
-}
-
-async function ensureServer() {
-  if (await checkServer()) return null
-
-  const child = spawn('npm', ['run', 'dev'], {
-    cwd: new URL('..', import.meta.url),
-    shell: true,
-    stdio: 'ignore',
-  })
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await delay(1000)
-    if (await checkServer()) return child
-  }
-
-  child.kill()
-  throw new Error(`Timed out waiting for ${BASE_URL}`)
-}
+import { BASE_URL, ensureE2eServer } from './helpers/e2e-server.mjs'
 
 test('audit form paste button reads clipboard text into the job post field', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/audit')
   const browser = await chromium.launch()
 
   try {
@@ -74,12 +37,12 @@ test('audit form paste button reads clipboard text into the job post field', { t
     assert.equal(await page.getByTestId('job-input-url').inputValue(), 'https://linkedin.com/jobs/view/clipboard-role')
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })
 
 test('audit form paste button reads clipboard images into the screenshot preview', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/audit')
   const browser = await chromium.launch()
 
   try {
@@ -115,12 +78,12 @@ test('audit form paste button reads clipboard images into the screenshot preview
     assert.equal(await page.getByAltText('Uploaded screenshot').isVisible(), true)
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })
 
 test('audit page accepts screenshot files dropped anywhere on the page', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/audit')
   const browser = await chromium.launch()
 
   try {
@@ -172,6 +135,6 @@ test('audit page accepts screenshot files dropped anywhere on the page', { timeo
     assert.equal(await page.getByAltText('Uploaded screenshot').isVisible(), true)
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })

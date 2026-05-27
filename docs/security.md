@@ -26,6 +26,15 @@ API key verification utilizes `crypto.timingSafeEqual()`. This ensures that key 
 ### 🔗 Webhook HMAC Signing
 All outgoing webhooks are cryptographically signed using `HMAC-SHA256` with the user's `AGENT_API_KEY`. This allows third-party integrators to verify that the payload originated from HireProof and hasn't been tampered with in transit.
 
+### 🔐 Secret Quality Gates
+Configured `SESSION_SECRET`, `BYOK_ENCRYPTION_KEY`, and self-hosted `AGENT_API_KEY` fallback values must be private high-entropy values. Public placeholders, short values, low-diversity strings, and known demo defaults are rejected instead of silently protecting sessions, stored BYOK credentials, or protected API surfaces.
+
+### 🧑‍💼 Operator-Only Data and Agent Surfaces
+Pilot request admin/list/export routes, product analytics summary/export routes, and platform-backed Cursor runs require a session whose email is listed in `HIREPROOF_ADMIN_EMAILS` or the more specific operator allowlists. A normal registered user can submit a pilot request, but cannot read other submitters' emails, workflows, analytics exports, or spend platform Cursor agent capacity. Cursor QA targets are limited to configured app/Vercel origins, explicitly configured `HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS`, or local loopback during development.
+
+### 📬 Chat Platform Webhook Bounds
+Slack, Discord, Telegram, and WhatsApp/Zernio webhook routes reject payloads above 1MB before adapter dispatch. Discord interaction requests must also carry a fresh signed timestamp, limiting replay and oversized-body abuse before command work starts.
+
 ### 🕵️ SSRF Protection (Deep IP Verification)
 The headless API implements multi-layer SSRF protection for outgoing webhooks:
 - **Hostname Blacklisting:** Blocks literal requests to `localhost`, `127.0.0.1`, and `.local` domains.
@@ -35,7 +44,11 @@ The headless API implements multi-layer SSRF protection for outgoing webhooks:
 We implement a multi-layer rate limiting strategy to protect against "Denial of Wallet" and credential stuffing attacks.
 - **Enterprise Layer (Upstash Redis):** If configured, HireProof uses distributed sliding-window rate limiting via Upstash Redis. This ensures that limits are synchronized across all serverless edge instances, providing global protection.
 - **Portability Layer (In-Memory):** If Redis is not configured, the app gracefully degrades to an in-memory token bucket. This maintains the "zero-cost" portability model for local developers while still providing per-instance protection.
+- **Auth Throttling:** Login and registration use per-email buckets plus client-identity buckets. Forwarding headers such as `X-Real-IP` and `X-Forwarded-For` are ignored unless `TRUST_PROXY_CLIENT_IP_HEADERS=true` is set behind a proxy that strips or overwrites client-supplied values.
 - **Demo Account Gate:** The shared judge demo account can only authenticate through `/api/auth/demo-login`, receives the demo session lifetime, and is blocked from developer resource mutations such as API keys, provider credentials, verified domains, repair jobs, and Cursor runs.
+- **Public Status Redaction:** `/api/health`, `/api/audit`, `/api/integrations/proof`, `/api/chat/hireproof`, `/api/workflows/audit`, and chat webhook metadata responses expose coarse readiness only. Per-secret presence, provider cache statistics, detailed cost-guard limits, and model-provider internals are available from authenticated developer usage instead of public status routes.
+- **Cursor Automation Gate:** Cursor automation routes require authenticated developer sessions or the internal `x-cursor-job-secret`; the internal secret is compared in constant time and JSON payloads are capped before run creation.
+- **Request Body Bounds:** JSON mutation routes reject oversized bodies before parsing. Auth, feedback, badge, developer, workflow, MCP, and headless audit routes use explicit route-level byte caps matched to the expected payload size. Public and agent-facing JSON routes count streamed request bytes before JSON parsing so missing or chunked `Content-Length` headers cannot bypass the cap.
 
 ---
 
@@ -54,7 +67,13 @@ We implement a top-level `middleware.ts` that filters all incoming traffic befor
 - **Anti-Sniffing:** Enforces `X-Content-Type-Options: nosniff` globally.
 
 ### 🛡️ CSRF Mandatory Origin Verification
-Our standard audit API enforces a mandatory `Origin` or `Referer` check for all non-GET requests. If both headers are missing or originate from an untrusted source, the request is rejected with a `403 Forbidden`, neutralizing Cross-Site Request Forgery even in older or misconfigured browsers.
+Our standard audit API enforces exact `Origin` or `Referer` validation for all non-GET requests. Requests must come from the current app origin or the configured `APP_BASE_URL`; missing, malformed, or substring-lookalike origins are rejected with a `403 Forbidden`, neutralizing Cross-Site Request Forgery even in older or misconfigured browsers.
+
+### 📦 Bounded Evidence Provider Responses
+Live audit evidence providers use strict time and response-size budgets before parsing third-party JSON. Certificate Transparency, RDAP, DNS, threat-intel, URL-intelligence, and SerpApi responses are capped before parsing so large outbound provider results cannot force unbounded buffering or JSON parsing during an audit. Invalid provider credential checks cancel provider error bodies instead of buffering arbitrary upstream responses.
+
+### 📈 Public Trend Cost Gate
+Public trends use stored audit aggregates by default. SerpApi-backed external trend signals run only when `PUBLIC_TRENDS_EXTERNAL_SIGNALS_ENABLED=true`, pass the SerpApi cost guard, and pass a per-source-IP public trends rate limit before any provider request is made.
 
 ---
 
@@ -86,6 +105,7 @@ Chat report IDs are generated using `crypto.randomUUID()`. With 128-bit entropy,
 - **URL Protocols:** All AI-generated links are passed through a protocol validator that strictly allows `http:` and `https:`, blocking `javascript:` URI attacks.
 - **DOM Isolation:** The Chrome Extension uses `textContent` instead of `innerHTML` for all AI-provided flags, ensuring the browser treats the output as non-executable text nodes.
 - **MIME Blacklisting:** File uploads are strictly validated for raster image MIME types (`jpeg`, `png`, `webp`), blocking malicious SVG XSS and binary payload drops.
+- **Badge Embed Escaping:** The verified badge HTML escapes rendered labels/domains, sets `nosniff`, and the public script/status endpoints cap reflected query parameters before embedding or returning them. Public badge checks and status lookups are rate-limited by source identity.
 
 ---
 

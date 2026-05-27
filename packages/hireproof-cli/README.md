@@ -157,7 +157,7 @@ The rich layout uses HireProof's brand green accent for terminal headings and re
 
 ## Local Report History
 
-The TUI saves compact report summaries only. It does not store API keys or the full pasted recruiter text by default.
+The TUI saves compact report summaries only. It does not store API keys or the full pasted recruiter text by default. Saved text fields redact common emails, phone numbers, URLs, and passcodes, and evidence history keeps source/type labels instead of raw snippets. Where supported by the OS, the config directory is kept at `0700` and the history file at `0600`.
 
 Path:
 
@@ -175,20 +175,25 @@ hireproof health
 
 ```powershell
 hireproof config set baseUrl https://hireproof.tech
-hireproof config set apiKey hireproof_agent_demo_key
+hireproof config set apiKey <your-account-api-key>
 hireproof config list
+hireproof config get apiKey
 ```
+
+`config list` and `config get apiKey` show whether the key is configured but redact the stored API key value.
 
 ## Options
 
 Shared:
 
 - `--base-url <url>`: HireProof server URL. Defaults to config, `HIREPROOF_URL`, or `https://hireproof.tech`.
-- `--api-key <key>`: API key. Defaults to config, `HIREPROOF_API_KEY`, or the public demo key.
+- `--api-key <key>`: API key. Defaults to config or `HIREPROOF_API_KEY`.
 - `--json`: Print raw JSON where supported.
 - `--plain`: Print compact non-boxed text where supported.
 - `--no-color`: Disable ANSI color in rich output.
 - `--verbose`: Show more detail in human output.
+
+The CLI rejects API responses larger than 256 KB before JSON parsing. Normal HireProof reports are compact; larger responses are treated as failed upstream responses.
 
 Audit:
 

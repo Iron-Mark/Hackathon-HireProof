@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 const DEFAULT_BASE_URL = 'https://hireproof.tech'
-const DEFAULT_API_KEY = 'hireproof_agent_demo_key'
+const MAX_API_RESPONSE_BYTES = 256 * 1024
 const CONFIG_KEYS = new Set(['baseUrl', 'apiKey'])
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/g
 
@@ -41,7 +41,7 @@ Audit options:
 
 Shared options:
   --base-url <url>       Defaults to config, HIREPROOF_URL, or ${DEFAULT_BASE_URL}
-  --api-key <key>        Defaults to config, HIREPROOF_API_KEY, or public demo key
+  --api-key <key>        Defaults to config or HIREPROOF_API_KEY
   --help                 Show help
 `)
 }
@@ -99,6 +99,10 @@ async function writeConfig(config) {
   await writeFile(file, `${JSON.stringify(config, null, 2)}\n`)
 }
 
+function displayConfigValue(key, value) {
+  return key === 'apiKey' && value ? '[redacted]' : value
+}
+
 function normalizeBaseUrl(value) {
   return String(value || DEFAULT_BASE_URL).replace(/\/+$/, '')
 }
@@ -107,7 +111,7 @@ async function getRuntimeOptions(flags) {
   const config = await readConfig()
   return {
     baseUrl: normalizeBaseUrl(flags.baseUrl || process.env.HIREPROOF_URL || config.baseUrl || DEFAULT_BASE_URL),
-    apiKey: String(flags.apiKey || process.env.HIREPROOF_API_KEY || config.apiKey || DEFAULT_API_KEY),
+    apiKey: String(flags.apiKey || process.env.HIREPROOF_API_KEY || config.apiKey || ''),
   }
 }
 
@@ -126,13 +130,7 @@ async function readAuditText(flags, positionals) {
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, options)
-  const text = await response.text()
-  let body = null
-  try {
-    body = text ? JSON.parse(text) : null
-  } catch {
-    body = { error: text || `HTTP ${response.status}` }
-  }
+  const body = await readBoundedJsonResponse(response)
 
   if (!response.ok) {
     const message = body?.error || body?.message || `HTTP ${response.status}`
@@ -140,6 +138,57 @@ async function requestJson(url, options = {}) {
   }
 
   return body
+}
+
+function apiResponseTooLargeError() {
+  return new Error(`HireProof API response too large (max ${MAX_API_RESPONSE_BYTES} bytes).`)
+}
+
+async function readBoundedJsonResponse(response) {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > MAX_API_RESPONSE_BYTES) {
+    throw apiResponseTooLargeError()
+  }
+
+  if (!response.body?.getReader) {
+    const text = await response.text()
+    if (Buffer.byteLength(text, 'utf8') > MAX_API_RESPONSE_BYTES) throw apiResponseTooLargeError()
+    try {
+      return text ? JSON.parse(text) : null
+    } catch {
+      return { error: text || `HTTP ${response.status}` }
+    }
+  }
+
+  const reader = response.body.getReader()
+  const chunks = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (!value) continue
+    totalBytes += value.byteLength
+    if (totalBytes > MAX_API_RESPONSE_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      throw apiResponseTooLargeError()
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  const text = new TextDecoder().decode(merged)
+  try {
+    return text ? JSON.parse(text) : null
+  } catch {
+    return { error: text || `HTTP ${response.status}` }
+  }
 }
 
 function titleCase(value) {
@@ -332,19 +381,16 @@ function formatRichAuditReport(report, flags = {}) {
 }
 
 function formatPlainHealth(health) {
+  const cost = health?.costPosture || {}
   const lines = [
     `HireProof API: ${health?.status || 'unknown'}`,
-    `Live search: ${health?.liveSearch ? 'ready' : 'not ready'}`,
-    `Model: ${health?.model ? 'ready' : 'not ready'}`,
+    `Readiness: ${health?.readiness?.state || 'unknown'}`,
+    `Public live evidence: ${cost.publicLiveEvidence ? 'enabled' : 'cost-guarded'}`,
+    `Public OCR: ${cost.publicOcr ? 'enabled' : 'cost-guarded'}`,
+    `API live mode: ${cost.byokRequiredForApiLive ? 'BYOK required' : 'credential-gated'}`,
   ]
 
-  if (health?.storage) lines.push(`Storage: ${health.storage}`)
-  if (health?.modelProvider?.model) lines.push(`Model provider: ${health.modelProvider.model}`)
   return `${lines.join('\n')}\n`
-}
-
-function readyLabel(value) {
-  return value ? 'ready' : 'not ready'
 }
 
 function formatRichHealth(health, flags = {}) {
@@ -352,15 +398,14 @@ function formatRichHealth(health, flags = {}) {
   const color = palette(shouldUseColor(flags))
   const status = health?.status || 'unknown'
   const statusColor = status === 'ok' ? color.green : color.red
+  const cost = health?.costPosture || {}
   return `${section(`${color.accent('HIREPROOF')} HEALTH CHECK`, [
     `${color.accent('HireProof')} API: ${status}`,
     row('API', statusColor(status), 16),
-    row('Storage', health?.storage || 'unknown', 16),
-    row('Live search', readyLabel(health?.liveSearch), 16),
-    row('Model', readyLabel(health?.model), 16),
-    row('AI Gateway', readyLabel(health?.modelProvider?.aiGateway), 16),
-    row('OpenAI fallback', readyLabel(health?.modelProvider?.openaiCompatible), 16),
-    row('Model provider', health?.modelProvider?.model || 'unknown', 16),
+    row('Readiness', health?.readiness?.state || 'unknown', 16),
+    row('Live evidence', cost.publicLiveEvidence ? 'public-enabled' : 'cost-guarded', 16),
+    row('OCR', cost.publicOcr ? 'public-enabled' : 'cost-guarded', 16),
+    row('API live mode', cost.byokRequiredForApiLive ? 'BYOK required' : 'credential-gated', 16),
   ], width)}\n`
 }
 
@@ -428,7 +473,7 @@ async function commandConfig(argv) {
     if (keys.length === 0) {
       console.log('No HireProof CLI config set.')
     } else {
-      for (const item of keys) console.log(`${item}: ${config[item]}`)
+      for (const item of keys) console.log(`${item}: ${displayConfigValue(item, config[item])}`)
     }
     return 0
   }
@@ -444,7 +489,7 @@ async function commandConfig(argv) {
   }
 
   if (action === 'get') {
-    console.log(config[key] || '')
+    console.log(displayConfigValue(key, config[key]) || '')
     return 0
   }
 

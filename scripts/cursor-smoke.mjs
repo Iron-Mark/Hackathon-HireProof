@@ -49,7 +49,7 @@ async function assertAccepted(name, response) {
 try {
   const nightly = await assertAccepted(
     'nightly-repo-health',
-    await fetch(`${base}/api/internal/cursor/nightly-repo-health`, { method: 'GET', headers }),
+    await fetch(`${base}/api/internal/cursor/nightly-repo-health`, { method: 'POST', headers }),
   )
 
   const uiQa = await assertAccepted(

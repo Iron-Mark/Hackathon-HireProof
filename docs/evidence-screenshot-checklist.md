@@ -31,7 +31,7 @@ Use this checklist when collecting proof for the hackathon submission, marketpla
 | --- | --- | --- | --- |
 | Health endpoint | `GET /api/health` | `status: ok` | Production smoke |
 | Integration proof endpoint | `GET /api/integrations/proof` | core readiness visible, optional gates separated | Production smoke |
-| Demo audit API | `POST /api/v1/audit` with demo key | `verdict: high-risk`, score >= 80 | Production smoke |
+| Demo audit API | `POST /api/v1/audit` with a configured API key and `mode=demo` | `verdict: high-risk`, score >= 80 | Production smoke |
 | ZIP download | `GET /downloads/hireproof-native-integrations.zip` | HTTP `200`, `application/zip` | Production smoke |
 | Mobile overflow | `/`, `/audit`, `/docs/automations` at 375px | no horizontal overflow | Browser proof |
 

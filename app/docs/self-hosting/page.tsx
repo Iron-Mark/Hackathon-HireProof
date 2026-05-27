@@ -146,7 +146,7 @@ docker logs -f hireproof
 npm run docker:smoke`}
             />
             <p className="mt-4 text-sm font-medium text-muted italic">
-              Note: Configure provider keys through your shell or Compose environment for live mode. Demo mode works with the bundled demo API key.
+              Note: Configure provider keys through your shell or Compose environment for live mode. Protected API and MCP calls require an account-issued or self-hosted API key.
             </p>
           </div>
 

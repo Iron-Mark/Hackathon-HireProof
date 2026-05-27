@@ -24,8 +24,8 @@ Recent consolidation commits:
 | Check | Result |
 | --- | --- |
 | Project | `hireproof` |
-| Project ID | `prj_mV18ExyZQFEEDTpmUWUPyxKHbnnu` |
-| Latest production deployment | `dpl_B4dKc45tnLR4abgB949rMaNxg4fq` |
+| Project ID | Redacted; use the Vercel dashboard or authenticated CLI when needed |
+| Latest production deployment | Redacted; deployment IDs are not stored in repository docs |
 | Deployment state | `READY` |
 | Deployment commit | `1224f7b8d5902703b19e6961d5f3663ddc51c087` |
 | Public alias | `https://hireproof.tech` |

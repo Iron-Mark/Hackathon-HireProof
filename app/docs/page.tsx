@@ -28,10 +28,11 @@ const platforms = [
 
 const HERO_CURL = `curl -X POST https://hireproof.tech/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.",
-    "location": "Philippines"
+    "location": "Philippines",
+    "mode": "demo"
   }'`
 
 export default function DocsOverview() {
@@ -51,7 +52,7 @@ export default function DocsOverview() {
       <div className="mb-10">
         <CodeBlock title="Try it now — curl" code={HERO_CURL} />
         <p className="mt-2 text-xs font-semibold text-muted">
-          The demo API key is public. No sign-up needed.{' '}
+          Protected API and MCP calls require an account-issued key or private self-hosted key.{' '}
           <Link href="/docs/authentication" className="text-safe hover:underline font-black">Learn about authentication →</Link>
         </p>
       </div>

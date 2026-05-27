@@ -65,6 +65,7 @@ type EvidenceBrokerProviders = {
 type EvidenceBrokerOptions = {
   serpapiKey?: string
   liveSearchAllowed?: boolean
+  requireOwnerSerpApi?: boolean
   providers?: EvidenceBrokerProviders
   now?: number
   timeoutMs?: number
@@ -84,6 +85,10 @@ type EvidenceBrokerResult = {
 const DEFAULT_PROVIDER_TIMEOUT_MS = Number(process.env.EVIDENCE_PROVIDER_TIMEOUT_MS || 3500)
 const DEFAULT_TOTAL_BUDGET_MS = Number(process.env.EVIDENCE_PROVIDER_TOTAL_BUDGET_MS || 9000)
 const DEFAULT_CACHE_TTL_MS = Number(process.env.EVIDENCE_CACHE_TTL_MS || 6 * 60 * 60 * 1000)
+const configuredProviderMaxResponseBytes = Number(process.env.EVIDENCE_PROVIDER_MAX_RESPONSE_BYTES || 512 * 1024)
+const MAX_PROVIDER_RESPONSE_BYTES = Number.isFinite(configuredProviderMaxResponseBytes)
+  ? Math.max(16 * 1024, Math.min(2 * 1024 * 1024, configuredProviderMaxResponseBytes))
+  : 512 * 1024
 const MAX_DOMAINS_PER_AUDIT = 6
 const TRUSTED_APPLY_ROOTS = new Set([
   'linkedin.com',
@@ -299,12 +304,70 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): 
   })
 }
 
+class ProviderResponseTooLargeError extends Error {
+  constructor(url: string, maxBytes: number) {
+    super(`Provider response from ${url} was too large; capped at ${maxBytes} bytes.`)
+    this.name = 'ProviderResponseTooLargeError'
+  }
+}
+
+function contentLengthFrom(response: Response) {
+  const raw = response.headers?.get('content-length')
+  if (!raw) return undefined
+  const length = Number(raw)
+  return Number.isFinite(length) && length >= 0 ? length : undefined
+}
+
+async function readBoundedResponseText(response: Response, url: string, maxBytes: number) {
+  const contentLength = contentLengthFrom(response)
+  if (typeof contentLength === 'number' && contentLength > maxBytes) {
+    throw new ProviderResponseTooLargeError(url, maxBytes)
+  }
+
+  if (response.body && typeof response.body.getReader === 'function') {
+    const reader = response.body.getReader()
+    const chunks: Uint8Array[] = []
+    let received = 0
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (!value) continue
+        received += value.byteLength
+        if (received > maxBytes) {
+          await reader.cancel().catch(() => undefined)
+          throw new ProviderResponseTooLargeError(url, maxBytes)
+        }
+        chunks.push(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
+
+    const body = new Uint8Array(received)
+    let offset = 0
+    for (const chunk of chunks) {
+      body.set(chunk, offset)
+      offset += chunk.byteLength
+    }
+    return new TextDecoder().decode(body)
+  }
+
+  if (typeof response.text !== 'function') return ''
+  const text = await response.text()
+  if (new TextEncoder().encode(text).byteLength > maxBytes) {
+    throw new ProviderResponseTooLargeError(url, maxBytes)
+  }
+  return text
+}
+
 async function fetchJson(url: string, options: RequestInit = {}, timeoutMs = DEFAULT_PROVIDER_TIMEOUT_MS): Promise<any> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const response = await fetch(url, { ...options, signal: controller.signal })
-    const text = await response.text()
+    const text = await readBoundedResponseText(response, url, MAX_PROVIDER_RESPONSE_BYTES)
     let body: any = null
     try {
       body = text ? JSON.parse(text) : null
@@ -785,7 +848,8 @@ export async function runEvidenceBroker(
 
   const liveSearchAllowed = options.liveSearchAllowed !== false
   const serpapiStatus = getSerpApiOperationalStatus()
-  let serpapiAvailable = liveSearchAllowed && hasSerpApiKey(options.serpapiKey) && serpapiStatus.status !== 'circuit-open'
+  const ownerSerpApiRequiredButMissing = Boolean(options.requireOwnerSerpApi && !options.serpapiKey)
+  let serpapiAvailable = liveSearchAllowed && !ownerSerpApiRequiredButMissing && hasSerpApiKey(options.serpapiKey) && serpapiStatus.status !== 'circuit-open'
   let serpapiCostStatus: OperationalStatus | undefined
 
   if (serpapiAvailable && !options.serpapiKey) {
@@ -815,6 +879,8 @@ export async function runEvidenceBroker(
           : 'not-live',
       serpapiCostStatus?.message
         ? serpapiCostStatus.message
+        : ownerSerpApiRequiredButMissing
+        ? 'Owner SerpApi BYOK is required for live API audits; platform SerpApi fallback was disabled.'
         : serpapiStatus.status === 'circuit-open'
         ? serpapiStatus.message || 'SerpApi circuit breaker is open.'
         : 'SerpApi key is not configured or live search is disabled; domain evidence funnel continued.',
@@ -847,7 +913,8 @@ export async function runEvidenceBroker(
     evidenceItems.push(...(result.evidence || []))
   }
 
-  for (const domain of domains.map(rootDomain).filter(Boolean) as string[]) {
+  const certificateDomains = Array.from(new Set(domains.map(rootDomain).filter(Boolean) as string[]))
+  for (const domain of certificateDomains) {
     if (Date.now() - startedAt > totalBudgetMs) break
     const result = await runProvider('certificateTransparency', () => providerImpl.certificateTransparency(domain, { ...context, targets: enrichedTargets }), context)
     statuses.certificateTransparency = mergeProviderStatus('certificateTransparency', statuses.certificateTransparency, result, now)

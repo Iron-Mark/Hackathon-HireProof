@@ -1,4 +1,4 @@
-import { createPublicKey, verify } from 'node:crypto'
+import { createPublicKey, timingSafeEqual, verify } from 'node:crypto'
 import { Chat, type Adapter, type Thread, type Message, type WebhookOptions } from 'chat'
 import { createDiscordAdapter } from '@chat-adapter/discord'
 import { createSlackAdapter } from '@chat-adapter/slack'
@@ -9,6 +9,7 @@ import { DEMO_FIXTURES } from '@/lib/fixtures'
 import { formatChatVerdict } from '@/lib/chat-verdict'
 import { saveReport } from '@/lib/db'
 import { createPublicReportId } from '@/lib/public-report-id'
+import { readTextRequest } from '@/lib/request-security'
 import type { AuditReport } from '@/lib/schemas'
 
 export type ChatPlatform = 'slack' | 'discord' | 'telegram' | 'whatsapp' | 'local'
@@ -19,18 +20,16 @@ type HireProofBot = Chat<Record<string, Adapter>>
 const CHAT_TEXT_LIMIT = 10_000
 const DEFAULT_PRODUCTION_BASE_URL = 'https://hireproof.tech'
 const CHAT_URL_PATTERN = /https?:\/\/[^\s<>"')]+/i
+const WEBHOOK_PAYLOAD_LIMIT_BYTES = 1024 * 1024
 const DISCORD_INTERACTION_PING_TYPE = 1
 const DISCORD_INTERACTION_APPLICATION_COMMAND_TYPE = 2
 const DISCORD_INTERACTION_CALLBACK_PONG_TYPE = 1
 const DISCORD_INTERACTION_CALLBACK_CHANNEL_MESSAGE_TYPE = 4
 const DISCORD_INTERACTION_CALLBACK_DEFERRED_CHANNEL_MESSAGE_TYPE = 5
+const DISCORD_AUDIT_ERROR_DETAIL_LIMIT_BYTES = 4096
+const DISCORD_AUDIT_SUCCESS_LIMIT_BYTES = 256 * 1024
 const ED25519_SPKI_DER_PREFIX = '302a300506032b6570032100'
-const requiredEnvironmentByPlatform: Record<WebhookPlatform, string[]> = {
-  slack: ['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'REDIS_URL'],
-  discord: ['DISCORD_BOT_TOKEN', 'DISCORD_PUBLIC_KEY', 'DISCORD_APPLICATION_ID', 'REDIS_URL'],
-  telegram: ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_WEBHOOK_SECRET_TOKEN', 'TELEGRAM_BOT_USERNAME', 'REDIS_URL'],
-  zernio: ['ZERNIO_API_KEY', 'ZERNIO_WEBHOOK_SECRET', 'REDIS_URL'],
-}
+const DISCORD_SIGNATURE_MAX_SKEW_MS = 5 * 60 * 1000
 const chatPlatformByWebhookPlatform: Record<WebhookPlatform, Exclude<ChatPlatform, 'local'>> = {
   slack: 'slack',
   discord: 'discord',
@@ -43,6 +42,12 @@ let botFingerprint: string | null = null
 
 function present(value?: string) {
   return Boolean(value?.trim())
+}
+
+function timingSafeSecretEqual(provided: string | undefined, configured: string | undefined) {
+  const providedBuffer = Buffer.from(provided || '')
+  const configuredBuffer = Buffer.from(configured || '')
+  return providedBuffer.length === configuredBuffer.length && timingSafeEqual(providedBuffer, configuredBuffer)
 }
 
 function hasChatState() {
@@ -287,6 +292,11 @@ function verifyDiscordInteractionRequest(request: Request, body: string) {
   if (!signature || !timestamp || !publicKey) return false
   if (!/^[\da-f]{128}$/i.test(signature) || !/^[\da-f]{64}$/i.test(publicKey)) return false
 
+  const timestampMs = Number(timestamp) * 1000
+  if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > DISCORD_SIGNATURE_MAX_SKEW_MS) {
+    return false
+  }
+
   const key = createPublicKey({
     key: Buffer.concat([
       Buffer.from(ED25519_SPKI_DER_PREFIX, 'hex'),
@@ -324,8 +334,97 @@ function truncateDiscordMessage(content: string) {
   return content.length > 1900 ? `${content.slice(0, 1897)}...` : content
 }
 
+async function discardChatProviderResponse(response: Response) {
+  await response.body?.cancel().catch(() => undefined)
+}
+
+async function readDiscordAuditErrorDetails(response: Response) {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > DISCORD_AUDIT_ERROR_DETAIL_LIMIT_BYTES) {
+    await response.body?.cancel().catch(() => undefined)
+    return 'response body exceeded diagnostic limit'
+  }
+
+  if (!response.body?.getReader) return ''
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let received = 0
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (!value) continue
+      received += value.byteLength
+      if (received > DISCORD_AUDIT_ERROR_DETAIL_LIMIT_BYTES) {
+        await reader.cancel().catch(() => undefined)
+        return 'response body exceeded diagnostic limit'
+      }
+      chunks.push(value)
+    }
+  } catch {
+    return ''
+  } finally {
+    reader.releaseLock()
+  }
+
+  const bytes = new Uint8Array(received)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(bytes)
+}
+
+async function readDiscordAuditReport(response: Response): Promise<AuditReport> {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > DISCORD_AUDIT_SUCCESS_LIMIT_BYTES) {
+    await response.body?.cancel().catch(() => undefined)
+    throw new Error('Discord audit API response too large.')
+  }
+
+  if (!response.body?.getReader) {
+    throw new Error('Discord audit API returned an unreadable response.')
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let received = 0
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (!value) continue
+      received += value.byteLength
+      if (received > DISCORD_AUDIT_SUCCESS_LIMIT_BYTES) {
+        await reader.cancel().catch(() => undefined)
+        throw new Error('Discord audit API response too large.')
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const bytes = new Uint8Array(received)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes)) as AuditReport
+  } catch {
+    throw new Error('Discord audit API returned invalid JSON.')
+  }
+}
+
 async function updateDiscordInteraction(applicationId: string, token: string, content: string) {
-  await fetch(`https://discord.com/api/v10/webhooks/${applicationId}/${token}/messages/@original`, {
+  const response = await fetch(`https://discord.com/api/v10/webhooks/${applicationId}/${token}/messages/@original`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -333,6 +432,7 @@ async function updateDiscordInteraction(applicationId: string, token: string, co
       allowed_mentions: { parse: [] },
     }),
   })
+  await discardChatProviderResponse(response)
 }
 
 function extractDiscordCommandText(payload: {
@@ -420,7 +520,7 @@ async function sendTelegramMessage(chatId: number | string, text: string) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
   if (!botToken) return
 
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -429,13 +529,14 @@ async function sendTelegramMessage(chatId: number | string, text: string) {
       disable_web_page_preview: true,
     }),
   })
+  await discardChatProviderResponse(response)
 }
 
 async function handleTelegramStartCommand(request: Request, body: string) {
   const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN?.trim()
   const providedSecret = request.headers.get('x-telegram-bot-api-secret-token')?.trim()
 
-  if (!expectedSecret || providedSecret !== expectedSecret) {
+  if (!expectedSecret || !timingSafeSecretEqual(providedSecret, expectedSecret)) {
     return new Response('invalid telegram webhook secret', { status: 401 })
   }
 
@@ -505,6 +606,17 @@ export function getChatCredentialStatus() {
   }
 }
 
+export function getPublicChatReadiness(platform?: Exclude<ChatPlatform, 'local'>) {
+  const readiness = {
+    slack: { ready: hasSlackCredentials() },
+    discord: { ready: hasDiscordCredentials() },
+    telegram: { ready: hasTelegramCredentials() },
+    whatsapp: { ready: hasWhatsAppCredentials() },
+  }
+
+  return platform ? readiness[platform] : readiness
+}
+
 function getChatConfigFingerprint() {
   return JSON.stringify({
     redis: process.env.REDIS_URL?.trim() || '',
@@ -521,8 +633,7 @@ function createCredentialGateResponse(platform: WebhookPlatform) {
   return Response.json({
     error: `${platform === 'zernio' ? 'WhatsApp/Zernio' : platform} ChatSDK credentials are not configured.`,
     platform: chatPlatform,
-    required: requiredEnvironmentByPlatform[platform],
-    credentialStatus: getChatCredentialStatus()[chatPlatform],
+    readiness: getPublicChatReadiness(chatPlatform),
   }, { status: 503 })
 }
 
@@ -565,7 +676,8 @@ export async function createDiscordAuditReply(text: string, baseUrl: string, met
   const inputUrl = safeText.match(CHAT_URL_PATTERN)?.[0]?.replace(/[),.;]+$/, '')
 
   const auditBaseUrl = baseUrl || DEFAULT_PRODUCTION_BASE_URL
-  const apiKey = process.env.AGENT_API_KEY?.trim() || 'hireproof_agent_demo_key'
+  const apiKey = process.env.AGENT_API_KEY?.trim()
+  if (!apiKey) throw new Error('AGENT_API_KEY is required for Discord audit handoff.')
   const response = await fetch(`${auditBaseUrl}/api/v1/audit`, {
     method: 'POST',
     headers: {
@@ -580,12 +692,12 @@ export async function createDiscordAuditReply(text: string, baseUrl: string, met
   })
 
   if (!response.ok) {
-    const details = await response.text().catch(() => '')
+    const details = await readDiscordAuditErrorDetails(response)
     throw new Error(`Discord audit API returned HTTP ${response.status}: ${details.slice(0, 300)}`)
   }
 
   const now = Date.now()
-  const apiReport = await response.json() as AuditReport
+  const apiReport = await readDiscordAuditReport(response)
   const report: AuditReport = {
     ...apiReport,
     id: createPublicReportId('chat'),
@@ -719,7 +831,9 @@ export async function handleSlackWebhook(request: Request, options?: WebhookOpti
 }
 
 export async function handleDiscordWebhook(request: Request, options?: WebhookOptions) {
-  const body = await request.text()
+  const parsedBody = await readTextRequest(request, WEBHOOK_PAYLOAD_LIMIT_BYTES, 'Webhook payload')
+  if (!parsedBody.ok) return parsedBody.response
+  const body = parsedBody.value
 
   try {
     const payload = JSON.parse(body) as {
@@ -761,7 +875,9 @@ export async function handleDiscordWebhook(request: Request, options?: WebhookOp
 }
 
 export async function handleTelegramWebhook(request: Request, options?: WebhookOptions) {
-  const body = await request.text()
+  const parsedBody = await readTextRequest(request, WEBHOOK_PAYLOAD_LIMIT_BYTES, 'Webhook payload')
+  if (!parsedBody.ok) return parsedBody.response
+  const body = parsedBody.value
 
   try {
     const startResponse = await handleTelegramStartCommand(request, body)

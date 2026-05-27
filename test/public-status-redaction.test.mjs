@@ -1,0 +1,56 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+
+test('public status routes expose only coarse readiness and no provider telemetry', async () => {
+  const health = await fs.readFile(new URL('../app/api/health/route.ts', import.meta.url), 'utf8')
+  const audit = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
+  const integrationsProof = await fs.readFile(new URL('../app/api/integrations/proof/route.ts', import.meta.url), 'utf8')
+  const platformReadiness = await fs.readFile(new URL('../lib/platform-readiness.ts', import.meta.url), 'utf8')
+  const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
+  const slackRoute = await fs.readFile(new URL('../app/api/webhooks/slack/route.ts', import.meta.url), 'utf8')
+  const discordRoute = await fs.readFile(new URL('../app/api/webhooks/discord/route.ts', import.meta.url), 'utf8')
+  const telegramRoute = await fs.readFile(new URL('../app/api/webhooks/telegram/route.ts', import.meta.url), 'utf8')
+  const zernioRoute = await fs.readFile(new URL('../app/api/webhooks/zernio/route.ts', import.meta.url), 'utf8')
+  const workflowRoute = await fs.readFile(new URL('../app/api/workflows/audit/route.ts', import.meta.url), 'utf8')
+  const bot = await fs.readFile(new URL('../lib/hireproof-bot.ts', import.meta.url), 'utf8')
+  const usage = await fs.readFile(new URL('../app/api/developer/usage/route.ts', import.meta.url), 'utf8')
+
+  assert.match(health, /costPosture/)
+  assert.match(health, /readiness/)
+  assert.match(health, /Cache-Control': 'no-store'/)
+  assert.match(audit, /capabilities/)
+  assert.match(audit, /Cache-Control': 'no-store'/)
+
+  assert.doesNotMatch(health, /serpapiCache|getSerpApiResponseCacheStats|getModelProviderStatus|providerCostGuards[,}]/)
+  assert.doesNotMatch(health, /liveSearch:\s*isSerpApiConfigured|model:\s*hasHireProofModelProvider/)
+  assert.doesNotMatch(audit, /serpapiCache|getSerpApiResponseCacheStats|getModelProviderStatus|apiKeys|modelProvider/)
+  assert.doesNotMatch(audit, /liveSearch:\s*serpapi|model:\s*hasHireProofModelProvider/)
+  assert.match(integrationsProof, /getPublicPlatformReadiness/)
+  assert.match(platformReadiness, /export function getPublicPlatformReadiness/)
+  assert.doesNotMatch(integrationsProof, /getPlatformReadiness\(\)/)
+  assert.match(platformReadiness, /publicSurfaces/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*SLACK_BOT_TOKEN/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*SLACK_SIGNING_SECRET/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*DISCORD_BOT_TOKEN/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*TELEGRAM_WEBHOOK_SECRET_TOKEN/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*ZERNIO_API_KEY/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*WORKFLOW_SECRET/)
+  assert.doesNotMatch(platformReadiness, /publicSurfaces[\s\S]*AI_GATEWAY_API_KEY/)
+  for (const source of [chatRoute, slackRoute, discordRoute, telegramRoute, zernioRoute]) {
+    assert.doesNotMatch(source, /credentialStatus/)
+    assert.doesNotMatch(source, /get(Slack|Discord|Telegram|WhatsApp|Chat)CredentialStatus/)
+    assert.match(source, /readiness/)
+  }
+  assert.match(bot, /getPublicChatReadiness/)
+  assert.doesNotMatch(bot, /required:\s*requiredEnvironmentByPlatform/)
+  assert.doesNotMatch(bot, /credentialStatus:\s*getChatCredentialStatus/)
+  assert.match(workflowRoute, /readiness/)
+  assert.doesNotMatch(workflowRoute, /credentialStatus/)
+  assert.doesNotMatch(workflowRoute, /workflowSecret:/)
+  assert.doesNotMatch(workflowRoute, /WORKFLOW_SECRET/)
+
+  assert.match(usage, /getUserFromSessionToken/)
+  assert.match(usage, /serpapiCache/)
+  assert.match(usage, /providerCostGuards/)
+})

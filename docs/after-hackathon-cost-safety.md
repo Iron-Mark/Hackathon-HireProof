@@ -42,8 +42,8 @@ This keeps the site, docs, README links, demo fixtures, deterministic audit logi
 
 - Public `/api/audit` respects `PUBLIC_LIVE_AUDIT_ENABLED=false` and falls back to deterministic extraction instead of platform-paid model/search work.
 - Screenshot OCR respects `PUBLIC_GOOGLE_VISION_OCR_ENABLED=false` and falls back to Tesseract.
-- Public trends respects `PUBLIC_TRENDS_EXTERNAL_SIGNALS_ENABLED=false` and avoids SerpApi trend refreshes.
-- API live audits can require owner BYOK credentials with `REQUIRE_BYOK_FOR_LIVE_API=true`.
+- Public trends only runs SerpApi-backed external signal refreshes when `PUBLIC_TRENDS_EXTERNAL_SIGNALS_ENABLED=true`; those public refreshes are rate-limited by source IP.
+- API live audits can require owner BYOK credentials with `REQUIRE_BYOK_FOR_LIVE_API=true`. In that mode, each missing owner credential disables its matching live provider path instead of falling back to platform model or SerpApi keys.
 - Daily platform provider counters throttle model, SerpApi, Google Vision, and Google Safe Browsing calls.
 
 ## Emergency Shutoff
@@ -62,4 +62,4 @@ If cost spikes appear:
 
 - Budget alerts are not hard caps. Use provider quotas and app guards for hard limits.
 - People cloning the repo do not spend your provider budget unless they use your hosted app or your keys.
-- BYOK users should pay their own provider costs through their saved model/search credentials.
+- BYOK users should pay their own provider costs through their saved model/search credentials. Partial BYOK does not authorize platform fallback for the missing provider when `REQUIRE_BYOK_FOR_LIVE_API=true`.

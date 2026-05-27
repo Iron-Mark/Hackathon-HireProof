@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto'
+
 const WORKFLOW_SECRET_MIN_LENGTH = 32
 const WORKFLOW_SECRET_MIN_DISTINCT_CHARS = 8
 
@@ -22,6 +24,16 @@ export type WorkflowSecretStatus = {
 
 export function getWorkflowSecret() {
   return process.env.WORKFLOW_SECRET?.trim() || ''
+}
+
+function timingSafeSecretEqual(provided: string, configured: string) {
+  const providedBuffer = Buffer.from(provided)
+  const configuredBuffer = Buffer.from(configured)
+  return providedBuffer.length === configuredBuffer.length && timingSafeEqual(providedBuffer, configuredBuffer)
+}
+
+export function validateWorkflowSecretHeader(request: Request) {
+  return timingSafeSecretEqual(request.headers.get('x-workflow-secret') || '', getWorkflowSecret())
 }
 
 export function getWorkflowSecretStatus(value = getWorkflowSecret()): WorkflowSecretStatus {

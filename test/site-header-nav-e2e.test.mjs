@@ -1,47 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { request as httpRequest } from 'node:http'
-import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-
-const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
-
-function checkServer() {
-  return new Promise((resolve) => {
-    const req = httpRequest(`${BASE_URL}/`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
-    })
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => {
-      req.destroy()
-      resolve(false)
-    })
-    req.end()
-  })
-}
-
-async function ensureServer() {
-  if (await checkServer()) return null
-
-  const child = spawn('npm', ['run', 'dev'], {
-    cwd: new URL('..', import.meta.url),
-    shell: true,
-    stdio: 'ignore',
-  })
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await delay(1000)
-    if (await checkServer()) return child
-  }
-
-  child.kill()
-  throw new Error(`Timed out waiting for ${BASE_URL}`)
-}
+import { BASE_URL, ensureE2eServer } from './helpers/e2e-server.mjs'
 
 test('mobile hamburger opens a full-screen navigation menu and opens pages from it', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/')
   const browser = await chromium.launch()
 
   try {
@@ -80,19 +43,19 @@ test('mobile hamburger opens a full-screen navigation menu and opens pages from 
     await page.keyboard.press('Tab')
     assert.ok(await mobileMenu.evaluate((menu) => menu.contains(document.activeElement)))
 
-    assert.ok(await page.getByRole('menuitem', { name: /^Search/ }).isVisible())
+    assert.ok(await mobileMenu.getByRole('menuitem', { name: /^Search/ }).isVisible())
     assert.ok(await page.getByRole('button', { name: 'Toggle theme' }).isVisible())
 
-    await page.getByRole('menuitem', { name: /Explore/ }).click()
+    await mobileMenu.getByRole('menuitem', { name: /Explore/ }).click()
     await page.waitForURL(/\/explore$/, { timeout: 10_000 })
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })
 
 test('desktop resources dropdown exposes one clickable menu', { timeout: 90_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/')
   const browser = await chromium.launch()
 
   try {
@@ -119,6 +82,6 @@ test('desktop resources dropdown exposes one clickable menu', { timeout: 90_000 
     await page.waitForURL(/\/lab$/, { timeout: 10_000 })
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })

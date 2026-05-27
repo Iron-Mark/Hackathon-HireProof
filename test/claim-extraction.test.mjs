@@ -149,6 +149,22 @@ test('recoverObviousClaims strips common job-board chrome from company names', (
   assert.equal(claims.applicationPath, 'Greenhouse job page')
 })
 
+test('recoverObviousClaims does not trust job-board lookalike hosts as application paths', () => {
+  const claims = recoverObviousClaims({
+    text: 'Senior Data Analyst at Acme Analytics. Easy Apply available.',
+    url: 'https://linkedin.com.attacker.test/jobs/view/123',
+  }, {
+    company: 'Acme Analytics',
+    role: 'Senior Data Analyst',
+    salary: 'Not specified',
+    location: 'Remote',
+    contactMethod: 'Email',
+    applicationPath: 'Not specified',
+  })
+
+  assert.equal(claims.applicationPath, 'Provided job URL')
+})
+
 test('recoverObviousClaims parses LinkedIn QA job blocks without treating job ids as recruiter phones', () => {
   const claims = recoverObviousClaims({
     text: [
@@ -267,6 +283,97 @@ test('enrichJobUrlInput fails safe for unsupported URL-only inputs', async () =>
   assert.equal(enrichment.status, 'unsupported-url')
   assert.equal(enrichment.source, 'none')
   assert.match(enrichment.reason || '', /supported public job pages/)
+})
+
+test('enrichJobUrlInput blocks private IPv6 and IPv4-mapped URL literals before fetching', async () => {
+  for (const inputUrl of [
+    'http://[::1]/private-admin-metadata',
+    'http://[fd00::1]/private-admin-metadata',
+    'http://[fe80::1]/private-admin-metadata',
+    'http://[::ffff:127.0.0.1]/private-admin-metadata',
+  ]) {
+    let fetched = false
+    const enrichment = await enrichJobUrlInput(inputUrl, async () => {
+      fetched = true
+      return new Response('should not fetch')
+    })
+
+    assert.equal(enrichment.status, 'unsupported-url')
+    assert.equal(enrichment.source, 'none')
+    assert.equal(fetched, false)
+  }
+})
+
+test('enrichJobUrlInput blocks redirects to private URL targets', async () => {
+  const enrichment = await enrichJobUrlInput(
+    'https://boards.greenhouse.io/acme/jobs/redirect',
+    async () => new Response('', {
+      status: 302,
+      headers: { location: 'http://127.0.0.1/private-admin-metadata' },
+    }),
+  )
+
+  assert.equal(enrichment.status, 'failed')
+  assert.match(enrichment.reason || '', /Only public job page URLs/)
+})
+
+test('enrichJobUrlInput rejects oversized job page responses before enrichment', async () => {
+  let cancelled = false
+  const enrichment = await enrichJobUrlInput(
+    'https://boards.greenhouse.io/acme/jobs/large',
+    async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: (name) => name.toLowerCase() === 'content-length' ? '300000' : null },
+      body: {
+        cancel: async () => {
+          cancelled = true
+        },
+      },
+      text: async () => 'x'.repeat(128),
+    }),
+  )
+
+  assert.equal(enrichment.status, 'failed')
+  assert.match(enrichment.reason || '', /too large/)
+  assert.equal(cancelled, true)
+})
+
+test('enrichJobUrlInput rejects oversized non-streaming job page responses before slicing', async () => {
+  const enrichment = await enrichJobUrlInput(
+    'https://boards.greenhouse.io/acme/jobs/non-stream-large',
+    async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      body: null,
+      text: async () => 'x'.repeat(300000),
+    }),
+  )
+
+  assert.equal(enrichment.status, 'failed')
+  assert.match(enrichment.reason || '', /too large/)
+})
+
+test('enrichJobUrlInput rejects streaming job pages that continue after the byte cap', async () => {
+  const encoder = new TextEncoder()
+  const exactLimitChunk = encoder.encode('x'.repeat(256_000))
+  const overflowChunk = encoder.encode('extra bytes beyond cap')
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(exactLimitChunk)
+      controller.enqueue(overflowChunk)
+      controller.close()
+    },
+  })
+
+  const enrichment = await enrichJobUrlInput(
+    'https://boards.greenhouse.io/acme/jobs/stream-overflow',
+    async () => new Response(stream),
+  )
+
+  assert.equal(enrichment.status, 'failed')
+  assert.match(enrichment.reason || '', /too large/)
 })
 
 test('enrichJobUrlInput extracts public ATS and generic job page content', async () => {

@@ -4,7 +4,7 @@
 # Requires: Vercel CLI logged in (`vercel whoami`), repo linked (`vercel link`).
 # NEVER commit real secrets. Do not paste API keys into chat or git.
 #
-# Project (from local .vercel/project.json): iron-marks-projects/hireproof
+# Project: use the currently linked Vercel project from `vercel link`
 # Docs: docs/cursor/deploy.md
 
 $ErrorActionPreference = "Stop"
@@ -37,8 +37,9 @@ function Add-VercelEnv {
 Write-Host @"
 
 === Manual alternative (commented vercel env add) ===
-Run from repo root after replacing placeholders. Each command prompts for the value
-unless you pipe stdin (shown below for PowerShell).
+Prefer .\scripts\setup-cursor-secrets.ps1 so secrets are prompted securely and
+sent to Vercel through stdin. Do not place Cursor secrets directly in command
+arguments or shell history.
 
 # 1) Repo pin and model defaults (safe to set before enabling integration)
 # vercel env add CURSOR_ALLOWED_REPO_URL preview
@@ -51,10 +52,10 @@ unless you pipe stdin (shown below for PowerShell).
 # vercel env add CURSOR_MAX_CONCURRENT_RUNS production
 
 # 2) Secrets (Preview first, then Production)
-# echo '<CURSOR_API_KEY>' | vercel env add CURSOR_API_KEY preview
-# echo '<CURSOR_API_KEY>' | vercel env add CURSOR_API_KEY production
-# echo '<CURSOR_WEBHOOK_SECRET>' | vercel env add CURSOR_WEBHOOK_SECRET preview
-# echo '<CURSOR_WEBHOOK_SECRET>' | vercel env add CURSOR_WEBHOOK_SECRET production
+# vercel env add CURSOR_API_KEY preview
+# vercel env add CURSOR_API_KEY production
+# vercel env add CURSOR_WEBHOOK_SECRET preview
+# vercel env add CURSOR_WEBHOOK_SECRET production
 
 # 3) Feature flag — set LAST on Preview, validate, then Production
 # echo 'true' | vercel env add CURSOR_INTEGRATION_ENABLED preview

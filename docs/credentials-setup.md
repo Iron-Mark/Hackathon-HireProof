@@ -152,7 +152,7 @@ This repo also uses Upstash REST variables elsewhere, but ChatSDK currently expe
 
 ## 3. Workflow Secret
 
-`WORKFLOW_SECRET` is not purchased from Vercel. Generate it yourself. Do not use a placeholder or short demo value; the workflow route rejects public placeholders and low-entropy secrets.
+`WORKFLOW_SECRET` is not purchased from Vercel. Generate it yourself. Do not use a placeholder or short demo value; the workflow route rejects missing, public-placeholder, and low-entropy secrets before it accepts any workflow start request.
 
 Run:
 
@@ -166,7 +166,7 @@ Save the generated output as the value:
 WORKFLOW_SECRET=
 ```
 
-This protects `/api/workflows/audit` when you want to start workflow runs from external callers.
+This protects `/api/workflows/audit` when you want to start workflow runs from external callers. Until this value is configured with a private high-entropy secret, POST starts fail closed with a credential-required or credential-misconfigured response.
 
 Vercel Workflow itself is enabled by the `workflow` package, the `workflow/next` plugin, and the `"use workflow"` directive in the workflow function. On Vercel, Workflow provisions the durable runtime automatically.
 
@@ -203,10 +203,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 Save the output as:
 
 ```env
-BYOK_ENCRYPTION_KEY=generated-random-hex
+BYOK_ENCRYPTION_KEY=<paste the generated hex value>
 ```
 
-Without this value, production will reject hosted BYOK saves. Authenticated `/api/v1/audit` and `/api/mcp` calls use the account owner's stored BYOK credentials when present, then fall back to platform environment keys.
+Without this value, production will reject hosted BYOK saves. Placeholder, short, or low-diversity values are rejected so a copied example cannot become the encryption key for user-provided provider credentials. Authenticated `/api/v1/audit` and `/api/mcp` calls use the account owner's stored BYOK credentials when present, then fall back to platform environment keys unless `REQUIRE_BYOK_FOR_LIVE_API=true` is enabled. With that flag enabled, `/api/v1/audit` disables missing owner model/search provider paths instead of spending platform keys for partial BYOK accounts.
 
 ## 6. Evidence Funnel Keys
 
@@ -237,9 +237,12 @@ Budget controls:
 ```env
 EVIDENCE_PROVIDER_TIMEOUT_MS=3500
 EVIDENCE_PROVIDER_TOTAL_BUDGET_MS=9000
+EVIDENCE_PROVIDER_MAX_RESPONSE_BYTES=524288
 EVIDENCE_CACHE_TTL_MS=21600000
 ENABLE_URLSCAN_SUBMIT=false
 ```
+
+`EVIDENCE_PROVIDER_MAX_RESPONSE_BYTES` caps each JSON provider response before parsing. Keep it low enough for synchronous audits; the default is 512 KiB and the runtime clamps custom values between 16 KiB and 2 MiB.
 
 Keep `ENABLE_URLSCAN_SUBMIT=false` unless you intentionally add public URL submissions later. The current implementation uses urlscan search metadata only.
 
@@ -258,6 +261,10 @@ SLACK_SIGNING_SECRET=
 REDIS_URL=
 WORKFLOW_SECRET=
 BYOK_ENCRYPTION_KEY=
+HIREPROOF_ADMIN_EMAILS=
+HIREPROOF_CURSOR_OPERATOR_EMAILS=
+HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS=
+TRUST_PROXY_CLIENT_IP_HEADERS=false
 AI_GATEWAY_API_KEY=
 HIREPROOF_MODEL=openai/gpt-4o-mini
 SERPAPI_API_KEY=
@@ -279,7 +286,7 @@ SLACK_BOT_TOKEN=xoxb-your-token
 SLACK_SIGNING_SECRET=your-signing-secret
 REDIS_URL=redis://default:password@host:port
 WORKFLOW_SECRET=
-BYOK_ENCRYPTION_KEY=generated-random-hex
+BYOK_ENCRYPTION_KEY=<paste generated 32-byte hex>
 AI_GATEWAY_API_KEY=gw_your_key
 HIREPROOF_MODEL=openai/gpt-4o-mini
 APP_BASE_URL=http://localhost:3002
@@ -309,7 +316,7 @@ Invoke-RestMethod http://localhost:3002/api/integrations/proof
 Expected result:
 
 - `slack.state` becomes `ready` when `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, and `REDIS_URL` are present.
-- `workflow.state` becomes `ready` when `WORKFLOW_SECRET` is present.
+- `workflow.state` becomes `ready` when `WORKFLOW_SECRET` is present and passes the placeholder, length, and entropy checks.
 - `gateway.state` becomes `ready` when `AI_GATEWAY_API_KEY` or `VERCEL_AI_GATEWAY_API_KEY` is present.
 - Developer Portal hosted BYOK saves succeed when `BYOK_ENCRYPTION_KEY` is present and the submitted provider key verifies.
 - Live audits include `operations.evidenceProviders` when the evidence funnel runs.

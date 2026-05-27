@@ -7,6 +7,10 @@ const STORAGE_KEY = 'hireproof_audit_history'
 const MAX_HISTORY = 50 
 const HistorySchema = z.array(AuditReportSchema)
 
+function createLocalReportId() {
+  return `report_${globalThis.crypto.randomUUID()}`
+}
+
 export function useAuditHistory() {
   const [history, setHistory] = useState<AuditReport[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
@@ -37,7 +41,7 @@ export function useAuditHistory() {
   const addReport = (report: AuditReport) => {
     const newReport = {
       ...report,
-      id: report.id || `report_${Date.now()}`,
+      id: report.id || createLocalReportId(),
       timestamp: report.timestamp || new Date().toISOString(),
     }
     

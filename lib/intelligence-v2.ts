@@ -71,6 +71,12 @@ function rootDomain(host?: string) {
   return parts.slice(-2).join('.')
 }
 
+function hostMatchesDomain(host: string | undefined, domain: string) {
+  const normalizedHost = host?.replace(/^www\./, '').toLowerCase()
+  const normalizedDomain = domain.replace(/^www\./, '').toLowerCase()
+  return Boolean(normalizedHost && (normalizedHost === normalizedDomain || normalizedHost.endsWith(`.${normalizedDomain}`)))
+}
+
 function emailDomain(email?: string) {
   const domain = String(email || '').trim().toLowerCase().match(/@([^@\s]+)$/)?.[1]
   return domain?.replace(/^www\./, '')
@@ -90,8 +96,10 @@ function isFreeEmailDomain(domain?: string) {
 }
 
 function classifySourceQuality(item: EvidenceItem): NonNullable<EvidenceItem['sourceQuality']> {
-  const text = normalizeText(`${item.source} ${item.type} ${item.snippet} ${item.url || ''}`)
+  const labelText = normalizeText(`${item.source} ${item.type} ${item.snippet}`)
+  const text = normalizeText(`${labelText} ${item.url || ''}`)
   const host = hostnameFromUrl(item.url)
+  const trustedJobBoardDomains = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'jobstreet.com', 'workdayjobs.com', 'greenhouse.io', 'lever.co', 'smartrecruiters.com']
 
   if (text.includes('risk signal') || text.includes('apply path mismatch')) return 'risky'
   if (
@@ -99,12 +107,12 @@ function classifySourceQuality(item: EvidenceItem): NonNullable<EvidenceItem['so
     text.includes('knowledge graph') ||
     text.includes('trust official') ||
     text.includes('verified local') ||
-    (host && /\b(careers|jobs|about|company)\b/.test(text) && !isWeakHost(host))
+    (/\b(careers page|careers listing|company website|official careers)\b/.test(labelText) && host && !isWeakHost(host))
   ) return 'official'
   if (
     text.includes('reputable job board') ||
-    ['linkedin.com', 'indeed.com', 'glassdoor.com', 'jobstreet.com', 'workdayjobs.com', 'greenhouse.io', 'lever.co', 'smartrecruiters.com']
-      .some(domain => host?.includes(domain) || text.includes(domain.replace('.com', '')))
+    trustedJobBoardDomains.some(domain => hostMatchesDomain(host, domain)) ||
+    (!host && trustedJobBoardDomains.some(domain => labelText.includes(domain.replace('.com', ''))))
   ) return 'reputable'
   if (text.includes('directory') || text.includes('mirror') || text.includes('scraped') || text.includes('aggregator')) return 'weak'
   return 'public'
@@ -462,6 +470,8 @@ function deriveIntelligence(
   const comparableEvidence = byType('Comparable Jobs')
   const officialHost = hostnameFromUrl(officialEvidence.find(item => item.url)?.url)
   const mismatchEvidence = byType('Apply Path Mismatch').filter(item => isActionableApplyPathMismatch(item, officialHost))
+  const inputConflictEvidence = byType('Input Conflict')
+  const hasInputConflict = inputConflictEvidence.length > 0 || redFlags.some(flag => /input conflict|resolved job page|submitted .* does not match/i.test(flag))
   const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
   const staleEvidence = evidence.filter(item => item.freshness === 'stale')
   const weakEvidence = evidence.filter(item => item.sourceQuality === 'weak')
@@ -634,6 +644,17 @@ function deriveIntelligence(
       rationale: 'The submitted apply link appears inconsistent with the official company or apply options.',
     })
     score = applyTrace(scoreTrace, score, 'Apply path', 18, 'Apply domain mismatch is a strong impersonation signal.')
+  } else if (hasInputConflict) {
+    addSignal(signals, {
+      id: 'input_conflict',
+      label: 'Submitted text conflicts with resolved job page',
+      direction: 'risk',
+      severity: 'medium',
+      weight: 16,
+      evidenceIds: inputConflictEvidence.map(item => item.id || '').filter(Boolean),
+      rationale: 'The submitted job text disagrees with the public job page that HireProof resolved from the URL.',
+    })
+    score = applyTrace(scoreTrace, score, 'Input conflict', 16, 'Conflicting submitted claims keep the report in caution territory.')
   } else if (/official|careers|linkedin/i.test(extractedClaims.applicationPath)) {
     addSignal(signals, {
       id: 'apply_path_professional',
@@ -745,6 +766,7 @@ function deriveIntelligence(
   const hasTrustedHiringSurface = officialEvidence.length > 0 &&
     (comparableEvidence.length > 0 || officialSourceMatches.length > 0) &&
     mismatchEvidence.length === 0 &&
+    !hasInputConflict &&
     reputationRiskEvidence.length === 0 &&
     !contactMethod.includes('telegram') &&
     !contactMethod.includes('whatsapp') &&

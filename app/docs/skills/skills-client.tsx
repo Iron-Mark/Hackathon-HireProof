@@ -28,7 +28,7 @@ const SKILLS: Skill[] = [
     ],
     example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{"method":"tools/call","name":"search_company","arguments":{"company_name":"Accenture","role":"Frontend Developer"}}'`,
     color: 'border-safe/30 bg-safe/5',
     tagColor: 'bg-safe/10 text-safe',
@@ -44,7 +44,7 @@ const SKILLS: Skill[] = [
     ],
     example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{"method":"tools/call","name":"news_check","arguments":{"company_name":"TechStart Solutions","keywords":["scam","fraud"]}}'`,
     color: 'border-evidence/30 bg-evidence/5',
     tagColor: 'bg-evidence/10 text-evidence',
@@ -61,7 +61,7 @@ const SKILLS: Skill[] = [
     ],
     example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{"method":"tools/call","name":"jobs_compare","arguments":{"role":"Frontend Intern","location":"Philippines","level":"Entry Level"}}'`,
     color: 'border-caution/30 bg-caution/5',
     tagColor: 'bg-caution/10 text-caution',
@@ -77,7 +77,7 @@ const SKILLS: Skill[] = [
     ],
     example: `curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{"method":"tools/call","name":"local_presence","arguments":{"company_name":"Accenture","location":"Philippines"}}'`,
     color: 'border-risk-bg bg-risk-bg/10',
     tagColor: 'bg-risk-bg/30 text-risk-text',
@@ -89,7 +89,7 @@ const MCP_CONFIG = `{
     "hireproof": {
       "url": "https://hireproof.tech/api/mcp",
       "headers": {
-        "x-api-key": "hireproof_agent_demo_key"
+        "x-api-key": "<your-account-api-key>"
       }
     }
   }
@@ -98,7 +98,7 @@ const MCP_CONFIG = `{
 const SDK_EXAMPLE = `import HireProof from 'hireproof-sdk'
 
 const client = new HireProof({
-  apiKey: 'hireproof_agent_demo_key',
+  apiKey: '<your-account-api-key>',
   baseUrl: 'https://hireproof.tech',
 })
 
@@ -108,6 +108,11 @@ const result = await client.mcp.callTool('search_company', {
   role: 'Frontend Developer',
 })
 console.log(result.content[0].text)`
+
+const DEMO_REST_EXAMPLE = `curl -X POST https://hireproof.tech/api/v1/audit \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: <your-account-api-key>" \\
+  -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'`
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)
@@ -285,8 +290,10 @@ zip -r hireproof-skill.zip .agents/skills/hireproof/
       {/* Quick Connect */}
       <section className="mb-12">
         <h2 className="mb-4 text-2xl font-black">Quick Connect via MCP</h2>
-        <p className="mb-4 text-sm font-semibold text-muted">Alternatively, connect directly to the live MCP server without downloading anything:</p>
+        <p className="mb-4 text-sm font-semibold text-muted">Alternatively, connect directly to the live MCP server with an account-issued API key and BYOK provider credentials:</p>
         <CodeBlock title="mcp-config.json" code={MCP_CONFIG} />
+        <p className="mb-4 text-sm font-semibold text-muted">Deterministic REST fixtures must include <code className="font-mono">mode=demo</code> and still require an account-issued or private self-hosted API key:</p>
+        <CodeBlock title="demo-rest.sh" code={DEMO_REST_EXAMPLE} />
         <p className="mb-4 text-sm font-semibold text-muted">Or use the TypeScript SDK:</p>
         <CodeBlock title="agent.ts" code={SDK_EXAMPLE} />
       </section>

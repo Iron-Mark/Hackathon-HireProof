@@ -1,12 +1,20 @@
 import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 
 const root = process.cwd()
 const require = createRequire(import.meta.url)
 const mode = process.argv.includes('--test') ? 'test' : 'build'
+const forbiddenCredentialResidue = [
+  new RegExp(['hireproof', 'agent', 'demo', 'key'].join('_'), 'i'),
+  new RegExp(['public', 'demo', 'key'].join(' '), 'i'),
+  new RegExp(['demo', 'api', 'key'].join(' '), 'i'),
+  new RegExp(['bundled', 'demo', 'api', 'key'].join(' '), 'i'),
+  new RegExp(['DEFAULT', 'API', 'KEY'].join('_')),
+]
 
 async function readJson(file) {
   return JSON.parse(await readFile(path.join(root, file), 'utf8'))
@@ -42,7 +50,7 @@ async function validateN8n() {
   const { buildAuditRequestOptions } = require('../integrations/n8n-nodes-hireproof/lib/hireproof-request.js')
   const syncOptions = buildAuditRequestOptions({
     baseUrl: 'https://hireproof.tech/',
-    apiKey: 'hireproof_agent_demo_key',
+    apiKey: 'test-agent-api-key',
     text: 'Remote frontend intern. PHP 80,000/week.',
     mode: 'demo',
   })
@@ -100,13 +108,24 @@ async function validateLangChain() {
   assert.ok(tool.schema.parse({ text: 'Remote frontend intern. PHP 80,000/week.' }))
 
   if (mode === 'test') {
-    const report = await langchain.runHireProofAudit({
-      text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
-      location: 'Philippines',
-      mode: 'demo',
-    })
-    assert.equal(report.verdict, 'high-risk')
-    assert.ok(Number(report.riskScore) >= 80)
+    if (process.env.HIREPROOF_API_KEY) {
+      const report = await langchain.runHireProofAudit({
+        text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+        location: 'Philippines',
+        mode: 'demo',
+      })
+      assert.equal(report.verdict, 'high-risk')
+      assert.ok(Number(report.riskScore) >= 80)
+    } else {
+      await assert.rejects(
+        () => langchain.runHireProofAudit({
+          text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+          location: 'Philippines',
+          mode: 'demo',
+        }),
+        /HireProof API key is required/
+      )
+    }
   }
 
   console.log('LangChain package validated')
@@ -124,6 +143,34 @@ async function validateDownloads() {
   }
   await readJson('public/downloads/hireproof-n8n-workflow.json')
   await readJson('public/downloads/hireproof-make-http-config.json')
+
+  const archives = [
+    'public/downloads/hireproof-extension.zip',
+    'public/downloads/hireproof-native-integrations.zip',
+  ]
+  for (const archive of archives) {
+    const archivePath = path.join(root, archive)
+    if (!existsSync(archivePath)) continue
+
+    const entries = execFileSync('tar', ['-tf', archivePath], { encoding: 'utf8' })
+      .split(/\r?\n/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+    for (const entry of entries) {
+      let content = ''
+      try {
+        content = execFileSync('tar', ['-xOf', archivePath, entry], {
+          encoding: 'utf8',
+          maxBuffer: 20 * 1024 * 1024,
+        })
+      } catch {
+        continue
+      }
+      for (const pattern of forbiddenCredentialResidue) {
+        assert.doesNotMatch(content, pattern, `${archive}:${entry} should not include credential residue ${pattern}`)
+      }
+    }
+  }
 
   console.log('download templates validated')
 }

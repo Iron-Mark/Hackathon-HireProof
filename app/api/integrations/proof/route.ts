@@ -1,7 +1,7 @@
-import { getPlatformReadiness } from '@/lib/platform-readiness'
+import { getPublicPlatformReadiness } from '@/lib/platform-readiness'
 
 export async function GET() {
-  return Response.json(getPlatformReadiness(), {
+  return Response.json(getPublicPlatformReadiness(), {
     headers: { 'Cache-Control': 'no-store' },
   })
 }

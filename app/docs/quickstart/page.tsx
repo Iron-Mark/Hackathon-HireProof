@@ -26,8 +26,8 @@ MODEL_PROVIDER_KEY=your_openai_compatible_api_key
 SERPAPI_API_KEY=your_serpapi_key
 APP_BASE_URL=http://localhost:3002
 
-# Optional: API key for headless agent access
-AGENT_API_KEY=hireproof_agent_demo_key`} />
+# Optional: private API key for live headless and MCP access
+AGENT_API_KEY=paste_generated_private_hex_key_here`} />
         <div className="mt-4 rounded-lg border border-safe/20 bg-safe/5 px-4 py-3 text-xs font-bold text-safe">
           💡 Demo mode works without any API keys. You can skip this step to try the app immediately.
         </div>
@@ -63,8 +63,8 @@ AGENT_API_KEY=hireproof_agent_demo_key`} />
         <h2 className="mb-4 text-2xl font-black">5. Test the Headless API</h2>
         <CodeBlock title="Terminal" code={`curl -X POST http://localhost:3002/api/v1/audit \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
-  -d '{"text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram."}'`} />
+  -H "x-api-key: <your-account-api-key>" \\
+  -d '{"text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.", "mode": "demo"}'`} />
       </section>
     </div>
   )

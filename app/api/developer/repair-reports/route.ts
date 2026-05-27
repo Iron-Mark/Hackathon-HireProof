@@ -1,44 +1,27 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { getUserFromSessionToken } from '@/lib/auth-store'
+import { getUserFromSessionToken, isOperatorUser } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { getReport, saveReport } from '@/lib/db'
 import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
+const REPAIR_REPORTS_PAYLOAD_LIMIT_BYTES = 32 * 1024
 
 async function requireUser() {
   const cookieStore = await cookies()
   return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
 }
 
-function parseOrigin(value: string | null) {
-  if (!value) return null
+type RepairUser = NonNullable<Awaited<ReturnType<typeof requireUser>>>
+type RepairReport = NonNullable<Awaited<ReturnType<typeof getReport>>>
 
-  try {
-    return new URL(value).origin
-  } catch {
-    return null
-  }
-}
-
-function allowedMutationOrigins(request: Request) {
-  const origins = new Set<string>([new URL(request.url).origin])
-  const appBaseOrigin = parseOrigin(process.env.APP_BASE_URL || null)
-  if (appBaseOrigin) origins.add(appBaseOrigin)
-  return origins
-}
-
-function validateMutationOrigin(request: Request) {
-  const origin = request.headers.get('origin')
-  const referer = request.headers.get('referer')
-  const sourceOrigin = parseOrigin(origin) || parseOrigin(referer)
-
-  if (!sourceOrigin || !allowedMutationOrigins(request).has(sourceOrigin)) {
-    return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
-  }
-
-  return null
+function canRepairReport(user: RepairUser, report: RepairReport | null | undefined) {
+  if (!report) return false
+  if (report.ownerId && report.ownerId === user.id) return true
+  return isOperatorUser(user)
 }
 
 function normalizeIds(value: unknown) {
@@ -60,7 +43,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
   }
 
-  const body = await request.json().catch(() => ({}))
+  const rateLimit = await checkRateLimit(`developer_repair_reports:${user.id}:${requestIp(request)}`, {
+    limit: 10,
+    windowMs: 60_000,
+  })
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+  }
+
+  const parsedJson = await readJsonRequest(request, REPAIR_REPORTS_PAYLOAD_LIMIT_BYTES, 'Repair payload')
+  if (!parsedJson.ok) return parsedJson.response
+
+  const body = parsedJson.value
   const ids = normalizeIds(body.ids)
   const dryRun = body.dryRun !== false
 
@@ -72,7 +66,7 @@ export async function POST(request: Request) {
 
   for (const id of ids) {
     const existing = await getReport(id)
-    if (!existing) {
+    if (!existing || !canRepairReport(user, existing)) {
       results.push({ id, status: 'missing', changed: false, changedFields: [] })
       continue
     }
@@ -80,6 +74,11 @@ export async function POST(request: Request) {
     const repaired = repairAuditReportForDisplay(existing)
     if (repaired.changed && !dryRun) {
       await saveReport(repaired.report)
+      console.info('developer repair-reports mutation', {
+        actorUserId: user.id,
+        reportId: id,
+        changedFields: repaired.changedFields,
+      })
     }
 
     results.push({

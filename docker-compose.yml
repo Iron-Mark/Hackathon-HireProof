@@ -11,7 +11,8 @@ services:
       PORT: 3002
       HOSTNAME: 0.0.0.0
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3002}
-      AGENT_API_KEY: ${AGENT_API_KEY:-hireproof_agent_demo_key}
+      AGENT_API_KEY: ${AGENT_API_KEY:?Set a private AGENT_API_KEY before running Docker Compose}
+      REQUIRE_BYOK_FOR_LIVE_API: ${REQUIRE_BYOK_FOR_LIVE_API:-true}
       AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
       VERCEL_AI_GATEWAY_API_KEY: ${VERCEL_AI_GATEWAY_API_KEY:-}
       HIREPROOF_MODEL: ${HIREPROOF_MODEL:-openai/gpt-4o-mini}

@@ -1,15 +1,17 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { getUserFromSessionToken } from '@/lib/auth-store'
+import { getUserFromSessionToken, isOperatorUser } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { noStoreJson } from '@/lib/response-security'
 import { getCursorPublicStatus, startCursorRun } from '@/lib/cursor/client'
 import { resolveDeveloperPresetPrompt } from '@/lib/cursor/presets'
+import { resolveCursorQaBaseUrl } from '@/lib/cursor/qa-target'
 import { listRunsForOwner } from '@/lib/cursor/run-store'
 import type { CursorRunRuntime } from '@/lib/cursor/types'
 
 export const runtime = 'nodejs'
+const CURSOR_RUN_PAYLOAD_LIMIT_BYTES = 32 * 1024
 
 async function requireUser() {
   const cookieStore = await cookies()
@@ -25,7 +27,7 @@ async function validateCursorRunRateLimit(request: Request, userId: string) {
   if (result.success) return null
 
   const retryAfter = 'retryAfterMs' in result ? Math.ceil((result as { retryAfterMs: number }).retryAfterMs / 1000) : 600
-  return NextResponse.json(
+  return noStoreJson(
     { error: 'Rate limit exceeded. Please try again later.' },
     { status: 429, headers: { 'Retry-After': String(retryAfter) } },
   )
@@ -38,9 +40,10 @@ function parseRuntime(value: unknown): CursorRunRuntime | undefined {
 
 export async function GET() {
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
+  if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
 
-  return NextResponse.json({
+  return noStoreJson({
     status: getCursorPublicStatus(),
     runs: await listRunsForOwner(user.id),
     presets: Object.entries({
@@ -56,19 +59,27 @@ export async function POST(request: Request) {
   if (csrfError) return csrfError
 
   const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
+  if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
   if (isDemoAccountEmail(user.email)) {
-    return NextResponse.json({ error: 'Demo accounts cannot start developer runs.' }, { status: 403 })
+    return noStoreJson({ error: 'Demo accounts cannot start developer runs.' }, { status: 403 })
   }
 
   const rateLimitError = await validateCursorRunRateLimit(request, user.id)
   if (rateLimitError) return rateLimitError
 
-  const body = await request.json().catch(() => ({}))
+  const parsedJson = await readJsonRequest(request, CURSOR_RUN_PAYLOAD_LIMIT_BYTES, 'Cursor run payload')
+  if (!parsedJson.ok) return parsedJson.response
+
+  const body = parsedJson.value
   const preset = typeof body.preset === 'string' ? body.preset : 'custom'
-  const baseUrl = typeof body.baseUrl === 'string' && body.baseUrl.trim()
-    ? body.baseUrl.trim()
-    : process.env.APP_BASE_URL || new URL(request.url).origin
+  let baseUrl: string
+  try {
+    baseUrl = resolveCursorQaBaseUrl(body.baseUrl, request.url)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid Cursor QA target.'
+    return noStoreJson({ error: message }, { status: 400 })
+  }
 
   let prompt: string
   try {
@@ -78,7 +89,7 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Invalid Cursor run request.'
-    return NextResponse.json({ error: message }, { status: 400 })
+    return noStoreJson({ error: message }, { status: 400 })
   }
 
   const started = await startCursorRun({
@@ -90,7 +101,7 @@ export async function POST(request: Request) {
   })
 
   if (started.disabled) {
-    return NextResponse.json({
+    return noStoreJson({
       status: 'disabled',
       message: started.reason,
       integration: getCursorPublicStatus(),
@@ -98,13 +109,13 @@ export async function POST(request: Request) {
   }
 
   if (!started.ok || !started.run) {
-    return NextResponse.json({
+    return noStoreJson({
       error: started.reason || 'Could not start Cursor run.',
       integration: getCursorPublicStatus(),
     }, { status: started.reason?.includes('concurrent') ? 429 : 502 })
   }
 
-  return NextResponse.json({
+  return noStoreJson({
     status: 'accepted',
     run: started.run,
     integration: getCursorPublicStatus(),

@@ -1,6 +1,6 @@
 # Cursor integration — automation and cron
 
-Secured ops routes for **scheduled repo health** and **preview UI QA**. Both require header `x-cursor-job-secret` matching deployment env `CURSOR_WEBHOOK_SECRET`, and an operational integration (`CURSOR_INTEGRATION_ENABLED=true` + `CURSOR_API_KEY`).
+Secured ops routes for **scheduled repo health** and **preview UI QA**. Both require header `x-cursor-job-secret` matching deployment env `CURSOR_WEBHOOK_SECRET`, apply a 10 requests/minute route limit per job and client, and require an operational integration (`CURSOR_INTEGRATION_ENABLED=true` + `CURSOR_API_KEY`).
 
 Deploy env setup: [deploy.md](./deploy.md).
 
@@ -8,10 +8,10 @@ Deploy env setup: [deploy.md](./deploy.md).
 
 | Method | Path | Body | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/api/internal/cursor/nightly-repo-health` | — | Start cloud **repo-health** preset (lint/build/docs drift style prompt). |
-| `POST` | `/api/internal/cursor/ui-qa` | `{ "baseUrl": "https://…" }` optional | Start **qa-walkthrough** against `/audit`, `/developer`, `/docs` on the given host. |
+| `POST` | `/api/internal/cursor/nightly-repo-health` | — | Start cloud **repo-health** preset (lint/build/docs drift style prompt). |
+| `POST` | `/api/internal/cursor/ui-qa` | `{ "baseUrl": "https://…" }` optional | Start **qa-walkthrough** against `/audit`, `/developer`, `/docs` on an allowed host. |
 
-Successful start: HTTP `202` with `runId` / `recordId`. Misconfigured secret: `401`. Missing `CURSOR_WEBHOOK_SECRET` on server: `503`. Integration off or no API key: `503` with `credential-required`.
+Successful start: HTTP `202` with `runId` / `recordId`. Rate limited: `429`. Misconfigured secret: `401`. Missing `CURSOR_WEBHOOK_SECRET` on server: `503`. Integration off or no API key: `503` with `credential-required`.
 
 Replace `BASE` and `SECRET` in examples below. Never commit `SECRET` to the repo.
 
@@ -21,13 +21,13 @@ Use this before promoting Cursor cron jobs to production traffic.
 
 1. **Deploy a Preview** from a branch (Vercel Preview deployment).
 2. Copy the Preview URL (e.g. `https://hireproof-git-feature-xyz.vercel.app`).
-3. In Vercel **Preview** env, set `APP_BASE_URL` to that URL (or pass `baseUrl` explicitly in the UI QA call).
+3. In Vercel **Preview** env, set `APP_BASE_URL` to that URL, or add the preview origin to `HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS` before passing it as `baseUrl`.
 4. Ensure Preview has: `CURSOR_INTEGRATION_ENABLED=true`, `CURSOR_API_KEY`, `CURSOR_WEBHOOK_SECRET`, and repo pin vars.
 5. **Trigger UI QA** once manually (curl or PowerShell below) with `"baseUrl": "<preview-url>"`.
 6. Review run metadata in **Developer portal → Cursor Agents** (when logged in) or Cursor dashboard run history.
 7. When satisfied, attach the same cron to **Production** only if you intend ops jobs on production—prefer keeping UI QA on Preview-only schedules.
 
-Default when `baseUrl` is omitted: server uses `APP_BASE_URL`, then the request origin. For cron, **always pass `baseUrl` explicitly** so Preview jobs do not accidentally target production.
+Default when `baseUrl` is omitted: server uses `APP_BASE_URL`, then Vercel deployment URL env, then `https://hireproof.tech`; local development may use a localhost request origin. Explicit `baseUrl` values must match `APP_BASE_URL`, a Vercel deployment URL env, a comma-separated origin in `HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS`, or localhost during development. For cron, **always pass `baseUrl` explicitly** so Preview jobs do not accidentally target production.
 
 ## Linux / macOS cron (curl)
 
@@ -35,7 +35,7 @@ Edit crontab (`crontab -e`). Example times are UTC; adjust to your ops window.
 
 ```cron
 # Nightly repo health — 02:15 UTC daily
-15 2 * * * curl -fsS -X GET \
+15 2 * * * curl -fsS -X POST \
   -H "x-cursor-job-secret: SECRET" \
   "https://hireproof.tech/api/internal/cursor/nightly-repo-health" \
   >> /var/log/hireproof-cursor-nightly.log 2>&1
@@ -55,7 +55,7 @@ Local dev (server on port `3002`):
 
 ```bash
 export CURSOR_WEBHOOK_SECRET='your-local-secret'
-curl -fsS -X GET \
+curl -fsS -X POST \
   -H "x-cursor-job-secret: $CURSOR_WEBHOOK_SECRET" \
   "http://127.0.0.1:3002/api/internal/cursor/nightly-repo-health"
 ```
@@ -70,7 +70,7 @@ Store the secret in the user or machine secret store, or pass via Task Scheduler
 $Base = "https://hireproof.tech"
 $Secret = $env:CURSOR_WEBHOOK_SECRET  # set in Task action / system env
 
-Invoke-RestMethod -Method Get `
+Invoke-RestMethod -Method Post `
   -Uri "$Base/api/internal/cursor/nightly-repo-health" `
   -Headers @{ "x-cursor-job-secret" = $Secret }
 ```
@@ -99,7 +99,7 @@ If you use [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs), first verify t
 
 Example shape (adjust schedule and path; store `CURSOR_WEBHOOK_SECRET` in Vercel env, inject in a small Route Handler or use an external worker that adds the header):
 
-- Schedule: `15 2 * * *` → `GET /api/internal/cursor/nightly-repo-health`
+- Schedule: `15 2 * * *` → `POST /api/internal/cursor/nightly-repo-health`
 - Schedule: `0 9 * * 1` → `POST /api/internal/cursor/ui-qa` with Preview `baseUrl` in body
 
 If custom headers are unsupported, use an external scheduler (cron, GitHub Actions, Azure Logic Apps) that calls the public HTTPS URL with `x-cursor-job-secret`.
@@ -121,7 +121,7 @@ jobs:
         env:
           CURSOR_WEBHOOK_SECRET: ${{ secrets.CURSOR_WEBHOOK_SECRET }}
         run: |
-          curl -fsS -X GET \
+          curl -fsS -X POST \
             -H "x-cursor-job-secret: ${CURSOR_WEBHOOK_SECRET}" \
             "https://hireproof.tech/api/internal/cursor/nightly-repo-health"
 ```

@@ -116,11 +116,12 @@ For API proof:
 ```bash
 curl -X POST https://hireproof.tech/api/v1/audit \
   -H "Content-Type: application/json" \
-  -H "x-api-key: hireproof_agent_demo_key" \
+  -H "x-api-key: $HIREPROOF_API_KEY" \
   -d '{"text":"Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.","mode":"demo"}'
 ```
 
-The public audit and lab UIs default to demo-safe mode so ordinary browsing does not spend hosted provider quota. Demo mode is fixture-based and explicitly labeled. Live evidence mode uses provider-backed checks when credentials are configured.
+The public audit and lab UIs default to demo-safe mode so ordinary browsing does not spend hosted provider quota. Demo mode is fixture-based and explicitly labeled. Protected API and MCP calls require an account-issued key or private self-hosted `AGENT_API_KEY`; live evidence mode uses provider-backed checks when credentials are configured.
+Hosted demos should use the public web UI. Docker and self-hosted production installs must set a private `AGENT_API_KEY` before using protected API or MCP surfaces.
 
 ## What HireProof Checks
 
@@ -150,7 +151,7 @@ HireProof uses a transparent evidence-weighted safety policy.
 | Surface | Safe claim | Boundary |
 | --- | --- | --- |
 | Production web app | Stable public alias is available at `https://hireproof.tech`. | Recheck live URL before final submission or public launch. |
-| API smoke | Demo API path returns a structured High-Risk report with the public demo key. | Live evidence depends on configured model/search credentials. |
+| API smoke | Demo API path returns a structured High-Risk report with a configured API key. | Live evidence depends on configured model/search credentials. |
 | Slack | Screenshot proof exists for a real HireProof reply. | Endpoint-level logs should be recaptured if judges require fresh log proof. |
 | Telegram | Live delivery proof exists with screenshot/log evidence. | The final report-link screenshot should be recaptured after permalink fallback changes. |
 | Discord | Credentials, webhook readiness, install link, and slash commands exist. | Do not claim live Discord proof until a real message screenshot and matching log are captured. |
@@ -222,7 +223,7 @@ Demo fixtures work without provider keys. Live evidence mode needs model/search 
 | App and API | `APP_BASE_URL`, `AGENT_API_KEY`, `SESSION_SECRET` |
 | Model routing | `AI_GATEWAY_API_KEY`, `VERCEL_AI_GATEWAY_API_KEY`, `HIREPROOF_MODEL`, `MODEL_PROVIDER_KEY` |
 | Evidence search | `SERPAPI_API_KEY` |
-| Persistence and rate limits | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REDIS_URL` |
+| Persistence and rate limits | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REDIS_URL`, `TRUST_PROXY_CLIENT_IP_HEADERS` |
 | Hosted BYOK | `BYOK_ENCRYPTION_KEY` |
 | Slack | `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET` |
 | Discord | `DISCORD_BOT_TOKEN`, `DISCORD_PUBLIC_KEY`, `DISCORD_APPLICATION_ID`, `DISCORD_GUILD_ID` |
@@ -312,12 +313,13 @@ pnpm integrations:package
 Docker:
 
 ```bash
+export AGENT_API_KEY="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")"
 npm run docker:build
 npm run docker:run
 npm run docker:smoke
 ```
 
-Docker smoke requires a working Docker runtime.
+Docker smoke requires a working Docker runtime. `docker:run` reads `AGENT_API_KEY` from your shell and enables `REQUIRE_BYOK_FOR_LIVE_API=true` so shared placeholder keys cannot spend platform live provider credentials.
 
 ## Verification
 
@@ -326,6 +328,8 @@ Recommended local gates:
 ```bash
 npm run lint
 npm run build
+npm run audit:security
+npm run test:security
 node --test test/runtime-wiring.test.mjs
 node --test test/byok-credentials.test.mjs
 npm run package:extension
@@ -344,7 +348,7 @@ Invoke-RestMethod -Uri "$base/api/integrations/proof"
 Invoke-RestMethod -Uri "$base/api/v1/audit" `
   -Method Post `
   -ContentType 'application/json' `
-  -Headers @{'x-api-key'='hireproof_agent_demo_key'} `
+  -Headers @{'x-api-key'=$env:HIREPROOF_API_KEY} `
   -Body (@{
     text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'
     mode='demo'

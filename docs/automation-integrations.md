@@ -36,8 +36,8 @@ All native packs use the same backend contract:
 - Sync audit: `POST /api/v1/audit`
 - Async audit: `POST /api/v1/audit` with `webhook_url`
 - Health check: `GET /api/health`
-- Demo API key: `hireproof_agent_demo_key`
-- Live mode requires deployment/provider credentials.
+- API key: account-issued or self-hosted API key required for sync, async, and demo fixture requests
+- Live mode and async webhook runs require an account-issued key plus deployment/provider credentials.
 
 The async webhook path returns `202 processing` immediately, then posts the completed `AuditReport` to the provided callback URL. Runtime is not fixed; it depends on mode, configured credentials, AI/search provider latency, and webhook receiver behavior.
 

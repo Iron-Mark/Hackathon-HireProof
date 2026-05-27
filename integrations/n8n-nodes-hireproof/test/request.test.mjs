@@ -19,14 +19,14 @@ assert.equal(body.webhook_url, undefined)
 
 const asyncOptions = buildAuditRequestOptions({
   baseUrl: 'https://hireproof.tech/',
-  apiKey: 'hireproof_agent_demo_key',
+  apiKey: 'test_hireproof_api_key',
   text: body.text,
   mode: 'demo',
   webhookUrl: 'https://example.com/hireproof-callback',
 })
 
 assert.equal(asyncOptions.url, 'https://hireproof.tech/api/v1/audit')
-assert.equal(asyncOptions.headers['x-api-key'], 'hireproof_agent_demo_key')
+assert.equal(asyncOptions.headers['x-api-key'], 'test_hireproof_api_key')
 assert.equal(asyncOptions.body.webhook_url, 'https://example.com/hireproof-callback')
 
 const credential = new HireProofApi()

@@ -17,18 +17,15 @@ test('extractScreenshotText uses Google Vision OCR when configured', async () =>
     const payload = JSON.parse(init.body)
     assert.equal(payload.requests[0].features[0].type, 'DOCUMENT_TEXT_DETECTION')
     assert.equal(payload.requests[0].image.content, 'aGVsbG8=')
-    return {
-      ok: true,
-      json: async () => ({
-        responses: [
-          {
-            fullTextAnnotation: {
-              text: 'Crossing Hurdles Frontend Developer $20 - $70/hour Remote Easy Apply',
-            },
+    return new Response(JSON.stringify({
+      responses: [
+        {
+          fullTextAnnotation: {
+            text: 'Crossing Hurdles Frontend Developer $20 - $70/hour Remote Easy Apply',
           },
-        ],
-      }),
-    }
+        },
+      ],
+    }), { status: 200 })
   }
 
   try {
@@ -37,6 +34,52 @@ test('extractScreenshotText uses Google Vision OCR when configured', async () =>
     assert.equal(result.status, 'extracted')
     assert.equal(result.provider, 'google-vision')
     assert.match(result.text, /Crossing Hurdles/)
+  } finally {
+    if (previous === undefined) delete process.env.GOOGLE_CLOUD_VISION_API_KEY
+    else process.env.GOOGLE_CLOUD_VISION_API_KEY = previous
+  }
+})
+
+test('extractScreenshotText rejects oversized Google Vision responses before OCR extraction', async () => {
+  const previous = process.env.GOOGLE_CLOUD_VISION_API_KEY
+  process.env.GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
+  let cancelled = false
+
+  const oversizedText = 'Remote software engineer '.repeat(70_000)
+  const oversizedBody = JSON.stringify({
+    responses: [
+      {
+        fullTextAnnotation: {
+          text: oversizedText,
+        },
+      },
+    ],
+  })
+
+  try {
+    const result = await extractScreenshotText(SAMPLE_IMAGE, {
+      fetchImpl: async () => ({
+        ok: true,
+        status: 200,
+        headers: {
+          get: (name) => name.toLowerCase() === 'content-length' ? String(Buffer.byteLength(oversizedBody)) : null,
+        },
+        body: {
+          cancel: async () => {
+            cancelled = true
+          },
+        },
+        text: async () => oversizedBody,
+      }),
+      preprocessTesseract: false,
+      tesseractImpl: {
+        recognize: async () => ({ data: { text: '', confidence: 0 } }),
+      },
+    })
+
+    assert.equal(result.status, 'unavailable')
+    assert.match(result.reason, /Google Vision response exceeded/)
+    assert.equal(cancelled, true)
   } finally {
     if (previous === undefined) delete process.env.GOOGLE_CLOUD_VISION_API_KEY
     else process.env.GOOGLE_CLOUD_VISION_API_KEY = previous

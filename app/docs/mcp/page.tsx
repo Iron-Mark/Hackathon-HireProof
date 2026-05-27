@@ -67,13 +67,13 @@ export default function McpPage() {
         </div>
         <div className="space-y-4">
           <p className="text-sm font-medium text-muted leading-relaxed">
-            MCP clients (like Cursor or Claude) can list and call these tools using standard JSON-RPC over HTTP.
+            MCP clients (like Cursor or Claude) can list and call these tools using standard JSON-RPC over HTTP. MCP tool calls require an account-issued API key with BYOK provider credentials or a private self-hosted API key.
           </p>
-          <CodeBlock title="List all tools" code={`curl https://hireproof.app/api/mcp \\
-  -H "x-api-key: hireproof_agent_demo_key"`} />
-          <CodeBlock title="Call search_company" code={`curl -X POST https://hireproof.app/api/mcp \\
+          <CodeBlock title="List all tools" code={`curl https://hireproof.tech/api/mcp \\
+  -H "x-api-key: <your-account-api-key>"`} />
+          <CodeBlock title="Call search_company" code={`curl -X POST https://hireproof.tech/api/mcp \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: hireproof_agent_demo_key" \\
+  -H "x-api-key: <your-account-api-key>" \\
   -d '{
     "method": "tools/call",
     "name": "search_company",

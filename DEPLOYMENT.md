@@ -9,8 +9,8 @@ The app has been deployed to production on Vercel. The current local working tre
 ### Production URLs
 
 - **Canonical Demo URL**: https://hireproof.tech
-- **Project**: iron-marks-projects/hireproof
-- **Vercel Project ID**: prj_8pHu5GQQ0EzG49bgCcMm1QdNK9JB
+- **Project**: Vercel project details are intentionally not stored in repository docs
+- **Vercel Project ID**: Redacted; use the Vercel dashboard or authenticated CLI when needed
 
 ### Latest Local Verification
 
@@ -70,6 +70,8 @@ The app has been deployed to production on Vercel. The current local working tre
 To enable live features, add to Vercel project settings:
 
 ```env
+AGENT_API_KEY=generate_a_private_random_value
+REQUIRE_BYOK_FOR_LIVE_API=true
 SERPAPI_API_KEY=your_serpapi_key
 AI_GATEWAY_API_KEY=your_ai_gateway_key
 HIREPROOF_MODEL=openai/gpt-4o-mini
@@ -117,12 +119,13 @@ WORKFLOW_SECRET=
 #### Docker Self-Hosting
 
 ```bash
+export AGENT_API_KEY="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")"
 npm run docker:build
 npm run docker:run
 npm run docker:smoke
 ```
 
-The image uses Next.js standalone output, runs on port `3002`, includes a non-root runtime user, and reports container health through `/api/health`.
+The image uses Next.js standalone output, runs on port `3002`, includes a non-root runtime user, and reports container health through `/api/health`. Docker self-hosting requires a private `AGENT_API_KEY`; Compose fails closed if it is missing and defaults `REQUIRE_BYOK_FOR_LIVE_API=true`.
 
 #### Chrome Web Store Package
 

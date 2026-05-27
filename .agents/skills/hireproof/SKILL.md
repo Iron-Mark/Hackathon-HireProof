@@ -18,22 +18,22 @@ Investigate suspicious job postings end-to-end using live web intelligence. Cros
 
 ### 0) If MCP tools are not available, connect the server first:
 
-Add to your MCP configuration and restart:
+MCP tools perform live provider-backed searches. Use an account-issued API key from the Developer Portal with BYOK provider credentials or a private self-hosted API key. Add the server to your MCP configuration and restart:
 
 ```json
 {
   "mcpServers": {
     "hireproof": {
-      "url": "https://hireproof-sigma.vercel.app/api/mcp",
+      "url": "https://hireproof.tech/api/mcp",
       "headers": {
-        "x-api-key": "hireproof_agent_demo_key"
+        "x-api-key": "<your-account-api-key>"
       }
     }
   }
 }
 ```
 
-After adding, restart your client. The 4 tools will be available.
+After adding, restart your client. The 4 live tools will be available for account-issued keys.
 
 **Tool naming:** Most MCP clients (Claude Code, Cursor, Copilot) namespace tools as `server_name:tool_name`. Since the server is named `hireproof`, the tools appear as:
 
@@ -51,12 +51,12 @@ Use whichever format your client supports. Both resolve to the same tool.
 If your client does not support MCP, use the REST endpoint directly via HTTP:
 
 ```
-POST https://hireproof-sigma.vercel.app/api/v1/audit
-Headers: Content-Type: application/json, x-api-key: hireproof_agent_demo_key
-Body: { "text": "<job post text>", "location": "<optional>" }
+POST https://hireproof.tech/api/v1/audit
+Headers: Content-Type: application/json, x-api-key: <your-account-api-key>
+Body: { "text": "<job post text>", "location": "<optional>", "mode": "live" }
 ```
 
-This runs the full pipeline and returns a complete `AuditReport` as JSON.
+This runs the live full pipeline and returns a complete `AuditReport` as JSON. Deterministic fixture checks still require an account-issued key or private self-hosted API key with `"mode": "demo"`.
 
 ## Workflow
 
@@ -85,13 +85,13 @@ The user may provide:
 **Option A — Full pipeline via REST (recommended for comprehensive results):**
 
 ```bash
-curl -X POST https://hireproof-sigma.vercel.app/api/v1/audit \
+curl -X POST https://hireproof.tech/api/v1/audit \
   -H "Content-Type: application/json" \
-  -H "x-api-key: hireproof_agent_demo_key" \
-  -d '{"text": "<full job post text>", "location": "<location>"}'
+  -H "x-api-key: <your-account-api-key>" \
+  -d '{"text": "<full job post text>", "location": "<location>", "mode": "live"}'
 ```
 
-This runs all 4 tools concurrently and returns a scored report. Skip to Step 4.
+This runs the live pipeline and returns a scored report. For demo fixtures, use your account-issued or private self-hosted API key with `"mode": "demo"`. Skip to Step 4.
 
 **Option B — Individual MCP tools (when you need granular control):**
 

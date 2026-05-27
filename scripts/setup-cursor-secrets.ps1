@@ -10,8 +10,7 @@
 
 [CmdletBinding()]
 param(
-    [switch]$DryRun,
-    [string]$CursorApiKeyPlain
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
@@ -104,7 +103,6 @@ function Invoke-VercelEnvAdd {
 
     $vercelArgs = @(
         "env", "add", $Name, $Target,
-        "--value", $trimmedValue,
         "--yes",
         "--force"
     )
@@ -112,7 +110,7 @@ function Invoke-VercelEnvAdd {
         $vercelArgs += "--sensitive"
     }
 
-    $output = @(& vercel @vercelArgs 2>&1)
+    $output = @($trimmedValue | & vercel @vercelArgs 2>&1)
     $exitCode = $LASTEXITCODE
     if ($output) {
         $output | ForEach-Object { Write-Host $_ }
@@ -187,19 +185,8 @@ Write-Host "Generated CURSOR_WEBHOOK_SECRET (32-byte hex, not shown)." -Foregrou
 Write-Host ""
 
 if ($DryRun) {
-    if ($CursorApiKeyPlain) {
-        $CursorApiKey = $CursorApiKeyPlain.Trim()
-    }
-    else {
-        $CursorApiKey = "dry-run-placeholder-key"
-        Write-Host "[DryRun] Skipping CURSOR_API_KEY prompt (placeholder used)." -ForegroundColor Yellow
-    }
-}
-elseif ($CursorApiKeyPlain) {
-    $CursorApiKey = $CursorApiKeyPlain.Trim()
-    if (-not $CursorApiKey) {
-        throw "CURSOR_API_KEY parameter cannot be empty."
-    }
+    $CursorApiKey = "dry-run-placeholder-key"
+    Write-Host "[DryRun] Skipping CURSOR_API_KEY prompt (placeholder used)." -ForegroundColor Yellow
 }
 else {
     $secureKey = Read-Host "Paste CURSOR_API_KEY (Cloud Agents API key)" -AsSecureString

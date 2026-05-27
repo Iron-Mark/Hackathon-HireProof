@@ -22,6 +22,8 @@ async function loadEvidenceBrokerModule({ env = {}, serpapi = {}, fetchImpl } = 
     URLSearchParams,
     AbortController,
     DOMException,
+    TextDecoder,
+    TextEncoder,
     Date,
     setTimeout,
     clearTimeout,
@@ -33,6 +35,15 @@ async function loadEvidenceBrokerModule({ env = {}, serpapi = {}, fetchImpl } = 
           getSerpApiOperationalStatus: () => serpapi.operationalStatus || { status: 'ok', message: 'SerpApi available.' },
           runSmartSerpApiInvestigation: serpapi.runSmartSerpApiInvestigation || (async () => []),
           ensureSerpApiEvidenceCoverage: serpapi.ensureSerpApiEvidenceCoverage || (async (evidence) => evidence),
+        }
+      }
+      if (id === '@/lib/provider-cost-guard') {
+        return {
+          checkProviderCostGuard: async () => ({
+            allowed: true,
+            remaining: Number.MAX_SAFE_INTEGER,
+            status: { status: 'ok', message: 'Test provider cost guard passed.' },
+          }),
         }
       }
       if (id === '@/lib/schemas') return {}
@@ -155,6 +166,40 @@ test('evidence broker degrades gracefully when SerpApi is unavailable', async ()
   assert.ok(result.evidence.some((item) => item.type === 'Domain Age'))
 })
 
+test('evidence broker does not fall back to platform SerpApi when owner key is required', async () => {
+  const calls = []
+  const { runEvidenceBroker } = await loadEvidenceBrokerModule({
+    env: { SERPAPI_API_KEY: 'platform-serpapi-key' },
+    serpapi: {
+      runSmartSerpApiInvestigation: async () => {
+        calls.push('serpapi')
+        return [{ source: 'SerpApi', type: 'Company Check', snippet: 'Platform key was used.' }]
+      },
+    },
+  })
+
+  const result = await runEvidenceBroker({
+    claims: sampleClaims,
+    applicationUrl: 'https://jobs-acme.example/apply',
+  }, {
+    liveSearchAllowed: true,
+    requireOwnerSerpApi: true,
+    providers: {
+      rdap: async () => ({ status: 'not-live', evidence: [] }),
+      dns: async () => ({ status: 'not-live', evidence: [] }),
+      safeBrowsing: async () => ({ status: 'not-live', evidence: [] }),
+      certificateTransparency: async () => ({ status: 'not-live', evidence: [] }),
+      threatIntel: async () => ({ status: 'not-live', evidence: [] }),
+      companyRegistry: async () => ({ status: 'not-live', evidence: [] }),
+      urlscan: async () => ({ status: 'not-live', evidence: [] }),
+    },
+  })
+
+  assert.deepEqual(calls, [])
+  assert.equal(result.operations.evidenceProviders.serpapi.status, 'not-live')
+  assert.match(result.operations.evidenceProviders.serpapi.message, /Owner SerpApi BYOK/i)
+})
+
 test('evidence broker falls through to DNS and certificates when RDAP is throttled', async () => {
   const { runEvidenceBroker } = await loadEvidenceBrokerModule()
 
@@ -175,6 +220,93 @@ test('evidence broker falls through to DNS and certificates when RDAP is throttl
   assert.equal(result.operations.evidenceProviders.rdap.status, 'throttled')
   assert.equal(result.operations.evidenceProviders.dns.status, 'ok')
   assert.ok(result.evidence.some((item) => item.type === 'Certificate Transparency'))
+})
+
+test('evidence broker rejects oversized certificate transparency responses before buffering', async () => {
+  let readBody = false
+  const { runEvidenceBroker } = await loadEvidenceBrokerModule({
+    fetchImpl: async (url) => {
+      assert.match(String(url), /crt\.sh/)
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (name) => name.toLowerCase() === 'content-length' ? String(2 * 1024 * 1024) : null },
+        text: async () => {
+          readBody = true
+          throw new Error('unbounded CT response body was read')
+        },
+      }
+    },
+  })
+
+  const result = await runEvidenceBroker({
+    claims: {
+      ...sampleClaims,
+      applicationPath: 'Apply at https://careers.example.com/job',
+      recruiterEmail: '',
+    },
+    applicationUrl: 'https://careers.example.com/job',
+    text: '',
+  }, {
+    liveSearchAllowed: false,
+    providers: {
+      rdap: async () => ({ status: 'not-live', evidence: [] }),
+      dns: async () => ({ status: 'not-live', evidence: [] }),
+      safeBrowsing: async () => ({ status: 'not-live', evidence: [] }),
+      threatIntel: async () => ({ status: 'not-live', evidence: [] }),
+      companyRegistry: async () => ({ status: 'not-live', evidence: [] }),
+      urlscan: async () => ({ status: 'not-live', evidence: [] }),
+    },
+  })
+
+  assert.equal(readBody, false)
+  assert.equal(result.operations.evidenceProviders.certificateTransparency.status, 'degraded')
+  assert.match(result.operations.evidenceProviders.certificateTransparency.message, /too large/i)
+  assert.ok(!result.evidence.some((item) => item.type === 'Certificate Transparency'))
+})
+
+test('evidence broker fallback response reader enforces byte caps for multibyte bodies', async () => {
+  const multibyteName = 'あ'.repeat(6000)
+  const oversizedJson = JSON.stringify([{ name_value: multibyteName, entry_timestamp: '2026-05-01T00:00:00Z' }])
+  assert.ok(oversizedJson.length < 16 * 1024)
+  assert.ok(new TextEncoder().encode(oversizedJson).byteLength > 16 * 1024)
+
+  const { runEvidenceBroker } = await loadEvidenceBrokerModule({
+    env: { EVIDENCE_PROVIDER_MAX_RESPONSE_BYTES: String(16 * 1024) },
+    fetchImpl: async (url) => {
+      assert.match(String(url), /crt\.sh/)
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        text: async () => oversizedJson,
+      }
+    },
+  })
+
+  const result = await runEvidenceBroker({
+    claims: {
+      ...sampleClaims,
+      applicationPath: 'Apply at https://careers.example.com/job',
+      recruiterEmail: '',
+    },
+    applicationUrl: 'https://careers.example.com/job',
+    text: '',
+  }, {
+    liveSearchAllowed: false,
+    providers: {
+      rdap: async () => ({ status: 'not-live', evidence: [] }),
+      dns: async () => ({ status: 'not-live', evidence: [] }),
+      safeBrowsing: async () => ({ status: 'not-live', evidence: [] }),
+      threatIntel: async () => ({ status: 'not-live', evidence: [] }),
+      companyRegistry: async () => ({ status: 'not-live', evidence: [] }),
+      urlscan: async () => ({ status: 'not-live', evidence: [] }),
+    },
+  })
+
+  assert.equal(result.operations.evidenceProviders.certificateTransparency.status, 'degraded')
+  assert.match(result.operations.evidenceProviders.certificateTransparency.message, /too large/i)
+  assert.ok(!result.evidence.some((item) => item.type === 'Certificate Transparency'))
 })
 
 test('evidence broker treats missing Safe Browsing as neutral but known-bad hits as risk', async () => {
@@ -259,6 +391,13 @@ test('audit signal scoring understands domain and threat-intel evidence', async 
     {
       source: 'HireProof domain broker',
       type: 'Domain Mismatch',
+      snippet: 'Risk signal: submitted apply domain jobs-acme-security.example does not match official company root acme.example.',
+      sourceType: 'domain',
+      trustLevel: 'risk',
+    },
+    {
+      source: 'HireProof domain broker',
+      type: 'Domain Mismatch',
       snippet: 'Trust signal: submitted apply domain acme.example matches the official company root acme.example.',
       sourceType: 'domain',
       trustLevel: 'medium',
@@ -269,7 +408,39 @@ test('audit signal scoring understands domain and threat-intel evidence', async 
   assert.ok(ids.includes('domain.newly_registered'))
   assert.ok(ids.includes('domain.recruiter_mismatch'))
   assert.ok(ids.includes('threat.known_bad_url'))
+  assert.ok(ids.includes('domain.apply_mismatch'))
   assert.ok(ids.includes('domain.apply_official'))
+})
+
+test('structured domain mismatch risk evidence scores as caution instead of safe', async () => {
+  const { buildAuditSignals, scoreAuditSignals } = await import('../lib/audit-signals.mjs')
+  const claims = {
+    company: 'Acme Careers',
+    role: 'Frontend Developer',
+    salary: 'Not listed',
+    location: 'Remote',
+    contactMethod: 'Email',
+    applicationPath: 'Provided job URL',
+  }
+  const evidence = [
+    {
+      source: 'HireProof domain broker',
+      type: 'Domain Mismatch',
+      snippet: 'Risk signal: submitted apply domain jobs-acme-security.example does not match official company root acme.example.',
+      sourceType: 'domain',
+      trustLevel: 'risk',
+      sourceQuality: 'risky',
+      matchConfidence: 0.86,
+    },
+  ]
+
+  const signals = buildAuditSignals(claims, [], [], evidence)
+  const ids = signals.map((signal) => signal.id)
+  const score = scoreAuditSignals(signals, evidence)
+
+  assert.ok(ids.includes('domain.apply_mismatch'))
+  assert.ok(!ids.includes('evidence.negative_reputation'))
+  assert.ok(score >= 35)
 })
 
 test('structured broker evidence does not self-trigger generic negative reputation', async () => {

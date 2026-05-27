@@ -176,9 +176,12 @@ function Tooltip({
 export function SiteFooter() {
   const [health, setHealth] = useState<{
     status: string;
-    storage: string;
-    liveSearch: boolean;
-    model: boolean;
+    readiness?: {
+      state?: string;
+    };
+    costPosture?: {
+      publicLiveEvidence?: boolean;
+    };
   } | null>(null);
 
   useEffect(() => {
@@ -329,14 +332,14 @@ export function SiteFooter() {
             <Tooltip
               content={
                 health
-                  ? `Infrastructure: ${health.storage} | Search Capabilities: ${health.liveSearch ? "Enabled" : "Disabled"}`
+                  ? `Public API status: ${health.readiness?.state || health.status}`
                   : "Checking system configuration..."
               }
             >
               <div className="flex items-center gap-2 text-[10px] font-black text-muted uppercase tracking-widest cursor-default">
                 <Globe className="h-3 w-3" />
                 {health
-                  ? `${health.storage} · ${health.liveSearch && health.model ? "live ready" : "demo/local ready"}`
+                  ? `public api · ${health.costPosture?.publicLiveEvidence ? "live-enabled" : "cost-guarded"}`
                   : "Checking"}
               </div>
             </Tooltip>

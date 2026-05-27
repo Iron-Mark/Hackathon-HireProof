@@ -19,7 +19,7 @@ const CURSOR_PROMPT_PRESETS = [
 
 export function ApiPlayground() {
   const [text, setText] = useState('Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.')
-  const [apiKey, setApiKey] = useState('hireproof_agent_demo_key')
+  const [apiKey, setApiKey] = useState('')
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState<any>(null)
   const [copiedPresetId, setCopiedPresetId] = useState<string | null>(null)
@@ -78,6 +78,7 @@ export function ApiPlayground() {
             <input
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Paste your API key"
               className="w-full rounded-xl border border-border-soft bg-background p-3 font-mono text-xs outline-none focus:border-safe/30 focus:ring-4 focus:ring-safe/5"
             />
           </div>

@@ -40,7 +40,8 @@
     "httpStatus": 200,
     "status": "ChatSDK Agents verdict formatted.",
     "platform": "discord",
-    "reportUrl": "https://hireproof-sigma.vercel.app/audit/chat_1777833939429",
+    "reportUrl": null,
+    "reportUrlStatus": "redacted: legacy timestamp permalink invalid after UUID hardening; recapture live proof before using this artifact as current evidence",
     "verdict": "high-risk",
     "riskScore": 92
   },

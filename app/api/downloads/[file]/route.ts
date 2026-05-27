@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { NextResponse } from 'next/server'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { requestIp } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 
@@ -12,12 +13,6 @@ const ALLOWED_DOWNLOADS: Record<string, { contentType: string }> = {
   'hireproof-make-http-config.json': { contentType: 'application/json; charset=utf-8' },
   'hireproof-n8n-workflow.json': { contentType: 'application/json; charset=utf-8' },
   'hireproof-native-integrations.zip': { contentType: 'application/zip' },
-}
-
-function requestIp(request: Request) {
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  return realIp || forwarded || 'unknown'
 }
 
 export async function GET(request: Request, context: { params: Promise<{ file: string }> }) {

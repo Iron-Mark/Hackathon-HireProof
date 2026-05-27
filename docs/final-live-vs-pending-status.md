@@ -13,7 +13,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | Screenshot OCR audit path | Implemented and production-smoke-proven | Google Vision OCR evidence receipt, Tesseract fallback in repo |
 | Screenshot privacy default | Implemented | Screenshot reports are excluded from Explore/Trends by default |
 | Public job URL enrichment | Implemented | Supported job URLs are resolved before claim extraction |
-| Demo audit API | Live | `POST /api/v1/audit` with `hireproof_agent_demo_key` |
+| Demo audit API | Live | `POST /api/v1/audit` with a configured API key and `mode=demo` |
 | Live SerpApi audit path | Live and smoke-proven | `POST /api/v1/audit` with `mode=live`, clean Canva extraction, and live evidence |
 | MCP investigation tools | Implemented | `/api/mcp` and docs |
 | ChatSDK shared bot path | Implemented | `/api/chat/hireproof`, `/api/webhooks/*` |
@@ -85,7 +85,7 @@ This proves the evidence broker status object is returned in live SSE results. I
 
 Checked locally on 2026-05-04 after Phase 3:
 
-- Local report: `/audit/report_1777857241946`
+- Local report: generated pre-UUID local report permalink. Current report links use UUID-backed IDs.
 - Input: Vercel role with `https://vercel.com/careers` and `recruiting@vercel.com`
 - Provider keys present: SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, urlscan
 - Browser check: provider-status panel rendered at `375px` and `1280px`
@@ -157,7 +157,7 @@ Use for alternatives:
 $base='https://hireproof.tech'
 Invoke-RestMethod -Uri "$base/api/health"
 Invoke-RestMethod -Uri "$base/api/integrations/proof"
-Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'='hireproof_agent_demo_key'} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
+Invoke-RestMethod -Uri "$base/api/v1/audit" -Method Post -ContentType 'application/json' -Headers @{'x-api-key'=$env:HIREPROOF_API_KEY} -Body (@{text='Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.'; mode='demo'} | ConvertTo-Json)
 Invoke-WebRequest -UseBasicParsing "$base/downloads/hireproof-native-integrations.zip"
 Invoke-WebRequest -UseBasicParsing "$base/downloads/hireproof-extension.zip"
 ```

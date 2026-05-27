@@ -39,6 +39,10 @@ const hireProofTool = createHireProofAuditTool({
 
 Do not place callback URLs in the job post, prompt, or tool-call arguments.
 
+## Response bounds
+
+The helper rejects audit API responses larger than 256 KB before parsing JSON. HireProof reports are expected to be compact; a larger response is treated as a failed or unsafe upstream response.
+
 ## Exports
 
 - `createHireProofAuditTool`

@@ -40,7 +40,59 @@ const COMMANDS = [
   { command: 'exit', screen: 'exit', aliases: ['quit'] },
 ]
 
+const MAX_API_RESPONSE_BYTES = 256 * 1024
 const ColorContext = React.createContext(true)
+
+function apiResponseTooLargeError() {
+  return new Error(`HireProof API response too large (max ${MAX_API_RESPONSE_BYTES} bytes).`)
+}
+
+async function readBoundedJsonResponse(response) {
+  const contentLength = Number(response.headers?.get?.('content-length') || '0')
+  if (Number.isFinite(contentLength) && contentLength > MAX_API_RESPONSE_BYTES) {
+    throw apiResponseTooLargeError()
+  }
+
+  if (!response.body?.getReader) {
+    const text = await response.text()
+    if (Buffer.byteLength(text, 'utf8') > MAX_API_RESPONSE_BYTES) throw apiResponseTooLargeError()
+    try {
+      return text ? JSON.parse(text) : null
+    } catch {
+      return null
+    }
+  }
+
+  const reader = response.body.getReader()
+  const chunks = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (!value) continue
+    totalBytes += value.byteLength
+    if (totalBytes > MAX_API_RESPONSE_BYTES) {
+      await reader.cancel().catch(() => undefined)
+      throw apiResponseTooLargeError()
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  try {
+    const text = new TextDecoder().decode(merged)
+    return text ? JSON.parse(text) : null
+  } catch {
+    return null
+  }
+}
 
 function useInkColor(value) {
   return useContext(ColorContext) ? value : undefined
@@ -213,24 +265,20 @@ function ConfigScreen({ baseUrl, apiKey }) {
 }
 
 function HealthScreen({ health }) {
-  const gateway = health?.modelProvider?.aiGateway
+  const cost = health?.costPosture || {}
   const muted = useInkColor('gray')
   const apiTone = useInkColor(statusTone(health?.status))
-  const searchTone = useInkColor(statusTone(health?.liveSearch))
-  const modelTone = useInkColor(statusTone(health?.model))
-  const gatewayTone = useInkColor(statusTone(gateway))
   const rows = [
     ['API', health?.status || 'not checked', apiTone],
-    ['Live search', health?.liveSearch ? 'ready' : 'not checked', searchTone],
-    ['Model', health?.model ? 'ready' : 'not checked', modelTone],
-    ['AI Gateway', gateway ? 'ready' : 'not checked', gatewayTone],
+    ['Readiness', health?.readiness?.state || 'not checked', apiTone],
+    ['Live evidence', cost.publicLiveEvidence ? 'public-enabled' : 'cost-guarded', apiTone],
+    ['OCR', cost.publicOcr ? 'public-enabled' : 'cost-guarded', apiTone],
+    ['API live mode', cost.byokRequiredForApiLive ? 'BYOK required' : 'credential-gated', apiTone],
   ]
   return React.createElement(Panel, { title: 'Health Matrix', borderColor: '#12864f' }, React.createElement(Box, { flexDirection: 'column' }, [
     React.createElement(ScreenTitle, { key: 'title' }, 'Health'),
     React.createElement(Text, { key: 'api' }, `API: ${health?.status || 'not checked'}`),
-    React.createElement(Text, { key: 'search' }, `Live search: ${health?.liveSearch ? 'ready' : 'not checked'}`),
-    React.createElement(Text, { key: 'model' }, `Model: ${health?.model ? 'ready' : 'not checked'}`),
-    React.createElement(Text, { key: 'gateway' }, `AI Gateway: ${gateway ? 'ready' : 'not checked'}`),
+    React.createElement(Text, { key: 'readiness' }, `Readiness: ${health?.readiness?.state || 'not checked'}`),
     ...rows.map(([label, value, color]) => React.createElement(Text, { key: `row-${label}`, color }, `${label.padEnd(12)} ${value}`)),
     React.createElement(Text, { key: 'hint', color: muted }, 'Run health from the menu or command: hireproof health.'),
   ]))
@@ -446,12 +494,12 @@ export function HireProofTuiApp({
       body: JSON.stringify(payload),
     })
     if (!response.ok) throw new Error(`Audit failed: HTTP ${response.status}`)
-    return response.json()
+    return readBoundedJsonResponse(response)
   })
   const runHealthClient = healthClient || (async () => {
     const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/api/health`)
     if (!response.ok) throw new Error(`Health check failed: HTTP ${response.status}`)
-    return response.json()
+    return readBoundedJsonResponse(response)
   })
 
   useEffect(() => {
@@ -459,7 +507,7 @@ export function HireProofTuiApp({
     if (screen === 'health' && !health) {
       runHealthClient()
         .then(nextHealth => { if (active) setHealth(nextHealth) })
-        .catch(() => { if (active) setHealth({ status: 'error', liveSearch: false, model: false }) })
+        .catch(() => { if (active) setHealth({ status: 'error', readiness: { state: 'unknown' }, costPosture: {} }) })
     }
     return () => { active = false }
   }, [screen])

@@ -159,7 +159,7 @@ for (const platform of platforms) {
   webhookChecks[platform.key] = await getJson(`${base}${platform.endpoint}`)
 }
 
-const surfaces = readiness.body?.surfaces || {}
+const surfaces = readiness.body?.publicSurfaces || readiness.body?.surfaces || {}
 const report = {
   checkedAt,
   base,
@@ -191,8 +191,8 @@ const report = {
     key,
     {
       httpStatus: value.status,
-      ready: value.body?.credentialStatus?.ready,
-      credentialStatus: value.body?.credentialStatus,
+      ready: value.body?.readiness?.ready,
+      readiness: value.body?.readiness,
     },
   ])),
 }

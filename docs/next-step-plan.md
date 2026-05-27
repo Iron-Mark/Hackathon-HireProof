@@ -32,7 +32,7 @@ Production health result:
 
 Audit proof:
 
-- `POST /api/v1/audit` with `x-api-key: hireproof_agent_demo_key` and `mode: demo` returns a High-Risk report with score `92`.
+- `POST /api/v1/audit` with a configured API key and `mode: demo` returns a High-Risk report with score `92`.
 - `POST /api/audit` with production `Origin` / `Referer` returns SSE result events for live audits.
 - Raw live audit POSTs without `Origin` or `Referer` return `403 Insecure Request: Missing Origin/Referer`, which is expected from CSRF/origin hardening.
 
@@ -108,8 +108,8 @@ Verification:
 - `node --test test/runtime-wiring.test.mjs` passed.
 - `npm run lint` passed.
 - `npm run build` passed.
-- Local live audit generated `report_1777857241946` with provider statuses for SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, and urlscan.
-- Playwright verified `/audit/report_1777857241946` renders the provider-status panel at `375px` and `1280px` without horizontal overflow.
+- Local live audit generated a pre-UUID report permalink with provider statuses for SerpApi, RDAP, DNS, Safe Browsing, Certificate Transparency, Threat Intel, Company Registry, and urlscan.
+- Playwright verified the generated local report page rendered the provider-status panel at `375px` and `1280px` without horizontal overflow. Current report links use UUID-backed IDs.
 
 Remaining manual action:
 
@@ -240,7 +240,7 @@ Invoke-WebRequest -UseBasicParsing "$base/api/workflows/audit" | Select-Object S
 Acceptance:
 
 - All pages return `200`.
-- `/api/health` reports storage, model, and live search honestly.
+- `/api/health` reports coarse public readiness and cost posture only; authenticated developer surfaces carry detailed provider readiness.
 - ChatSDK and Workflow endpoints return credential-gated status if credentials are absent.
 
 ## Phase 5: Checkpoint And Sync

@@ -31,6 +31,10 @@ console.log(report.riskScore)  // 85
 console.log(report.redFlags)   // ['Unrealistically high salary...', ...]
 ```
 
+## Response bounds
+
+The SDK rejects API responses larger than 256 KB before JSON parsing. HireProof reports and MCP responses are expected to be compact; larger responses are treated as failed upstream responses.
+
 ## API
 
 ### `client.audit.investigate(request)` — Synchronous investigation

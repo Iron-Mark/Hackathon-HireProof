@@ -1,4 +1,5 @@
 const base = process.env.HIREPROOF_DOCKER_BASE_URL || 'http://127.0.0.1:3002'
+const agentApiKey = process.env.AGENT_API_KEY || 'local-dev-agent-key-32-char-minimum-value'
 
 async function assertOk(name, request) {
   const response = await request()
@@ -15,7 +16,7 @@ const auditResponse = await assertOk('demo audit', () => fetch(`${base}/api/v1/a
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': process.env.AGENT_API_KEY || 'hireproof_agent_demo_key',
+    'x-api-key': agentApiKey,
   },
   body: JSON.stringify({
     text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',

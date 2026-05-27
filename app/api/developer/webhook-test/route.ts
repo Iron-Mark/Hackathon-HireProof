@@ -1,60 +1,55 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getUserFromSessionToken, listApiKeys } from '@/lib/auth-store'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { buildHireProofWebhookHeaders } from '@/lib/webhook-signing.mjs'
+import { validateWebhookUrl, WebhookUrlValidationError } from '@/lib/webhook-url-security'
+import { noStoreJson } from '@/lib/response-security'
+
+const WEBHOOK_TEST_PAYLOAD_LIMIT_BYTES = 32 * 1024
+
+async function discardWebhookReceiverResponse(response: Response) {
+  await response.body?.cancel().catch(() => undefined)
+}
 
 export async function POST(request: Request) {
+  const csrfError = validateMutationOrigin(request)
+  if (csrfError) return csrfError
+
   // 1. Authenticate (optional strict check, but good practice for developer portals)
   const cookieStore = await cookies()
   const user = await getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
   
   if (!user) {
-    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+    return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
+  }
+
+  const rateLimit = await checkRateLimit(`developer_webhook_test:${user.id}:${requestIp(request)}`, {
+    limit: 10,
+    windowMs: 60000,
+  })
+  if (!rateLimit.success) {
+    return noStoreJson({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
   try {
-    const { url } = await request.json()
+    const parsedJson = await readJsonRequest(request, WEBHOOK_TEST_PAYLOAD_LIMIT_BYTES, 'Webhook test payload')
+    if (!parsedJson.ok) return parsedJson.response
+
+    const body = parsedJson.value
+    let url = body?.url
 
     if (!url || typeof url !== 'string') {
-      return NextResponse.json({ error: 'Invalid or missing webhook URL.' }, { status: 400 })
+      return noStoreJson({ error: 'Invalid or missing webhook URL.' }, { status: 400 })
     }
 
-    let parsedUrl: URL
     try {
-      parsedUrl = new URL(url)
-    } catch {
-      return NextResponse.json({ error: 'Invalid webhook URL format.' }, { status: 400 })
-    }
-
-    // SSRF Protection: 1. Scheme Validation
-    if (parsedUrl.protocol !== 'https:') {
-      return NextResponse.json({ error: 'Webhooks must use the https:// protocol.' }, { status: 400 })
-    }
-
-    // SSRF Protection: 2. Hostname Blacklisting
-    const hostname = parsedUrl.hostname.toLowerCase()
-    
-    // Check for explicit local/private hostnames
-    if (hostname === 'localhost' || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
-      return NextResponse.json({ error: 'Local network destinations are strictly prohibited.' }, { status: 400 })
-    }
-
-    // Check for IP-based SSRF (Metadata, Loopback, Private IPs)
-    const blockedIPRanges = [
-      /^127\./,                            // Loopback (127.x.x.x)
-      /^10\./,                             // Private Class A (10.x.x.x)
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,    // Private Class B (172.16.x.x - 172.31.x.x)
-      /^192\.168\./,                       // Private Class C (192.168.x.x)
-      /^169\.254\./,                       // AWS/GCP/Azure Metadata service (169.254.x.x)
-      /^0\./,                              // 0.x.x.x
-      /^::1$/,                             // IPv6 Loopback
-      /^\[::1\]$/                          // IPv6 Loopback (Bracketed)
-    ]
-
-    for (const regex of blockedIPRanges) {
-      if (regex.test(hostname)) {
-        return NextResponse.json({ error: 'Prohibited IP address detected in webhook destination.' }, { status: 400 })
+      url = await validateWebhookUrl(url)
+    } catch (error) {
+      if (error instanceof WebhookUrlValidationError) {
+        return noStoreJson({ error: error.message }, { status: 400 })
       }
+      return noStoreJson({ error: 'Invalid webhook URL format.' }, { status: 400 })
     }
 
     // 2. Generate a mock payload matching the HireProof shape
@@ -96,18 +91,27 @@ export async function POST(request: Request) {
       headers: signedHeaders,
       body: payload,
       signal: controller.signal,
+      redirect: 'manual',
     })
 
     clearTimeout(timeoutId)
+    await discardWebhookReceiverResponse(response)
+
+    if (response.status >= 300 && response.status < 400) {
+      return noStoreJson(
+        { error: `Webhook redirects are not followed for safety. Receiver returned status ${response.status}` },
+        { status: 502 }
+      )
+    }
 
     if (!response.ok) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: `Webhook receiver returned status ${response.status}` },
         { status: 502 }
       )
     }
 
-    return NextResponse.json({
+    return noStoreJson({
       success: true,
       status: response.status,
       preview: {
@@ -122,8 +126,8 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      return NextResponse.json({ error: 'Webhook request timed out after 8 seconds.' }, { status: 504 })
+      return noStoreJson({ error: 'Webhook request timed out after 8 seconds.' }, { status: 504 })
     }
-    return NextResponse.json({ error: `Failed to dispatch webhook: ${error.message}` }, { status: 500 })
+    return noStoreJson({ error: `Failed to dispatch webhook: ${error.message}` }, { status: 500 })
   }
 }

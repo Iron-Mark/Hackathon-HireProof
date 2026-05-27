@@ -3,7 +3,7 @@
   "url": "https://hireproof.tech/api/v1/audit",
   "headers": {
     "Content-Type": "application/json",
-    "x-api-key": "hireproof_agent_demo_key"
+    "x-api-key": "test_hireproof_api_key"
   },
   "body": {
     "text": "Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.",

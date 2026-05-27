@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import { repairAuditReportForDisplay } from '../lib/report-repair.mjs'
 
 const baseReport = {
-  id: 'chat_1777847068717',
+  id: 'chat_8ecbb942-71d4-4d9b-a8a8-b7f7a0fc09b5',
   version: '2',
   verdict: 'safe',
   riskScore: 18,
@@ -79,7 +79,7 @@ test('repairAuditReportForDisplay cleans archived LinkedIn UI artifacts without 
 test('repairAuditReportForDisplay recovers LinkedIn title and location from archived evidence', () => {
   const { report, changedFields } = repairAuditReportForDisplay({
     ...baseReport,
-    id: 'chat_1777850197131',
+    id: 'chat_871727f9-d26f-4b89-b7ad-d5807826c4be',
     timestamp: '2026-05-04T01:00:00.000Z',
     extractedClaims: {
       company: 'Dexian Asia Pacific',
@@ -108,7 +108,7 @@ test('repairAuditReportForDisplay recovers LinkedIn title and location from arch
     ],
   })
 
-  assert.equal(report.id, 'chat_1777850197131')
+  assert.equal(report.id, 'chat_871727f9-d26f-4b89-b7ad-d5807826c4be')
   assert.equal(report.timestamp, '2026-05-04T01:00:00.000Z')
   assert.equal(report.extractedClaims.role, 'Quality Assurance Automation Engineer')
   assert.equal(report.extractedClaims.location, 'Manila, National Capital Region, Philippines')
@@ -156,12 +156,46 @@ test('repairAuditReportForDisplay keeps missing-evidence warnings for generic pu
   assert.ok(!changedFields.includes('redFlags'))
   assert.ok(!changedFields.includes('summary'))
 })
+
 test('developer report repair endpoint is authenticated, same-origin guarded, and dry-run capable', async () => {
   const source = await fs.readFile(new URL('../app/api/developer/repair-reports/route.ts', import.meta.url), 'utf8')
 
   assert.match(source, /getUserFromSessionToken/)
   assert.match(source, /validateMutationOrigin/)
+  assert.match(source, /from '@\/lib\/request-security'/)
+  assert.doesNotMatch(source, /function allowedMutationOrigins/)
+  assert.doesNotMatch(source, /new URL\(request\.url\)\.origin/)
   assert.match(source, /dryRun/)
   assert.match(source, /repairAuditReportForDisplay/)
   assert.match(source, /saveReport/)
+})
+
+test('developer report repair endpoint enforces owner or operator authorization', async () => {
+  const source = await fs.readFile(new URL('../app/api/developer/repair-reports/route.ts', import.meta.url), 'utf8')
+  const authStore = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /canRepairReport/)
+  assert.match(source, /report\.ownerId && report\.ownerId === user\.id/)
+  assert.match(source, /isOperatorUser\(user\)/)
+  assert.match(authStore, /HIREPROOF_REPAIR_OPERATOR_EMAILS/)
+  assert.match(authStore, /HIREPROOF_ADMIN_EMAILS/)
+  assert.match(source, /!existing \|\| !canRepairReport\(user, existing\)/)
+  assert.match(source, /developer repair-reports mutation/)
+  assert.doesNotMatch(source, /status: 'forbidden'/)
+})
+
+test('developer report repair endpoint rate-limits repair mutations before parsing payloads', async () => {
+  const source = await fs.readFile(new URL('../app/api/developer/repair-reports/route.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /checkRateLimit/)
+  assert.match(source, /developer_repair_reports:\$\{user\.id\}:\$\{requestIp\(request\)\}/)
+  assert.match(source, /Rate limit exceeded/)
+  assert.ok(
+    source.indexOf('checkRateLimit') < source.indexOf('readJsonRequest(request'),
+    'repair route should rate-limit before body parsing',
+  )
+  assert.ok(
+    source.indexOf('checkRateLimit') < source.indexOf('await saveReport(repaired.report)'),
+    'repair route should rate-limit before rewriting reports',
+  )
 })

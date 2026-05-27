@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -102,14 +102,18 @@ test('HireProof CLI checks API health', async () => {
     assert.equal(request.method, 'GET')
     assert.equal(request.url, '/api/health')
     response.setHeader('content-type', 'application/json')
-    response.end(JSON.stringify({ status: 'ok', liveSearch: true, model: true }))
+    response.end(JSON.stringify({
+      status: 'ok',
+      readiness: { state: 'ready' },
+      costPosture: { publicLiveEvidence: false, publicOcr: false, byokRequiredForApiLive: true },
+    }))
   }, async (baseUrl) => {
     const result = await runCli(['health', '--base-url', baseUrl])
 
     assert.equal(result.code, 0)
     assert.match(result.stdout, /HireProof API: ok/)
-    assert.match(result.stdout, /Live search\s+ready/)
-    assert.match(result.stdout, /Model\s+ready/)
+    assert.match(result.stdout, /Readiness\s+ready/)
+    assert.match(result.stdout, /Live evidence\s+cost-guarded/)
   })
 })
 
@@ -145,6 +149,53 @@ test('HireProof CLI audits inline text and can print JSON', async () => {
     assert.doesNotMatch(result.stdout, ansiPattern)
     assert.doesNotMatch(result.stdout, /HIREPROOF TERMINAL REPORT/)
   })
+})
+
+test('HireProof CLI rejects oversized audit API responses before rendering', async () => {
+  const oversizedReport = JSON.stringify({
+    ...sampleReport({ verdict: 'safe', riskScore: 1 }),
+    summary: 'x'.repeat((256 * 1024) + 1),
+  })
+
+  await withMockHireProofApi((request, response) => {
+    assert.equal(request.method, 'POST')
+    assert.equal(request.url, '/api/v1/audit')
+    response.setHeader('content-type', 'application/json')
+    response.setHeader('content-length', String(Buffer.byteLength(oversizedReport)))
+    response.end(oversizedReport)
+  }, async (baseUrl) => {
+    const result = await runCli([
+      'audit',
+      '--text',
+      'Remote job. Huge pay. Telegram only.',
+      '--api-key',
+      'test_key',
+      '--base-url',
+      baseUrl,
+      '--json',
+    ])
+
+    assert.equal(result.code, 1)
+    assert.match(result.stderr, /HireProof API response too large/)
+    assert.equal(result.stdout, '')
+  })
+})
+
+test('HireProof TUI default API clients use bounded response parsing', async () => {
+  const source = await readFile(new URL('../packages/hireproof-cli/lib/tui-app.mjs', import.meta.url), 'utf8')
+
+  assert.match(source, /MAX_API_RESPONSE_BYTES\s*=\s*256\s*\*\s*1024/)
+  assert.match(source, /readBoundedJsonResponse/)
+  assert.match(source, /reader\.cancel\(\)\.catch\(\(\) => undefined\)/)
+  assert.doesNotMatch(source, /return response\.json\(\)/)
+})
+
+test('HireProof CLI default API client cancels oversized streaming responses', async () => {
+  const source = await readFile(new URL('../packages/hireproof-cli/bin/hireproof.mjs', import.meta.url), 'utf8')
+
+  assert.match(source, /readBoundedJsonResponse/)
+  assert.match(source, /reader\.cancel\(\)\.catch\(\(\) => undefined\)/)
+  assert.doesNotMatch(source, /return response\.json\(\)/)
 })
 
 test('HireProof CLI audits a text file with rich branded output', async () => {
@@ -235,10 +286,8 @@ test('HireProof CLI health output uses branded readiness card', async () => {
     response.setHeader('content-type', 'application/json')
     response.end(JSON.stringify({
       status: 'ok',
-      storage: 'redis',
-      liveSearch: true,
-      model: true,
-      modelProvider: { aiGateway: true, openaiCompatible: true, model: 'openai/gpt-4o-mini' },
+      readiness: { state: 'ready' },
+      costPosture: { publicLiveEvidence: true, publicOcr: false, byokRequiredForApiLive: true },
     }))
   }, async (baseUrl) => {
     const result = await runCli(['health', '--base-url', baseUrl, '--no-color'])
@@ -246,8 +295,8 @@ test('HireProof CLI health output uses branded readiness card', async () => {
     assert.equal(result.code, 0)
     assert.match(result.stdout, /HIREPROOF HEALTH CHECK/)
     assert.match(result.stdout, /API\s+ok/)
-    assert.match(result.stdout, /Live search\s+ready/)
-    assert.match(result.stdout, /AI Gateway\s+ready/)
+    assert.match(result.stdout, /Readiness\s+ready/)
+    assert.match(result.stdout, /Live evidence\s+public-enabled/)
   })
 })
 
@@ -258,11 +307,16 @@ test('HireProof CLI stores and reads local config', async () => {
     const setUrl = await runCli(['config', 'set', 'baseUrl', 'https://example.test'], { configHome })
     const setKey = await runCli(['config', 'set', 'apiKey', 'local_key'], { configHome })
     const list = await runCli(['config', 'list'], { configHome })
+    const getKey = await runCli(['config', 'get', 'apiKey'], { configHome })
 
     assert.equal(setUrl.code, 0)
     assert.equal(setKey.code, 0)
     assert.match(list.stdout, /baseUrl: https:\/\/example\.test/)
-    assert.match(list.stdout, /apiKey: local_key/)
+    assert.match(list.stdout, /apiKey: \[redacted\]/)
+    assert.doesNotMatch(list.stdout, /local_key/)
+    assert.equal(getKey.code, 0)
+    assert.match(getKey.stdout, /\[redacted\]/)
+    assert.doesNotMatch(getKey.stdout, /local_key/)
   } finally {
     await rm(configHome, { recursive: true, force: true })
   }
@@ -324,9 +378,8 @@ test('HireProof TUI command console autocompletes with tab and opens a screen', 
     color: false,
     healthClient: async () => ({
       status: 'ok',
-      liveSearch: true,
-      model: true,
-      modelProvider: { aiGateway: true },
+      readiness: { state: 'ready' },
+      costPosture: { publicLiveEvidence: true, publicOcr: false, byokRequiredForApiLive: true },
     }),
   }))
 
@@ -350,9 +403,8 @@ test('HireProof TUI slash focuses command palette and shortcuts open screens', a
     color: false,
     healthClient: async () => ({
       status: 'ok',
-      liveSearch: true,
-      model: true,
-      modelProvider: { aiGateway: true },
+      readiness: { state: 'ready' },
+      costPosture: { publicLiveEvidence: true, publicOcr: false, byokRequiredForApiLive: true },
     }),
   }))
 
@@ -445,20 +497,56 @@ test('HireProof TUI renders local Ask HireProof answers from selected report', a
 test('HireProof TUI report history stores sanitized summaries only', async () => {
   const { saveReportSummary, readReportSummaries } = await import('../packages/hireproof-cli/lib/report-history.mjs')
   const historyHome = await mkdtemp(path.join(os.tmpdir(), 'hireproof-history-'))
+  const sensitiveReport = sampleReport({
+    summary: 'OCR found recruiter jane.private@example.test, phone +1 (415) 555-1212, passcode 918273, and https://private.example.test/apply.',
+    extractedClaims: {
+      company: 'PrivateCo jane.private@example.test',
+      role: 'Assistant passcode 918273',
+      salary: 'Huge pay',
+      location: 'Remote',
+      contactMethod: 'Call +1 (415) 555-1212',
+      applicationPath: 'https://private.example.test/apply',
+    },
+    redFlags: ['Contact jane.private@example.test directly'],
+    greenFlags: ['Mentions a company'],
+    evidence: [
+      {
+        source: 'Screenshot OCR',
+        type: 'OCR',
+        snippet: 'Extracted screenshot text: jane.private@example.test +1 (415) 555-1212 passcode 918273 https://private.example.test/apply',
+      },
+    ],
+    nextSteps: ['Do not send passcode 918273 to jane.private@example.test'],
+  })
 
   try {
-    await saveReportSummary(sampleReport(), {
+    await saveReportSummary(sensitiveReport, {
       configHome: historyHome,
       inputText: 'PRIVATE recruiter text should not be stored',
     })
     const reports = await readReportSummaries({ configHome: historyHome })
-    const raw = await readFile(path.join(historyHome, 'reports.jsonl'), 'utf8')
+    const historyFile = path.join(historyHome, 'reports.jsonl')
+    const raw = await readFile(historyFile, 'utf8')
+    const dirMode = (await stat(historyHome)).mode & 0o777
+    const fileMode = (await stat(historyFile)).mode & 0o777
 
     assert.equal(reports.length, 1)
     assert.equal(reports[0].id, 'report_test')
     assert.equal(reports[0].verdict, 'high-risk')
     assert.doesNotMatch(raw, /PRIVATE recruiter text/)
     assert.doesNotMatch(raw, /test_key/)
+    assert.doesNotMatch(raw, /jane\.private@example\.test/)
+    assert.doesNotMatch(raw, /\+1 \(415\) 555-1212/)
+    assert.doesNotMatch(raw, /918273/)
+    assert.doesNotMatch(raw, /private\.example\.test/)
+    assert.match(raw, /\[redacted email\]/)
+    assert.match(raw, /\[redacted phone\]/)
+    assert.match(raw, /\[redacted code\]/)
+    assert.match(raw, /\[redacted url\]/)
+    if (process.platform !== 'win32') {
+      assert.equal(dirMode, 0o700)
+      assert.equal(fileMode, 0o600)
+    }
   } finally {
     await rm(historyHome, { recursive: true, force: true })
   }
@@ -507,9 +595,8 @@ test('HireProof TUI health screen loads live readiness data', async () => {
     initialScreen: 'health',
     healthClient: async () => ({
       status: 'ok',
-      liveSearch: true,
-      model: true,
-      modelProvider: { aiGateway: true },
+      readiness: { state: 'ready' },
+      costPosture: { publicLiveEvidence: true, publicOcr: false, byokRequiredForApiLive: true },
     }),
   }))
 
@@ -518,8 +605,8 @@ test('HireProof TUI health screen loads live readiness data', async () => {
   const frame = stripAnsi(result.lastFrame())
   assert.match(frame, /Health/)
   assert.match(frame, /API: ok/)
-  assert.match(frame, /Live search: ready/)
-  assert.match(frame, /AI Gateway: ready/)
+  assert.match(frame, /Readiness: ready/)
+  assert.match(frame, /Live evidence\s+public-enabled/)
 })
 
 test('HireProof TUI recent reports screen loads saved summaries', async () => {

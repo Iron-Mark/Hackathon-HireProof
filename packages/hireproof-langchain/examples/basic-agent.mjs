@@ -1,7 +1,7 @@
 import { createHireProofAuditTool } from '../dist/index.js'
 
 const hireProofTool = createHireProofAuditTool({
-  apiKey: process.env.HIREPROOF_API_KEY || 'hireproof_agent_demo_key',
+  apiKey: process.env.HIREPROOF_API_KEY,
   baseUrl: process.env.HIREPROOF_URL || 'https://hireproof.tech',
 })
 

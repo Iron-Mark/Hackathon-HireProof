@@ -168,13 +168,14 @@ node packages\\hireproof-cli\\bin\\hireproof.mjs audit .\\job-post.txt --json`}
           <Settings className="mb-4 h-6 w-6 text-safe" />
           <h2 className="mb-3 text-xl font-black">Local Config</h2>
           <p className="mb-4 text-sm font-semibold leading-relaxed text-muted">
-            Store default API settings locally, then keep normal audit commands short.
+            Store default API settings locally, then keep normal audit commands short. Config output redacts the stored API key value.
           </p>
           <CodeBlock
             title="Terminal"
             code={`hireproof config set baseUrl https://hireproof.tech
-hireproof config set apiKey hireproof_agent_demo_key
-hireproof config list`}
+hireproof config set apiKey <your-account-api-key>
+hireproof config list
+hireproof config get apiKey`}
           />
         </div>
       </section>
@@ -204,6 +205,9 @@ hireproof config list`}
             </p>
           </div>
         </div>
+        <p className="max-w-3xl text-sm font-semibold leading-relaxed text-muted">
+          CLI API responses are capped at 256 KB before JSON parsing; larger upstream responses fail closed instead of rendering.
+        </p>
         <CodeBlock
           title="Terminal"
           code={`hireproof

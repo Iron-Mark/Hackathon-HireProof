@@ -1,6 +1,4 @@
 import { generateObject, generateText, tool, stepCountIs } from 'ai'
-import dns from 'node:dns'
-import { promisify } from 'node:util'
 import { z } from 'zod'
 import {
   AuditRequestSchema,
@@ -28,7 +26,7 @@ import {
 } from '@/lib/serpapi'
 import { runEvidenceBroker } from '@/lib/evidence-broker'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { saveReport } from '@/lib/db'
+import { createPublicReportId, saveReport } from '@/lib/db'
 import { authenticateApiKey, getOwnerProviderCredentials, recordUsage } from '@/lib/auth-store'
 import { getHireProofModel, hasHireProofModelProvider } from '@/lib/ai-model'
 import { recoverObviousClaims } from '@/lib/claim-extraction.mjs'
@@ -42,11 +40,23 @@ import {
 import { enrichAuditRequestWithOcr } from '@/lib/ocr.mjs'
 import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
+import { readJsonRequest } from '@/lib/request-security'
+import { readBoundedInternalToolJson } from '@/lib/response-security'
+import { validateWebhookUrl, WebhookUrlValidationError } from '@/lib/webhook-url-security'
 
 export const runtime = 'nodejs'
+const HEADLESS_AUDIT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
+const JSON_RESPONSE_HEADERS = {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-store',
+}
 
 function requireByokForLiveApi() {
   return process.env.REQUIRE_BYOK_FOR_LIVE_API === 'true'
+}
+
+async function discardWebhookReceiverResponse(response: Response) {
+  await response.body?.cancel().catch(() => undefined)
 }
 
 class LiveAuditCredentialsError extends Error {
@@ -79,7 +89,7 @@ function buildDemoReport(validated: AuditRequest, ownerId: string, apiKeyId: str
   }
 
   const report = buildAuditReportV2({
-    id: `report_${Date.now()}`,
+    id: createPublicReportId('report'),
     extractedClaims: fixture.extractedClaims,
     evidence: fixture.evidence,
     ownerId,
@@ -97,7 +107,7 @@ function buildDemoReport(validated: AuditRequest, ownerId: string, apiKeyId: str
     ownerId,
     apiKeyId,
     source: 'api',
-    publiclyListed: true,
+    publiclyListed: false,
   }
 }
 
@@ -121,10 +131,11 @@ function extractCompanyFromUrl(url?: string) {
   }
 }
 
-async function extractClaims(input: AuditRequest, modelProviderKey?: string): Promise<ExtractedClaims> {
+async function extractClaims(input: AuditRequest, modelProviderKey?: string, allowPlatformModel = true): Promise<ExtractedClaims> {
   const text = input.text
 
-  if (!hasHireProofModelProvider(modelProviderKey)) {
+  const modelProviderAvailable = allowPlatformModel ? hasHireProofModelProvider(modelProviderKey) : Boolean(modelProviderKey)
+  if (!modelProviderAvailable) {
     const companyFromUrl = extractCompanyFromUrl(input.url || undefined)
     const company = companyFromUrl || extractFirstMatch(text, [
       /(?:company|employer)\s*[:\-]\s*([A-Za-z0-9&,' -]{2,70}?)(?=\s*(?:[.;\n\r]|role|position|job title|salary|location|contact|apply)\s*[:\-]?|$)/i,
@@ -261,23 +272,27 @@ export async function POST(request: Request) {
   const apiAuth = apiKey ? await authenticateApiKey(apiKey) : null
   
   if (!apiKey || !apiAuth) {
-    return new Response(JSON.stringify({ error: 'Unauthorized. Invalid or missing x-api-key header.' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ error: 'Unauthorized. Invalid or missing x-api-key header.' }), { status: 401, headers: JSON_RESPONSE_HEADERS })
   }
   const ownerCredentials = apiAuth.isFallback ? {} : await getOwnerProviderCredentials(apiAuth.ownerId)
   const ownerHasByok = Boolean(ownerCredentials.modelProviderKey || ownerCredentials.serpapiKey)
-  const serpapiAvailable = hasSerpApiKey(ownerCredentials.serpapiKey)
-  const modelAvailable = hasHireProofModelProvider(ownerCredentials.modelProviderKey)
-  const liveCredentialsAvailable = serpapiAvailable || modelAvailable
-  const credentialMode: AuditReport['credentialMode'] = ownerHasByok ? 'owner-byok' : 'platform-env'
+  const ownerModelAvailable = Boolean(ownerCredentials.modelProviderKey)
+  const ownerSerpapiAvailable = Boolean(ownerCredentials.serpapiKey)
+  let serpapiAvailable = hasSerpApiKey(ownerCredentials.serpapiKey)
+  let modelAvailable = hasHireProofModelProvider(ownerCredentials.modelProviderKey)
+  let liveCredentialsAvailable = serpapiAvailable || modelAvailable
+  let credentialMode: AuditReport['credentialMode'] = ownerHasByok ? 'owner-byok' : liveCredentialsAvailable ? 'platform-env' : 'demo'
+
+  const credentialBucket = `api_key:${apiAuth.apiKeyId}`
 
   // 2. Rate Limiting (Agent Tier: 20 reqs / 1 min)
-  const rateLimitResult = await checkRateLimit(apiKey, { limit: 20, windowMs: 60000 })
+  const rateLimitResult = await checkRateLimit(`v1_audit:${credentialBucket}`, { limit: 20, windowMs: 60000 })
   if (!rateLimitResult.success) {
     const retryAfter = 'retryAfterMs' in rateLimitResult ? Math.ceil((rateLimitResult as any).retryAfterMs / 1000) : 60
     return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }), {
       status: 429,
       headers: {
-        'Content-Type': 'application/json',
+        ...JSON_RESPONSE_HEADERS,
         'Retry-After': String(retryAfter),
       },
     })
@@ -286,74 +301,56 @@ export async function POST(request: Request) {
   let validated: AuditRequest
   let requestEnrichment: any = null
   let ocrEvidence: EvidenceItem[] = []
+  let validatedWebhookUrl: string | null = null
   try {
-    const body = await request.json()
+    const parsedJson = await readJsonRequest(request, HEADLESS_AUDIT_PAYLOAD_LIMIT_BYTES, 'Audit payload')
+    if (!parsedJson.ok) return parsedJson.response
+    const body = parsedJson.value
     validated = AuditRequestSchema.parse(body)
+
     const { request: enrichedRequest, enrichment } = await enrichAuditRequestInput(validated)
     requestEnrichment = enrichment
     if (!validated.text && !validated.image && validated.url && enrichment.status !== 'enriched') {
       return new Response(JSON.stringify({
         error: 'HireProof could not read enough public job content from that URL. Paste the visible job title, company, pay, location, and application process, or upload a screenshot.',
         reason: (enrichment as any).reason,
-      }), { status: 422, headers: { 'Content-Type': 'application/json' } })
+      }), { status: 422, headers: JSON_RESPONSE_HEADERS })
     }
     const { request: ocrRequest, evidence: screenshotEvidence } = await enrichAuditRequestWithOcr(enrichedRequest)
     ocrEvidence = screenshotEvidence as EvidenceItem[]
     validated = ocrRequest
 
     if (validated.webhook_url) {
-      const url = new URL(validated.webhook_url)
-      const hostname = url.hostname
-      
-      // SSRF Protection: block local, private, and loopback addresses
-      // 1. Literal hostname check
-      const isLocalHostname = ['localhost', '127.0.0.1', '0.0.0.0', '::1', '::'].includes(hostname) || 
-                              hostname.endsWith('.local') ||
-                              hostname.endsWith('.internal')
-      
-      if (isLocalHostname) {
-        return new Response(JSON.stringify({ error: 'Webhook URL cannot be a private or local network address' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
-      }
-
-      // 2. Resolve IP and check ranges to prevent DNS Rebinding and IP encoding bypasses
-      try {
-        const lookup = promisify(dns.lookup)
-        const { address } = await lookup(hostname)
-        
-        const isPrivateIp = 
-          address.startsWith('10.') || 
-          address.startsWith('192.168.') || 
-          address.startsWith('169.254.') || 
-          address.startsWith('127.') ||
-          /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(address) ||
-          address === '::1' || address === '::' || address.startsWith('fe80:')
-          
-        if (isPrivateIp) {
-          return new Response(JSON.stringify({ error: 'Webhook URL resolves to a private or local network address' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-      } catch (e) {
-        // If we can't resolve the IP, it's safer to proceed but the fetch will likely fail anyway.
-        // However, we don't block here because it could be a valid but transient DNS issue.
-      }
+      validatedWebhookUrl = await validateWebhookUrl(validated.webhook_url)
     }
   } catch (error: any) {
+    if (error instanceof WebhookUrlValidationError) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: JSON_RESPONSE_HEADERS })
+    }
     const message = error?.issues
       ? `Validation error: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join('; ')}`
       : 'Invalid request format'
-    return new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ error: message }), { status: 400, headers: JSON_RESPONSE_HEADERS })
   }
 
   const serpApiOperationalStatus = getSerpApiOperationalStatus()
+  const requireOwnerByok = requireByokForLiveApi() && validated.mode !== 'demo'
+  if (requireOwnerByok) {
+    serpapiAvailable = ownerSerpapiAvailable
+    modelAvailable = ownerModelAvailable
+    liveCredentialsAvailable = serpapiAvailable || modelAvailable
+    credentialMode = liveCredentialsAvailable ? 'owner-byok' : 'demo'
+  }
   const liveSearchRequested = validated.mode !== 'demo' && serpapiAvailable
   const liveSearchAllowed = liveSearchRequested && serpApiOperationalStatus.status !== 'circuit-open'
 
-  if (requireByokForLiveApi() && validated.mode !== 'demo' && !ownerHasByok) {
+  if (requireOwnerByok && !liveCredentialsAvailable) {
     await recordUsage({ ownerId: apiAuth.ownerId, apiKeyId: apiAuth.apiKeyId, endpoint: '/api/v1/audit', status: 503 })
     return new Response(JSON.stringify({
       error: 'Platform live audit credentials are disabled after hackathon submission. Use mode=demo or add BYOK model/search credentials in the developer portal.',
       missing: ['owner BYOK MODEL_PROVIDER_KEY or SERPAPI_API_KEY'],
       recovery: 'Use mode=demo for fixtures or add live credentials through the developer portal BYOK settings.',
-    }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+    }), { status: 503, headers: JSON_RESPONSE_HEADERS })
   }
 
   if (validated.mode !== 'demo' && modelAvailable && !ownerCredentials.modelProviderKey) {
@@ -366,14 +363,14 @@ export async function POST(request: Request) {
       }), {
         status: 429,
         headers: {
-          'Content-Type': 'application/json',
+          ...JSON_RESPONSE_HEADERS,
           'Retry-After': String(modelCostGuard.retryAfterSec || 60),
         },
       })
     }
   }
 
-  const guardrail = await acquireLiveAuditGuardrail({ identifier: apiKey, channel: 'api', live: liveSearchAllowed })
+  const guardrail = await acquireLiveAuditGuardrail({ identifier: credentialBucket, channel: 'api', live: liveSearchAllowed })
   if (!guardrail.allowed) {
     return new Response(JSON.stringify({
       error: guardrail.status.message || 'Live audit guardrail is active.',
@@ -381,7 +378,7 @@ export async function POST(request: Request) {
     }), {
       status: 429,
       headers: {
-        'Content-Type': 'application/json',
+        ...JSON_RESPONSE_HEADERS,
         'Retry-After': String(guardrail.retryAfterSec || 30),
       },
     })
@@ -397,7 +394,7 @@ export async function POST(request: Request) {
         }
 
         if ((validated.mode === 'live' || (serpapiAvailable && validated.mode !== 'demo')) && liveCredentialsAvailable) {
-          const extractedClaims = await extractClaims(validated, ownerCredentials.modelProviderKey)
+          const extractedClaims = await extractClaims(validated, ownerCredentials.modelProviderKey, !requireOwnerByok)
           const hasCompany = !extractedClaims.company.toLowerCase().includes('unknown')
           let evidence: EvidenceItem[] = []
 
@@ -426,7 +423,7 @@ export async function POST(request: Request) {
                         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                         body: JSON.stringify({ method: 'tools/call', name: 'search_company', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   news_check: tool({
@@ -438,7 +435,7 @@ export async function POST(request: Request) {
                         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                         body: JSON.stringify({ method: 'tools/call', name: 'news_check', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   jobs_compare: tool({
@@ -450,7 +447,7 @@ export async function POST(request: Request) {
                         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                         body: JSON.stringify({ method: 'tools/call', name: 'jobs_compare', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any),
                   local_presence: tool({
@@ -462,7 +459,7 @@ export async function POST(request: Request) {
                         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                         body: JSON.stringify({ method: 'tools/call', name: 'local_presence', arguments: args })
                       })
-                      return res.json()
+                      return readBoundedInternalToolJson(res)
                     }
                   } as any)
                 },
@@ -490,6 +487,7 @@ export async function POST(request: Request) {
           }, {
             serpapiKey: ownerCredentials.serpapiKey,
             liveSearchAllowed: liveSearchRequested,
+            requireOwnerSerpApi: requireOwnerByok,
             externalEvidenceAllowed: true,
           })
           evidence = broker.evidence
@@ -502,7 +500,7 @@ export async function POST(request: Request) {
           if (evidence.length === 0 && serpapiAvailable) routeRedFlags.push('No supporting evidence found')
 
           const report: AuditReport = buildAuditReportV2({
-            id: `report_${Date.now()}`,
+            id: createPublicReportId('report'),
             extractedClaims,
             evidence,
             enrichmentEvidence: [...buildEnrichmentEvidence(requestEnrichment), ...ocrEvidence],
@@ -511,7 +509,7 @@ export async function POST(request: Request) {
             ownerId: apiAuth.ownerId,
             apiKeyId: apiAuth.apiKeyId,
             source: 'api',
-            publiclyListed: !validated.image,
+            publiclyListed: false,
             operations: {
               ...broker.operations,
               liveSearch: broker.operations.liveSearch || guardrail.status,
@@ -532,7 +530,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (validated.webhook_url) {
+    if (validatedWebhookUrl) {
       // Process asynchronously with retry
       Promise.resolve().then(async () => {
         try {
@@ -544,12 +542,18 @@ export async function POST(request: Request) {
             const maxRetries = 3
             for (let attempt = 0; attempt < maxRetries; attempt++) {
               try {
-                const res = await fetch(validated.webhook_url as string, {
+                const res = await fetch(validatedWebhookUrl, {
                   method: 'POST',
                   headers: buildHireProofWebhookHeaders(payload, apiKey),
                   body: payload,
                   signal: AbortSignal.timeout(10_000),
+                  redirect: 'manual',
                 })
+                await discardWebhookReceiverResponse(res)
+                if (res.status >= 300 && res.status < 400) {
+                  console.error(`[Webhook] Redirect ${res.status} blocked for webhook delivery.`)
+                  break
+                }
                 if (res.ok || (res.status >= 200 && res.status < 300)) break
                 if (res.status >= 400 && res.status < 500) {
                   console.error(`[Webhook] Client error ${res.status}, not retrying.`)
@@ -569,7 +573,7 @@ export async function POST(request: Request) {
         }
       })
       
-      return new Response(JSON.stringify({ status: 'processing', message: 'Investigation started. Results will be posted to the webhook URL.' }), { status: 202, headers: { 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ status: 'processing', message: 'Investigation started. Results will be posted to the webhook URL.' }), { status: 202, headers: JSON_RESPONSE_HEADERS })
     }
 
     try {
@@ -580,7 +584,7 @@ export async function POST(request: Request) {
       }
       await recordUsage({ ownerId: apiAuth.ownerId, apiKeyId: apiAuth.apiKeyId, endpoint: '/api/v1/audit', status: 200, reportId: report.id })
       
-      return new Response(JSON.stringify(report), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify(report), { status: 200, headers: JSON_RESPONSE_HEADERS })
     } finally {
       await guardrail.release()
     }
@@ -592,9 +596,9 @@ export async function POST(request: Request) {
         error: error.message,
         missing: error.missing,
         recovery: 'Use mode=demo for fixtures or add live credentials through the developer portal BYOK settings.',
-      }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+      }), { status: 503, headers: JSON_RESPONSE_HEADERS })
     }
     console.error('[A2A Audit API] Error:', error instanceof Error ? error.message : 'Unknown routing error')
-    return new Response(JSON.stringify({ error: 'Failed to complete audit' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ error: 'Failed to complete audit' }), { status: 500, headers: JSON_RESPONSE_HEADERS })
   }
 }

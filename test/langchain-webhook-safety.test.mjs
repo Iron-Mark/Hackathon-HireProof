@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
+import fs from 'node:fs/promises'
 
 const require = createRequire(import.meta.url)
 
@@ -36,12 +37,12 @@ test('LangChain audit helper ignores untrusted input webhookUrl but allows trust
     return {
       ok: true,
       status: 200,
-      async json() {
-        return {
+      async text() {
+        return JSON.stringify({
           id: 'report_test',
           verdict: 'high-risk',
           riskScore: 92,
-        }
+        })
       },
     }
   }
@@ -70,6 +71,120 @@ test('LangChain audit helper ignores untrusted input webhookUrl but allows trust
 
     const trustedBody = JSON.parse(calls[1].options.body)
     assert.equal(trustedBody.webhook_url, 'https://trusted.example/callback')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('LangChain audit helper rejects oversized API responses before parsing JSON', async () => {
+  const { runHireProofAudit } = require('../packages/hireproof-langchain/dist/index.js')
+  const originalFetch = globalThis.fetch
+  let jsonParsed = false
+
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-length': String((256 * 1024) + 1) }),
+    async json() {
+      jsonParsed = true
+      return { verdict: 'safe', riskScore: 1 }
+    },
+  })
+
+  try {
+    await assert.rejects(
+      () => runHireProofAudit({
+        text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+        mode: 'demo',
+      }, {
+        apiKey: 'victim-api-key-for-test',
+        baseUrl: 'https://hireproof.test',
+      }),
+      /HireProof audit response too large/,
+    )
+    assert.equal(jsonParsed, false)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('LangChain packaged helper has no unbounded response.json fallback', async () => {
+  const source = await fs.readFile(new URL('../packages/hireproof-langchain/dist/index.js', import.meta.url), 'utf8')
+
+  assert.match(source, /readBoundedAuditResponseJson/)
+  assert.match(source, /MAX_AUDIT_RESPONSE_BYTES/)
+  assert.match(source, /HireProof audit response body is not readable/)
+  assert.doesNotMatch(source, /response\.json\(\)/)
+})
+
+test('LangChain audit helper does not fall back to unbounded response.json parsing', async () => {
+  const { runHireProofAudit } = require('../packages/hireproof-langchain/dist/index.js')
+  const originalFetch = globalThis.fetch
+  let jsonParsed = false
+
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-length': '64' }),
+    async json() {
+      jsonParsed = true
+      return { verdict: 'safe', riskScore: 1 }
+    },
+  })
+
+  try {
+    await assert.rejects(
+      () => runHireProofAudit({
+        text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+        mode: 'demo',
+      }, {
+        apiKey: 'victim-api-key-for-test',
+        baseUrl: 'https://hireproof.test',
+      }),
+      /response body is not readable/,
+    )
+    assert.equal(jsonParsed, false)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('LangChain audit helper cancels oversized streaming audit responses', async () => {
+  const { runHireProofAudit } = require('../packages/hireproof-langchain/dist/index.js')
+  const originalFetch = globalThis.fetch
+  const encoder = new TextEncoder()
+  let cancelled = false
+
+  globalThis.fetch = async () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('{"summary":"'))
+        controller.enqueue(new Uint8Array(256 * 1024))
+        controller.enqueue(encoder.encode('"}'))
+      },
+      cancel() {
+        cancelled = true
+      },
+    })
+
+    return new Response(stream, {
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+    })
+  }
+
+  try {
+    await assert.rejects(
+      () => runHireProofAudit({
+        text: 'Remote frontend intern. PHP 80,000/week. No interview. Message us on Telegram.',
+        mode: 'demo',
+      }, {
+        apiKey: 'victim-api-key-for-test',
+        baseUrl: 'https://hireproof.test',
+      }),
+      /HireProof audit response too large/,
+    )
+    assert.equal(cancelled, true)
   } finally {
     globalThis.fetch = originalFetch
   }

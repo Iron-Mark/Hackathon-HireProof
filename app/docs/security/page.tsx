@@ -55,6 +55,8 @@ const controls = [
       'Headless /api/v1/audit and /api/mcp requests require API-key authentication.',
       'API keys are hashed for lookup and raw key material is only shown once at creation.',
       'Developer session cookies gate Hosted BYOK Vault reads, saves, and revokes.',
+      'Public status, proof, chat, workflow, and webhook metadata routes expose coarse readiness only; per-secret presence, provider cache telemetry, and guard internals remain behind authenticated developer usage.',
+      'Cursor automation routes require high-entropy job secrets or developer sessions, cap request bodies, and compare internal job secrets in constant time.',
       'The report schema records credentialMode as owner-byok, platform-env, or demo for auditability.',
     ],
   },
@@ -63,7 +65,7 @@ const controls = [
     title: 'Hosted BYOK Vault',
     items: [
       'Provider secrets are verified before save, encrypted with AES-256-GCM, and stored with only redacted metadata returned to the browser.',
-      'Production hosted credential storage requires BYOK_ENCRYPTION_KEY; development falls back to local secrets for hackathon ergonomics.',
+      'Production hosted credential storage requires a private high-entropy BYOK_ENCRYPTION_KEY; placeholders and short shared values are rejected.',
       'Old browser-local provider keys are cleared by the Developer Portal flow instead of continuing to rely on localStorage secrets.',
       'Credential mutation routes enforce authenticated ownership before returning or deleting records.',
     ],
@@ -72,9 +74,10 @@ const controls = [
     icon: UserCheck,
     title: 'CSRF and request origin controls',
     items: [
-      'The public UI audit route rejects missing Origin/Referer headers and blocks cross-origin submissions outside allowed app hosts.',
+      'The public UI audit route uses exact Origin/Referer validation against the current app origin and APP_BASE_URL, rejecting substring-lookalike hosts.',
       'Hosted BYOK PATCH and DELETE operations use exact allowed origins from the request URL and APP_BASE_URL.',
       'Credential save attempts are separately rate-limited by user and source IP.',
+      'JSON mutation routes reject oversized request bodies before parsing; public and agent-facing routes count streamed body bytes so missing or chunked Content-Length headers cannot bypass the cap.',
       'Mutation failures return browser-safe errors rather than provider-specific secret validation details.',
     ],
   },
@@ -93,9 +96,22 @@ const controls = [
     title: 'Webhook and SSRF defenses',
     items: [
       'Async webhook_url delivery only accepts valid URLs and rejects localhost, .local, .internal, loopback, link-local, and RFC 1918 private ranges.',
-      'The server performs DNS lookup before dispatch and blocks resolved private or local network addresses.',
+      'The server performs DNS lookup before dispatch, blocks any resolved private or local network address, and does not follow receiver redirects.',
+      'Developer webhook sandbox tests use the same destination validation and add per-user rate limiting.',
+      'Slack, Discord, Telegram, and WhatsApp/Zernio webhook endpoints reject oversized payloads before adapter dispatch; Discord interaction signatures also require a fresh timestamp.',
       'Callback payloads are signed with HMAC-SHA256 in X-HireProof-Signature and include X-HireProof-Event.',
       'Webhook delivery uses a 10 second timeout and retries server-side failures with exponential backoff, while 4xx receiver errors stop retries.',
+    ],
+  },
+  {
+    icon: Server,
+    title: 'Outbound provider response bounds',
+    items: [
+      'SerpApi network responses are bounded before JSON parsing so an upstream provider response cannot force unbounded buffering.',
+      'Invalid provider credential checks cancel response bodies instead of reading arbitrary error payloads into memory.',
+      'Evidence-provider fetches use timeouts and response-size budgets before parsing third-party JSON.',
+      'Public job URL enrichment validates every redirect target and caps fetched HTML before extraction.',
+      'Public trend pages use stored audits by default; SerpApi-backed external trend signals require explicit opt-in and are rate-limited per source IP.',
     ],
   },
   {
@@ -105,7 +121,8 @@ const controls = [
       'The UI warns users not to paste passwords, IDs, bank details, or verification codes.',
       'Browser history is stored locally through SafeStorage and capped at 50 reports per browser profile.',
       'Server persistence validates reports through AuditReportSchema before write.',
-      'Redis report storage expires after 30 days; local filesystem fallback evicts older reports after 500 records.',
+      'Verified badge embeds use scoped public tokens, escape rendered HTML, rate-limit public checks, and bound reflected script/status query parameters.',
+      'Redis report storage expires after 30 days; local filesystem fallback caps public listing indexes without deleting existing permalinks.',
     ],
   },
 ]
@@ -134,7 +151,8 @@ const boundaries = [
   {
     title: 'What remains customer or operator responsibility',
     items: [
-      'Provision strong APP_BASE_URL, SESSION_SECRET, AGENT_API_KEY, BYOK_ENCRYPTION_KEY, Redis, and provider credentials in production.',
+      'Provision strong APP_BASE_URL, SESSION_SECRET, AGENT_API_KEY, BYOK_ENCRYPTION_KEY, Redis, and provider credentials in production. Secret values must be private, generated, at least 32 characters, and not copied placeholders.',
+      'Set HIREPROOF_ADMIN_EMAILS or narrower operator allowlists before using pilot-admin, analytics export, or cross-owner repair surfaces.',
       'Keep Vercel, Redis, model providers, and search providers configured with least-privilege access and billing alerts.',
       'Avoid collecting unnecessary personal data in job posts or screenshots.',
       'Validate incoming HireProof webhook signatures before trusting callback payloads.',

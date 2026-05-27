@@ -1,11 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { request as httpRequest } from 'node:http'
-import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
-
-const BASE_URL = process.env.HIREPROOF_E2E_URL || 'http://localhost:3002'
+import { BASE_URL, ensureE2eServer } from './helpers/e2e-server.mjs'
 
 const VIEWPORTS = [
   { name: 'small phone portrait', width: 320, height: 568 },
@@ -13,39 +9,6 @@ const VIEWPORTS = [
   { name: 'tablet portrait', width: 768, height: 1024 },
   { name: 'desktop', width: 1440, height: 900 },
 ]
-
-function checkServer() {
-  return new Promise((resolve) => {
-    const req = httpRequest(`${BASE_URL}/`, { method: 'GET', timeout: 1500 }, (res) => {
-      res.resume()
-      resolve(Boolean(res.statusCode && res.statusCode < 500))
-    })
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => {
-      req.destroy()
-      resolve(false)
-    })
-    req.end()
-  })
-}
-
-async function ensureServer() {
-  if (await checkServer()) return null
-
-  const child = spawn('npm', ['run', 'dev'], {
-    cwd: new URL('..', import.meta.url),
-    shell: true,
-    stdio: 'ignore',
-  })
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await delay(1000)
-    if (await checkServer()) return child
-  }
-
-  child.kill()
-  throw new Error(`Timed out waiting for ${BASE_URL}`)
-}
 
 async function assertNoPageOverflow(page, label) {
   const metrics = await page.evaluate(() => ({
@@ -61,7 +24,7 @@ async function assertNoPageOverflow(page, label) {
 }
 
 test('interactive drawers, command search, docs tabs, and wide tables stay viewport-safe', { timeout: 180_000 }, async () => {
-  const server = await ensureServer()
+  const server = await ensureE2eServer('/')
   const browser = await chromium.launch()
 
   try {
@@ -128,6 +91,6 @@ test('interactive drawers, command search, docs tabs, and wide tables stay viewp
     }
   } finally {
     await browser.close()
-    server?.kill()
+    await server.release()
   }
 })
