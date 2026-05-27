@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import vm from 'node:vm'
 import ts from 'typescript'
+import net from 'node:net'
 
 async function loadRequestSecurityModule() {
   const source = await fs.readFile(new URL('../lib/request-security.ts', import.meta.url), 'utf8')
@@ -26,6 +27,9 @@ async function loadRequestSecurityModule() {
     require: (id) => {
       if (id === 'next/server') {
         return { NextResponse: { json: (body, init) => new Response(JSON.stringify(body), init) } }
+      }
+      if (id === 'node:net') {
+        return { default: net, ...net }
       }
       throw new Error(`Unexpected require: ${id}`)
     },
