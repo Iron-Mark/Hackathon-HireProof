@@ -209,3 +209,74 @@ v1-main-hardened-2026-05-27-final
 ```
 
 The tag should point at the commit that includes this proof report and the Node 20 workflow alignment.
+
+## Final Verification Addendum - 2026-05-27
+
+This addendum records the final checked code state after the security follow-up fixes, release badge cleanup, E2E test stabilization, and operator-script response-bound hardening. The addendum itself is committed afterward so the repo keeps the proof locally.
+
+| Check | Result |
+| --- | --- |
+| Final verified code commit | `39ef8cb96f4b212909b9b285533608c36817a7f1` |
+| Stable tag | `v1-main-hardened-2026-05-27-final` |
+| GitHub release | `https://github.com/Iron-Mark/Hackathon-HireProof/releases/tag/v1-main-hardened-2026-05-27-final` |
+| GitHub Actions run | `26493252006` |
+| Required job | `lint-build-cursor-tests` |
+| Required job result | `success` |
+| Vercel production deployment | `dpl_AEMzhNPwnfxRuKWFCAF7KNHH5iQC` |
+| Vercel deployment state | `READY` |
+| Vercel deployment commit | `39ef8cb96f4b212909b9b285533608c36817a7f1` |
+| Vercel project Node setting | `20.x` |
+| Open Dependabot alerts | `0` |
+| `npm audit --audit-level=moderate` | `0 vulnerabilities` |
+| Production error logs checked | No error-level logs found in the checked 30 minute window |
+| Production `status:500` logs checked | No matching logs found in the checked 30 minute window |
+
+Final local verification commands:
+
+```bash
+node --test test/api-v1-audit-e2e.test.mjs
+node --test test/e2e-server-helper.test.mjs
+node --test test/provider-response-bounds.test.mjs test/seo-metadata.test.mjs
+npm run lint
+npm run build
+npm run test:security
+npm audit --audit-level=moderate
+```
+
+Final live smoke against `https://hireproof.tech`:
+
+| Probe | Status |
+| --- | --- |
+| `GET /api/health` | `200` |
+| `GET /api/intelligence/trends` | `200` |
+| `GET /api/intelligence/reports` | `200` |
+| `GET /api/v1/audit` | `405` |
+| `POST /api/v1/audit` without API key | `401` |
+| `POST /api/audit` without Origin/Referer | `403` |
+| `GET /` | `200` |
+| `GET /audit` | `200` |
+| `GET /docs` | `200` |
+| `GET /developer` | `200` |
+| `GET /explore` | `200` |
+| `GET /trends` | `200` |
+| `GET /portfolio` | `200` |
+| `GET /sitemap.xml` | `200` |
+| `GET /robots.txt` | `200` |
+
+Final `/api/health` public posture:
+
+```json
+{
+  "status": "ok",
+  "readiness": {
+    "state": "ready",
+    "scope": "public"
+  },
+  "costPosture": {
+    "publicLiveEvidence": false,
+    "publicOcr": false,
+    "publicTrendSignals": false,
+    "byokRequiredForApiLive": true
+  }
+}
+```
