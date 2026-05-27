@@ -1,3 +1,5 @@
+import { readBoundedText } from './lib/bounded-response.mjs'
+
 const base = (
   process.env.HIREPROOF_CURSOR_SMOKE_BASE_URL
   || process.env.APP_BASE_URL
@@ -23,7 +25,7 @@ const headers = {
 }
 
 async function assertAccepted(name, response) {
-  const body = await response.text()
+  const body = await readBoundedText(response, { label: `${name} response body` })
   let json
   try {
     json = JSON.parse(body)

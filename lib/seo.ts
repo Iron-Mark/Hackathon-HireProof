@@ -1,3 +1,5 @@
+import { statSync } from 'node:fs'
+import { join } from 'node:path'
 import type { Metadata, MetadataRoute } from 'next'
 
 export const SITE_URL = 'https://hireproof.tech'
@@ -10,6 +12,14 @@ export const DEFAULT_DESCRIPTION =
   'Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.'
 
 export const PORTFOLIO_CASE_STUDY_PUBLISHED_AT = '2026-05-19'
+export const PORTFOLIO_CASE_STUDY_SOURCE_PATH = join(process.cwd(), 'app', 'portfolio', 'page.tsx')
+export const PORTFOLIO_CASE_STUDY_MODIFIED_AT = (() => {
+  try {
+    return statSync(PORTFOLIO_CASE_STUDY_SOURCE_PATH).mtime.toISOString().split('T')[0]
+  } catch {
+    return PORTFOLIO_CASE_STUDY_PUBLISHED_AT
+  }
+})()
 export const PORTFOLIO_CASE_STUDY_KEYWORDS =
   'Mark Siazon, HireProof portfolio case study, job post verification, employment safety, AI audit, anti-fraud tooling'
 
@@ -236,7 +246,6 @@ export function buildSiteJsonLd() {
 }
 
 export function buildPortfolioCaseStudyJsonLd() {
-  const dateModified = new Date().toISOString().split('T')[0]
   return {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
@@ -246,7 +255,7 @@ export function buildPortfolioCaseStudyJsonLd() {
     url: `${SITE_URL}/portfolio`,
     inLanguage: 'en-US',
     datePublished: PORTFOLIO_CASE_STUDY_PUBLISHED_AT,
-    dateModified,
+    dateModified: PORTFOLIO_CASE_STUDY_MODIFIED_AT,
     keywords: PORTFOLIO_CASE_STUDY_KEYWORDS,
     description: 'A solo-developed HireProof portfolio case study by Mark Siazon.',
     image: {

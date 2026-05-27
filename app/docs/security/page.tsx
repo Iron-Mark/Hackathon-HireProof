@@ -110,6 +110,7 @@ const controls = [
       'SerpApi network responses are bounded before JSON parsing so an upstream provider response cannot force unbounded buffering.',
       'Invalid provider credential checks cancel response bodies instead of reading arbitrary error payloads into memory.',
       'Evidence-provider fetches use timeouts and response-size budgets before parsing third-party JSON.',
+      'Operator smoke and proof scripts use bounded response readers before parsing configurable live endpoint responses.',
       'Public job URL enrichment validates every redirect target and caps fetched HTML before extraction.',
       'Public trend pages use stored audits by default; SerpApi-backed external trend signals require explicit opt-in and are rate-limited per source IP.',
     ],

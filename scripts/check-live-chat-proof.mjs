@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { readBoundedText } from './lib/bounded-response.mjs'
 
 const base = (process.env.HIREPROOF_PROOF_BASE_URL || 'https://hireproof.tech').replace(/\/$/, '')
 const requireLive = process.argv.includes('--require-live')
@@ -51,7 +52,7 @@ async function withTimeout(label, request) {
 }
 
 async function readJson(response) {
-  const text = await response.text()
+  const text = await readBoundedText(response, { label: 'Live proof response body' })
   try {
     return text ? JSON.parse(text) : null
   } catch {

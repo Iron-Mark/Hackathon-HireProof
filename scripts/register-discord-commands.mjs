@@ -1,3 +1,5 @@
+import { readBoundedText } from './lib/bounded-response.mjs'
+
 const applicationId = process.env.DISCORD_APPLICATION_ID?.trim()
 const botToken = process.env.DISCORD_BOT_TOKEN?.trim()
 const guildId = process.env.DISCORD_GUILD_ID?.trim()
@@ -40,7 +42,7 @@ const response = await fetch(url, {
   body: JSON.stringify(commands),
 })
 
-const body = await response.text()
+const body = await readBoundedText(response, { label: 'Discord command registration response body' })
 
 if (!response.ok) {
   console.error(`Discord command registration failed: ${response.status} ${response.statusText}`)

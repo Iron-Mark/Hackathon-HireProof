@@ -52,6 +52,7 @@ test('portfolio metadata and case-study JSON-LD are discoverable and aligned to 
   assert.match(seo, /AUTHOR_PROFILE_URL = 'https:\/\/marksiazon\.dev'/)
   assert.match(seo, /PORTFOLIO_CASE_STUDY_PUBLISHED_AT/)
   assert.match(seo, /PORTFOLIO_CASE_STUDY_KEYWORDS/)
+  assert.match(seo, /PORTFOLIO_CASE_STUDY_MODIFIED_AT/)
   assert.match(seo, /buildPortfolioCaseStudyJsonLd/)
   assert.match(layout, /AUTHOR_PROFILE_URL/)
   assert.match(layout, /authors: \[\{ name: SITE_AUTHOR, url: AUTHOR_PROFILE_URL \}\]/)

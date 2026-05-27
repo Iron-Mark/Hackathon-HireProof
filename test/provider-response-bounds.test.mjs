@@ -95,3 +95,57 @@ test('provider credential verification does not buffer invalid response bodies',
   assert.match(source, /response\.body\?\.cancel/)
   assert.doesNotMatch(source, /arrayBuffer\(\)/)
 })
+
+test('operator smoke and proof scripts bound response bodies before parsing', async () => {
+  const helper = await fs.readFile(new URL('../scripts/lib/bounded-response.mjs', import.meta.url), 'utf8').catch(() => '')
+  const securityDocs = await fs.readFile(new URL('../app/docs/security/page.tsx', import.meta.url), 'utf8')
+  assert.match(helper, /SCRIPT_RESPONSE_LIMIT_BYTES/)
+  assert.match(helper, /Number\.isFinite/)
+  assert.match(helper, /readBoundedText/)
+  assert.match(helper, /response\.body\?\.getReader/)
+  assert.match(helper, /reader\.cancel/)
+  assert.match(securityDocs, /Operator smoke and proof scripts use bounded response readers/)
+
+  for (const scriptPath of [
+    '../scripts/check-live-chat-proof.mjs',
+    '../scripts/cursor-smoke.mjs',
+    '../scripts/smoke-docker.mjs',
+    '../scripts/register-discord-commands.mjs',
+  ]) {
+    const source = await fs.readFile(new URL(scriptPath, import.meta.url), 'utf8')
+    assert.match(source, /from '\.\/lib\/bounded-response\.mjs'/, `${scriptPath} should import the bounded response helper`)
+    assert.doesNotMatch(source, /await response\.text\(\)/, `${scriptPath} should not read unbounded response text`)
+    assert.doesNotMatch(source, /await \w+Response\.json\(\)/, `${scriptPath} should not parse unbounded JSON responses`)
+  }
+})
+
+test('script bounded response helper cancels streams that exceed the byte cap', async () => {
+  const { readBoundedText } = await import(`../scripts/lib/bounded-response.mjs?case=${Date.now()}`)
+  let cancelled = false
+  const response = {
+    headers: { get: () => null },
+    body: {
+      getReader() {
+        let reads = 0
+        return {
+          async read() {
+            reads += 1
+            return reads === 1
+              ? { done: false, value: new Uint8Array(12) }
+              : { done: false, value: new Uint8Array(12) }
+          },
+          async cancel() {
+            cancelled = true
+          },
+          releaseLock() {},
+        }
+      },
+    },
+  }
+
+  await assert.rejects(
+    () => readBoundedText(response, { label: 'test script response', maxBytes: 16 }),
+    /test script response exceeded 16 bytes/,
+  )
+  assert.equal(cancelled, true)
+})
