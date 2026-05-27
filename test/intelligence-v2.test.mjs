@@ -553,8 +553,8 @@ test('v2 intelligence reconciles official global hiring sources without local-of
     source: 'web',
   })
 
-  assert.ok(report.riskScore <= 30)
-  assert.equal(report.intelligence.applyPath.status, 'official')
+  assert.equal(report.verdict, 'caution')
+  assert.equal(report.intelligence.applyPath.status, 'trusted-board')
   assert.ok(report.intelligence.signals.some((signal) => signal.id === 'official_source_role_reconciliation'))
   assert.ok(report.redFlags.every((flag) => !/no local/i.test(flag)))
   assert.match(report.operations?.falsePositiveControl?.profileModeExplanation || '', /city-level wording differences/i)
@@ -668,6 +668,76 @@ test('trusted job-board reports preserve input-conflict risk from URL enrichment
   assert.ok(policyTrace && policyTrace.delta > 12)
   assert.ok(report.riskScore >= 45)
   assert.equal(report.verdict, 'caution')
+})
+
+test('official apply URL is recognized by company host match, not keywords only', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_official_apply_host_match',
+    extractedClaims: {
+      company: 'Acme Health',
+      role: 'Remote Frontend Developer',
+      salary: '$100,000 per year',
+      location: 'Remote United States',
+      contactMethod: 'Email',
+      applicationPath: 'https://jobs.acmehealth.example/apply/frontend-developer',
+    },
+    evidence: [
+      {
+        source: 'Acme Health careers',
+        type: 'Official Company Presence',
+        url: 'https://www.acmehealth.example/careers',
+        snippet: 'Trust: official | Remote Frontend Developer at Acme Health.',
+      },
+      {
+        source: 'LinkedIn',
+        type: 'Comparable Jobs',
+        url: 'https://www.linkedin.com/jobs/view/987654321',
+        snippet: 'Trust: reputable-job-board | Remote Frontend Developer at Example Co | Location: Remote United States | Salary: $100,000 per year',
+      },
+    ],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  assert.equal(report.intelligence.applyPath.status, 'official')
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'official_source_role_reconciliation'))
+  assert.ok(report.intelligence.signals.some((signal) => signal.id === 'apply_path_professional'))
+})
+
+test('official source role match does not launder unverified apply path', async () => {
+  const { buildAuditReportV2 } = await loadIntelligenceModule()
+  const report = buildAuditReportV2({
+    id: 'report_official_source_poisoning_guard',
+    extractedClaims: {
+      company: 'Acme Careers',
+      role: 'Frontend Developer',
+      salary: 'Not specified',
+      location: 'Manila, Philippines',
+      contactMethod: 'Email',
+      applicationPath: 'Email resume to hr@acme-hiring.example',
+    },
+    evidence: [
+      {
+        source: 'Acme Careers',
+        type: 'Official Company Presence',
+        url: 'https://www.acme.example/careers',
+        snippet: 'Trust: official | Acme Careers | Frontend Developer roles are listed on the official careers page.',
+      },
+    ],
+    enrichmentRedFlags: ['No local presence found', 'Recruiter identity is unverified'],
+    ownerId: 'web',
+    source: 'web',
+  })
+
+  const policyTrace = report.intelligence.scoreTrace.find((item) => item.step === 'Policy reconciliation')
+  assert.ok(policyTrace)
+  assert.equal(report.verdict, 'caution')
+  assert.ok(report.riskScore >= 45)
+  assert.equal(report.intelligence.applyPath.status, 'unknown')
+  assert.ok(report.redFlags.some((flag) => /no local/i.test(flag)))
+  assert.ok(report.intelligence.signals.every((signal) => signal.id !== 'official_source_role_reconciliation'))
+  assert.ok(policyTrace.delta > 12)
 })
 
 test('remote recruiter free-mail identity remains risky even with a real company footprint', async () => {
