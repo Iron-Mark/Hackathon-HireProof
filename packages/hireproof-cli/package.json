@@ -1,6 +1,6 @@
 {
   "name": "@hireproof/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Command-line tool for running HireProof job-post audits from a terminal or automation script.",
   "type": "module",
   "bin": {
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Iron-Mark/Hackathon-HireProof.git",
+    "url": "git+https://github.com/Iron-Mark/Hackathon-HireProof.git",
     "directory": "packages/hireproof-cli"
   },
   "homepage": "https://hireproof.tech/docs/cli",
