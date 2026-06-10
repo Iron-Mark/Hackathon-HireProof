@@ -70,7 +70,7 @@ Goal:
 
 Acceptance:
 
-- `npx @hireproof/cli --help` works from outside the repo. Result: passed with `@hireproof/cli@1.0.0`.
+- `npx @hireproof/cli --help` works from outside the repo. Result: passed with `@hireproof/cli@1.0.0`; refreshed on 2026-06-11 with latest `@hireproof/cli@1.0.1`.
 - `npx @hireproof/cli audit --mode demo --json` returns parseable JSON without ANSI/TUI output. Result: passed with a High-Risk report, score `92`.
 - A fresh temporary project can install and import `@hireproof/langchain`. Result: passed with `@hireproof/langchain@1.0.0`, `@langchain/core`, and `zod`.
 - A fresh temporary project can install `n8n-nodes-hireproof` and expose expected n8n package metadata/files. Result: passed with `credentials/HireProofApi.credentials.js` and `nodes/HireProof/HireProof.node.js`.

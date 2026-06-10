@@ -15,8 +15,8 @@ This file keeps the judge-facing proof artifacts in one place. It intentionally 
 | Discord ChatSDK | Credential-ready | Production credentials and webhook readiness pass; shared reply path passes. | Live Discord bot delivery until screenshots/logs are captured. |
 | Telegram ChatSDK | Live delivery proven | Real Telegram message screenshot plus matching production webhook log. | Report-link screenshot until the platform reply base-URL fallback is re-tested live. |
 
-| HireProof CLI TUI | npm-published and repo-rendered proof | `@hireproof/cli@1.0.0` is public on npm; light and dark terminal UI screenshots are generated from the repo-shipped Ink TUI. | Future CLI version bumps until separately published. |
-| SDK and agent packages | npm-published | `hireproof-sdk@1.0.0`, `@hireproof/langchain@1.0.0`, and `n8n-nodes-hireproof@1.0.0` are public on npm. | Make Custom App review and n8n directory/community verification until external review evidence exists. |
+| HireProof CLI TUI | npm-published and repo-rendered proof | `@hireproof/cli@1.0.1` is public on npm; light and dark terminal UI screenshots are generated from the repo-shipped Ink TUI. | Future CLI version bumps until separately published. |
+| SDK and agent packages | npm-published | `hireproof-sdk@1.0.1`, `@hireproof/langchain@1.0.0`, and `n8n-nodes-hireproof@1.0.0` are public on npm. | Make Custom App review and n8n directory/community verification until external review evidence exists. |
 
 Use this one-line status in public/demo materials:
 
@@ -196,13 +196,13 @@ Use this claim in the submission:
 
 > HireProof also ships as a local terminal product surface: a tested CLI with rich audit reports, an Ink-based Shield Sentinel TUI, Tab autocomplete, health/config tools, recent report summaries, and clean JSON for automations.
 
-The CLI npm package is public. Keep version-specific claims to `1.0.0` until a new package version is published.
+The CLI npm package is public. Version-specific CLI claims can use `@hireproof/cli@1.0.1` after the 2026-06-11 npm publish and clean `npx @hireproof/cli@latest --help` smoke.
 
 ## Published npm Package Proof
 
-- `@hireproof/cli@1.0.0`: `https://www.npmjs.com/package/@hireproof/cli`
+- `@hireproof/cli@1.0.1`: `https://www.npmjs.com/package/@hireproof/cli`
 - `@hireproof/langchain@1.0.0`: `https://www.npmjs.com/package/@hireproof/langchain`
-- `hireproof-sdk@1.0.0`: `https://www.npmjs.com/package/hireproof-sdk`
+- `hireproof-sdk@1.0.1`: `https://www.npmjs.com/package/hireproof-sdk`
 - `n8n-nodes-hireproof@1.0.0`: `https://www.npmjs.com/package/n8n-nodes-hireproof`
 
 Use this claim in the submission:

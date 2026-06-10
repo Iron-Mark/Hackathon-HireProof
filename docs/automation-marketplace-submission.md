@@ -4,11 +4,11 @@ Last checked: 2026-05-04
 
 This runbook turns the repo-shipped automation packs into external marketplace submissions. Do not mark any marketplace as live until the matching account-backed submission and approval evidence exists.
 
-Npm publication status as of 2026-05-04:
+Npm publication status as of 2026-06-11:
 
-- Published: `@hireproof/cli@1.0.0`
+- Published: `@hireproof/cli@1.0.1`
 - Published: `@hireproof/langchain@1.0.0`
-- Published: `hireproof-sdk@1.0.0`
+- Published: `hireproof-sdk@1.0.1`
 - Published: `n8n-nodes-hireproof@1.0.0`
 
 Make Custom App review and any n8n directory/community verification remain separate external review steps.
