@@ -2,6 +2,8 @@
 
 This report records the verified state after consolidating HireProof onto `main`, clearing Dependabot security alerts, hardening GitHub settings, and checking the live production app.
 
+> Update 2026-06-10: the active runtime pin was later upgraded from Node 20.x to Node 24.x after local Node 24 lint, targeted regression tests, and production build verification. See `docs/runtime-node24-upgrade-2026-06-10.md`.
+
 ## Repository State
 
 | Check | Result |

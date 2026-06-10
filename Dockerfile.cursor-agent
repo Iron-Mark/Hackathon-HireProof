@@ -1,5 +1,5 @@
 # Minimal Cursor cloud-agent / dev-environment image for HireProof maintenance jobs.
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /workspace/hireproof
 

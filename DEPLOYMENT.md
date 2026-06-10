@@ -94,8 +94,8 @@ WORKFLOW_SECRET=
 }
 ```
 
-**Next.js**: Version 16.2.4 with Turbopack
-**Node.js**: 20.x (default on Vercel)
+**Next.js**: Version 16.2.6 with Turbopack
+**Node.js**: 24.x (default on Vercel)
 
 ### How to Access
 

@@ -49,7 +49,7 @@
   "author": "",
   "license": "ISC",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "bugs": {
     "url": "https://github.com/Iron-Mark/Hackathon-HireProof/issues"
@@ -91,6 +91,7 @@
   "overrides": {
     "@swc/helpers": "0.5.21",
     "@tootallnate/once": "3.0.1",
+    "axios": "1.17.0",
     "brace-expansion": "5.0.6",
     "chokidar": "5.0.0",
     "cacache": "21.0.0",
@@ -98,7 +99,7 @@
     "express-rate-limit": "^8.5.1",
     "fast-uri": "^3.1.2",
     "fast-xml-builder": "^1.2.0",
-    "hono": "^4.12.18",
+    "hono": "4.12.25",
     "http-proxy-agent": "9.0.0",
     "ip-address": "^10.2.0",
     "make-fetch-happen": "16.0.0",
