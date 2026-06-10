@@ -4,6 +4,10 @@ Command-line access to the HireProof job-post audit API.
 
 The CLI is for developers, power users, and automations that need a terminal-friendly way to audit a job post without opening the web app. Running `hireproof` in an interactive terminal opens the branded HireProof console; direct commands still support rich reports, plain text, and clean JSON.
 
+## Requirements
+
+- Node.js 22 or newer. The TUI uses Ink 7, which requires Node 22+.
+
 ## Install
 
 From the repo while developing:
