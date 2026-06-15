@@ -173,22 +173,17 @@ Include when a checkpoint is authorized:
 - `artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json`
 - `artifacts/web-vitals/hireproof-web-vitals-latest.json`
 
-Exclude from the checkpoint unless there is a separate artifact-history decision:
+Artifact retention rule:
 
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T04-47-39-015Z.json`
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T04-51-36-704Z.json`
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T05-59-14-108Z.json`
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T10-29-19-798Z.json`
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T11-55-27-073Z.json`
-- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T18-30-23-152Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-21-51-563Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-23-02-396Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-47-53-631Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-51-48-125Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T05-59-29-856Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T10-29-34-387Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T11-55-43-441Z.json`
-- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T18-30-37-854Z.json`
+- Keep only the stable latest JSON evidence files in version control:
+  `artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json` and
+  `artifacts/web-vitals/hireproof-web-vitals-latest.json`.
+- Treat timestamped `artifacts/seo-crawl-preview/hireproof-crawl-social-*.json` and
+  `artifacts/web-vitals/hireproof-web-vitals-*.json` files as generated local run history.
+  They are ignored by `.gitignore` and should stay untracked unless a reviewer explicitly
+  asks for a dated artifact-history checkpoint.
+- Do not maintain a hand-written list of excluded timestamped artifacts; the glob rules above
+  are the source of truth because proof reruns create new timestamped files.
 
 Before creating the checkpoint, rerun the current local proof boundary:
 

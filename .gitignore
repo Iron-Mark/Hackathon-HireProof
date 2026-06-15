@@ -28,6 +28,7 @@ yarn-error.log*
 scratch/*.log
 artifacts/**/*.log
 artifacts/research-agent/
+# Generated proof run history stays local; keep only the stable latest evidence pointers.
 artifacts/seo-crawl-preview/hireproof-crawl-social-*.json
 !artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json
 artifacts/web-vitals/hireproof-web-vitals-*.json
