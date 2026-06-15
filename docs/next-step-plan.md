@@ -132,14 +132,14 @@ Current dirty areas:
 - Homepage server-rendering split and small client islands: `app/home-page.tsx`, `app/home-demo-link.tsx`, `app/home-demo-panel.tsx`, and deletion of the old full-page `app/home-client.tsx`.
 - Route shell and client-cost cleanup for `/audit` and `/lab`.
 - Brand image optimization, proof scripts, focused tests, dependency-audit override, and the imported pro-research archive under `docs/spec/hireproof`.
-- Timestamped local proof artifacts under `artifacts/seo-crawl-preview` and `artifacts/web-vitals`, plus a current-production baseline crawl artifact.
+- Stable proof artifacts under `artifacts/seo-crawl-preview/*-latest.json` and `artifacts/web-vitals/*-latest.json`; timestamped proof JSON is ignored as generated run history unless explicitly selected for an artifact-history checkpoint.
 
 Checkpoint boundary:
 
-- Stage the implementation, proof scripts, tests, docs, `hireproof-crawl-social-latest.json`, and the latest timestamped proof reports when a checkpoint is authorized.
+- Stage the implementation, proof scripts, tests, docs, `hireproof-crawl-social-latest.json`, and `hireproof-web-vitals-latest.json` when a checkpoint is authorized.
 - Do not stage `artifacts/` wholesale; it includes older timestamped local proof history that is not required for the checkpoint.
 - Treat older timestamped proof reports as optional history, not required checkpoint payload.
-- If proof scripts are rerun before checkpoint, refresh the timestamped artifact names below before staging. Do not stage stale timestamped proof files as the final evidence pair.
+- If proof scripts are rerun before checkpoint, verify the stable latest artifacts were refreshed. Do not stage stale timestamped proof files as the final evidence pair.
 - After checkpoint and push, rerun deploy/live proof before claiming production closure.
 
 Exact checkpoint manifest for the June 15 pro-research slice:
@@ -171,9 +171,7 @@ Include when a checkpoint is authorized:
 - `docs/remaining-work.md`
 - `docs/spec/hireproof/`, including `ref/original/*.pdf`, because the pro-research archive should preserve source-backed PDF evidence alongside extracted text.
 - `artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json`
-- The newest local timestamped `artifacts/seo-crawl-preview/hireproof-crawl-social-*.json` produced by the final pre-check rerun: currently `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T06-18-30-825Z.json`.
-- The current-production baseline crawl artifact referenced by the live-vs-pending docs: `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T08-01-26-809Z.json`.
-- The newest timestamped `artifacts/web-vitals/hireproof-web-vitals-*.json` produced by the final pre-check rerun: currently `artifacts/web-vitals/hireproof-web-vitals-2026-06-15T06-18-56-383Z.json`.
+- `artifacts/web-vitals/hireproof-web-vitals-latest.json`
 
 Exclude from the checkpoint unless there is a separate artifact-history decision:
 
@@ -205,7 +203,9 @@ $env:HIREPROOF_PROOF_BASE_URL='http://127.0.0.1:3029'; npm run proof:web-vitals
 git diff --check
 ```
 
-After the proof scripts finish, update the include list above with the new timestamped artifact filenames or verify that the current newest artifacts are the intended checkpoint evidence.
+After the proof scripts finish, verify that `hireproof-crawl-social-latest.json` and
+`hireproof-web-vitals-latest.json` are the intended checkpoint evidence. Timestamped proof JSON is
+generated run history and should stay out of the checkpoint unless separately requested.
 
 Staging dry-run verification:
 

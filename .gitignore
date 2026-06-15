@@ -28,6 +28,10 @@ yarn-error.log*
 scratch/*.log
 artifacts/**/*.log
 artifacts/research-agent/
+artifacts/seo-crawl-preview/hireproof-crawl-social-*.json
+!artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json
+artifacts/web-vitals/hireproof-web-vitals-*.json
+!artifacts/web-vitals/hireproof-web-vitals-latest.json
 
 # local env files
 .env*.local

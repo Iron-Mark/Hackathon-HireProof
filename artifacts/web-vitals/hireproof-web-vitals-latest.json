@@ -1,0 +1,166 @@
+{
+  "generatedAt": "2026-06-15T14:11:12.515Z",
+  "baseUrl": "https://hireproof.tech",
+  "device": "mobile-390x844",
+  "prewarm": {
+    "enabled": true,
+    "route": "/robots.txt",
+    "status": 200,
+    "ok": true,
+    "error": null
+  },
+  "budgets": {
+    "lcpMs": 2500,
+    "cls": 0.1,
+    "longTaskTotalMs": 300,
+    "longTaskMaxMs": 200
+  },
+  "results": [
+    {
+      "route": "/",
+      "url": "https://hireproof.tech/",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 320,
+        "lcpMs": 320,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "",
+          "text": "Check a recruiter message, job listing, freelance gig, internship, or scholarship or training offer before you share personal details. HireP",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 10,
+        "longTaskMaxMs": 60,
+        "domContentLoadedMs": 306,
+        "loadEventMs": 383
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/audit",
+      "url": "https://hireproof.tech/audit",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 176,
+        "lcpMs": 1000,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "leading-6",
+          "text": "Live evidence is capped. Public audits stay available with deterministic checks; hosted live provider runs are BYOK or API-key gated to prot",
+          "source": ""
+        },
+        "cls": 0.0981,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 34,
+        "longTaskMaxMs": 84,
+        "domContentLoadedMs": 131,
+        "loadEventMs": 249
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/demo/linkedin",
+      "url": "https://hireproof.tech/demo/linkedin",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 228,
+        "lcpMs": 228,
+        "lcpElement": {
+          "tagName": "H1",
+          "id": "",
+          "className": "text-3xl font-black tracking-tight",
+          "text": "Remote Frontend Intern - PHP 80,000/week",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 11,
+        "longTaskMaxMs": 61,
+        "domContentLoadedMs": 207,
+        "loadEventMs": 301
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/docs",
+      "url": "https://hireproof.tech/docs",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 324,
+        "lcpMs": 324,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "text-lg font-semibold leading-8 text-muted",
+          "text": "An employment-fraud trust-and-safety agent for verifying job posts and detecting recruitment fraud. Paste a listing, upload a screenshot, or",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 2,
+        "longTaskTotalMs": 50,
+        "longTaskMaxMs": 80,
+        "domContentLoadedMs": 307,
+        "loadEventMs": 412
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/lab",
+      "url": "https://hireproof.tech/lab",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 252,
+        "lcpMs": 252,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "max-w-xl text-lg font-medium leading-relaxed text-muted-foreground",
+          "text": "Run the same audit stream used by HireProof and watch the investigation logs resolve into a structured report.",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 2,
+        "longTaskTotalMs": 27,
+        "longTaskMaxMs": 74,
+        "domContentLoadedMs": 237,
+        "loadEventMs": 348
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    }
+  ],
+  "pass": true
+}

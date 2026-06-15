@@ -200,7 +200,9 @@ const summary = {
 
 await mkdir(outputDir, { recursive: true })
 const outputPath = path.join(outputDir, `hireproof-web-vitals-${stamp()}.json`)
+const latestOutputPath = path.join(outputDir, 'hireproof-web-vitals-latest.json')
 await writeFile(outputPath, `${JSON.stringify(summary, null, 2)}\n`)
+await writeFile(latestOutputPath, `${JSON.stringify(summary, null, 2)}\n`)
 
 for (const result of results) {
   const status = result.pass ? 'PASS' : 'FAIL'
@@ -209,6 +211,7 @@ for (const result of results) {
   )
 }
 console.log(`Report: ${outputPath}`)
+console.log(`Latest: ${latestOutputPath}`)
 
 if (!summary.pass) {
   process.exitCode = 1
