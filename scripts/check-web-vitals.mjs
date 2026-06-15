@@ -8,6 +8,8 @@ const routes = (process.env.HIREPROOF_PROOF_ROUTES || '/,/audit,/demo/linkedin,/
   .split(',')
   .map((route) => route.trim())
   .filter(Boolean)
+const prewarmEnabled = process.env.HIREPROOF_PROOF_PREWARM !== '0' && /^https?:\/\//.test(baseUrl)
+const prewarmRoute = process.env.HIREPROOF_PROOF_PREWARM_ROUTE || '/robots.txt'
 
 const budgets = {
   lcpMs: Number(process.env.HIREPROOF_BUDGET_LCP_MS || 2500),
@@ -120,6 +122,40 @@ async function collectRoute(page, route) {
   return result
 }
 
+async function prewarmContext(context) {
+  if (!prewarmEnabled) {
+    return {
+      enabled: false,
+      route: prewarmRoute,
+      status: null,
+      ok: null,
+      error: null,
+    }
+  }
+
+  const page = await context.newPage()
+  try {
+    const response = await page.goto(routeUrl(prewarmRoute), { waitUntil: 'domcontentloaded', timeout: 30000 })
+    return {
+      enabled: true,
+      route: prewarmRoute,
+      status: response?.status() || 0,
+      ok: response?.ok() || false,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      enabled: true,
+      route: prewarmRoute,
+      status: 0,
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  } finally {
+    await page.close()
+  }
+}
+
 const browser = await chromium.launch()
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 },
@@ -131,7 +167,15 @@ const context = await browser.newContext({
 })
 
 const results = []
+let prewarm = {
+  enabled: false,
+  route: prewarmRoute,
+  status: null,
+  ok: null,
+  error: null,
+}
 try {
+  prewarm = await prewarmContext(context)
   for (const route of routes) {
     const page = await context.newPage()
     try {
@@ -148,6 +192,7 @@ const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl,
   device: 'mobile-390x844',
+  prewarm,
   budgets,
   results,
   pass: results.every((result) => result.pass),
