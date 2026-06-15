@@ -1,10 +1,15 @@
 # Final Live vs Pending Status
 
-Last checked: 2026-05-04
+Last checked: 2026-06-15
 
 This is the concise status boundary for submission, demos, and reviewer conversations.
 
-## Live / Repo-Controlled
+## Production Live / Local Repo-Controlled
+
+Rows marked `Live`, `Screenshot-proven`, `Published`, or `Production accepted-run proven`
+have production or external evidence. Rows marked `Implemented locally` are current
+checkout proof only and still need checkpoint, push, deployment, and live rerun before
+they can be described as production-live.
 
 | Area | Status | Evidence path |
 | --- | --- | --- |
@@ -31,6 +36,8 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | Demo fixture labeling | Implemented | Fixture snackbar, visible result warning, fixture evidence wording |
 | Live audit guardrails | Implemented | Queue throttling, SerpApi circuit breaker, cache telemetry |
 | Evidence provider status UI | Implemented locally | Audit report panel for SerpApi, RDAP, DNS, Safe Browsing, CT, threat-intel, registry, and urlscan statuses |
+| Pro-research SEO/Web Vitals local proof | Implemented locally | `docs/spec/hireproof`, `npm run proof:crawl-social`, `npm run proof:web-vitals` |
+| Workflow transitive dependency audit fix | Implemented locally | `esbuild@0.28.1` override, `npm run audit:security`, `npm run test:security` |
 
 ## Pending External Proof
 
@@ -43,6 +50,7 @@ This is the concise status boundary for submission, demos, and reviewer conversa
 | n8n community node | Directory/community verification beyond npm package | Requires n8n review after local install screenshots |
 | Make Custom App | Make review approval | Requires Make developer account and review flow |
 | WDK completed transcript | Completed durable run with callback proof | Current proof is accepted-run only |
+| June 15 pro-research deploy proof | Checkpoint, push, deploy, and live route proof | Current June 15 proof is local production-build and security-audit evidence only |
 
 ## Latest Live SerpApi Smoke
 
@@ -91,7 +99,7 @@ Checked locally on 2026-05-04 after Phase 3:
 - Browser check: provider-status panel rendered at `375px` and `1280px`
 - Overflow check: no horizontal overflow at either viewport
 
-This proves the UI can surface the provider-status object returned by live audit results. Production deployment still requires committing and pushing the Phase 3 UI changes.
+This proves the UI can surface the provider-status object returned by live audit results. The current June 15 proof set is a separate local production-build checkpoint candidate and still needs commit, push, deploy, and live rerun before production closure is claimed.
 
 ## Latest Package Proof
 
@@ -108,6 +116,44 @@ CLI refresh checked on 2026-06-11 from a clean temporary folder:
 
 - `npx @hireproof/cli@latest --help`: passed with `@hireproof/cli@1.0.1`.
 - npm registry metadata reports `engines.node` as `>=22.0.0`.
+
+## Latest Pro-Research SEO/Web Vitals Proof
+
+Checked on 2026-06-15 from a local production build at `http://127.0.0.1:3029`, then refreshed during the checkpoint-manifest pre-check.
+
+- `npm run proof:crawl-social -- --url http://127.0.0.1:3029`: passed.
+- Crawl/social artifact: `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T06-18-30-825Z.json`.
+- `HIREPROOF_PROOF_BASE_URL=http://127.0.0.1:3029 npm run proof:web-vitals`: passed.
+- Web Vitals artifact: `artifacts/web-vitals/hireproof-web-vitals-2026-06-15T06-18-56-383Z.json`.
+- Routes covered: `/`, `/audit`, `/demo/linkedin`, `/docs`, and `/lab`.
+- Budget result: every route returned `200`, CLS `0`, LCP under `2500ms`, long-task total under `300ms`, and max long task under `200ms`.
+
+This is not live production proof. The working tree still needs an intentional checkpoint, push,
+deployment, and live rerun before production closure is claimed.
+
+## Latest Current-Production Baseline Proof
+
+Checked on 2026-06-15 against `https://hireproof.tech`.
+
+- `GET /api/health`: returned `status: ok` with `readiness.state: ready` and `readiness.scope: public`.
+- `npm run proof:crawl-social -- --url https://hireproof.tech`: passed robots, sitemap, canonical-origin, private-route exclusion, home route, and social-tag checks.
+- Live crawl/social artifact: `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T08-01-26-809Z.json`.
+
+This is a current-production baseline proof only. It does not prove the dirty checkpoint stack until
+that stack is intentionally checkpointed, pushed, deployed, and rerun live.
+
+## Latest Dependency Audit Proof
+
+Checked on 2026-06-15 after overriding Workflow's transitive `esbuild` dependency to `0.28.1`.
+
+- `npm run audit:security`: passed with `found 0 vulnerabilities`.
+- `npm ls esbuild workflow @workflow/cli @workflow/builders --all`: resolved Workflow's `esbuild` chain to `0.28.1`.
+- `npm run test:security`: passed with `337` tests.
+- `npm run lint`: passed.
+- `node --test test/download-hardening.test.mjs test/polish-hardening.test.mjs`: passed with `27` tests.
+- `npm run build`: passed and generated `102` static pages.
+
+This is local proof. It still needs checkpoint, push, deployment, and live route proof before production closure is claimed.
 
 ## Latest Screenshot OCR Smoke
 

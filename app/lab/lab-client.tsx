@@ -16,7 +16,6 @@ import {
   Terminal,
   Zap,
 } from 'lucide-react'
-import { SiteHeader } from '@/components/layout/site-header'
 import { showToast } from '@/components/system/toast'
 import type { AuditReport, AuditRequest } from '@/lib/schemas'
 
@@ -301,9 +300,7 @@ export function LabClient() {
         : 'border-safe/30 bg-safe/10 text-safe'
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-safe/30 hireproof-grid">
-      <SiteHeader />
-
+    <>
       <main className="mx-auto max-w-400 px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32">
         <div className="mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <div>
@@ -605,6 +602,6 @@ export function LabClient() {
           </aside>
         </div>
       </main>
-    </div>
+    </>
   )
 }

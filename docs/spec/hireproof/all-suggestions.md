@@ -1,0 +1,125 @@
+# HireProof All Source Suggestions
+
+This is the broad suggestion register extracted from every approved source document for this project. Use it as a checklist when executing the spec.
+
+## HireProof.tech performance & SEO review Overview
+Source: `PDFs/Web Audits and SEO/HireProof.tech - Performance and SEO Review.pdf`
+
+- HireProof.tech performance & SEO review
+- HireProof is a job-scam verification service built with Next.js 16 and React 19 . The site offers a free job-post
+- integrations. It uses a public manifest to make the site installable (PWA) and centralizes SEO metadata in
+- lib/seo.ts for canonical URLs and structured data【filecite†turn5file0†L9-L17】. The repository
+- hireproof.tech showed a DNS lookup
+- should be discoverable from the HTML and
+- preloaded if referenced via CSS .Without explicit image
+- preloading or
+- fetchpriority , the
+- uses heavy client-side JavaScript. Web.dev
+- browser to respond sooner .Client-side tasks such as
+- Web.dev emphasises that images must
+- SEO and metadataThe documentation centralizes canonical
+- URLs, Open Graph metadata and
+- description【filecite†turn6file0†L4-L23】.Centralizing metadata is
+- alt-text on critical images
+- highlights that tasks longer than 50 ms block interactions and degrade INP . Combining multiple
+- means there is no offline caching or controlled network strategy. Critical assets (icons, fonts, API
+- add kilobytes of JavaScript. Each added script increases main-thread work and download time.
+- If the hero uses a background image in CSS, explicitly preload it via <link rel="preload"
+- fetchpriority="high" as="image" href="/path-to-hero.webp"> . For Next.js, use the
+- <Image> component with priority and fetchPriority="high" to hint that the image is the
+- Avoid lazy loading above-the-fold images - Do not set loading="lazy" on the hero image.
+- Inline critical CSS - Large global style sheets can block rendering even after the image is ready .
+- Extract only the CSS required for the hero section and inline it in the document. Defer non-critical
+- Reduce Interaction to Next Paint (INP)
+- tasks. For example, update UI and show spinners immediately, then defer network calls or analytics
+- Leverage React concurrency features - Use useTransition , useDeferredValue or
+- Suspense to run non-critical updates without blocking user interactions. Avoid heavy
+- computations on the client; offload analysis to API endpoints or serverless functions.
+- Reduce JavaScript bundle size - Audit dependencies and remove unused icons, animations or
+- Reserve space for dynamic content - When injecting evidence results or risk scores, wrap them in
+- Avoid inserting banners above existing content - If you display notifications (e.g., BYOK alerts),
+- responses. Ensure caching is conservative for dynamic AI results to avoid stale data.
+- them to avoid re-downloads on each visit. If using next/font/local , self-host fonts and preload
+- SEO & metadata improvements
+- schema that describes HireProof as an AI scam-detection tool. Provide creator and offers
+- Accessible images - Add descriptive alt attributes to hero images and icons. Use meaningful
+- Optimize sitemaps and robots - Ensure private pages (report history, settings, API routes) remain
+- sitemaps to Google Search Console after deploying major changes.
+- Monitor Web Vitals in the field - Integrate Google’s web-vitals library or Vercel’s Analytics to
+- HireProof has a solid technical foundation and already implements best practices like centralized SEO
+- metadata and a comprehensive PWA manifest. However , the dynamic nature of the audit interface and the
+- heavy use of client-side scripts risk degrading Core Web Vitals. By preloading and prioritizing hero assets,
+- metadata, the site can deliver faster , more stable pages and improved search visibility. These changes will
+
+## HireProof.tech Audit - SEO, Performance & Roadmap
+Source: `PDFs/Web Audits and SEO/HireProof.tech - SEO Performance and Roadmap Audit.pdf`
+
+- HireProof.tech Audit - SEO, Performance &
+- HireProof.tech provides a novel tool for detecting recruitment scams and offers a polished interface with
+- HTML head, and the canonical URL points to hireproof.tech rather than www. A large amount of
+- content is served through Next.js client components, including a complex nav bar , interactive scanning
+- bundles and degrade Core Web Vitals, especially Interaction to Next Paint (INP) . A phased plan below
+- prioritizes SEO fixes, reduction of client-side work and progressive enhancement.
+- Meaningful meta tags & JSON-LD - The <head> includes meta description, keywords, canonical
+- Scam-detection tool & demos - The LinkedIn demo page uses animated progress logs and risk
+- canonicalThe canonical tag references https://hireproof.tech , but there is no
+- 301 redirect to enforce the preferred URL. www.hireproof.tech should
+- permanently redirect to hireproof.tech to prevent duplicate indexing and
+- consolidate link equity.
+- navigationThe header ( site-header.tsx ) is a client component with imports of
+- and Framer Motion to mimic scanning and risk scoring . This page loads large
+- assets and scripts even if users just browse; it should be isolated and lazily
+- clientThe LabClient component orchestrates an audit workflow: it tracks steps,
+- client increases JS load and complexity; unused code ships to all users.
+- these animations add ~20KB+ to the bundle.
+- if JS is disabled. Search engines can crawl Next.js routes, but unnecessary client
+- hydration can hurt SEO and accessibility.
+- Recommended roadmap
+- than adding more animations. Treat each phase as a main quest ; finish it before starting
+- Phase 1 - Foundation & SEO
+- Permanent redirect - Configure a 301 redirect from www.hireproof.tech to hireproof.tech
+- (and ensure HTTP→HTTPS) to consolidate signals. Keep the canonical pointing to the apex domain
+- Meta & structured data audit - Verify each route has a unique <title> and meta description;
+- avoid using the same tags across pages. Continue using JSON-LD for Organization , Person and
+- SoftwareApplication but add BreadcrumbList for docs and labs. Use absolute URLs in @id fields.
+- Robots & sitemap - Generate a dynamic sitemap.xml and robots.txt via Next.js API route.
+- private/dynamic demo routes. Submit the sitemap to Google Search Console.
+- Link architecture - Consolidate thin or duplicate pages; avoid index bloat by combining the various
+- “Audit Engine - verify suspicious jobs” rather than generic “Audit”).2
+- Phase 2 - Navigation & common layout
+- renders static HTML and CSS. Only the theme toggle and search/command menu should be client
+- URL; avoid usePathname in most cases. This will shrink the JS bundle significantly.
+- Reduce dropdown complexity - Replace hover-activated dropdowns with accessible, CSS-only
+- menus where possible. For mobile, use the built-in <details> element; this reduces custom JS for
+- Phase 3 - Demo & lab refactoring
+- demonstration pages into a /demo subdirectory and mark them as client components. Use next/
+- them. Do not include their scripts in the main bundle.
+- Reduce animation libraries - For the LinkedIn demo, use simple CSS keyframes for fade-ins instead
+- of importing Framer Motion. Limit progress log updates; update the DOM fewer times to avoid
+- Move the lab workflow server-side - The LabClient component handles the entire audit
+- workflow on the client . Migrate this logic to an API route and handle stream parsing server-side.
+- On the client, show a <form> that posts to the API and returns a full report; if progressive
+- streaming is desired, use the native <form> with the replace attribute or SSE in a Web Worker
+- to avoid blocking the main thread. This will improve INP and reduce user CPU usage.
+- <button type="reset"> semantics and server-side state. Avoid storing large arrays of logs in
+- state; render only the last 20 entries to reduce memory usage.
+- Phase 4 - Asset & performance optimisation
+- Optimize images and icons - Replace inline SVG icons imported from lucide-react with next/
+- image and next/font icons or a sprite sheet. Use priority for hero images and
+- loading="lazy" for below-the-fold content. Preload only critical assets in the <head>.
+- Defer non-critical scripts - Use defer on analytics scripts and load chat or third-party widgets
+- after load event. Avoid dangerouslySetInnerHTML for injecting large JSON; instead read
+- Phase 5 - Continuous monitoring & experimentation
+- drop-off rates and conversion changes. Use this data to decide whether to keep or remove certain
+- the audit tool should fall back to an HTML <form> if JS fails. Progressive enhancement benefits SEO
+- HireProof.tech successfully markets a scam-detection tool through rich demos and storytelling. However ,
+- the site’s reliance on heavy client-side components and animations harms performance and could hurt
+- search rankings. By following the phased plan above-starting with domain canonicalization, simplifying
+- improved Core Web Vitals , and better crawlability while retaining a polished user experience. Each phase
+- should be treated as a discrete mission: execute it decisively, measure the impact, and resist the temptation
+- to add new features until the foundational work is complete.
+- HireProof | Verify Job Posts Before Applying
+- https://hireproof.tech/
+- https://raw.githubusercontent.com/Iron-Mark/Hackathon-HireProof/ce4ff32f292e7959eff3bda141702ad46175c006/app/demo/
+- https://raw.githubusercontent.com/Iron-Mark/Hackathon-HireProof/ce4ff32f292e7959eff3bda141702ad46175c006/app/lab/lab-
+- https://raw.githubusercontent.com/Iron-Mark/Hackathon-HireProof/ce4ff32f292e7959eff3bda141702ad46175c006/components/

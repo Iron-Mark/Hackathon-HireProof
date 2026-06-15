@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 
 test('public download CTAs use the rate-limited API download route', async () => {
   const files = [
-    '../app/home-client.tsx',
+    '../app/home-page.tsx',
     '../app/audit/audit-client.tsx',
     '../app/docs/automations/page.tsx',
     '../app/docs/chrome-extension/page.tsx',

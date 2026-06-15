@@ -1,6 +1,6 @@
 # HireProof Platform Proof Status
 
-Last checked: 2026-05-03
+Last checked: 2026-06-15
 
 ## Summary
 
@@ -21,6 +21,9 @@ Final submission status:
 - Multi-platform ChatSDK wiring now includes Discord, Telegram, and optional provider adapters behind their own readiness gates. Telegram live delivery is screenshot/log-proven; Discord is production credential-ready; optional provider adapters remain backend-gated.
 - Live proof runbook for the pending platforms is documented in `docs/live-chat-platform-proof-plan.md`.
 - Controlled proof checker is available as `npm run proof:chat-live`; the latest snapshot is `docs/demo/live-chat-proof-check-latest.json`.
+- SEO/social crawl proof is available as `npm run proof:crawl-social`.
+- Local Web Vitals route proof is available as `npm run proof:web-vitals`.
+- June 15 local security proof passed after overriding Workflow's transitive `esbuild` dependency to `0.28.1`; `npm run audit:security` reports `found 0 vulnerabilities`, and `npm run test:security` passed `337` tests.
 - Local WDK proof passed: `/api/workflows/audit` accepted a run and returned `wrun_01KQD72F2DVABS2KSFKABWAKXR`.
 - Local ChatSDK reply proof passed through `/api/chat/hireproof` and returned a formatted HireProof verdict plus report link.
 - Local platform readiness passed for Workflow and AI Gateway with the local proof environment.
@@ -28,6 +31,7 @@ Final submission status:
 - Production audit API smoke passed after the Redis env hardening fix: `POST /api/v1/audit` returned a High-Risk demo report with score `92`.
 - **Forensic Export Proof**: Verified that `generatePdfDossier` and `buildTrendsCsvExport` are wired to the production UI, allowing for multi-format evidence persistence.
 - Vercel 500-log check after the final smoke returned no new logs.
+- June 15 local pro-research proof passed on `http://127.0.0.1:3029`: crawl/social proof passed and Web Vitals proof passed for `/`, `/audit`, `/demo/linkedin`, `/docs`, and `/lab`.
 
 ## Submission Positioning Boundary
 
@@ -168,10 +172,27 @@ Local `/api/chat/hireproof` can exercise shared reply paths, but those local che
 
 The current working tree passed:
 
-- `node --test test/polish-hardening.test.mjs test/runtime-wiring.test.mjs`
+- `npm run audit:security`
+- `npm run test:security`
+- `node --test test/download-hardening.test.mjs test/polish-hardening.test.mjs`
 - `npm run lint`
 - `npm run build`
+- `npm run proof:crawl-social -- --url http://127.0.0.1:3029`
+- `HIREPROOF_PROOF_BASE_URL=http://127.0.0.1:3029 npm run proof:web-vitals`
 - `git diff --check` with only CRLF warnings
+
+June 15 proof artifacts, refreshed after the checkpoint-manifest pre-check and cursor guard watchdog stabilization:
+
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T06-18-30-825Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-15T06-18-56-383Z.json`
+
+These are local production-build proof artifacts. Production proof still requires checkpoint,
+push, deploy, and live rerun on `https://hireproof.tech`.
+
+Current-production baseline proof also passed on 2026-06-15: `/api/health` returned `status: ok`
+with `readiness.state: ready`, and `npm run proof:crawl-social -- --url https://hireproof.tech`
+passed with artifact `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T08-01-26-809Z.json`.
+This live crawl proves the currently deployed production baseline, not the uncheckpointed dirty stack.
 
 ## Production Proof Follow-Up
 

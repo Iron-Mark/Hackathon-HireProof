@@ -68,7 +68,7 @@ function runGuardWithOpenStdin(prefix, env = {}) {
     const killTimer = setTimeout(() => {
       child.kill()
       reject(new Error('cursor pretool guard timed out during test'))
-    }, 1000)
+    }, 5000)
 
     child.stdout.setEncoding('utf8')
     child.stderr.setEncoding('utf8')

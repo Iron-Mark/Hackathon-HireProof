@@ -7,7 +7,6 @@ import { AlertTriangle, CheckCircle2, Play, Zap, Search, TrendingUp, Terminal, S
 import { motion, AnimatePresence } from 'framer-motion'
 import AuditForm from '@/components/audit/audit-form'
 import ResultScreen from '@/components/audit/result-screen'
-import { SiteHeader } from '@/components/layout/site-header'
 import { ErrorBoundary } from '@/components/system/error-boundary'
 import { AuditSkeleton } from '@/components/audit/audit-skeleton'
 import { AuditLiveProgress, type AuditProgressEvent } from '@/components/audit/audit-live-progress'
@@ -499,15 +498,10 @@ function AuditContent() {
 
 export function AuditClient() {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="mx-auto max-w-[1600px] px-6 md:px-12 lg:px-20 xl:px-32">
-        <ErrorBoundary>
-          <Suspense fallback={<AuditSkeleton />}>
-            <AuditContent />
-          </Suspense>
-        </ErrorBoundary>
-      </main>
-    </div>
+    <ErrorBoundary>
+      <Suspense fallback={<AuditSkeleton />}>
+        <AuditContent />
+      </Suspense>
+    </ErrorBoundary>
   )
 }

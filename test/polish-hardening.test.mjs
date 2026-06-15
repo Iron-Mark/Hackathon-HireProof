@@ -321,11 +321,18 @@ test('homepage ticker avoids unsupported hard impact metrics', async () => {
 })
 
 test('first-place sprint surfaces demo clarity and public proof from the homepage', async () => {
-  const source = await fs.readFile(new URL('../app/home-client.tsx', import.meta.url), 'utf8')
+  const homePage = await fs.readFile(new URL('../app/home-page.tsx', import.meta.url), 'utf8')
+  const route = await fs.readFile(new URL('../app/page.tsx', import.meta.url), 'utf8')
+  const demoLink = await fs.readFile(new URL('../app/home-demo-link.tsx', import.meta.url), 'utf8')
+  const demoPanel = await fs.readFile(new URL('../app/home-demo-panel.tsx', import.meta.url), 'utf8')
+  const source = `${homePage}\n${demoLink}\n${demoPanel}`
   const header = await fs.readFile(new URL('../components/layout/site-header.tsx', import.meta.url), 'utf8')
   const proofPage = await fs.readFile(new URL('../app/proof/page.tsx', import.meta.url), 'utf8')
   const spotTheBot = await fs.readFile(new URL('../components/marketing/spot-the-bot.tsx', import.meta.url), 'utf8')
 
+  assert.doesNotMatch(homePage, /'use client'/)
+  assert.match(route, /HireProofHomePage/)
+  assert.doesNotMatch(route, /HomeClient/)
   assert.match(source, /Paste a job post\. See if it/)
   assert.match(source, /safe, suspicious, or high-risk/)
   assert.match(source, /freelance gig/)
@@ -338,6 +345,8 @@ test('first-place sprint surfaces demo clarity and public proof from the homepag
   assert.match(source, /Quick demo/)
   assert.match(source, /Pilot-ready job-scam checks/)
   assert.match(source, /pilot-ready job-scam verification/)
+  assert.match(source, /Pressure-language markers/)
+  assert.doesNotMatch(source, /GPT-4/)
   assert.match(source, /href="\/audit\?demo=high-risk"/)
   assert.match(source, /Also available/)
   assert.match(source, /Proof pack/)

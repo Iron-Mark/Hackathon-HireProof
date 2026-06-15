@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-06-15T06:18:56.382Z",
+  "baseUrl": "http://127.0.0.1:3029",
+  "device": "mobile-390x844",
+  "budgets": {
+    "lcpMs": 2500,
+    "cls": 0.1,
+    "longTaskTotalMs": 300,
+    "longTaskMaxMs": 200
+  },
+  "results": [
+    {
+      "route": "/",
+      "url": "http://127.0.0.1:3029/",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 272,
+        "lcpMs": 272,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "",
+          "text": "Check a recruiter message, job listing, freelance gig, internship, or scholarship or training offer before you share personal details. HireP",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 30,
+        "longTaskMaxMs": 80,
+        "domContentLoadedMs": 161,
+        "loadEventMs": 343
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/audit",
+      "url": "http://127.0.0.1:3029/audit",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 172,
+        "lcpMs": 592,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "leading-6",
+          "text": "Live evidence is capped. Public audits stay available with deterministic checks; hosted live provider runs are BYOK or API-key gated to prot",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 92,
+        "longTaskMaxMs": 142,
+        "domContentLoadedMs": 136,
+        "loadEventMs": 242
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/demo/linkedin",
+      "url": "http://127.0.0.1:3029/demo/linkedin",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 152,
+        "lcpMs": 152,
+        "lcpElement": {
+          "tagName": "H1",
+          "id": "",
+          "className": "text-3xl font-black tracking-tight",
+          "text": "Remote Frontend Intern - PHP 80,000/week",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 1,
+        "longTaskTotalMs": 2,
+        "longTaskMaxMs": 52,
+        "domContentLoadedMs": 83,
+        "loadEventMs": 204
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/docs",
+      "url": "http://127.0.0.1:3029/docs",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 220,
+        "lcpMs": 220,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "text-lg font-semibold leading-8 text-muted",
+          "text": "An employment-fraud trust-and-safety agent for verifying job posts and detecting recruitment fraud. Paste a listing, upload a screenshot, or",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 2,
+        "longTaskTotalMs": 40,
+        "longTaskMaxMs": 80,
+        "domContentLoadedMs": 119,
+        "loadEventMs": 291
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    },
+    {
+      "route": "/lab",
+      "url": "http://127.0.0.1:3029/lab",
+      "status": 200,
+      "metrics": {
+        "fcpMs": 188,
+        "lcpMs": 188,
+        "lcpElement": {
+          "tagName": "P",
+          "id": "",
+          "className": "max-w-xl text-lg font-medium leading-relaxed text-muted-foreground",
+          "text": "Run the same audit stream used by HireProof and watch the investigation logs resolve into a structured report.",
+          "source": ""
+        },
+        "cls": 0,
+        "longTaskCount": 2,
+        "longTaskTotalMs": 10,
+        "longTaskMaxMs": 60,
+        "domContentLoadedMs": 147,
+        "loadEventMs": 220
+      },
+      "budgets": {
+        "lcpMs": 2500,
+        "cls": 0.1,
+        "longTaskTotalMs": 300,
+        "longTaskMaxMs": 200
+      },
+      "pass": true
+    }
+  ],
+  "pass": true
+}

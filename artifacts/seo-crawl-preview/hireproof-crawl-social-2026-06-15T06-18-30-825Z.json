@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2026-06-15T06:18:30.824Z",
+  "baseUrl": "http://127.0.0.1:3029",
+  "canonicalOrigin": "https://hireproof.tech",
+  "routes": {
+    "robots": "http://127.0.0.1:3029/robots.txt",
+    "sitemap": "http://127.0.0.1:3029/sitemap.xml",
+    "home": "http://127.0.0.1:3029/"
+  },
+  "socialTags": {
+    "ogTitle": "HireProof | Verify Job Posts Before Applying",
+    "ogDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+    "ogImage": "https://hireproof.tech/og-image.png",
+    "ogUrl": "https://hireproof.tech",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "HireProof | Verify Job Posts Before Applying",
+    "twitterDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+    "twitterImage": "https://hireproof.tech/og-image.png"
+  },
+  "checks": [
+    {
+      "name": "robots status 200",
+      "pass": true,
+      "evidence": "200 text/plain"
+    },
+    {
+      "name": "robots exposes sitemap",
+      "pass": true,
+      "evidence": "Sitemap: https://hireproof.tech/sitemap.xml"
+    },
+    {
+      "name": "robots blocks API crawl",
+      "pass": true,
+      "evidence": "Disallow: /api/"
+    },
+    {
+      "name": "robots blocks private history",
+      "pass": true,
+      "evidence": "Disallow: /history/"
+    },
+    {
+      "name": "sitemap status 200",
+      "pass": true,
+      "evidence": "200 application/xml"
+    },
+    {
+      "name": "sitemap urlset present",
+      "pass": true,
+      "evidence": "<urlset>"
+    },
+    {
+      "name": "sitemap uses canonical origin only",
+      "pass": true,
+      "evidence": [
+        "https://hireproof.tech/",
+        "https://hireproof.tech/audit",
+        "https://hireproof.tech/explore",
+        "https://hireproof.tech/trends",
+        "https://hireproof.tech/pricing",
+        "https://hireproof.tech/pilot",
+        "https://hireproof.tech/proof",
+        "https://hireproof.tech/portfolio"
+      ]
+    },
+    {
+      "name": "sitemap includes public routes",
+      "pass": true,
+      "evidence": [
+        "https://hireproof.tech/",
+        "https://hireproof.tech/audit",
+        "https://hireproof.tech/proof",
+        "https://hireproof.tech/docs"
+      ]
+    },
+    {
+      "name": "sitemap excludes private routes",
+      "pass": true,
+      "evidence": "private routes absent"
+    },
+    {
+      "name": "home status 200",
+      "pass": true,
+      "evidence": "200 text/html; charset=utf-8"
+    },
+    {
+      "name": "open graph tags present",
+      "pass": true,
+      "evidence": {
+        "ogTitle": "HireProof | Verify Job Posts Before Applying",
+        "ogDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+        "ogImage": "https://hireproof.tech/og-image.png",
+        "ogUrl": "https://hireproof.tech",
+        "ogType": "website",
+        "twitterCard": "summary_large_image",
+        "twitterTitle": "HireProof | Verify Job Posts Before Applying",
+        "twitterDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+        "twitterImage": "https://hireproof.tech/og-image.png"
+      }
+    },
+    {
+      "name": "twitter tags present",
+      "pass": true,
+      "evidence": {
+        "ogTitle": "HireProof | Verify Job Posts Before Applying",
+        "ogDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+        "ogImage": "https://hireproof.tech/og-image.png",
+        "ogUrl": "https://hireproof.tech",
+        "ogType": "website",
+        "twitterCard": "summary_large_image",
+        "twitterTitle": "HireProof | Verify Job Posts Before Applying",
+        "twitterDescription": "Paste a job post, recruiter message, job URL, or screenshot. HireProof checks claims with evidence and returns a Safe, Caution, or High-Risk verdict before you apply.",
+        "twitterImage": "https://hireproof.tech/og-image.png"
+      }
+    }
+  ],
+  "pass": true
+}

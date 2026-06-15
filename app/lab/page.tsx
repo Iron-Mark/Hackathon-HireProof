@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LabClient } from './lab-client'
+import { SiteHeader } from '@/components/layout/site-header'
 import { pageMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = pageMetadata({
@@ -9,5 +10,10 @@ export const metadata: Metadata = pageMetadata({
 })
 
 export default function LabPage() {
-  return <LabClient />
+  return (
+    <div className="min-h-screen bg-background text-foreground selection:bg-safe/30 hireproof-grid">
+      <SiteHeader />
+      <LabClient />
+    </div>
+  )
 }

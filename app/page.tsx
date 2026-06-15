@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { HomeClient } from './home-client'
+import { HomePage as HireProofHomePage } from './home-page'
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, canonicalFor, defaultOpenGraph } from '@/lib/seo'
 
 export const metadata: Metadata = {
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 }
 
 export default function HomePage() {
-  return <HomeClient />
+  return <HireProofHomePage />
 }

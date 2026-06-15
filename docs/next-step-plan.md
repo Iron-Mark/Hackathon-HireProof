@@ -1,6 +1,6 @@
 # HireProof Next Step Plan
 
-Last checked: 2026-05-04
+Last checked: 2026-06-15
 
 ## Current Action Plan
 
@@ -129,7 +129,90 @@ Verified so far:
 
 Current dirty areas:
 
-- None expected before the active Phase 2 package proof pass, except documentation updates created by this action-plan refresh.
+- Homepage server-rendering split and small client islands: `app/home-page.tsx`, `app/home-demo-link.tsx`, `app/home-demo-panel.tsx`, and deletion of the old full-page `app/home-client.tsx`.
+- Route shell and client-cost cleanup for `/audit` and `/lab`.
+- Brand image optimization, proof scripts, focused tests, dependency-audit override, and the imported pro-research archive under `docs/spec/hireproof`.
+- Timestamped local proof artifacts under `artifacts/seo-crawl-preview` and `artifacts/web-vitals`, plus a current-production baseline crawl artifact.
+
+Checkpoint boundary:
+
+- Stage the implementation, proof scripts, tests, docs, `hireproof-crawl-social-latest.json`, and the latest timestamped proof reports when a checkpoint is authorized.
+- Do not stage `artifacts/` wholesale; it includes older timestamped local proof history that is not required for the checkpoint.
+- Treat older timestamped proof reports as optional history, not required checkpoint payload.
+- If proof scripts are rerun before checkpoint, refresh the timestamped artifact names below before staging. Do not stage stale timestamped proof files as the final evidence pair.
+- After checkpoint and push, rerun deploy/live proof before claiming production closure.
+
+Exact checkpoint manifest for the June 15 pro-research slice:
+
+Include when a checkpoint is authorized:
+
+- `app/audit/audit-client.tsx`
+- `app/audit/page.tsx`
+- `app/home-client.tsx` deletion
+- `app/home-demo-link.tsx`
+- `app/home-demo-panel.tsx`
+- `app/home-page.tsx`
+- `app/lab/lab-client.tsx`
+- `app/lab/page.tsx`
+- `app/page.tsx`
+- `components/brand/brand-mark.tsx`
+- `package-lock.json`
+- `package.json`
+- `scripts/check-web-vitals.mjs`
+- `scripts/verify-crawl-social-preview.mjs`
+- `test/cursor-pretool-guard.test.mjs`
+- `test/download-hardening.test.mjs`
+- `test/polish-hardening.test.mjs`
+- `docs/README.md`
+- `docs/deep-research-report-03.md`
+- `docs/final-live-vs-pending-status.md`
+- `docs/next-step-plan.md`
+- `docs/platform-proof-status.md`
+- `docs/remaining-work.md`
+- `docs/spec/hireproof/`, including `ref/original/*.pdf`, because the pro-research archive should preserve source-backed PDF evidence alongside extracted text.
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json`
+- The newest local timestamped `artifacts/seo-crawl-preview/hireproof-crawl-social-*.json` produced by the final pre-check rerun: currently `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T06-18-30-825Z.json`.
+- The current-production baseline crawl artifact referenced by the live-vs-pending docs: `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-15T08-01-26-809Z.json`.
+- The newest timestamped `artifacts/web-vitals/hireproof-web-vitals-*.json` produced by the final pre-check rerun: currently `artifacts/web-vitals/hireproof-web-vitals-2026-06-15T06-18-56-383Z.json`.
+
+Exclude from the checkpoint unless there is a separate artifact-history decision:
+
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T04-47-39-015Z.json`
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T04-51-36-704Z.json`
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T05-59-14-108Z.json`
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T10-29-19-798Z.json`
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T11-55-27-073Z.json`
+- `artifacts/seo-crawl-preview/hireproof-crawl-social-2026-06-14T18-30-23-152Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-21-51-563Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-23-02-396Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-47-53-631Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T04-51-48-125Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T05-59-29-856Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T10-29-34-387Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T11-55-43-441Z.json`
+- `artifacts/web-vitals/hireproof-web-vitals-2026-06-14T18-30-37-854Z.json`
+
+Before creating the checkpoint, rerun the current local proof boundary:
+
+```powershell
+node --test test/download-hardening.test.mjs test/polish-hardening.test.mjs
+npm run lint
+npm run audit:security
+npm run test:security
+npm run build
+npm run proof:crawl-social -- --url http://127.0.0.1:3029
+$env:HIREPROOF_PROOF_BASE_URL='http://127.0.0.1:3029'; npm run proof:web-vitals
+git diff --check
+```
+
+After the proof scripts finish, update the include list above with the new timestamped artifact filenames or verify that the current newest artifacts are the intended checkpoint evidence.
+
+Staging dry-run verification:
+
+- Run Git index dry-runs serially, not in parallel; parallel `git add --dry-run` calls can collide on `.git/index.lock`.
+- 2026-06-15 dry-run verifier result after the archived research boundary sync and live baseline crawl artifact inclusion: `41` candidate staged lines, `0` excluded stale artifact matches.
+- 2026-06-15 full proof rerun: focused hardening tests, `npm run lint`, `npm run audit:security`, `npm run test:security` (`337/337`), `npm run build` (`102` static pages), local crawl/social proof, local Web Vitals proof, and `git diff --check` were rerun or refreshed during checkpoint-readiness work. The cursor pretool guard timeout-path test needed a test-watchdog stabilization so the full suite no longer fails under concurrent load while preserving the guard's `CURSOR_PRETOOL_STDIN_TIMEOUT_MS` behavior.
+- Use the explicit include paths above; do not replace them with `git add artifacts/`.
 
 ## Phase 1: Stabilize The Working Tree
 
@@ -168,7 +251,7 @@ Review and keep only intentional changes in these areas:
 - `lib/ai-model.ts` and `/api/audit`: AI Gateway should be primary when configured, with OpenAI fallback.
 - `lib/hireproof-bot.ts` and `/api/webhooks/slack`: ChatSDK Slack path should remain credential-gated, not claimed fully live.
 - `lib/workflows/audit-workflow.ts`, `/api/workflows/audit`, and `next.config.js`: WDK route should be implemented but honest about required credentials.
-- `app/home-client.tsx`: preserve the redesign unless build, mobile layout, or smoke checks show regressions.
+- `app/home-page.tsx`, `app/home-demo-link.tsx`, and `app/home-demo-panel.tsx`: preserve the server-rendered homepage split and small client islands unless build, mobile layout, or smoke checks show regressions.
 - Docs: use "implemented, credential-gated" for ChatSDK and WDK until real platform events are verified.
 
 Acceptance:

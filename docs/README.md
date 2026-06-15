@@ -3,7 +3,8 @@
 This directory contains the historical research, strategy, and planning documents generated during the **Cursor Hackathon** workstream. These files are preserved for context and process transparency.
 
 ## Live Documentation
-For the most up-to-date technical documentation, visit the **[Live Documentation Portal](https://hireproof.tech/docs)**.
+For the most up-to-date production-shipped technical documentation, visit the **[Live Documentation Portal](https://hireproof.tech/docs)**.
+The local June 15 pro-research proof/docs stack can be ahead of that portal until it is checkpointed, pushed, deployed, and live-verified.
 
 ### Cursor integration
 - [`cursor/README.md`](./cursor/README.md): Index for Cursor SDK, MCP, Bugbot, QA, and architecture boundaries.
@@ -21,6 +22,7 @@ For the most up-to-date technical documentation, visit the **[Live Documentation
 
 ### Execution Plans
 - `final-presentation-plan.md`: The original blueprint for the HireProof MVP.
+- `spec/hireproof/`: Source-backed pro-research archive, intake summary, source coverage, SEO/performance audit extraction, and active checklist used for the June pro-research closeout.
 - `triple-track-coverage.md`: Honest track map for v0 + MCPs, ChatSDK Agents, and Vercel Workflow / WDK.
 - Live `/docs/competitive-roadmap`: Public judge-safe positioning for the focused employment-fraud wedge, transparent risk policy, WDK roadmap, and future multimodal work.
 - `chat-sdk-agents-integration-plan.md`: Draft plan for future multi-platform chat expansion.
