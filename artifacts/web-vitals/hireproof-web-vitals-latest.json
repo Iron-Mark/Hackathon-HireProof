@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T14:11:12.515Z",
+  "generatedAt": "2026-06-15T14:58:37.854Z",
   "baseUrl": "https://hireproof.tech",
   "device": "mobile-390x844",
   "prewarm": {
@@ -21,8 +21,8 @@
       "url": "https://hireproof.tech/",
       "status": 200,
       "metrics": {
-        "fcpMs": 320,
-        "lcpMs": 320,
+        "fcpMs": 1328,
+        "lcpMs": 1328,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -31,11 +31,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 1,
-        "longTaskTotalMs": 10,
-        "longTaskMaxMs": 60,
-        "domContentLoadedMs": 306,
-        "loadEventMs": 383
+        "longTaskCount": 2,
+        "longTaskTotalMs": 31,
+        "longTaskMaxMs": 68,
+        "domContentLoadedMs": 1217,
+        "loadEventMs": 2321
       },
       "budgets": {
         "lcpMs": 2500,
@@ -50,8 +50,8 @@
       "url": "https://hireproof.tech/audit",
       "status": 200,
       "metrics": {
-        "fcpMs": 176,
-        "lcpMs": 1000,
+        "fcpMs": 732,
+        "lcpMs": 1540,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -60,11 +60,11 @@
           "source": ""
         },
         "cls": 0.0981,
-        "longTaskCount": 1,
-        "longTaskTotalMs": 34,
-        "longTaskMaxMs": 84,
-        "domContentLoadedMs": 131,
-        "loadEventMs": 249
+        "longTaskCount": 2,
+        "longTaskTotalMs": 28,
+        "longTaskMaxMs": 75,
+        "domContentLoadedMs": 720,
+        "loadEventMs": 790
       },
       "budgets": {
         "lcpMs": 2500,
@@ -79,8 +79,8 @@
       "url": "https://hireproof.tech/demo/linkedin",
       "status": 200,
       "metrics": {
-        "fcpMs": 228,
-        "lcpMs": 228,
+        "fcpMs": 708,
+        "lcpMs": 708,
         "lcpElement": {
           "tagName": "H1",
           "id": "",
@@ -90,10 +90,10 @@
         },
         "cls": 0,
         "longTaskCount": 1,
-        "longTaskTotalMs": 11,
-        "longTaskMaxMs": 61,
-        "domContentLoadedMs": 207,
-        "loadEventMs": 301
+        "longTaskTotalMs": 9,
+        "longTaskMaxMs": 59,
+        "domContentLoadedMs": 630,
+        "loadEventMs": 950
       },
       "budgets": {
         "lcpMs": 2500,
@@ -108,8 +108,8 @@
       "url": "https://hireproof.tech/docs",
       "status": 200,
       "metrics": {
-        "fcpMs": 324,
-        "lcpMs": 324,
+        "fcpMs": 852,
+        "lcpMs": 852,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -118,11 +118,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 2,
-        "longTaskTotalMs": 50,
-        "longTaskMaxMs": 80,
-        "domContentLoadedMs": 307,
-        "loadEventMs": 412
+        "longTaskCount": 1,
+        "longTaskTotalMs": 7,
+        "longTaskMaxMs": 57,
+        "domContentLoadedMs": 799,
+        "loadEventMs": 1151
       },
       "budgets": {
         "lcpMs": 2500,
@@ -137,8 +137,8 @@
       "url": "https://hireproof.tech/lab",
       "status": 200,
       "metrics": {
-        "fcpMs": 252,
-        "lcpMs": 252,
+        "fcpMs": 780,
+        "lcpMs": 780,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -147,11 +147,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 2,
-        "longTaskTotalMs": 27,
-        "longTaskMaxMs": 74,
-        "domContentLoadedMs": 237,
-        "loadEventMs": 348
+        "longTaskCount": 1,
+        "longTaskTotalMs": 4,
+        "longTaskMaxMs": 54,
+        "domContentLoadedMs": 697,
+        "loadEventMs": 1035
       },
       "budgets": {
         "lcpMs": 2500,
