@@ -61,7 +61,7 @@
     "@ai-sdk/gateway": "^3.0.105",
     "@ai-sdk/openai": "^3.0.53",
     "@chat-adapter/discord": "^4.29.0",
-    "@chat-adapter/slack": "^4.29.0",
+    "@chat-adapter/slack": "^4.30.0",
     "@chat-adapter/state-redis": "^4.29.0",
     "@chat-adapter/telegram": "^4.29.0",
     "@cursor/sdk": "^1.0.13",
