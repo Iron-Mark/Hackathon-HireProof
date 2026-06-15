@@ -1,11 +1,1 @@
-<svg width="620" height="132" viewBox="0 0 620 132" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">HireProof wordmark</title>
-  <desc id="desc">HireProof text wordmark with a job verification tagline.</desc>
-  <rect width="620" height="132" rx="20" fill="#F8FAF7"/>
-  <text x="32" y="72" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="800" letter-spacing="0">HireProof</text>
-  <text x="36" y="106" fill="#475569" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="21" font-weight="500" letter-spacing="0">Job-post verification with receipts</text>
-  <rect x="483" y="31" width="103" height="34" rx="17" fill="#FDE7E5"/>
-  <circle cx="502" cy="48" r="5.5" fill="#B42318"/>
-  <text x="516" y="54" fill="#7A1C14" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="800">High-Risk</text>
-</svg>
-
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="132" fill="none" aria-labelledby="title desc" role="img" viewBox="0 0 620 132"><title id="title">HireProof wordmark</title><desc id="desc">HireProof text wordmark with a job verification tagline.</desc><rect width="620" height="132" fill="#F8FAF7" rx="20"/><text x="32" y="72" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="800" letter-spacing="0">HireProof</text><text x="36" y="106" fill="#475569" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="21" font-weight="500" letter-spacing="0">Job-post verification with receipts</text><rect width="103" height="34" x="483" y="31" fill="#FDE7E5" rx="17"/><circle cx="502" cy="48" r="5.5" fill="#B42318"/><text x="516" y="54" fill="#7A1C14" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="800">High-Risk</text></svg>

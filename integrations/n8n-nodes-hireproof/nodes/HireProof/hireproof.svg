@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HireProof">
-  <rect width="64" height="64" rx="16" fill="#111827"/>
-  <path d="M20 34.5 28.5 43 46 21" fill="none" stroke="#22c55e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-label="HireProof" role="img" viewBox="0 0 64 64"><rect width="64" height="64" fill="#111827" rx="16"/><path fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" d="M20 34.5 28.5 43 46 21"/></svg>

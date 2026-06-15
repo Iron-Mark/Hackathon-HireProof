@@ -1,18 +1,1 @@
-<svg width="1440" height="720" viewBox="0 0 1440 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1440" height="720" fill="#F8FAF7"/>
-  <g opacity="0.52">
-    <path d="M0 120H1440M0 240H1440M0 360H1440M0 480H1440M0 600H1440" stroke="#D9E2D6" stroke-width="1"/>
-    <path d="M120 0V720M240 0V720M360 0V720M480 0V720M600 0V720M720 0V720M840 0V720M960 0V720M1080 0V720M1200 0V720M1320 0V720" stroke="#D9E2D6" stroke-width="1"/>
-  </g>
-  <g opacity="0.3">
-    <rect x="94" y="84" width="178" height="72" rx="14" fill="#FFFFFF" stroke="#CBD5C7"/>
-    <rect x="1078" y="118" width="228" height="88" rx="16" fill="#FFFFFF" stroke="#CBD5C7"/>
-    <rect x="788" y="452" width="198" height="76" rx="16" fill="#FFFFFF" stroke="#CBD5C7"/>
-    <rect x="238" y="518" width="256" height="92" rx="16" fill="#FFFFFF" stroke="#CBD5C7"/>
-  </g>
-  <circle cx="330" cy="182" r="5" fill="#167C5C" opacity="0.55"/>
-  <circle cx="1004" cy="282" r="5" fill="#B7791F" opacity="0.55"/>
-  <circle cx="1152" cy="540" r="5" fill="#B42318" opacity="0.5"/>
-  <circle cx="636" cy="604" r="5" fill="#2563EB" opacity="0.45"/>
-</svg>
-
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" fill="none" viewBox="0 0 1440 720"><rect width="1440" height="720" fill="#F8FAF7"/><g opacity=".52"><path stroke="#D9E2D6" stroke-width="1" d="M0 120H1440M0 240H1440M0 360H1440M0 480H1440M0 600H1440"/><path stroke="#D9E2D6" stroke-width="1" d="M120 0V720M240 0V720M360 0V720M480 0V720M600 0V720M720 0V720M840 0V720M960 0V720M1080 0V720M1200 0V720M1320 0V720"/></g><g opacity=".3"><rect width="178" height="72" x="94" y="84" fill="#FFF" stroke="#CBD5C7" rx="14"/><rect width="228" height="88" x="1078" y="118" fill="#FFF" stroke="#CBD5C7" rx="16"/><rect width="198" height="76" x="788" y="452" fill="#FFF" stroke="#CBD5C7" rx="16"/><rect width="256" height="92" x="238" y="518" fill="#FFF" stroke="#CBD5C7" rx="16"/></g><circle cx="330" cy="182" r="5" fill="#167C5C" opacity=".55"/><circle cx="1004" cy="282" r="5" fill="#B7791F" opacity=".55"/><circle cx="1152" cy="540" r="5" fill="#B42318" opacity=".5"/><circle cx="636" cy="604" r="5" fill="#2563EB" opacity=".45"/></svg>
