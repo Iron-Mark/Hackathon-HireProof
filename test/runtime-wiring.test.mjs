@@ -593,6 +593,8 @@ test('live chat proof script fails loudly but keeps controlled credential gates 
   assert.match(script, /REQUEST_TIMEOUT_MS = 15_000/)
   assert.match(script, /live-chat-proof-check-strict-latest\.json/)
   assert.match(script, /assertPublicHttpBaseUrl/)
+  assert.match(script, /Origin: proofOrigin/)
+  assert.match(script, /Referer: `\$\{proofOrigin\}\/`/)
   assert.match(script, /collectValidationErrors/)
   assert.match(script, /coreStatus/)
   assert.match(script, /optionalStatus/)

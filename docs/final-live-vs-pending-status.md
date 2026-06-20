@@ -1,6 +1,6 @@
 # Final Live vs Pending Status
 
-Last checked: 2026-06-15
+Last checked: 2026-06-20
 
 This is the concise status boundary for submission, demos, and reviewer conversations.
 
@@ -24,6 +24,7 @@ they can be described as production-live.
 | ChatSDK shared bot path | Implemented | `/api/chat/hireproof`, `/api/webhooks/*` |
 | Slack proof | Screenshot-proven | `docs/demo/Screenshot 2026-04-30 024756.jpg` |
 | Telegram proof | Live delivery proven | `docs/platform-proof-status.md` |
+| Discord/Telegram controlled proof gates | Ready in strict proof snapshot | `docs/demo/live-chat-proof-check-strict-latest.json` |
 | WDK route | Production accepted-run proven | run ID `wrun_01KQD9H6AND3W7YZBHHKAH2KV5` |
 | Native automation packs | Repo-shipped and validated | `integrations/`, `packages/hireproof-langchain`, `/docs/automations` |
 | npm packages | Published and package-proofed | `@hireproof/cli`, `@hireproof/langchain`, `hireproof-sdk`, `n8n-nodes-hireproof` |
@@ -44,8 +45,8 @@ they can be described as production-live.
 | Area | Pending item | Why it is pending |
 | --- | --- | --- |
 | Chrome Web Store | Public listing approval | Requires developer-dashboard submission and Google review |
-| Discord | Real message screenshot and matching webhook log | Credentials/webhook are ready, but live event proof is still needed |
-| Additional chat providers | Credentials plus real event proof | Requires provider account credentials and real event capture |
+| WhatsApp/Zernio | Credentials plus real event proof, or approved deferral | Current strict proof reports `whatsapp` as `credential-gated` |
+| Additional chat providers | Credentials plus real event proof | Requires provider account credentials and real event capture if kept in scope |
 | npm package version bumps | Future package releases after the current published versions | Requires version bump and owner publish action |
 | n8n community node | Directory/community verification beyond npm package | Requires n8n review after local install screenshots |
 | Make Custom App | Make review approval | Requires Make developer account and review flow |

@@ -1,13 +1,12 @@
 {
-  "checkedAt": "2026-04-30T02:14:19.178Z",
-  "base": "https://hireproof-sigma.vercel.app",
-  "status": "credential-gated",
+  "checkedAt": "2026-06-20T04:08:42.860Z",
+  "base": "https://hireproof.tech",
+  "status": "ready",
+  "coreStatus": "ready",
+  "optionalStatus": "credential-gated",
   "health": {
     "httpStatus": 200,
-    "status": "ok",
-    "storage": "redis",
-    "model": true,
-    "liveSearch": true
+    "status": "ok"
   },
   "platforms": {
     "slack": {
@@ -16,71 +15,48 @@
       "missing": []
     },
     "discord": {
-      "state": "credential-gated",
+      "state": "ready",
       "endpoint": "/api/webhooks/discord",
-      "missing": [
-        "DISCORD_BOT_TOKEN",
-        "DISCORD_PUBLIC_KEY",
-        "DISCORD_APPLICATION_ID"
-      ]
+      "missing": []
     },
     "telegram": {
-      "state": "credential-gated",
+      "state": "ready",
       "endpoint": "/api/webhooks/telegram",
-      "missing": [
-        "TELEGRAM_BOT_TOKEN",
-        "TELEGRAM_WEBHOOK_SECRET_TOKEN",
-        "TELEGRAM_BOT_USERNAME"
-      ]
+      "missing": []
     },
     "whatsapp": {
       "state": "credential-gated",
       "endpoint": "/api/webhooks/zernio",
-      "missing": [
-        "ZERNIO_API_KEY",
-        "ZERNIO_WEBHOOK_SECRET"
-      ]
+      "missing": []
     }
   },
   "sharedChatReplyPath": {
     "httpStatus": 200,
     "status": "ChatSDK Agents verdict formatted.",
     "platform": "discord",
-    "reportUrl": null,
-    "reportUrlStatus": "redacted: legacy timestamp permalink invalid after UUID hardening; recapture live proof before using this artifact as current evidence",
+    "reportUrl": "https://hireproof.tech/audit/chat_a73e2bef-dabe-49ff-b1ae-241aeb9253a1",
     "verdict": "high-risk",
     "riskScore": 92
   },
   "webhookGetChecks": {
     "discord": {
       "httpStatus": 200,
-      "ready": false,
-      "credentialStatus": {
-        "botToken": false,
-        "publicKey": false,
-        "applicationId": false,
-        "redis": true,
-        "ready": false
+      "ready": true,
+      "readiness": {
+        "ready": true
       }
     },
     "telegram": {
       "httpStatus": 200,
-      "ready": false,
-      "credentialStatus": {
-        "botToken": false,
-        "webhookSecretToken": false,
-        "botUsername": false,
-        "redis": true,
-        "ready": false
+      "ready": true,
+      "readiness": {
+        "ready": true
       }
     },
     "whatsapp": {
       "httpStatus": 200,
       "ready": false,
-      "credentialStatus": {
-        "apiKey": false,
-        "webhookSecret": false,
-        "redis": true,
+      "readiness": {
         "ready": false
       }
     }
@@ -89,7 +65,7 @@
     "mode": "strict-live",
     "passed": false,
     "errors": [
-      "live platform proof is still pending for: discord, telegram, whatsapp"
+      "live platform proof is still pending for: whatsapp"
     ]
   }
 }

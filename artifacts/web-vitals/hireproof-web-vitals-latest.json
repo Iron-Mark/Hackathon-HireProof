@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-15T19:36:07.954Z",
-  "baseUrl": "https://hireproof.tech",
+  "generatedAt": "2026-06-20T02:25:59.504Z",
+  "baseUrl": "http://127.0.0.1:3002",
   "device": "mobile-390x844",
   "prewarm": {
     "enabled": true,
@@ -18,11 +18,11 @@
   "results": [
     {
       "route": "/",
-      "url": "https://hireproof.tech/",
+      "url": "http://127.0.0.1:3002/",
       "status": 200,
       "metrics": {
-        "fcpMs": 300,
-        "lcpMs": 300,
+        "fcpMs": 688,
+        "lcpMs": 688,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -31,11 +31,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 1,
-        "longTaskTotalMs": 11,
-        "longTaskMaxMs": 61,
-        "domContentLoadedMs": 205,
-        "loadEventMs": 367
+        "longTaskCount": 2,
+        "longTaskTotalMs": 215,
+        "longTaskMaxMs": 177,
+        "domContentLoadedMs": 667,
+        "loadEventMs": 917
       },
       "budgets": {
         "lcpMs": 2500,
@@ -47,24 +47,24 @@
     },
     {
       "route": "/audit",
-      "url": "https://hireproof.tech/audit",
+      "url": "http://127.0.0.1:3002/audit",
       "status": 200,
       "metrics": {
-        "fcpMs": 168,
-        "lcpMs": 1048,
+        "fcpMs": 760,
+        "lcpMs": 892,
         "lcpElement": {
-          "tagName": "P",
+          "tagName": "IMG",
           "id": "",
-          "className": "leading-6",
-          "text": "Live evidence is capped. Public audits stay available with deterministic checks; hosted live provider runs are BYOK or API-key gated to prot",
-          "source": ""
+          "className": "relative z-10 h-full w-full rounded-2xl object-contain drop-shadow-[0_0_10px_rgba(34,197,94,0.35)]",
+          "text": "",
+          "source": "http://127.0.0.1:3002/_next/image?url=%2Fdownloads%2Fhireproof-hp-shield-bot-icon.png&w=256&q=75"
         },
-        "cls": 0.0981,
-        "longTaskCount": 1,
-        "longTaskTotalMs": 22,
-        "longTaskMaxMs": 72,
-        "domContentLoadedMs": 130,
-        "loadEventMs": 226
+        "cls": 0,
+        "longTaskCount": 2,
+        "longTaskTotalMs": 79,
+        "longTaskMaxMs": 123,
+        "domContentLoadedMs": 672,
+        "loadEventMs": 912
       },
       "budgets": {
         "lcpMs": 2500,
@@ -76,11 +76,11 @@
     },
     {
       "route": "/demo/linkedin",
-      "url": "https://hireproof.tech/demo/linkedin",
+      "url": "http://127.0.0.1:3002/demo/linkedin",
       "status": 200,
       "metrics": {
-        "fcpMs": 240,
-        "lcpMs": 240,
+        "fcpMs": 432,
+        "lcpMs": 432,
         "lcpElement": {
           "tagName": "H1",
           "id": "",
@@ -89,11 +89,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 0,
-        "longTaskTotalMs": 0,
-        "longTaskMaxMs": 0,
-        "domContentLoadedMs": 170,
-        "loadEventMs": 308
+        "longTaskCount": 2,
+        "longTaskTotalMs": 127,
+        "longTaskMaxMs": 134,
+        "domContentLoadedMs": 417,
+        "loadEventMs": 595
       },
       "budgets": {
         "lcpMs": 2500,
@@ -105,11 +105,11 @@
     },
     {
       "route": "/docs",
-      "url": "https://hireproof.tech/docs",
+      "url": "http://127.0.0.1:3002/docs",
       "status": 200,
       "metrics": {
-        "fcpMs": 228,
-        "lcpMs": 228,
+        "fcpMs": 420,
+        "lcpMs": 420,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -118,11 +118,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 1,
-        "longTaskTotalMs": 7,
-        "longTaskMaxMs": 57,
-        "domContentLoadedMs": 143,
-        "loadEventMs": 301
+        "longTaskCount": 2,
+        "longTaskTotalMs": 113,
+        "longTaskMaxMs": 149,
+        "domContentLoadedMs": 323,
+        "loadEventMs": 600
       },
       "budgets": {
         "lcpMs": 2500,
@@ -134,11 +134,11 @@
     },
     {
       "route": "/lab",
-      "url": "https://hireproof.tech/lab",
+      "url": "http://127.0.0.1:3002/lab",
       "status": 200,
       "metrics": {
-        "fcpMs": 232,
-        "lcpMs": 232,
+        "fcpMs": 460,
+        "lcpMs": 460,
         "lcpElement": {
           "tagName": "P",
           "id": "",
@@ -147,11 +147,11 @@
           "source": ""
         },
         "cls": 0,
-        "longTaskCount": 0,
-        "longTaskTotalMs": 0,
-        "longTaskMaxMs": 0,
-        "domContentLoadedMs": 129,
-        "loadEventMs": 219
+        "longTaskCount": 2,
+        "longTaskTotalMs": 168,
+        "longTaskMaxMs": 191,
+        "domContentLoadedMs": 341,
+        "loadEventMs": 663
       },
       "budgets": {
         "lcpMs": 2500,

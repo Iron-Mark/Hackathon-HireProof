@@ -11,6 +11,7 @@ const outputPath = process.env.HIREPROOF_PROOF_OUTPUT_PATH
   ? path.resolve(process.env.HIREPROOF_PROOF_OUTPUT_PATH)
   : path.join(process.cwd(), 'docs', 'demo', defaultOutputFile)
 const REQUEST_TIMEOUT_MS = 15_000
+const proofOrigin = new URL(base).origin
 
 const platforms = [
   { key: 'discord', endpoint: '/api/webhooks/discord' },
@@ -72,7 +73,11 @@ async function getJson(url) {
 async function postJson(url, body) {
   const response = await withTimeout(`POST ${url}`, (signal) => fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: proofOrigin,
+      Referer: `${proofOrigin}/`,
+    },
     body: JSON.stringify(body),
     signal,
   }))
