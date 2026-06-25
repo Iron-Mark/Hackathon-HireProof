@@ -5,7 +5,7 @@ LangChain tool package for gating job-application agents with HireProof audits.
 ## Install
 
 ```bash
-npm install @hireproof/langchain @langchain/core zod
+npm install @hireproof/langchain @langchain/core
 ```
 
 ## Usage

@@ -50,7 +50,7 @@ test('public status routes expose only coarse readiness and no provider telemetr
   assert.doesNotMatch(workflowRoute, /workflowSecret:/)
   assert.doesNotMatch(workflowRoute, /WORKFLOW_SECRET/)
 
-  assert.match(usage, /getUserFromSessionToken/)
+  assert.match(usage, /getCurrentSessionUser/)
   assert.match(usage, /serpapiCache/)
   assert.match(usage, /providerCostGuards/)
 })

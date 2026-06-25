@@ -42,6 +42,7 @@ import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
 import { readJsonRequest } from '@/lib/request-security'
 import { readBoundedInternalToolJson } from '@/lib/response-security'
+import { getTrustedInternalBaseUrl } from '@/lib/trusted-base-url'
 import { validateWebhookUrl, WebhookUrlValidationError } from '@/lib/webhook-url-security'
 
 export const runtime = 'nodejs'
@@ -408,7 +409,7 @@ export async function POST(request: Request) {
                 }
               }
 
-              const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000'
+              const baseUrl = getTrustedInternalBaseUrl()
               
               const result = await generateText({
                 model: getHireProofModel(ownerCredentials.modelProviderKey),

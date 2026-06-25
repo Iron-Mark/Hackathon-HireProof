@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { authenticateUser, makeSessionToken } from '@/lib/auth-store'
+import { setAuthSessionCookie } from '@/lib/auth-session-cookie'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
@@ -49,12 +50,6 @@ export async function POST(request: Request) {
   if (!user) return noStoreJson({ error: 'Invalid email or password.' }, { status: 401 })
 
   const cookieStore = await cookies()
-  cookieStore.set('hireproof_session', makeSessionToken(user.id), {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
+  setAuthSessionCookie(cookieStore, makeSessionToken(user.id))
   return noStoreJson({ user })
 }

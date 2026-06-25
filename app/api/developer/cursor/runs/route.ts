@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken, isOperatorUser } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
+import { isOperatorUser } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
@@ -12,11 +12,6 @@ import type { CursorRunRuntime } from '@/lib/cursor/types'
 
 export const runtime = 'nodejs'
 const CURSOR_RUN_PAYLOAD_LIMIT_BYTES = 32 * 1024
-
-async function requireUser() {
-  const cookieStore = await cookies()
-  return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
-}
 
 async function validateCursorRunRateLimit(request: Request, userId: string) {
   const result = await checkRateLimit(`cursor_runs:${userId}:${requestIp(request)}`, {
@@ -39,7 +34,7 @@ function parseRuntime(value: unknown): CursorRunRuntime | undefined {
 }
 
 export async function GET() {
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
 
@@ -58,7 +53,7 @@ export async function POST(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
   if (isDemoAccountEmail(user.email)) {

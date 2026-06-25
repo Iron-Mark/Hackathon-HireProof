@@ -1,16 +1,11 @@
-import { cookies } from 'next/headers'
-import { createVerifiedDomain, getUserFromSessionToken, listVerifiedDomains } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
+import { createVerifiedDomain, listVerifiedDomains } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { noStoreJson } from '@/lib/response-security'
 
 const DEVELOPER_PAYLOAD_LIMIT_BYTES = 16 * 1024
-
-async function requireUser() {
-  const cookieStore = await cookies()
-  return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
-}
 
 function publicDomain(record: Awaited<ReturnType<typeof createVerifiedDomain>>) {
   return {
@@ -28,7 +23,7 @@ function publicDomain(record: Awaited<ReturnType<typeof createVerifiedDomain>>) 
 }
 
 export async function GET() {
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   const records = await listVerifiedDomains(user.id)
   return noStoreJson({ domains: records.map(publicDomain) })
@@ -38,7 +33,7 @@ export async function POST(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
     return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })

@@ -502,9 +502,9 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   const zernioWebhook = await fs.readFile(new URL('../app/api/webhooks/zernio/route.ts', import.meta.url), 'utf8')
   const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
 
-  assert.equal(packageJson.dependencies['@chat-adapter/discord'], '^4.29.0')
-  assert.equal(packageJson.dependencies['@chat-adapter/telegram'], '^4.29.0')
-  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.2.3')
+  assert.equal(packageJson.dependencies['@chat-adapter/discord'], '^4.31.0')
+  assert.equal(packageJson.dependencies['@chat-adapter/telegram'], '^4.31.0')
+  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.3.0')
   assert.match(bot, /from '@chat-adapter\/discord'/)
   assert.match(bot, /from '@chat-adapter\/telegram'/)
   assert.match(bot, /from '@zernio\/chat-sdk-adapter'/)
@@ -1190,11 +1190,11 @@ test('audit scoring uses normalized evidence-weighted signals', async () => {
 
 test('redis-backed services trim production environment variables before client creation', async () => {
   const db = await fs.readFile(new URL('../lib/db.ts', import.meta.url), 'utf8')
-  const authStore = await fs.readFile(new URL('../lib/auth-store.ts', import.meta.url), 'utf8')
+  const jsonRecordStore = await fs.readFile(new URL('../lib/json-record-store.ts', import.meta.url), 'utf8')
   const rateLimit = await fs.readFile(new URL('../lib/rate-limit.ts', import.meta.url), 'utf8')
   const bot = await fs.readFile(new URL('../lib/hireproof-bot.ts', import.meta.url), 'utf8')
 
-  for (const source of [db, authStore, rateLimit]) {
+  for (const source of [db, jsonRecordStore, rateLimit]) {
     assert.match(source, /UPSTASH_REDIS_REST_URL\?\.trim\(\)/)
     assert.match(source, /UPSTASH_REDIS_REST_TOKEN\?\.trim\(\)/)
   }
@@ -1382,7 +1382,7 @@ test('pilot intake stores requests and exposes authenticated admin/export surfac
   assert.match(route, /const\s+PILOT_REQUEST_PAYLOAD_LIMIT_BYTES\s*=\s*65_536/)
   assert.match(route, /readJsonRequest\(request,\s*PILOT_REQUEST_PAYLOAD_LIMIT_BYTES,\s*'Pilot request payload'\)/)
   assert.match(route, /checkRateLimit\(`pilot_request_status:\$\{user\.id\}:\$\{requestIp\(request\)\}`/)
-  assert.match(route, /getUserFromSessionToken/)
+  assert.match(route, /getCurrentSessionUser/)
   assert.match(route, /isOperatorUser\(user\)/)
   assert.match(route, /Operator access required/)
   assert.match(route, /export async function PATCH/)
@@ -1461,9 +1461,13 @@ test('public demo API key cannot spend platform live provider credentials', asyn
 
 test('audit agent MCP base URL does not trust inbound Host headers', async () => {
   const source = await fs.readFile(new URL('../app/api/audit/route.ts', import.meta.url), 'utf8')
+  const trustedBaseUrl = await fs.readFile(new URL('../lib/trusted-base-url.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /function getTrustedInternalBaseUrl/)
-  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /getTrustedInternalBaseUrl/)
+  assert.match(trustedBaseUrl, /process\.env\.APP_BASE_URL/)
+  assert.match(trustedBaseUrl, /configuredBaseUrl\?\.trim\(\)/)
+  assert.match(trustedBaseUrl, /\.replace\(\/\\\/\+\$\/,\s*''\)/)
+  assert.match(trustedBaseUrl, /DEFAULT_INTERNAL_BASE_URL = 'http:\/\/127\.0\.0\.1:3002'/)
   assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
   assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)
   assert.doesNotMatch(source, /`\$\{protocol\}:\/\/\$\{host\}`/)
@@ -1471,9 +1475,13 @@ test('audit agent MCP base URL does not trust inbound Host headers', async () =>
 
 test('workflow audit handoff base URL does not trust inbound request host', async () => {
   const source = await fs.readFile(new URL('../app/api/workflows/audit/route.ts', import.meta.url), 'utf8')
+  const trustedBaseUrl = await fs.readFile(new URL('../lib/trusted-base-url.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /function getTrustedInternalBaseUrl/)
-  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /getTrustedInternalBaseUrl/)
+  assert.match(trustedBaseUrl, /process\.env\.APP_BASE_URL/)
+  assert.match(trustedBaseUrl, /configuredBaseUrl\?\.trim\(\)/)
+  assert.match(trustedBaseUrl, /\.replace\(\/\\\/\+\$\/,\s*''\)/)
+  assert.match(trustedBaseUrl, /DEFAULT_INTERNAL_BASE_URL = 'http:\/\/127\.0\.0\.1:3002'/)
   assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
   assert.doesNotMatch(source, /new URL\(request\.url\)\.origin/)
   assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)
@@ -1481,9 +1489,13 @@ test('workflow audit handoff base URL does not trust inbound request host', asyn
 
 test('chat audit endpoint report URLs do not trust inbound request origin', async () => {
   const source = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
+  const trustedBaseUrl = await fs.readFile(new URL('../lib/trusted-base-url.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /function getTrustedInternalBaseUrl/)
-  assert.match(source, /process\.env\.APP_BASE_URL \|\| 'http:\/\/127\.0\.0\.1:3002'/)
+  assert.match(source, /getTrustedInternalBaseUrl/)
+  assert.match(trustedBaseUrl, /process\.env\.APP_BASE_URL/)
+  assert.match(trustedBaseUrl, /configuredBaseUrl\?\.trim\(\)/)
+  assert.match(trustedBaseUrl, /\.replace\(\/\\\/\+\$\/,\s*''\)/)
+  assert.match(trustedBaseUrl, /DEFAULT_INTERNAL_BASE_URL = 'http:\/\/127\.0\.0\.1:3002'/)
   assert.match(source, /const baseUrl = getTrustedInternalBaseUrl\(\)/)
   assert.doesNotMatch(source, /new URL\(request\.url\)\.origin/)
   assert.doesNotMatch(source, /request\.headers\.get\(['"]host['"]\)/)

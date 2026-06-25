@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
 import {
-  getUserFromSessionToken,
   listProviderCredentials,
   revokeProviderCredential,
   saveProviderCredential,
@@ -12,11 +11,6 @@ import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/reques
 import { noStoreJson } from '@/lib/response-security'
 
 const PROVIDER_CREDENTIAL_PAYLOAD_LIMIT_BYTES = 32 * 1024
-
-async function requireUser() {
-  const cookieStore = await cookies()
-  return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
-}
 
 async function validateCredentialSaveRateLimit(request: Request, userId: string) {
   const result = await checkRateLimit(`byok_provider_credentials:${userId}:${requestIp(request)}`, {
@@ -49,7 +43,7 @@ async function validateCredentialRevokeRateLimit(request: Request, userId: strin
 }
 
 export async function GET() {
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
 
   return noStoreJson({
@@ -61,7 +55,7 @@ export async function PATCH(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
     return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })
@@ -97,7 +91,7 @@ export async function DELETE(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
     return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })

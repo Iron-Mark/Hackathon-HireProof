@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken, revokeApiKey } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
+import { revokeApiKey } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { requestIp, validateMutationOrigin } from '@/lib/request-security'
@@ -9,8 +9,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const cookieStore = await cookies()
-  const user = await getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
     return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })

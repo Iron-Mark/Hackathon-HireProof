@@ -1,8 +1,5 @@
-import fs from 'fs/promises'
-import path from 'path'
 import crypto from 'crypto'
 import { resolveTxt } from 'dns/promises'
-import { Redis } from '@upstash/redis'
 import {
   createApiKey,
   createSessionToken,
@@ -12,8 +9,10 @@ import {
   verifySessionToken,
 } from './auth-core.mjs'
 import type { ApiKeyRecord } from './auth-core'
+import { AUTH_SESSION_TTL_SECONDS } from './auth-session-cookie'
 import { decryptSecret, encryptSecret, redactSecret } from './byok-crypto.mjs'
 import { isDemoAccountEmail } from './demo-account'
+import { readJson, writeJson } from './json-record-store'
 
 interface EncryptedSecretPayload {
   algorithm: 'aes-256-gcm'
@@ -120,8 +119,6 @@ export interface OwnerProviderCredentials {
   serpapiKey?: string
 }
 
-const dataDir = path.join(process.cwd(), 'data')
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
 const SECRET_MIN_LENGTH = 32
 const SECRET_MIN_DISTINCT_CHARS = 8
 const MISSING_USER_DUMMY_PASSWORD_HASH =
@@ -145,23 +142,6 @@ const PUBLIC_PLACEHOLDER_SECRETS = new Set([
   'hireproof_dev_session_secret',
   'hireproof_dev_byok_encryption_secret',
 ])
-
-let globalRedis: Redis | null = null
-let writeLock: Promise<void> = Promise.resolve()
-
-function getRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL?.trim()
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
-  if (!url || !token) return null
-  if (!globalRedis) {
-    try {
-      globalRedis = new Redis({ url, token })
-    } catch {
-      return null
-    }
-  }
-  return globalRedis
-}
 
 function isWeakSharedSecret(value: string) {
   const secret = value.trim()
@@ -214,46 +194,6 @@ function redactProviderCredential(record: ProviderCredentialRecord): RedactedPro
     updatedAt: record.updatedAt,
     verifiedAt: record.verifiedAt,
   }
-}
-
-async function readJson<T>(name: string, fallback: T): Promise<T> {
-  const redis = getRedis()
-  if (redis) {
-    try {
-      const value = await redis.get(`hireproof:${name}`)
-      if (value) return (typeof value === 'string' ? JSON.parse(value) : value) as T
-    } catch {
-      // Fall through to local fallback.
-    }
-  }
-
-  try {
-    const raw = await fs.readFile(path.join(dataDir, `${name}.json`), 'utf-8')
-    return JSON.parse(raw) as T
-  } catch {
-    return fallback
-  }
-}
-
-async function writeJson<T>(name: string, value: T) {
-  const redis = getRedis()
-  if (redis) {
-    try {
-      await redis.set(`hireproof:${name}`, JSON.stringify(value))
-      return
-    } catch {
-      // Fall through to local fallback.
-    }
-  }
-
-  writeLock = writeLock.then(async () => {
-    await fs.mkdir(dataDir, { recursive: true })
-    const file = path.join(dataDir, `${name}.json`)
-    const tmp = `${file}.tmp`
-    await fs.writeFile(tmp, JSON.stringify(value, null, 2))
-    await fs.rename(tmp, file)
-  })
-  await writeLock
 }
 
 function publicUser(user: UserAccount): PublicUser {
@@ -331,7 +271,7 @@ export async function getUserById(id: string) {
   return user ? publicUser(user) : null
 }
 
-export function makeSessionToken(userId: string, ttlSeconds = SESSION_TTL_SECONDS) {
+export function makeSessionToken(userId: string, ttlSeconds = AUTH_SESSION_TTL_SECONDS) {
   return createSessionToken(userId, sessionSecret(), ttlSeconds)
 }
 

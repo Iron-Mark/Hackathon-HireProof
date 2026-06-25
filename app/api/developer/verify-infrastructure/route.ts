@@ -1,5 +1,4 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
 import { normalizeProviderInput, verifyProviderCredential } from '@/lib/provider-verification'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
@@ -12,8 +11,7 @@ export async function POST(req: Request) {
     const csrfError = validateMutationOrigin(req)
     if (csrfError) return csrfError
 
-    const cookieStore = await cookies()
-    const user = await getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
+    const user = await getCurrentSessionUser()
     if (!user) return noStoreJson({ valid: false, error: 'Authentication required.' }, { status: 401 })
 
     const rateLimit = await checkRateLimit(`developer_verify_infrastructure:${user.id}:${requestIp(req)}`, {

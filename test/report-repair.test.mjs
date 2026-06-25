@@ -160,7 +160,7 @@ test('repairAuditReportForDisplay keeps missing-evidence warnings for generic pu
 test('developer report repair endpoint is authenticated, same-origin guarded, and dry-run capable', async () => {
   const source = await fs.readFile(new URL('../app/api/developer/repair-reports/route.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /getUserFromSessionToken/)
+  assert.match(source, /getCurrentSessionUser/)
   assert.match(source, /validateMutationOrigin/)
   assert.match(source, /from '@\/lib\/request-security'/)
   assert.doesNotMatch(source, /function allowedMutationOrigins/)
