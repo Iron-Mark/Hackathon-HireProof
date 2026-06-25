@@ -1,0 +1,30 @@
+name: Branch Flow Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  branch-flow-guard:
+    name: branch-flow-guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce dev-to-main promotion path
+        shell: bash
+        run: |
+          echo "base=${{ github.base_ref }}"
+          echo "head=${{ github.head_ref }}"
+
+          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
+            echo "::error::main only accepts promotion pull requests from dev. Open feature and fix pull requests against dev first."
+            exit 1
+          fi
+
+          if [[ "${{ github.base_ref }}" == "dev" && "${{ github.head_ref }}" == "main" ]]; then
+            echo "::error::Do not back-merge main into dev with a pull request. Rebase or fast-forward dev from main when needed."
+            exit 1
+          fi
+
+          echo "Branch flow is valid."
