@@ -40,6 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
     hideLoading();
   }
 
+  function safeReportUrl(serverUrl, reportId) {
+    const id = String(reportId || '').trim();
+    if (!/^[a-zA-Z0-9_-]{8,120}$/.test(id)) return '';
+
+    try {
+      const base = new URL(serverUrl);
+      if (!['http:', 'https:'].includes(base.protocol)) return '';
+      return new URL('/audit/' + encodeURIComponent(id), base).toString();
+    } catch {
+      return '';
+    }
+  }
+
   function displayResult(report) {
     hideLoading();
 
@@ -79,8 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Full report link
     const config = getConfig();
-    if (report.id) {
-      fullReportLink.href = config.serverUrl + '/audit/' + report.id;
+    const reportUrl = safeReportUrl(config.serverUrl, report.id);
+    if (reportUrl) {
+      fullReportLink.href = reportUrl;
       fullReportLink.style.display = 'block';
     } else {
       fullReportLink.style.display = 'none';
