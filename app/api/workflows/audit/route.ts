@@ -4,16 +4,13 @@ import { startAuditWorkflow } from '@/lib/workflows/audit-workflow'
 import { getWorkflowSecretStatus, validateWorkflowSecretHeader } from '@/lib/workflow-secret'
 import { readJsonRequest } from '@/lib/request-security'
 import { validateWebhookUrl, WebhookUrlValidationError } from '@/lib/webhook-url-security'
+import { getTrustedInternalBaseUrl } from '@/lib/trusted-base-url'
 
 export const runtime = 'nodejs'
 const WORKFLOW_PAYLOAD_LIMIT_BYTES = 64 * 1024
 
 function workflowCredentialsReady() {
   return getWorkflowSecretStatus().valid
-}
-
-function getTrustedInternalBaseUrl() {
-  return (process.env.APP_BASE_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
 }
 
 export async function GET() {

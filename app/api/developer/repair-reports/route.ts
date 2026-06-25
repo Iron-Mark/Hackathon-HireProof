@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken, isOperatorUser } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
+import { isOperatorUser } from '@/lib/auth-store'
 import { isDemoAccountEmail } from '@/lib/demo-account'
 import { getReport, saveReport } from '@/lib/db'
 import { repairAuditReportForDisplay } from '@/lib/report-repair.mjs'
@@ -10,12 +10,7 @@ import { noStoreJson } from '@/lib/response-security'
 export const runtime = 'nodejs'
 const REPAIR_REPORTS_PAYLOAD_LIMIT_BYTES = 32 * 1024
 
-async function requireUser() {
-  const cookieStore = await cookies()
-  return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
-}
-
-type RepairUser = NonNullable<Awaited<ReturnType<typeof requireUser>>>
+type RepairUser = NonNullable<Awaited<ReturnType<typeof getCurrentSessionUser>>>
 type RepairReport = NonNullable<Awaited<ReturnType<typeof getReport>>>
 
 function canRepairReport(user: RepairUser, report: RepairReport | null | undefined) {
@@ -37,7 +32,7 @@ export async function POST(request: Request) {
   const csrfError = validateMutationOrigin(request)
   if (csrfError) return csrfError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (isDemoAccountEmail(user.email)) {
     return noStoreJson({ error: 'Demo accounts cannot modify developer resources.' }, { status: 403 })

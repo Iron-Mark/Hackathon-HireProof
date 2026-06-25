@@ -40,6 +40,7 @@ import { acquireLiveAuditGuardrail } from '@/lib/live-audit-guardrails'
 import { checkProviderCostGuard } from '@/lib/provider-cost-guard'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { readBoundedInternalToolJson } from '@/lib/response-security'
+import { getTrustedInternalBaseUrl } from '@/lib/trusted-base-url'
 
 export const runtime = 'nodejs'
 const UI_AUDIT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
@@ -200,10 +201,6 @@ async function persistReportSafely(report: AuditReport) {
 
 function publicLiveAuditEnabled() {
   return process.env.PUBLIC_LIVE_AUDIT_ENABLED !== 'false'
-}
-
-function getTrustedInternalBaseUrl() {
-  return (process.env.APP_BASE_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
 }
 
 export async function POST(request: Request) {

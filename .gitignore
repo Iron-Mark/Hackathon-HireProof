@@ -10,6 +10,7 @@ node_modules/
 # next.js
 /.next/
 /out/
+/.swc/
 
 # production
 /build
@@ -25,7 +26,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-scratch/*.log
+/scratch/
 artifacts/**/*.log
 artifacts/research-agent/
 # Generated proof run history stays local; keep only the stable latest evidence pointers.

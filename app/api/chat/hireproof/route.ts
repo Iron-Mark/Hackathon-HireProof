@@ -3,16 +3,13 @@ import { createChatReply, getPublicChatReadiness, type ChatPlatform } from '@/li
 import { AuditRequestSchema } from '@/lib/schemas'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
+import { getTrustedInternalBaseUrl } from '@/lib/trusted-base-url'
 
 export const runtime = 'nodejs'
 
 const supportedPlatforms = ['slack', 'discord', 'telegram', 'whatsapp', 'local'] as const
 const CHAT_TEXT_LIMIT = 10_000
 const CHAT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
-
-function getTrustedInternalBaseUrl() {
-  return (process.env.APP_BASE_URL || 'http://127.0.0.1:3002').replace(/\/$/, '')
-}
 
 function normalizePlatform(platform: unknown): ChatPlatform {
   return supportedPlatforms.includes(platform as ChatPlatform) ? platform as ChatPlatform : 'local'
