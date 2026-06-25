@@ -53,6 +53,7 @@ The local June 15 pro-research proof/docs stack can be ahead of that portal unti
 
 ### Guidelines & Security
 - `AGENTS.md`: Contributor and AI Agent guidelines for this repository.
+- `branch-policy.md`: GitHub branch flow, required checks, and CodeQL scanning policy.
 - `security.md`: Detailed technical breakdown of the platform's security hardening.
 
 ### Assets

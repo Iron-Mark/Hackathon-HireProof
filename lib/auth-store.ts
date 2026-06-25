@@ -159,9 +159,16 @@ function requireStrongSharedSecret(value: string, name: string) {
 }
 
 function timingSafeStringEqual(left: string, right: string) {
-  const leftDigest = crypto.createHash('sha256').update(left).digest()
-  const rightDigest = crypto.createHash('sha256').update(right).digest()
-  return crypto.timingSafeEqual(leftDigest, rightDigest)
+  const leftBuffer = Buffer.from(left)
+  const rightBuffer = Buffer.from(right)
+  const maxLength = Math.max(leftBuffer.length, rightBuffer.length, 1)
+  const leftPadded = Buffer.alloc(maxLength)
+  const rightPadded = Buffer.alloc(maxLength)
+
+  leftBuffer.copy(leftPadded)
+  rightBuffer.copy(rightPadded)
+
+  return crypto.timingSafeEqual(leftPadded, rightPadded) && leftBuffer.length === rightBuffer.length
 }
 
 function sessionSecret() {
@@ -391,7 +398,7 @@ export async function getUsageSummary(ownerId: string) {
 
 function cleanText(value: unknown, maxLength: number) {
   return String(value || '')
-    .replace(/<script.*?>.*?<\/script>/gi, '')
+    .replace(/[<>]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength)
@@ -399,7 +406,7 @@ function cleanText(value: unknown, maxLength: number) {
 
 function cleanLongText(value: unknown, maxLength: number) {
   return String(value || '')
-    .replace(/<script.*?>.*?<\/script>/gi, '')
+    .replace(/[<>]/g, ' ')
     .replace(/\r\n/g, '\n')
     .replace(/\n{4,}/g, '\n\n\n')
     .trim()
