@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { authenticateUser, createUser, makeSessionToken } from '@/lib/auth-store'
+import { setAuthSessionCookie } from '@/lib/auth-session-cookie'
 import {
   DEMO_ACCOUNT_EMAIL,
   DEMO_ACCOUNT_NAME,
@@ -75,13 +76,7 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set('hireproof_session', makeSessionToken(user.id, DEMO_SESSION_TTL), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: DEMO_SESSION_TTL,
-    })
+    setAuthSessionCookie(cookieStore, makeSessionToken(user.id, DEMO_SESSION_TTL), DEMO_SESSION_TTL)
 
     return noStoreJson(
       {

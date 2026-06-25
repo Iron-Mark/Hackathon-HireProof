@@ -41,7 +41,7 @@ test('developer cursor runs route enforces session auth origin and rate limits',
   const envExample = await readRepoFile('.env.example')
   const securityDoc = await readRepoFile('docs/security.md')
 
-  assert.match(route, /getUserFromSessionToken/)
+  assert.match(route, /getCurrentSessionUser/)
   assert.match(route, /isOperatorUser/)
   assert.match(route, /Operator access required/)
   assert.match(route, /validateMutationOrigin/)

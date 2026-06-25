@@ -34,6 +34,15 @@ async function loadLoginRoute({ authenticateUser, makeSessionToken = () => 'sess
       if (id === '@/lib/auth-store') {
         return { authenticateUser, makeSessionToken }
       }
+      if (id === '@/lib/auth-session-cookie') {
+        return { setAuthSessionCookie: (store, token, maxAge = 60 * 60 * 24 * 7) => store.set('hireproof_session', token, {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: false,
+          path: '/',
+          maxAge,
+        }) }
+      }
       if (id === '@/lib/rate-limit') {
         return { checkRateLimit: async () => ({ success: true, remaining: 9 }) }
       }

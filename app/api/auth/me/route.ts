@@ -1,9 +1,7 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
 import { noStoreJson } from '@/lib/response-security'
 
 export async function GET() {
-  const cookieStore = await cookies()
-  const user = await getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
+  const user = await getCurrentSessionUser()
   return noStoreJson({ user })
 }

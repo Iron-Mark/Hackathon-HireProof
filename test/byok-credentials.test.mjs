@@ -101,7 +101,7 @@ test('developer provider verification route rate-limits external provider checks
   const route = await fs.readFile(new URL('../app/api/developer/verify-infrastructure/route.ts', import.meta.url), 'utf8')
 
   assert.match(route, /validateMutationOrigin/)
-  assert.match(route, /getUserFromSessionToken/)
+  assert.match(route, /getCurrentSessionUser/)
   assert.match(route, /checkRateLimit/)
   assert.match(route, /requestIp\(req\)/)
   assert.match(route, /developer_verify_infrastructure:\$\{user\.id\}:\$\{requestIp\(req\)\}/)
@@ -258,7 +258,7 @@ test('developer webhook sandbox uses shared SSRF validation and blocks redirects
   const route = await fs.readFile(new URL('../app/api/developer/webhook-test/route.ts', import.meta.url), 'utf8')
 
   assert.match(route, /validateMutationOrigin/)
-  assert.match(route, /getUserFromSessionToken/)
+  assert.match(route, /getCurrentSessionUser/)
   assert.match(route, /checkRateLimit\(`developer_webhook_test:\$\{user\.id\}:\$\{requestIp\(request\)\}`/)
   assert.match(route, /from '@\/lib\/webhook-url-security'/)
   assert.match(route, /url = await validateWebhookUrl\(url\)/)

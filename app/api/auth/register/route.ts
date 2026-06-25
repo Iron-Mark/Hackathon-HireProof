@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createUser, makeSessionToken } from '@/lib/auth-store'
+import { setAuthSessionCookie } from '@/lib/auth-session-cookie'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { noStoreJson } from '@/lib/response-security'
@@ -40,13 +41,7 @@ export async function POST(request: Request) {
 
     const user = await createUser(email, String(body.password || ''), String(body.name || ''))
     const cookieStore = await cookies()
-    cookieStore.set('hireproof_session', makeSessionToken(user.id), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    })
+    setAuthSessionCookie(cookieStore, makeSessionToken(user.id))
     return noStoreJson({ user })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Registration failed.'

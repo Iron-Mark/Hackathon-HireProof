@@ -1,18 +1,13 @@
-import { cookies } from 'next/headers'
-import { createPilotRequest, getUserFromSessionToken, isOperatorUser, listPilotRequests, recordProductEvent, updatePilotRequestStatus } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
+import { createPilotRequest, isOperatorUser, listPilotRequests, recordProductEvent, updatePilotRequestStatus } from '@/lib/auth-store'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { noStoreJson } from '@/lib/response-security'
 
 const PILOT_REQUEST_PAYLOAD_LIMIT_BYTES = 65_536
 
-async function requireUser() {
-  const cookieStore = await cookies()
-  return getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
-}
-
 export async function GET() {
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
   return noStoreJson({ requests: await listPilotRequests() })
@@ -61,7 +56,7 @@ export async function PATCH(request: Request) {
   const originError = validateMutationOrigin(request)
   if (originError) return originError
 
-  const user = await requireUser()
+  const user = await getCurrentSessionUser()
   if (!user) return noStoreJson({ error: 'Authentication required.' }, { status: 401 })
   if (!isOperatorUser(user)) return noStoreJson({ error: 'Operator access required.' }, { status: 403 })
 

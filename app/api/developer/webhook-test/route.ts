@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers'
-import { getUserFromSessionToken, listApiKeys } from '@/lib/auth-store'
+import { listApiKeys } from '@/lib/auth-store'
+import { getCurrentSessionUser } from '@/lib/auth-session-user'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { readJsonRequest, requestIp, validateMutationOrigin } from '@/lib/request-security'
 import { buildHireProofWebhookHeaders } from '@/lib/webhook-signing.mjs'
@@ -17,8 +17,7 @@ export async function POST(request: Request) {
   if (csrfError) return csrfError
 
   // 1. Authenticate (optional strict check, but good practice for developer portals)
-  const cookieStore = await cookies()
-  const user = await getUserFromSessionToken(cookieStore.get('hireproof_session')?.value)
+  const user = await getCurrentSessionUser()
   
   if (!user) {
     return noStoreJson({ error: 'Authentication required.' }, { status: 401 })

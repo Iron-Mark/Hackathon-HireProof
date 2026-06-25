@@ -82,6 +82,24 @@ async function loadAuthRouteModule(routePath, { checkRateLimit }) {
           makeSessionToken: () => 'session-token',
         }
       }
+      if (id === '@/lib/auth-session-cookie') {
+        return {
+          setAuthSessionCookie: (store, token, maxAge = 60 * 60 * 24 * 7) => store.set('hireproof_session', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: false,
+            path: '/',
+            maxAge,
+          }),
+          clearAuthSessionCookie: (store) => store.set('hireproof_session', '', {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: false,
+            path: '/',
+            maxAge: 0,
+          }),
+        }
+      }
       if (id === '@/lib/response-security') {
         return { noStoreJson: (body, init) => new Response(JSON.stringify(body), init) }
       }
@@ -169,15 +187,51 @@ test('demo login uses the shared origin validator instead of trusting request UR
 
 test('logout explicitly expires the root-path session cookie', async () => {
   const logoutRoute = await fs.readFile(new URL('../app/api/auth/logout/route.ts', import.meta.url), 'utf8')
+  const sessionCookie = await fs.readFile(new URL('../lib/auth-session-cookie.ts', import.meta.url), 'utf8')
 
   assert.match(logoutRoute, /validateMutationOrigin/)
-  assert.match(logoutRoute, /cookieStore\.set\('hireproof_session',\s*''/)
-  assert.match(logoutRoute, /httpOnly:\s*true/)
-  assert.match(logoutRoute, /sameSite:\s*'lax'/)
-  assert.match(logoutRoute, /secure:\s*process\.env\.NODE_ENV === 'production'/)
-  assert.match(logoutRoute, /path:\s*'\/'/)
-  assert.match(logoutRoute, /maxAge:\s*0/)
-  assert.doesNotMatch(logoutRoute, /cookieStore\.delete\('hireproof_session'\)/)
+  assert.match(logoutRoute, /clearAuthSessionCookie\(cookieStore\)/)
+  assert.match(sessionCookie, /AUTH_SESSION_COOKIE_NAME = 'hireproof_session'/)
+  assert.match(sessionCookie, /cookieStore\.set\(AUTH_SESSION_COOKIE_NAME,\s*''/)
+  assert.match(sessionCookie, /httpOnly:\s*true/)
+  assert.match(sessionCookie, /sameSite:\s*'lax'/)
+  assert.match(sessionCookie, /secure:\s*process\.env\.NODE_ENV === 'production'/)
+  assert.match(sessionCookie, /path:\s*'\/'/)
+  assert.match(sessionCookie, /authSessionCookieOptions\(0\)/)
+  assert.doesNotMatch(sessionCookie, /cookieStore\.delete\(AUTH_SESSION_COOKIE_NAME\)/)
+})
+
+test('session readers use the shared auth session cookie helper', async () => {
+  async function collectRouteFiles(directoryUrl) {
+    const entries = await fs.readdir(directoryUrl, { withFileTypes: true })
+    const files = []
+    for (const entry of entries) {
+      const entryUrl = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, directoryUrl)
+      if (entry.isDirectory()) {
+        files.push(...await collectRouteFiles(entryUrl))
+      } else if (entry.name === 'route.ts') {
+        files.push(entryUrl)
+      }
+    }
+    return files
+  }
+
+  const sessionCookie = await fs.readFile(new URL('../lib/auth-session-cookie.ts', import.meta.url), 'utf8')
+  assert.match(sessionCookie, /export function getAuthSessionToken/)
+  assert.match(sessionCookie, /cookieStore\.get\(AUTH_SESSION_COOKIE_NAME\)\?\.value/)
+
+  for (const routeUrl of await collectRouteFiles(new URL('../app/api/', import.meta.url))) {
+    const source = await fs.readFile(routeUrl, 'utf8')
+    assert.doesNotMatch(source, /get\(['"]hireproof_session['"]\)/, `${routeUrl.pathname} should not hard-code the session cookie name`)
+
+    if (source.includes('Authentication required.')) {
+      assert.match(source, /getCurrentSessionUser/, `${routeUrl.pathname} should use the shared current-user helper`)
+    }
+
+    if (source.includes('getUserFromSessionToken') && source.includes('cookies()')) {
+      assert.match(source, /getAuthSessionToken/, `${routeUrl.pathname} should use the shared auth session helper`)
+    }
+  }
 })
 
 test('session mutation routes return no-store responses for cookie-bearing auth flows', async () => {

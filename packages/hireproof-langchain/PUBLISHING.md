@@ -23,7 +23,7 @@ node packages/hireproof-langchain/test-smoke.mjs
 npm pack --workspace @hireproof/langchain
 ```
 
-3. Install the tarball into a clean sample project with `@langchain/core` and `zod`.
+3. Install the tarball into a clean sample project with `@langchain/core`.
 4. Import `createHireProofAuditTool`.
 5. Run the demo API request and confirm a High-Risk fixture result.
 6. Publish only from the npm account that should own the package scope.

@@ -35,6 +35,23 @@ Use this file as the source of truth for current launch, store, and social asset
 | Story/Reel cover | `public/social/hireproof-story-1080x1920.png` |
 | Product Hunt thumbnail | `public/social/product-hunt-thumbnail-1080.png` |
 
+## Architecture and docs media
+
+| Use | File |
+| --- | --- |
+| Current technical architecture diagram | `public/technical_architecture_fraud_v2.png` |
+
+## Reference and archived marketing assets
+
+These files are retained as design, launch, or historical reference even when the current app does not directly import them.
+
+| Use | File |
+| --- | --- |
+| Previous Open Graph concept | `public/og-image-old.png` |
+| Previous architecture diagram | `public/technical_architecture_fraud_v1.png` |
+| Historical local product screenshot | `Screenshot 2026-05-07 012233.jpg` |
+| Historical local product screenshot | `Screenshot 2026-05-07 012244.jpg` |
+
 ## CLI and terminal proof
 
 | Use | File |
@@ -65,3 +82,4 @@ Use this file as the source of truth for current launch, store, and social asset
 - Keep one green checked `P` in compact identity assets.
 - Use red only for high-risk warnings.
 - Legacy SVG marks are archived under `assets/brand/legacy/`.
+- Do not delete marketing, launch, portfolio, or historical reference images just because they are not currently imported by code.
