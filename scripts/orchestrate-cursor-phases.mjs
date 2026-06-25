@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const readmePath = path.join(root, 'docs', 'cursor', 'README.md')
+const WINDOWS_CMD = 'C:\\Windows\\System32\\cmd.exe'
 
 /** Machine defaults for Codex CLI on this repo (override via env). */
 const CODEX_MODEL = process.env.CODEX_ORCHESTRATE_MODEL?.trim() || 'gpt-5.5'
@@ -102,7 +103,7 @@ function spawnCodex(commandArgs) {
     shell: false,
   }
   if (process.platform === 'win32') {
-    return spawnSync('cmd.exe', ['/d', '/s', '/c', 'codex', ...commandArgs], options)
+    return spawnSync(WINDOWS_CMD, ['/d', '/s', '/c', 'codex', ...commandArgs], options)
   }
   return spawnSync('codex', commandArgs, options)
 }

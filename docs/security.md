@@ -29,6 +29,9 @@ All outgoing webhooks are cryptographically signed using `HMAC-SHA256` with the 
 ### 🔐 Secret Quality Gates
 Configured `SESSION_SECRET`, `BYOK_ENCRYPTION_KEY`, and self-hosted `AGENT_API_KEY` fallback values must be private high-entropy values. Public placeholders, short values, low-diversity strings, and known demo defaults are rejected instead of silently protecting sessions, stored BYOK credentials, or protected API surfaces.
 
+### 🗝️ API Key Lookup Hashes
+Account-issued API keys are stored as deterministic scrypt lookup hashes instead of raw tokens. Deployments may set `API_KEY_HASH_PEPPER` as the stable lookup salt; if omitted, HireProof falls back to existing server secrets and then a development namespace. Keep the pepper stable once account keys exist because changing it invalidates stored lookup hashes.
+
 ### 🧑‍💼 Operator-Only Data and Agent Surfaces
 Pilot request admin/list/export routes, product analytics summary/export routes, and platform-backed Cursor runs require a session whose email is listed in `HIREPROOF_ADMIN_EMAILS` or the more specific operator allowlists. A normal registered user can submit a pilot request, but cannot read other submitters' emails, workflows, analytics exports, or spend platform Cursor agent capacity. Cursor QA targets are limited to configured app/Vercel origins, explicitly configured `HIREPROOF_CURSOR_QA_ALLOWED_ORIGINS`, or local loopback during development.
 

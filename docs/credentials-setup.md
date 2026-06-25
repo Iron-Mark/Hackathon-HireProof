@@ -18,6 +18,7 @@ Short answer: mostly yes for a hackathon demo, with limits.
 | `REDIS_URL` | Upstash Redis or another Redis host | Yes on Upstash free tier | Upstash free tier is enough for demo ChatSDK thread state. |
 | `WORKFLOW_SECRET` | You generate it | Yes | This is our app-level protection secret, not a paid vendor credential. |
 | `BYOK_ENCRYPTION_KEY` | You generate it | Yes | Required before Developer Portal users can save encrypted OpenAI/SerpApi keys server-side. |
+| `API_KEY_HASH_PEPPER` | You generate it | Yes | Optional stable pepper for account API key lookup hashes. Keep stable once configured. |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway | Free monthly credits, then paid usage | Vercel lists a free monthly AI Gateway credit tier. |
 | `VERCEL_AI_GATEWAY_API_KEY` | Vercel AI Gateway | Same as above | This repo accepts either key name. |
 | `SERPAPI_API_KEY` | SerpApi | Free trial / paid quota | Best live web, news, jobs, and maps evidence. |

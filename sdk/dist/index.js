@@ -103,6 +103,12 @@ function validateUrl(url) {
         }
     }
 }
+function stripTrailingSlashes(value) {
+    let end = value.length;
+    while (end > 0 && value[end - 1] === '/')
+        end -= 1;
+    return value.slice(0, end);
+}
 // ─── Resources ───────────────────────────────────────────────────────
 class AuditResource {
     constructor(client) {
@@ -193,7 +199,7 @@ class HireProof {
             throw new Error('HireProof: apiKey is required and must be a non-empty string');
         }
         this.apiKey = config.apiKey;
-        this.baseUrl = (config.baseUrl || 'http://localhost:3000').replace(/\/+$/, '');
+        this.baseUrl = stripTrailingSlashes(config.baseUrl || 'http://localhost:3000');
         this.timeout = Math.max(config.timeout || 60000, 5000);
         this.maxRetries = Math.max(config.maxRetries ?? 3, 0);
         this.audit = new AuditResource(this);
