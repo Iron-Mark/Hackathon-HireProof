@@ -212,7 +212,7 @@ npm run build
 node --test test/runtime-wiring.test.mjs
 ```
 
-The repository is consolidated on `main`. The current protected-branch and production hardening proof is recorded in [`docs/production-hardening-proof-2026-05-20.md`](docs/production-hardening-proof-2026-05-20.md).
+The repository uses `main` for production and `dev` for development/staging. Open feature PRs into `dev`, then promote `dev` into `main` by PR. See [`docs/branch-policy.md`](docs/branch-policy.md).
 
 Demo fixtures work without provider keys. Live evidence mode needs model/search credentials such as AI Gateway or an OpenAI-compatible provider plus SerpApi. See [`docs/credentials-setup.md`](docs/credentials-setup.md).
 
@@ -220,7 +220,7 @@ Demo fixtures work without provider keys. Live evidence mode needs model/search 
 
 | Group | Variables |
 | --- | --- |
-| App and API | `APP_BASE_URL`, `AGENT_API_KEY`, `SESSION_SECRET` |
+| App and API | `APP_BASE_URL`, `AGENT_API_KEY`, `SESSION_SECRET`, `API_KEY_HASH_PEPPER` |
 | Model routing | `AI_GATEWAY_API_KEY`, `VERCEL_AI_GATEWAY_API_KEY`, `HIREPROOF_MODEL`, `MODEL_PROVIDER_KEY` |
 | Evidence search | `SERPAPI_API_KEY` |
 | Persistence and rate limits | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REDIS_URL`, `TRUST_PROXY_CLIENT_IP_HEADERS` |

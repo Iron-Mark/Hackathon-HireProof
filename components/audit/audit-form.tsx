@@ -283,9 +283,8 @@ export default function AuditForm({ onInvestigate, loading = false }: AuditFormP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Input Sanitization: Trim and strip potential malicious tags
-    const cleanText = text.trim().replace(/<script.*?>.*?<\/script>/gi, '')
-    const cleanUrl = url.trim().replace(/<script.*?>.*?<\/script>/gi, '')
+    const cleanText = text.trim()
+    const cleanUrl = url.trim().replace(/[<>]/g, '')
     
     if (cleanText || cleanUrl || image) {
       onInvestigate({ 

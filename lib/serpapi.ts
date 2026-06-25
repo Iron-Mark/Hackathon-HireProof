@@ -402,11 +402,9 @@ function normalizeCompanyForSimilarity(company: string) {
 }
 
 function normalizeRoleForSimilarity(role: string) {
+  const ignoredTokens = new Set(['internship', 'intern', 'junior', 'jr', 'senior', 'sr', 'lead', 'principal', 'staff', 'remote', 'hybrid', 'onsite'])
   const normalized = normalizeSearchText(role)
-  return normalized
-    .replace(/\b(internship|intern|junior|jr|senior|sr|lead|principal|staff|remote|hybrid|onsite)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return normalized.split(' ').filter(token => !ignoredTokens.has(token)).join(' ').trim()
 }
 
 function normalizeLocationForSimilarity(location: string) {

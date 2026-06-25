@@ -12,7 +12,10 @@ const HireProofAuditInputSchema = z.object({
 const TrustedWebhookUrlSchema = z.string().url()
 
 function normalizeBaseUrl(baseUrl) {
-  return String(baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '')
+  const value = String(baseUrl || DEFAULT_BASE_URL)
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') end -= 1
+  return value.slice(0, end)
 }
 
 function isSafeEnough(report, threshold = 40) {
@@ -39,6 +42,9 @@ async function readBoundedAuditResponseJson(response) {
       } catch {
         return {}
       }
+    }
+    if (typeof response.json === 'function') {
+      return response.json()
     }
     throw new Error('HireProof audit response body is not readable.')
   }
