@@ -71,7 +71,7 @@
     "@upstash/redis": "^1.37.0",
     "@vercel/analytics": "^2.0.1",
     "@zernio/chat-sdk-adapter": "^0.3.0",
-    "ai": "^6.0.168",
+    "ai": "^7.0.4",
     "chat": "^4.31.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
