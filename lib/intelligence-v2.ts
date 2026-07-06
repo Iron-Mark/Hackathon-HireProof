@@ -350,7 +350,17 @@ export function normalizeCompensation(value: string): NormalizedCompensation | n
   const amount = Number(numberMatch[1].replace(/,/g, ''))
   if (!Number.isFinite(amount) || amount <= 0) return null
 
-  const currency = /(?:USD|usd|\$|dollars)/.test(text) ? 'USD' : 'PHP'
+  const currency = /(?:USD|usd|\$|dollars)/.test(text)
+    ? 'USD'
+    : /(?:GBP|£|pounds)/i.test(text)
+      ? 'GBP'
+      : /(?:EUR|€|euros?)\b/i.test(text)
+        ? 'EUR'
+        : /\bCAD\b/i.test(text)
+          ? 'CAD'
+          : /\bAUD\b/i.test(text)
+            ? 'AUD'
+            : 'PHP'
   const lower = text.toLowerCase()
   const period: NormalizedCompensation['period'] = lower.includes('hour')
     ? 'hour'
@@ -556,6 +566,58 @@ function deriveIntelligence(
   const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
   const staleEvidence = evidence.filter(item => item.freshness === 'stale')
   const weakEvidence = evidence.filter(item => item.sourceQuality === 'weak')
+  const threatIntelEvidence = evidence.filter(item => (
+    (normalizeText(item.sourceType || '') === 'threat intel' && item.trustLevel === 'risk') ||
+    (/\b(known threat|known phishing|urlhaus|phishtank|threat intel)\b/i.test(`${item.type} ${item.source}`) &&
+      /risk signal|phishing|malware|social.engineering|abuse/i.test(item.snippet || ''))
+  ))
+  const newDomainRiskEvidence = evidence.filter(item => (
+    /\bdomain age\b/i.test(item.type || '') &&
+    (item.trustLevel === 'risk' || /risk signal|newly registered|very new/i.test(item.snippet || ''))
+  ))
+  const recentCertificateEvidence = evidence.filter(item => (
+    /\bcertificate transparency\b/i.test(item.type || '') &&
+    /risk signal|very recent|new certificate/i.test(item.snippet || '')
+  ))
+  const claimsNoInterview = normalizeText(extractedClaims.applicationPath).includes('no interview')
+  const paymentContext = normalizeText(`${extractedClaims.applicationPath} ${extractedClaims.salary} ${extractedClaims.role}`)
+  const claimsUpfrontPayment = [
+    'training fee',
+    'registration fee',
+    'activation fee',
+    'processing fee',
+    'application fee',
+    'membership fee',
+    'placement fee',
+    'equipment deposit',
+    'security deposit',
+    'deposit required',
+    'deposit to unlock',
+    'with deposit',
+    'purchase software',
+    'software license',
+    'starter kit',
+    'pay to start',
+    'pay before starting',
+    'upfront payment',
+    'upfront fee',
+  ].some(term => paymentContext.includes(term))
+  const contractorDisclosureText = normalizeText([
+    extractedClaims.role,
+    extractedClaims.salary,
+    extractedClaims.applicationPath,
+    ...evidence.map(item => `${item.type} ${item.snippet}`),
+  ].join(' '))
+  const hasContractorDisclosure = [
+    '1099',
+    'independent contractor',
+    'contractor role',
+    'contract role',
+    'project based',
+    'project dependent',
+    'hours vary',
+    'not guaranteed',
+  ].some(term => contractorDisclosureText.includes(term))
   const officialSourceMatches = findOfficialSourceMatches(extractedClaims, evidence)
   const globalHiringContext = hasGlobalHiringContext(extractedClaims, evidence)
   const normalizedContactMethod = normalizeText(extractedClaims.contactMethod)
@@ -671,9 +733,12 @@ function deriveIntelligence(
 
   const claimedSalary = normalizeCompensation(extractedClaims.salary)
   const seniority = inferSeniority(extractedClaims.role)
+  // Only comparables quoted in the SAME currency as the claim can produce a ratio —
+  // dividing a PHP claim by a USD benchmark manufactured 5x+ false anomalies.
   const liveComparableMonthlyValues = comparableEvidence
-    .map(item => compensationFromEvidenceSnippet(item.snippet || '')?.monthlyAmount)
-    .filter((value): value is number => typeof value === 'number')
+    .map(item => compensationFromEvidenceSnippet(item.snippet || ''))
+    .filter((comp): comp is NormalizedCompensation => Boolean(comp && (!claimedSalary || comp.currency === claimedSalary.currency)))
+    .map(comp => comp.monthlyAmount)
   const benchmark = buildHybridSalaryBenchmark({
     role: extractedClaims.role,
     location: extractedClaims.location,
@@ -681,7 +746,8 @@ function deriveIntelligence(
     liveComparableMonthlyValues,
   })
   const liveComparableMedian = median(liveComparableMonthlyValues)
-  const comparableMonthly = liveComparableMedian || benchmark.comparableMonthlyAmount
+  const benchmarkCurrencyMatches = !claimedSalary || benchmark.currency === claimedSalary.currency
+  const comparableMonthly = liveComparableMedian || (benchmarkCurrencyMatches ? benchmark.comparableMonthlyAmount : undefined)
   const salaryRatio = claimedSalary && comparableMonthly ? Number((claimedSalary.monthlyAmount / comparableMonthly).toFixed(2)) : undefined
   const salaryAnomalous = Boolean(claimedSalary && (
     claimedSalary.period === 'week' ||
@@ -802,6 +868,71 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Reputation', 16, 'Company-specific negative reputation evidence increases risk.')
   }
 
+  if (threatIntelEvidence.length > 0) {
+    addSignal(signals, {
+      id: 'threat_intel_match',
+      label: 'Known threat intelligence match',
+      direction: 'risk',
+      severity: 'high',
+      weight: 30,
+      evidenceIds: threatIntelEvidence.map(item => item.id || '').filter(Boolean),
+      rationale: 'A submitted URL or domain matched known phishing, malware, or social-engineering intelligence.',
+    })
+    score = applyTrace(scoreTrace, score, 'Threat intelligence', 30, 'Known-threat intelligence match is a direct danger signal.')
+  }
+
+  if (newDomainRiskEvidence.length > 0) {
+    addSignal(signals, {
+      id: 'domain_newly_registered',
+      label: 'Apply or contact domain is newly registered',
+      direction: 'risk',
+      severity: 'medium',
+      weight: 10,
+      evidenceIds: newDomainRiskEvidence.map(item => item.id || '').filter(Boolean),
+      rationale: 'Newly registered domains are cheap impersonation infrastructure and need stronger verification.',
+    })
+    score = applyTrace(scoreTrace, score, 'Domain age', 10, 'Newly registered domain increases impersonation risk.')
+  }
+
+  if (recentCertificateEvidence.length > 0) {
+    addSignal(signals, {
+      id: 'certificate_very_recent',
+      label: 'Very recent certificate activity',
+      direction: 'risk',
+      severity: 'medium',
+      weight: 6,
+      evidenceIds: recentCertificateEvidence.map(item => item.id || '').filter(Boolean),
+      rationale: 'Brand-new certificate issuance for the submitted domain is consistent with freshly stood-up infrastructure.',
+    })
+    score = applyTrace(scoreTrace, score, 'Certificate transparency', 6, 'Very recent certificate activity slightly increases risk.')
+  }
+
+  if (claimsNoInterview) {
+    addSignal(signals, {
+      id: 'process_no_interview',
+      label: 'Hiring flow claims no interview',
+      direction: 'risk',
+      severity: 'medium',
+      weight: 12,
+      evidenceIds: [],
+      rationale: 'Legitimate employment almost always includes an interview or structured screening step.',
+    })
+    score = applyTrace(scoreTrace, score, 'Hiring process', 12, 'A no-interview hiring flow is unusual for legitimate employment.')
+  }
+
+  if (claimsUpfrontPayment) {
+    addSignal(signals, {
+      id: 'process_upfront_payment',
+      label: 'Upfront fee, deposit, or purchase required',
+      direction: 'risk',
+      severity: 'high',
+      weight: 22,
+      evidenceIds: [],
+      rationale: 'Asking applicants to pay fees, deposits, or purchases before starting is the classic advance-fee scam pattern.',
+    })
+    score = applyTrace(scoreTrace, score, 'Upfront payment', 22, 'Upfront fee, deposit, or purchase request is a direct financial-loss vector.')
+  }
+
   if (staleEvidence.length > 0) {
     addSignal(signals, {
       id: 'stale_evidence',
@@ -851,6 +982,8 @@ function deriveIntelligence(
     mismatchEvidence.length === 0 &&
     !hasInputConflict &&
     reputationRiskEvidence.length === 0 &&
+    threatIntelEvidence.length === 0 &&
+    newDomainRiskEvidence.length === 0 &&
     !contactMethod.includes('telegram') &&
     !contactMethod.includes('whatsapp') &&
     (
@@ -861,6 +994,61 @@ function deriveIntelligence(
   score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
   if (mismatchEvidence.length > 0 && score < 35) {
     score = applyTrace(scoreTrace, score, 'Apply path floor', 35 - score, 'Actionable apply-domain mismatch prevents a safe verdict.')
+  }
+
+  // Hard safety floor: a known-threat match can never be argued down by trust signals.
+  if (threatIntelEvidence.length > 0 && score < 70) {
+    score = applyTrace(scoreTrace, score, 'Threat intel floor', 70 - score, 'Known phishing/malware intelligence match forces a high-risk verdict regardless of other context.')
+  }
+
+  // Impersonation stack: a mismatching apply path combined with independent
+  // infrastructure or identity risk is a scam pattern, not a caution pattern.
+  const hasImpersonationStack = mismatchEvidence.length > 0 && (
+    recruiterIdentity.status === 'risky' ||
+    newDomainRiskEvidence.length > 0 ||
+    recentCertificateEvidence.length > 0
+  )
+  if (hasImpersonationStack && score < 65) {
+    score = applyTrace(scoreTrace, score, 'Impersonation floor', 65 - score, 'Apply-domain mismatch layered with recruiter or domain-infrastructure risk matches employer-impersonation scams.')
+  }
+
+  // Advance-fee floor: an upfront payment ask without strong corroborating
+  // evidence for the employer is the definitional advance-fee scam.
+  const hasStrongCorroborationEvidence = officialEvidence.length > 0 ||
+    verifiedLocalEvidence.length > 0 ||
+    evidence.some(item => item.sourceQuality === 'reputable' || item.sourceQuality === 'official')
+  if (claimsUpfrontPayment && !hasStrongCorroborationEvidence && score < 65) {
+    score = applyTrace(scoreTrace, score, 'Advance-fee floor', 65 - score, 'Upfront payment request from an employer without strong corroboration matches advance-fee scams.')
+  }
+
+  // Reputation scam-pattern floor: company-specific scam warnings combined with
+  // any structural scam signal is a high-risk pattern, not a caution pattern.
+  if (
+    reputationRiskEvidence.length > 0 &&
+    (salaryAnomalous || hasOffPlatformContact || claimsNoInterview || claimsUpfrontPayment) &&
+    score < 65
+  ) {
+    score = applyTrace(scoreTrace, score, 'Reputation scam-pattern floor', 65 - score, 'Scam-warning reputation evidence combined with a structural scam signal forces a high-risk verdict.')
+  }
+
+  // Verification floor: any unresolved moderate risk means the report should ask
+  // for verification (caution) instead of certifying the post as safe. Trust
+  // evidence lowers the score inside the caution band but cannot cross it while
+  // one of these concerns is open.
+  const hasFreshCorroboration = evidence.some(item => item.freshness === 'fresh' || item.freshness === 'recent')
+  const hasStrongCorroboration = hasStrongCorroborationEvidence
+  const verificationConcerns: string[] = []
+  if (hasOffPlatformContact) verificationConcerns.push('off-platform recruiter contact')
+  if (claimsNoInterview) verificationConcerns.push('no-interview hiring flow')
+  if (claimsUpfrontPayment) verificationConcerns.push('upfront fee, deposit, or purchase request')
+  if (salaryAnomalous) verificationConcerns.push('salary far outside comparable market signals')
+  if (newDomainRiskEvidence.length > 0) verificationConcerns.push('newly registered domain')
+  if (recruiterIdentity.status === 'risky') verificationConcerns.push('recruiter identity mismatch or free-mail contact')
+  if (staleEvidence.length > 0 && !hasFreshCorroboration) verificationConcerns.push('only stale supporting evidence')
+  if (evidence.length > 0 && !hasStrongCorroboration) verificationConcerns.push('no official, verified-local, or reputable-source corroboration')
+  if (hasContractorDisclosure) verificationConcerns.push('disclosed contractor/variable-hours terms')
+  if (verificationConcerns.length > 0 && score < 35) {
+    score = applyTrace(scoreTrace, score, 'Verification floor', 35 - score, `Open verification concerns prevent a safe verdict: ${verificationConcerns.join('; ')}.`)
   }
 
   const mismatchHostPair = mismatchEvidence.map(mismatchHostsFromEvidence).find(item => item.submittedHost || item.claimedOfficialHost)
@@ -1008,8 +1196,12 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
     redFlags.push('Company name could not be confidently extracted from the post')
   }
 
+  // Only enrichment-sourced flags feed the base score. The flags derived via
+  // extractRedFlags/extractGreenFlags are explanations of structured signals that
+  // buildAuditSignals already derives internally from claims + evidence, so passing
+  // them back in double-counted every top signal (see legacy flag signals).
   const baseScore = Math.max(
-    calculateRiskScore(input.extractedClaims, redFlags, greenFlags, reportEvidence),
+    calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence),
     (input.enrichmentRedFlags || []).length > 0 ? 45 : 0,
   )
   const { intelligence, riskScore, operations } = deriveIntelligence(input.extractedClaims, reportEvidence, redFlags, greenFlags, baseScore)

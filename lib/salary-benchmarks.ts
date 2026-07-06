@@ -50,7 +50,7 @@ function normalizeText(value: string) {
 
 function inferCountry(location: string): keyof typeof COUNTRY_CONFIG {
   const text = normalizeText(location)
-  if (/\b(ph|philippines|manila|makati|cebu|davao|taguig|pasig)\b/.test(text)) return 'PH'
+  if (/\b(ph|philippines|manila|makati|cebu|davao|taguig|pasig|quezon|iloilo|bacolod|baguio|caloocan|pasay|paranaque|mandaluyong|zamboanga|cagayan)\b/.test(text)) return 'PH'
   if (/\b(uk|united kingdom|london|england|scotland)\b/.test(text)) return 'UK'
   if (/\b(canada|toronto|vancouver|montreal)\b/.test(text)) return 'CA'
   if (/\b(remote|global|worldwide|anywhere)\b/.test(text)) return 'REMOTE'
