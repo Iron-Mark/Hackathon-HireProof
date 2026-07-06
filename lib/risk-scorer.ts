@@ -10,10 +10,11 @@ export function calculateRiskScore(
   extractedClaims: ExtractedClaims,
   redFlags: string[],
   greenFlags: string[],
-  evidence: EvidenceItem[]
+  evidence: EvidenceItem[],
+  signalWeightOverrides?: Record<string, number>
 ): number {
   const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence)
-  return scoreAuditSignals(signals, evidence)
+  return scoreAuditSignals(signals, evidence, signalWeightOverrides)
 }
 
 export function determineVerdict(riskScore: number): 'safe' | 'caution' | 'high-risk' {

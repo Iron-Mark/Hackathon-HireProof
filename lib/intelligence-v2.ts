@@ -31,6 +31,12 @@ type BuildReportV2Input = {
    * always produce identical scores. Defaults to the current time in production.
    */
   now?: number
+  /**
+   * Optional per-signal weight overrides for the base engine (signal id -> weight).
+   * Used by the offline trainer to evaluate learned weights end-to-end; production
+   * uses the hand-tuned weights unless a trained artifact is explicitly wired in.
+   */
+  signalWeightOverrides?: Record<string, number>
   mode?: AuditReport['mode']
   credentialMode?: AuditReport['credentialMode']
   ownerId?: string
@@ -1201,7 +1207,7 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   // buildAuditSignals already derives internally from claims + evidence, so passing
   // them back in double-counted every top signal (see legacy flag signals).
   const baseScore = Math.max(
-    calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence),
+    calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides),
     (input.enrichmentRedFlags || []).length > 0 ? 45 : 0,
   )
   const { intelligence, riskScore, operations } = deriveIntelligence(input.extractedClaims, reportEvidence, redFlags, greenFlags, baseScore)
