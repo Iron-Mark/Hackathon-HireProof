@@ -12,6 +12,8 @@
  *   node scripts/score-accuracy.mjs                  # human-readable report
  *   node scripts/score-accuracy.mjs --json           # machine-readable metrics
  *   node scripts/score-accuracy.mjs --update-baseline# record current metrics as the gate
+ *   node scripts/score-accuracy.mjs --sweep          # verdict-threshold calibration sweep
+ *                                                    # (train+validation only; test untouched)
  *
  * Gate: exits non-zero if the test-split macro-F1 drops below the recorded
  * baseline (test/fixtures/accuracy-baseline.json). Intended for CI use.
@@ -131,10 +133,55 @@ function printReport(allMetrics, results) {
   }
 }
 
+function verdictAt(score, safeMax, riskMin) {
+  if (score < safeMax) return 'safe'
+  if (score < riskMin) return 'caution'
+  return 'high-risk'
+}
+
+/**
+ * Calibration sweep over the two verdict cutoffs, on train+validation only.
+ * Reports the macro-F1 plateau and where the shipped (35, 65) config sits.
+ * NOTE: the engine's floors pin scores AT 35/65 by design, so thresholds and
+ * floors are one coupled system — moving a cutoff without moving its floors
+ * flips every floored case. The sweep quantifies exactly that sensitivity.
+ */
+function sweepThresholds(results) {
+  const tuning = results.filter((item) => item.split === 'train' || item.split === 'validation')
+  const rows = []
+  for (let safeMax = 25; safeMax <= 45; safeMax += 1) {
+    for (let riskMin = 55; riskMin <= 75; riskMin += 1) {
+      const matrix = emptyMatrix()
+      for (const item of tuning) matrix[item.expected][verdictAt(item.score, safeMax, riskMin)] += 1
+      const { perClass, macroF1 } = classMetrics(matrix)
+      rows.push({ safeMax, riskMin, macroF1, highRiskRecall: perClass['high-risk'].recall })
+    }
+  }
+  const best = rows.reduce((max, row) => (row.macroF1 > max.macroF1 ? row : max), rows[0])
+  const plateau = rows.filter((row) => row.macroF1 >= best.macroF1 - 1e-9)
+  const shipped = rows.find((row) => row.safeMax === 35 && row.riskMin === 65)
+
+  console.log(`Sweep over ${rows.length} threshold pairs (train+validation, n=${tuning.length})`)
+  console.log(`Best macro-F1: ${pct(best.macroF1)} — plateau contains ${plateau.length} pairs`)
+  const safeRange = [Math.min(...plateau.map((row) => row.safeMax)), Math.max(...plateau.map((row) => row.safeMax))]
+  const riskRange = [Math.min(...plateau.map((row) => row.riskMin)), Math.max(...plateau.map((row) => row.riskMin))]
+  console.log(`Plateau ranges: safe/caution cutoff ${safeRange[0]}..${safeRange[1]}, caution/high-risk cutoff ${riskRange[0]}..${riskRange[1]}`)
+  console.log(`Shipped (35, 65): macro-F1 ${pct(shipped.macroF1)}, high-risk recall ${pct(shipped.highRiskRecall)} — ${shipped.macroF1 >= best.macroF1 - 1e-9 ? 'ON the optimal plateau' : 'BELOW optimum'}`)
+
+  // Safety-bias check: within the plateau, high-risk recall must be maximal at the shipped point.
+  const bestRecall = Math.max(...plateau.map((row) => row.highRiskRecall))
+  console.log(`Max high-risk recall on plateau: ${pct(bestRecall)} (shipped: ${pct(shipped.highRiskRecall)})`)
+}
+
 async function main() {
   const args = new Set(process.argv.slice(2))
   const stack = await loadScoringStack()
   const results = evaluate(stack)
+
+  if (args.has('--sweep')) {
+    sweepThresholds(results)
+    return
+  }
 
   const allMetrics = { overall: metricsForSubset(results) }
   for (const split of SPLITS) {
