@@ -25,6 +25,12 @@ type BuildReportV2Input = {
   evidence: EvidenceItem[]
   enrichmentEvidence?: EvidenceItem[]
   enrichmentRedFlags?: string[]
+  /**
+   * Reference timestamp (ms since epoch) used for evidence-freshness classification and the
+   * report timestamp. Injectable so scoring is deterministic: identical inputs + identical `now`
+   * always produce identical scores. Defaults to the current time in production.
+   */
+  now?: number
   mode?: AuditReport['mode']
   credentialMode?: AuditReport['credentialMode']
   ownerId?: string
@@ -148,7 +154,7 @@ function classifyMatchConfidence(item: EvidenceItem) {
   return 0.45
 }
 
-function parseFreshnessFromText(value: string): number | undefined {
+function parseFreshnessFromText(value: string, now: number): number | undefined {
   const text = String(value || '')
   const relative = text.match(/\b(\d+)\s+(day|week|month|year)s?\s+ago\b/i)
   if (relative) {
@@ -165,23 +171,23 @@ function parseFreshnessFromText(value: string): number | undefined {
   if (!explicit) return undefined
   const timestamp = Date.parse(explicit[1])
   if (!Number.isFinite(timestamp)) return undefined
-  return Math.max(0, Math.floor((Date.now() - timestamp) / 86400000))
+  return Math.max(0, Math.floor((now - timestamp) / 86400000))
 }
 
-function classifyFreshness(item: EvidenceItem): {
+function classifyFreshness(item: EvidenceItem, now: number): {
   freshness: NonNullable<EvidenceItem['freshness']>
   freshnessDays?: number
 } {
-  const freshnessDays = parseFreshnessFromText(`${item.snippet} ${item.source}`)
+  const freshnessDays = parseFreshnessFromText(`${item.snippet} ${item.source}`, now)
   if (typeof freshnessDays !== 'number') return { freshness: 'unknown' }
   if (freshnessDays <= 30) return { freshness: 'fresh', freshnessDays }
   if (freshnessDays <= 180) return { freshness: 'recent', freshnessDays }
   return { freshness: 'stale', freshnessDays }
 }
 
-function attachEvidenceMetadata(evidence: EvidenceItem[]) {
+function attachEvidenceMetadata(evidence: EvidenceItem[], now: number) {
   return evidence.map((item, index) => {
-    const freshness = classifyFreshness(item)
+    const freshness = classifyFreshness(item, now)
     return {
       ...item,
       id: item.id || `ev_${index + 1}`,
@@ -970,7 +976,8 @@ function deriveIntelligence(
 }
 
 export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
-  const evidence = attachEvidenceMetadata([...(input.enrichmentEvidence || []), ...(input.evidence || [])])
+  const now = typeof input.now === 'number' && Number.isFinite(input.now) ? input.now : Date.now()
+  const evidence = attachEvidenceMetadata([...(input.enrichmentEvidence || []), ...(input.evidence || [])], now)
   const reportOfficialHost = hostnameFromUrl(evidence.find(item => item.type === 'Official Company Presence')?.url)
   const reportEvidence = evidence.filter(item =>
     item.type !== 'Apply Path Mismatch' || isActionableApplyPathMismatch(item, reportOfficialHost)
@@ -1027,7 +1034,7 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
     evidence: reportEvidence,
     alternatives: buildVerifiedAlternativeJobs(reportEvidence),
     nextSteps: buildNextSteps(verdict, input.extractedClaims.company),
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(now).toISOString(),
     mode: input.mode || 'live',
     credentialMode: input.credentialMode,
     ownerId: input.ownerId,
