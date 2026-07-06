@@ -1,7 +1,8 @@
-import type { ExtractedClaims, EvidenceItem } from '@/lib/schemas'
+import type { ExtractedClaims, EvidenceItem, ScoreTraceItem } from '@/lib/schemas'
 import {
   buildAuditSignals,
   scoreAuditSignals,
+  traceAuditSignals,
   strongestRiskSignals,
   strongestTrustSignals,
 } from '@/lib/audit-signals.mjs'
@@ -15,6 +16,22 @@ export function calculateRiskScore(
 ): number {
   const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence)
   return scoreAuditSignals(signals, evidence, signalWeightOverrides)
+}
+
+/**
+ * Same computation as calculateRiskScore, but returns the full ordered account of
+ * the number: baseline, per-signal confidence-scaled deltas, binding floors and
+ * ceilings, and final rounding. The sum of trace deltas equals the score exactly.
+ */
+export function traceRiskScore(
+  extractedClaims: ExtractedClaims,
+  redFlags: string[],
+  greenFlags: string[],
+  evidence: EvidenceItem[],
+  signalWeightOverrides?: Record<string, number>
+): { score: number; trace: ScoreTraceItem[] } {
+  const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence)
+  return traceAuditSignals(signals, evidence, signalWeightOverrides)
 }
 
 export function determineVerdict(riskScore: number): 'safe' | 'caution' | 'high-risk' {

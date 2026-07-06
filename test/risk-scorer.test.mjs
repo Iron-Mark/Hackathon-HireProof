@@ -8,7 +8,7 @@ async function loadRiskScorer() {
   const auditSignalsSource = await fs.readFile(new URL('../lib/audit-signals.mjs', import.meta.url), 'utf8')
   const auditSignalsCompiled = auditSignalsSource
     .replace(/^export function /gm, 'function ')
-    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
+    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, traceAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
   const auditSignalsContext = { exports: {}, module: { exports: {} }, console }
   vm.runInNewContext(auditSignalsCompiled, auditSignalsContext)
 

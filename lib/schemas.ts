@@ -49,6 +49,8 @@ export const ScoreTraceItemSchema = z.object({
   delta: z.number().min(-100).max(100),
   scoreAfter: z.number().min(0).max(100),
   reason: z.string().max(1000),
+  signalId: z.string().max(100).optional(),
+  evidenceIds: z.array(z.string().max(100)).max(20).optional(),
 })
 export type ScoreTraceItem = z.infer<typeof ScoreTraceItemSchema>
 
@@ -110,6 +112,7 @@ export const IntelligenceSummarySchema = z.object({
   }),
   signals: z.array(IntelligenceSignalSchema).max(50),
   scoreTrace: z.array(ScoreTraceItemSchema).max(50),
+  baseScoreTrace: z.array(ScoreTraceItemSchema).max(80).optional(),
 })
 export type IntelligenceSummary = z.infer<typeof IntelligenceSummarySchema>
 

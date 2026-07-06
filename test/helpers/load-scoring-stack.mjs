@@ -54,7 +54,7 @@ export async function loadScoringStack() {
 
   const auditSignalsSource = await read('../../lib/audit-signals.mjs')
   const auditSignalsCompiled = auditSignalsSource.replace(/^export function /gm, 'function ')
-    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
+    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, traceAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
   const auditSignals = runCommonJs(auditSignalsCompiled, () => ({}))
 
   const riskScorer = runCommonJs(transpile(await read('../../lib/risk-scorer.ts')), (id) => {

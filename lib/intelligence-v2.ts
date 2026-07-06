@@ -17,6 +17,7 @@ import {
   extractRedFlags,
   generateSummary,
   getConfidenceLabel,
+  traceRiskScore,
 } from '@/lib/risk-scorer'
 
 type BuildReportV2Input = {
@@ -515,9 +516,24 @@ function addSignal(signals: IntelligenceSignal[], signal: IntelligenceSignal) {
   if (!signals.some(existing => existing.id === signal.id)) signals.push(signal)
 }
 
-function applyTrace(trace: ScoreTraceItem[], score: number, step: string, delta: number, reason: string) {
+const idsOf = (items: EvidenceItem[]) => items.map(item => item.id || '').filter(Boolean)
+
+function applyTrace(
+  trace: ScoreTraceItem[],
+  score: number,
+  step: string,
+  delta: number,
+  reason: string,
+  signalId?: string,
+  evidenceIds?: string[],
+) {
   const scoreAfter = clampScore(score + delta)
-  trace.push({ step, delta, scoreAfter, reason })
+  // Record the EFFECTIVE delta (post-clamp) so the sum of traced deltas always
+  // equals the final score exactly — the trace is a complete audit of the number.
+  const item: ScoreTraceItem = { step, delta: scoreAfter - score, scoreAfter, reason }
+  if (signalId) item.signalId = signalId
+  if (evidenceIds && evidenceIds.length > 0) item.evidenceIds = evidenceIds.slice(0, 20)
+  trace.push(item)
   return scoreAfter
 }
 
@@ -556,7 +572,7 @@ function deriveIntelligence(
 ): { intelligence: IntelligenceSummary; riskScore: number; operations: AuditOperations } {
   const signals: IntelligenceSignal[] = []
   const scoreTrace: ScoreTraceItem[] = []
-  let score = applyTrace(scoreTrace, 25, 'Baseline', 0, 'Every HireProof v2 report starts from a cautious baseline.')
+  let score = applyTrace(scoreTrace, 0, 'Baseline', 25, 'Every HireProof v2 report starts from a cautious baseline of 25.')
 
   const byType = (type: string) => evidence.filter(item => item.type === type)
   const officialEvidence = byType('Official Company Presence')
@@ -647,7 +663,7 @@ function deriveIntelligence(
       evidenceIds: officialEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The company appears in official web or knowledge-graph evidence.',
     })
-    score = applyTrace(scoreTrace, score, 'Company identity', -14, 'Official company presence lowers impersonation risk.')
+    score = applyTrace(scoreTrace, score, 'Company identity', -14, 'Official company presence lowers impersonation risk.', 'company_official_match', idsOf(officialEvidence))
   } else if (normalizeText(extractedClaims.company).includes('unknown')) {
     addSignal(signals, {
       id: 'company_unverified',
@@ -658,7 +674,7 @@ function deriveIntelligence(
       evidenceIds: [],
       rationale: 'A job opportunity without a verifiable company identity is materially riskier.',
     })
-    score = applyTrace(scoreTrace, score, 'Company identity', 18, 'Company name could not be confidently verified.')
+    score = applyTrace(scoreTrace, score, 'Company identity', 18, 'Company name could not be confidently verified.', 'company_unverified')
   }
 
   if (companyProfileMode === 'startup_remote' && digitalFootprintEvidence.length >= 2) {
@@ -671,7 +687,7 @@ function deriveIntelligence(
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Remote startups are evaluated on consistent official, founder, product, LinkedIn, and reputable platform evidence rather than requiring a local office footprint.',
     })
-    score = applyTrace(scoreTrace, score, 'Company profile mode', -8, 'Startup-remote profile has enough consistent digital footprint evidence.')
+    score = applyTrace(scoreTrace, score, 'Company profile mode', -8, 'Startup-remote profile has enough consistent digital footprint evidence.', 'startup_digital_footprint', idsOf(digitalFootprintEvidence))
   } else if (companyProfileMode === 'established_remote' && digitalFootprintEvidence.length >= 2) {
     addSignal(signals, {
       id: 'remote_digital_footprint',
@@ -682,7 +698,7 @@ function deriveIntelligence(
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Remote roles are weighted toward official domain, company profile, reputable job board, and apply-host consistency.',
     })
-    score = applyTrace(scoreTrace, score, 'Company profile mode', -6, 'Remote profile has consistent digital footprint evidence.')
+    score = applyTrace(scoreTrace, score, 'Company profile mode', -6, 'Remote profile has consistent digital footprint evidence.', 'remote_digital_footprint', idsOf(digitalFootprintEvidence))
   }
 
   if (officialSourceMatches.length > 0 && !hasOffPlatformContact && (hasSubmittedOfficialApplyPath || hasSubmittedTrustedApplyPath)) {
@@ -699,7 +715,7 @@ function deriveIntelligence(
     })
     score = applyTrace(scoreTrace, score, 'Source reconciliation', -8, globalHiringContext
       ? 'Official source matched the role; global/remote market wording is a minor confirmation note.'
-      : 'Official source matched the submitted company and role.')
+      : 'Official source matched the submitted company and role.', 'official_source_role_reconciliation', idsOf(officialSourceMatches))
   }
 
   if (verifiedLocalEvidence.length > 0) {
@@ -712,7 +728,7 @@ function deriveIntelligence(
       evidenceIds: verifiedLocalEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Maps/place evidence includes contact or address details for the claimed company.',
     })
-    score = applyTrace(scoreTrace, score, 'Local presence', -10, 'Verified local footprint supports legitimacy.')
+    score = applyTrace(scoreTrace, score, 'Local presence', -10, 'Verified local footprint supports legitimacy.', 'local_presence_verified', idsOf(verifiedLocalEvidence))
   } else if (redFlags.some(flag => /no local/i.test(flag)) && companyProfileMode !== 'startup_remote' && companyProfileMode !== 'established_remote') {
     addSignal(signals, {
       id: 'local_presence_missing',
@@ -723,7 +739,7 @@ function deriveIntelligence(
       evidenceIds: [],
       rationale: 'The audit could not find local presence for a company claiming a local hiring footprint.',
     })
-    score = applyTrace(scoreTrace, score, 'Local presence', 8, 'No matching local presence was found.')
+    score = applyTrace(scoreTrace, score, 'Local presence', 8, 'No matching local presence was found.', 'local_presence_missing')
   } else if (redFlags.some(flag => /no local/i.test(flag))) {
     addSignal(signals, {
       id: 'remote_local_presence_not_required',
@@ -734,7 +750,7 @@ function deriveIntelligence(
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Missing Maps or office evidence is not treated as a strong risk for remote/startup roles when the digital footprint is otherwise consistent.',
     })
-    score = applyTrace(scoreTrace, score, 'Local presence', 0, 'Remote/startup mode avoids penalizing missing local office evidence.')
+    score = applyTrace(scoreTrace, score, 'Local presence', 0, 'Remote/startup mode avoids penalizing missing local office evidence.', 'remote_local_presence_not_required', idsOf(digitalFootprintEvidence))
   }
 
   const claimedSalary = normalizeCompensation(extractedClaims.salary)
@@ -774,7 +790,7 @@ function deriveIntelligence(
     })
     score = applyTrace(scoreTrace, score, 'Market salary', 22, typeof salaryRatio === 'number'
       ? `Claimed compensation is ${salaryRatio}x comparable listings.`
-      : 'Claimed compensation is materially above comparable listings.')
+      : 'Claimed compensation is materially above comparable listings.', 'salary_anomaly', idsOf(comparableEvidence))
   } else if (comparableEvidence.length > 0) {
     addSignal(signals, {
       id: 'market_comparable_found',
@@ -785,7 +801,7 @@ function deriveIntelligence(
       evidenceIds: comparableEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Comparable roles exist for checking salary and application path realism.',
     })
-    score = applyTrace(scoreTrace, score, 'Market salary', -4, 'Comparable jobs provide market context.')
+    score = applyTrace(scoreTrace, score, 'Market salary', -4, 'Comparable jobs provide market context.', 'market_comparable_found', idsOf(comparableEvidence))
   }
 
   if (mismatchEvidence.length > 0) {
@@ -798,7 +814,7 @@ function deriveIntelligence(
       evidenceIds: mismatchEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The submitted apply link appears inconsistent with the official company or apply options.',
     })
-    score = applyTrace(scoreTrace, score, 'Apply path', 18, 'Apply domain mismatch is a strong impersonation signal.')
+    score = applyTrace(scoreTrace, score, 'Apply path', 18, 'Apply domain mismatch is a strong impersonation signal.', 'apply_path_mismatch', idsOf(mismatchEvidence))
   } else if (hasInputConflict) {
     addSignal(signals, {
       id: 'input_conflict',
@@ -809,7 +825,7 @@ function deriveIntelligence(
       evidenceIds: inputConflictEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The submitted job text disagrees with the public job page that HireProof resolved from the URL.',
     })
-    score = applyTrace(scoreTrace, score, 'Input conflict', 16, 'Conflicting submitted claims keep the report in caution territory.')
+    score = applyTrace(scoreTrace, score, 'Input conflict', 16, 'Conflicting submitted claims keep the report in caution territory.', 'input_conflict', idsOf(inputConflictEvidence))
   } else if (hasSubmittedOfficialApplyPath || hasSubmittedTrustedApplyPath) {
     addSignal(signals, {
       id: 'apply_path_professional',
@@ -820,7 +836,7 @@ function deriveIntelligence(
       evidenceIds: officialEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The post references an official or trusted application path.',
     })
-    score = applyTrace(scoreTrace, score, 'Apply path', -5, 'Professional application path lowers risk.')
+    score = applyTrace(scoreTrace, score, 'Apply path', -5, 'Professional application path lowers risk.', 'apply_path_professional', idsOf(officialEvidence))
   }
 
   const recruiterIdentity = deriveRecruiterIdentity(extractedClaims, evidence, officialHost)
@@ -834,7 +850,7 @@ function deriveIntelligence(
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: 'The recruiter email domain matches the official company domain, which lowers impersonation risk.',
     })
-    score = applyTrace(scoreTrace, score, 'Recruiter identity', -8, 'Recruiter domain matches official company domain.')
+    score = applyTrace(scoreTrace, score, 'Recruiter identity', -8, 'Recruiter domain matches official company domain.', 'recruiter_domain_match', recruiterIdentity.evidenceIds)
   } else if (recruiterIdentity.status === 'platform-match') {
     addSignal(signals, {
       id: 'recruiter_platform_match',
@@ -845,7 +861,7 @@ function deriveIntelligence(
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: 'A LinkedIn or professional recruiter profile is present, but domain ownership still needs confirmation.',
     })
-    score = applyTrace(scoreTrace, score, 'Recruiter identity', -4, 'Professional recruiter profile provides partial identity support.')
+    score = applyTrace(scoreTrace, score, 'Recruiter identity', -4, 'Professional recruiter profile provides partial identity support.', 'recruiter_platform_match', recruiterIdentity.evidenceIds)
   } else if (recruiterIdentity.status === 'risky') {
     addSignal(signals, {
       id: 'recruiter_identity_mismatch',
@@ -858,7 +874,7 @@ function deriveIntelligence(
         ? 'The recruiter uses a free email domain instead of the official company domain.'
         : 'The recruiter email domain does not match the official company domain.',
     })
-    score = applyTrace(scoreTrace, score, 'Recruiter identity', 20, 'Recruiter identity is inconsistent with official company evidence.')
+    score = applyTrace(scoreTrace, score, 'Recruiter identity', 20, 'Recruiter identity is inconsistent with official company evidence.', 'recruiter_identity_mismatch', recruiterIdentity.evidenceIds)
   }
 
   if (reputationRiskEvidence.length > 0) {
@@ -871,7 +887,7 @@ function deriveIntelligence(
       evidenceIds: reputationRiskEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Company-specific news or reputation results include scam, fraud, warning, or impersonation language.',
     })
-    score = applyTrace(scoreTrace, score, 'Reputation', 16, 'Company-specific negative reputation evidence increases risk.')
+    score = applyTrace(scoreTrace, score, 'Reputation', 16, 'Company-specific negative reputation evidence increases risk.', 'reputation_risk', idsOf(reputationRiskEvidence))
   }
 
   if (threatIntelEvidence.length > 0) {
@@ -884,7 +900,7 @@ function deriveIntelligence(
       evidenceIds: threatIntelEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'A submitted URL or domain matched known phishing, malware, or social-engineering intelligence.',
     })
-    score = applyTrace(scoreTrace, score, 'Threat intelligence', 30, 'Known-threat intelligence match is a direct danger signal.')
+    score = applyTrace(scoreTrace, score, 'Threat intelligence', 30, 'Known-threat intelligence match is a direct danger signal.', 'threat_intel_match', idsOf(threatIntelEvidence))
   }
 
   if (newDomainRiskEvidence.length > 0) {
@@ -897,7 +913,7 @@ function deriveIntelligence(
       evidenceIds: newDomainRiskEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Newly registered domains are cheap impersonation infrastructure and need stronger verification.',
     })
-    score = applyTrace(scoreTrace, score, 'Domain age', 10, 'Newly registered domain increases impersonation risk.')
+    score = applyTrace(scoreTrace, score, 'Domain age', 10, 'Newly registered domain increases impersonation risk.', 'domain_newly_registered', idsOf(newDomainRiskEvidence))
   }
 
   if (recentCertificateEvidence.length > 0) {
@@ -910,7 +926,7 @@ function deriveIntelligence(
       evidenceIds: recentCertificateEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Brand-new certificate issuance for the submitted domain is consistent with freshly stood-up infrastructure.',
     })
-    score = applyTrace(scoreTrace, score, 'Certificate transparency', 6, 'Very recent certificate activity slightly increases risk.')
+    score = applyTrace(scoreTrace, score, 'Certificate transparency', 6, 'Very recent certificate activity slightly increases risk.', 'certificate_very_recent', idsOf(recentCertificateEvidence))
   }
 
   if (claimsNoInterview) {
@@ -923,7 +939,7 @@ function deriveIntelligence(
       evidenceIds: [],
       rationale: 'Legitimate employment almost always includes an interview or structured screening step.',
     })
-    score = applyTrace(scoreTrace, score, 'Hiring process', 12, 'A no-interview hiring flow is unusual for legitimate employment.')
+    score = applyTrace(scoreTrace, score, 'Hiring process', 12, 'A no-interview hiring flow is unusual for legitimate employment.', 'process_no_interview')
   }
 
   if (claimsUpfrontPayment) {
@@ -936,7 +952,7 @@ function deriveIntelligence(
       evidenceIds: [],
       rationale: 'Asking applicants to pay fees, deposits, or purchases before starting is the classic advance-fee scam pattern.',
     })
-    score = applyTrace(scoreTrace, score, 'Upfront payment', 22, 'Upfront fee, deposit, or purchase request is a direct financial-loss vector.')
+    score = applyTrace(scoreTrace, score, 'Upfront payment', 22, 'Upfront fee, deposit, or purchase request is a direct financial-loss vector.', 'process_upfront_payment')
   }
 
   if (staleEvidence.length > 0) {
@@ -949,7 +965,7 @@ function deriveIntelligence(
       evidenceIds: staleEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Older search/news evidence is kept visible, but it carries less confidence than fresh or recent sources.',
     })
-    score = applyTrace(scoreTrace, score, 'Evidence freshness', 4, 'Stale evidence slightly reduces confidence in the current-state match.')
+    score = applyTrace(scoreTrace, score, 'Evidence freshness', 4, 'Stale evidence slightly reduces confidence in the current-state match.', 'stale_evidence', idsOf(staleEvidence))
   }
 
   if (weakEvidence.length > 0) {
@@ -962,7 +978,7 @@ function deriveIntelligence(
       evidenceIds: weakEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Directory or mirror results are retained for transparency but ranked below official, registry, maps, LinkedIn, and trusted job-board sources.',
     })
-    score = applyTrace(scoreTrace, score, 'Source quality', 2, 'Weak mirrored sources have lower evidentiary value.')
+    score = applyTrace(scoreTrace, score, 'Source quality', 2, 'Weak mirrored sources have lower evidentiary value.', 'weak_source_present', idsOf(weakEvidence))
   }
 
   const contactMethod = normalizedContactMethod
@@ -979,7 +995,7 @@ function deriveIntelligence(
         ? 'Off-platform contact is still risky, but verified recruiter/company-domain evidence reduces the severity.'
         : 'Telegram or WhatsApp-only hiring paths commonly bypass official recruiter verification.',
     })
-    score = applyTrace(scoreTrace, score, 'Contact method', offPlatformWeight, 'Off-platform contact increases job-scam risk.')
+    score = applyTrace(scoreTrace, score, 'Contact method', offPlatformWeight, 'Off-platform contact increases job-scam risk.', 'off_platform_contact', recruiterIdentity.evidenceIds)
   }
 
   const rawFinalDelta = Math.max(0, clampScore(baseScore) - score)
@@ -997,7 +1013,7 @@ function deriveIntelligence(
       hasSubmittedTrustedApplyPath
     )
   const finalDelta = hasTrustedHiringSurface ? Math.min(rawFinalDelta, 12) : rawFinalDelta
-  score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Legacy red/green flags can raise the score, while v2 evidence-specific risk is preserved.')
+  score = applyTrace(scoreTrace, score, 'Policy reconciliation', finalDelta, 'Reconciles with the base signal engine (full breakdown in baseScoreTrace): when the base engine scores higher, the difference is added here so structured base-engine risk is never lost.')
   if (mismatchEvidence.length > 0 && score < 35) {
     score = applyTrace(scoreTrace, score, 'Apply path floor', 35 - score, 'Actionable apply-domain mismatch prevents a safe verdict.')
   }
@@ -1206,11 +1222,25 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   // extractRedFlags/extractGreenFlags are explanations of structured signals that
   // buildAuditSignals already derives internally from claims + evidence, so passing
   // them back in double-counted every top signal (see legacy flag signals).
-  const baseScore = Math.max(
-    calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides),
-    (input.enrichmentRedFlags || []).length > 0 ? 45 : 0,
-  )
+  // Guarded because unit tests mock '@/lib/risk-scorer' without the trace export.
+  const baseTraceResult = typeof traceRiskScore === 'function'
+    ? traceRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides)
+    : undefined
+  const rawBaseScore = baseTraceResult
+    ? baseTraceResult.score
+    : calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides)
+  const baseScore = Math.max(rawBaseScore, (input.enrichmentRedFlags || []).length > 0 ? 45 : 0)
+  const baseScoreTrace = baseTraceResult ? [...baseTraceResult.trace] : undefined
+  if (baseScoreTrace && baseScore > rawBaseScore) {
+    baseScoreTrace.push({
+      step: 'Enrichment floor',
+      delta: baseScore - rawBaseScore,
+      scoreAfter: baseScore,
+      reason: 'Enrichment red flags (URL resolution conflicts) keep the base score at or above the caution band.',
+    })
+  }
   const { intelligence, riskScore, operations } = deriveIntelligence(input.extractedClaims, reportEvidence, redFlags, greenFlags, baseScore)
+  if (baseScoreTrace) intelligence.baseScoreTrace = baseScoreTrace
   const verdict = determineVerdict(riskScore)
   const salaryBenchmarkOperation = operations?.salaryBenchmark
     ? {
