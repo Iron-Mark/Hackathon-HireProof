@@ -39,6 +39,7 @@ export const IntelligenceSignalSchema = z.object({
   direction: z.enum(['risk', 'trust', 'neutral']),
   severity: z.enum(['low', 'medium', 'high']),
   weight: z.number().min(-100).max(100),
+  confidence: z.enum(['low', 'medium', 'high']).optional(),
   evidenceIds: z.array(z.string().max(100)).max(20),
   rationale: z.string().max(1000),
 })

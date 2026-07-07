@@ -70,6 +70,19 @@ test('base report exposes the base-engine trace alongside the v2 trace', async (
   assert.ok(signalSteps.length >= 3, 'base trace should include per-signal steps')
 })
 
+test('every v2 signal carries a confidence level', async () => {
+  const stack = await loadScoringStack()
+  for (const item of SCORING_DATASET.slice(0, 40)) {
+    const report = buildReport(stack, item)
+    for (const signal of report.intelligence.signals) {
+      assert.ok(
+        ['low', 'medium', 'high'].includes(signal.confidence),
+        `${item.id}: signal ${signal.id} missing confidence`,
+      )
+    }
+  }
+})
+
 test('trace snapshot: impersonation high-risk case', async () => {
   const stack = await loadScoringStack()
   const item = SCORING_DATASET.find((entry) => entry.id === 'risk.impersonation.brand.1')
@@ -96,11 +109,13 @@ test('trace snapshot: safe official-surface case', async () => {
   const report = buildReport(stack, item)
 
   const outline = Array.from(report.intelligence.scoreTrace, (step) => `${step.step}${step.signalId ? `[${step.signalId}]` : ''}:${step.delta}`)
+  // Confidence-scaled: remote_digital_footprint -6 x0.85 -> -5; the source
+  // reconciliation step's nominal -7 is clamped at 0 to an effective -6.
   assert.deepEqual(outline, [
     'Baseline:25',
     'Company identity[company_official_match]:-14',
-    'Company profile mode[remote_digital_footprint]:-6',
-    'Source reconciliation[official_source_role_reconciliation]:-5',
+    'Company profile mode[remote_digital_footprint]:-5',
+    'Source reconciliation[official_source_role_reconciliation]:-6',
     'Market salary[market_comparable_found]:0',
     'Apply path[apply_path_professional]:0',
     'Policy reconciliation:0',

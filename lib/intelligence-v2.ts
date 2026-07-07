@@ -572,6 +572,16 @@ function addSignal(signals: IntelligenceSignal[], signal: IntelligenceSignal) {
 
 const idsOf = (items: EvidenceItem[]) => items.map(item => item.id || '').filter(Boolean)
 
+// Same multipliers as the base engine (lib/audit-signals.mjs): a signal's traced
+// contribution scales with how confident the detection is; the nominal weight
+// stays on the signal itself for explainability.
+const CONFIDENCE_MULTIPLIER = { high: 1, medium: 0.85, low: 0.6 } as const
+type SignalConfidence = keyof typeof CONFIDENCE_MULTIPLIER
+
+function confidenceScaled(weight: number, confidence: SignalConfidence) {
+  return Math.round(weight * CONFIDENCE_MULTIPLIER[confidence])
+}
+
 function applyTrace(
   trace: ScoreTraceItem[],
   score: number,
@@ -701,6 +711,7 @@ function deriveIntelligence(
       label: 'Official company footprint matched',
       direction: 'trust',
       severity: 'high',
+      confidence: 'high',
       weight: -14,
       evidenceIds: officialEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The company appears in official web or knowledge-graph evidence.',
@@ -712,6 +723,7 @@ function deriveIntelligence(
       label: 'Company identity is not verifiable',
       direction: 'risk',
       severity: 'high',
+      confidence: 'high',
       weight: 18,
       evidenceIds: [],
       rationale: 'A job opportunity without a verifiable company identity is materially riskier.',
@@ -725,22 +737,24 @@ function deriveIntelligence(
       label: 'Startup digital footprint is consistent',
       direction: 'trust',
       severity: 'medium',
+      confidence: 'medium',
       weight: -8,
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Remote startups are evaluated on consistent official, founder, product, LinkedIn, and reputable platform evidence rather than requiring a local office footprint.',
     })
-    score = applyTrace(scoreTrace, score, 'Company profile mode', -8, 'Startup-remote profile has enough consistent digital footprint evidence.', 'startup_digital_footprint', idsOf(digitalFootprintEvidence))
+    score = applyTrace(scoreTrace, score, 'Company profile mode', confidenceScaled(-8, 'medium'), 'Startup-remote profile has enough consistent digital footprint evidence.', 'startup_digital_footprint', idsOf(digitalFootprintEvidence))
   } else if (companyProfileMode === 'established_remote' && digitalFootprintEvidence.length >= 2) {
     addSignal(signals, {
       id: 'remote_digital_footprint',
       label: 'Remote-company digital footprint is consistent',
       direction: 'trust',
       severity: 'medium',
+      confidence: 'medium',
       weight: -6,
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Remote roles are weighted toward official domain, company profile, reputable job board, and apply-host consistency.',
     })
-    score = applyTrace(scoreTrace, score, 'Company profile mode', -6, 'Remote profile has consistent digital footprint evidence.', 'remote_digital_footprint', idsOf(digitalFootprintEvidence))
+    score = applyTrace(scoreTrace, score, 'Company profile mode', confidenceScaled(-6, 'medium'), 'Remote profile has consistent digital footprint evidence.', 'remote_digital_footprint', idsOf(digitalFootprintEvidence))
   }
 
   if (officialSourceMatches.length > 0 && !hasOffPlatformContact && (hasSubmittedOfficialApplyPath || hasSubmittedTrustedApplyPath)) {
@@ -749,13 +763,14 @@ function deriveIntelligence(
       label: 'Official source matched company and role',
       direction: 'trust',
       severity: 'high',
+      confidence: 'medium',
       weight: -8,
       evidenceIds: officialSourceMatches.map(item => item.id || '').filter(Boolean),
       rationale: globalHiringContext
         ? 'An official or trusted hiring source matches the company and role, so city-level or job-board metadata differences are treated as confirmation notes rather than scam signals.'
         : 'An official or trusted hiring source matches the company and role, reducing the chance that the submitted listing is an impersonation.',
     })
-    score = applyTrace(scoreTrace, score, 'Source reconciliation', -8, globalHiringContext
+    score = applyTrace(scoreTrace, score, 'Source reconciliation', confidenceScaled(-8, 'medium'), globalHiringContext
       ? 'Official source matched the role; global/remote market wording is a minor confirmation note.'
       : 'Official source matched the submitted company and role.', 'official_source_role_reconciliation', idsOf(officialSourceMatches))
   }
@@ -766,6 +781,7 @@ function deriveIntelligence(
       label: 'Local business presence verified',
       direction: 'trust',
       severity: 'medium',
+      confidence: 'high',
       weight: -10,
       evidenceIds: verifiedLocalEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Maps/place evidence includes contact or address details for the claimed company.',
@@ -777,17 +793,19 @@ function deriveIntelligence(
       label: 'No local footprint found',
       direction: 'risk',
       severity: 'medium',
+      confidence: 'medium',
       weight: 8,
       evidenceIds: [],
       rationale: 'The audit could not find local presence for a company claiming a local hiring footprint.',
     })
-    score = applyTrace(scoreTrace, score, 'Local presence', 8, 'No matching local presence was found.', 'local_presence_missing')
+    score = applyTrace(scoreTrace, score, 'Local presence', confidenceScaled(8, 'medium'), 'No matching local presence was found.', 'local_presence_missing')
   } else if (redFlags.some(flag => /no local/i.test(flag))) {
     addSignal(signals, {
       id: 'remote_local_presence_not_required',
       label: 'Local footprint is not required for this remote profile',
       direction: 'neutral',
       severity: 'low',
+      confidence: 'medium',
       weight: 0,
       evidenceIds: digitalFootprintEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Missing Maps or office evidence is not treated as a strong risk for remote/startup roles when the digital footprint is otherwise consistent.',
@@ -818,19 +836,23 @@ function deriveIntelligence(
     (typeof salaryRatio === 'number' && salaryRatio >= 2.5)
   ))
 
+  // Live comparables give a high-confidence anomaly read; a seeded band or a
+  // bare weekly-quote inference is medium confidence.
+  const salaryAnomalyConfidence: SignalConfidence = liveComparableMedian ? 'high' : 'medium'
   if (salaryAnomalous) {
     addSignal(signals, {
       id: 'salary_anomaly',
       label: 'Salary is far outside comparable market signals',
       direction: 'risk',
       severity: 'high',
+      confidence: salaryAnomalyConfidence,
       weight: 22,
       evidenceIds: comparableEvidence.map(item => item.id || '').filter(Boolean),
       rationale: typeof salaryRatio === 'number'
         ? `The claimed pay is ${salaryRatio}x the comparable monthly benchmark for this role/location.`
         : 'The claimed pay is weekly or far above comparable job listings for the role/location.',
     })
-    score = applyTrace(scoreTrace, score, 'Market salary', 22, typeof salaryRatio === 'number'
+    score = applyTrace(scoreTrace, score, 'Market salary', confidenceScaled(22, salaryAnomalyConfidence), typeof salaryRatio === 'number'
       ? `Claimed compensation is ${salaryRatio}x comparable listings.`
       : 'Claimed compensation is materially above comparable listings.', 'salary_anomaly', idsOf(comparableEvidence))
   } else if (comparableEvidence.length > 0) {
@@ -839,11 +861,12 @@ function deriveIntelligence(
       label: 'Comparable market jobs found',
       direction: 'trust',
       severity: 'low',
+      confidence: 'medium',
       weight: -4,
       evidenceIds: comparableEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Comparable roles exist for checking salary and application path realism.',
     })
-    score = applyTrace(scoreTrace, score, 'Market salary', -4, 'Comparable jobs provide market context.', 'market_comparable_found', idsOf(comparableEvidence))
+    score = applyTrace(scoreTrace, score, 'Market salary', confidenceScaled(-4, 'medium'), 'Comparable jobs provide market context.', 'market_comparable_found', idsOf(comparableEvidence))
   }
 
   if (mismatchEvidence.length > 0) {
@@ -852,6 +875,7 @@ function deriveIntelligence(
       label: 'Apply path does not match official company domain',
       direction: 'risk',
       severity: 'high',
+      confidence: 'high',
       weight: 18,
       evidenceIds: mismatchEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The submitted apply link appears inconsistent with the official company or apply options.',
@@ -863,6 +887,7 @@ function deriveIntelligence(
       label: 'Submitted text conflicts with resolved job page',
       direction: 'risk',
       severity: 'medium',
+      confidence: 'high',
       weight: 16,
       evidenceIds: inputConflictEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The submitted job text disagrees with the public job page that HireProof resolved from the URL.',
@@ -874,11 +899,12 @@ function deriveIntelligence(
       label: 'Application path appears professional',
       direction: 'trust',
       severity: 'low',
+      confidence: 'medium',
       weight: -5,
       evidenceIds: officialEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'The post references an official or trusted application path.',
     })
-    score = applyTrace(scoreTrace, score, 'Apply path', -5, 'Professional application path lowers risk.', 'apply_path_professional', idsOf(officialEvidence))
+    score = applyTrace(scoreTrace, score, 'Apply path', confidenceScaled(-5, 'medium'), 'Professional application path lowers risk.', 'apply_path_professional', idsOf(officialEvidence))
   }
 
   const recruiterIdentity = deriveRecruiterIdentity(extractedClaims, evidence, officialHost)
@@ -888,6 +914,7 @@ function deriveIntelligence(
       label: 'Recruiter identity matches company domain',
       direction: 'trust',
       severity: 'medium',
+      confidence: 'high',
       weight: -8,
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: 'The recruiter email domain matches the official company domain, which lowers impersonation risk.',
@@ -899,17 +926,19 @@ function deriveIntelligence(
       label: 'Recruiter profile has a professional platform signal',
       direction: 'trust',
       severity: 'low',
+      confidence: 'medium',
       weight: -4,
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: 'A LinkedIn or professional recruiter profile is present, but domain ownership still needs confirmation.',
     })
-    score = applyTrace(scoreTrace, score, 'Recruiter identity', -4, 'Professional recruiter profile provides partial identity support.', 'recruiter_platform_match', recruiterIdentity.evidenceIds)
+    score = applyTrace(scoreTrace, score, 'Recruiter identity', confidenceScaled(-4, 'medium'), 'Professional recruiter profile provides partial identity support.', 'recruiter_platform_match', recruiterIdentity.evidenceIds)
   } else if (recruiterIdentity.status === 'risky') {
     addSignal(signals, {
       id: 'recruiter_identity_mismatch',
       label: 'Recruiter identity does not match the company',
       direction: 'risk',
       severity: 'high',
+      confidence: 'high',
       weight: 20,
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: isFreeEmailDomain(recruiterIdentity.recruiterEmailDomain)
@@ -925,11 +954,12 @@ function deriveIntelligence(
       label: 'Reputation risk signal found',
       direction: 'risk',
       severity: 'high',
+      confidence: 'medium',
       weight: 16,
       evidenceIds: reputationRiskEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Company-specific news or reputation results include scam, fraud, warning, or impersonation language.',
     })
-    score = applyTrace(scoreTrace, score, 'Reputation', 16, 'Company-specific negative reputation evidence increases risk.', 'reputation_risk', idsOf(reputationRiskEvidence))
+    score = applyTrace(scoreTrace, score, 'Reputation', confidenceScaled(16, 'medium'), 'Company-specific negative reputation evidence increases risk.', 'reputation_risk', idsOf(reputationRiskEvidence))
   }
 
   if (threatIntelEvidence.length > 0) {
@@ -938,6 +968,7 @@ function deriveIntelligence(
       label: 'Known threat intelligence match',
       direction: 'risk',
       severity: 'high',
+      confidence: 'high',
       weight: 30,
       evidenceIds: threatIntelEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'A submitted URL or domain matched known phishing, malware, or social-engineering intelligence.',
@@ -951,6 +982,7 @@ function deriveIntelligence(
       label: 'Apply or contact domain is newly registered',
       direction: 'risk',
       severity: 'medium',
+      confidence: 'high',
       weight: 10,
       evidenceIds: newDomainRiskEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Newly registered domains are cheap impersonation infrastructure and need stronger verification.',
@@ -964,11 +996,12 @@ function deriveIntelligence(
       label: 'Very recent certificate activity',
       direction: 'risk',
       severity: 'medium',
+      confidence: 'medium',
       weight: 6,
       evidenceIds: recentCertificateEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Brand-new certificate issuance for the submitted domain is consistent with freshly stood-up infrastructure.',
     })
-    score = applyTrace(scoreTrace, score, 'Certificate transparency', 6, 'Very recent certificate activity slightly increases risk.', 'certificate_very_recent', idsOf(recentCertificateEvidence))
+    score = applyTrace(scoreTrace, score, 'Certificate transparency', confidenceScaled(6, 'medium'), 'Very recent certificate activity slightly increases risk.', 'certificate_very_recent', idsOf(recentCertificateEvidence))
   }
 
   if (claimsNoInterview) {
@@ -977,6 +1010,7 @@ function deriveIntelligence(
       label: 'Hiring flow claims no interview',
       direction: 'risk',
       severity: 'medium',
+      confidence: 'high',
       weight: 12,
       evidenceIds: [],
       rationale: 'Legitimate employment almost always includes an interview or structured screening step.',
@@ -990,6 +1024,7 @@ function deriveIntelligence(
       label: 'Upfront fee, deposit, or purchase required',
       direction: 'risk',
       severity: 'high',
+      confidence: 'high',
       weight: 22,
       evidenceIds: [],
       rationale: 'Asking applicants to pay fees, deposits, or purchases before starting is the classic advance-fee scam pattern.',
@@ -1003,11 +1038,12 @@ function deriveIntelligence(
       label: 'Some evidence is stale',
       direction: 'neutral',
       severity: 'low',
+      confidence: 'low',
       weight: 4,
       evidenceIds: staleEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Older search/news evidence is kept visible, but it carries less confidence than fresh or recent sources.',
     })
-    score = applyTrace(scoreTrace, score, 'Evidence freshness', 4, 'Stale evidence slightly reduces confidence in the current-state match.', 'stale_evidence', idsOf(staleEvidence))
+    score = applyTrace(scoreTrace, score, 'Evidence freshness', confidenceScaled(4, 'low'), 'Stale evidence slightly reduces confidence in the current-state match.', 'stale_evidence', idsOf(staleEvidence))
   }
 
   if (weakEvidence.length > 0) {
@@ -1016,11 +1052,12 @@ function deriveIntelligence(
       label: 'Weak source found',
       direction: 'neutral',
       severity: 'low',
+      confidence: 'low',
       weight: 2,
       evidenceIds: weakEvidence.map(item => item.id || '').filter(Boolean),
       rationale: 'Directory or mirror results are retained for transparency but ranked below official, registry, maps, LinkedIn, and trusted job-board sources.',
     })
-    score = applyTrace(scoreTrace, score, 'Source quality', 2, 'Weak mirrored sources have lower evidentiary value.', 'weak_source_present', idsOf(weakEvidence))
+    score = applyTrace(scoreTrace, score, 'Source quality', confidenceScaled(2, 'low'), 'Weak mirrored sources have lower evidentiary value.', 'weak_source_present', idsOf(weakEvidence))
   }
 
   const contactMethod = normalizedContactMethod
@@ -1031,6 +1068,7 @@ function deriveIntelligence(
       label: 'Off-platform recruiter contact',
       direction: 'risk',
       severity: offPlatformWeight >= 16 ? 'high' : 'medium',
+      confidence: 'high',
       weight: offPlatformWeight,
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: offPlatformWeight < 12
@@ -1143,6 +1181,7 @@ function deriveIntelligence(
       label: 'Evidence coverage is limited',
       direction: 'neutral',
       severity: 'medium',
+      confidence: 'medium',
       weight: 0,
       evidenceIds: evidence.map(item => item.id || '').filter(Boolean).slice(0, 5),
       rationale: 'The report has too few independent receipts to present missing dimensions as verified.',
