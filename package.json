@@ -64,7 +64,7 @@
     "@chat-adapter/slack": "^4.31.0",
     "@chat-adapter/state-redis": "^4.31.0",
     "@chat-adapter/telegram": "^4.31.0",
-    "@cursor/sdk": "^1.0.13",
+    "@cursor/sdk": "^1.0.22",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@swc/helpers": "0.5.23",
     "@upstash/ratelimit": "^2.0.8",
