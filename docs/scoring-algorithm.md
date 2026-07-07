@@ -98,16 +98,17 @@ it is deterministic and mirrored in both engine layers (`lib/audit-signals.mjs` 
 - **Token-boundary phrases** (`hasTokenPhrase`): matching happens on normalized,
   space-padded token sequences, so `t.me/handle` (→ ` t me `) is detected while the inside
   of "don't message" never is.
-- **Clause-boundary-aware negation with demand override** (`hasUnnegatedTerm` +
+- **Clause-boundary-aware negation with coercion override** (`hasUnnegatedTerm` +
   `tokenizeWithBoundaries`): a negation only suppresses a risk term inside its own clause
-  (scope ends at commas, periods, semicolons, dashes, and contrastive conjunctions), and a
-  payment-demand verb (`pay/send/deposit/wire/purchase/buy/…`) in the same clause fires the
-  term regardless of negation. So "we never ask for a fee" stays silent, but "beware of
-  scams, pay the activation fee" and "we do not overcharge. A refundable deposit is
-  required" both fire. Negation tokens are multilingual (English + fr/es/pt/it/id/hi/de).
-  **Matchers see RAW claim text** (not the ASCII-normalized view) so clause punctuation
-  survives. Acknowledged limit: nested double negation ("it is not the case that we do not
-  require a charge") is not parsed.
+  and only from *before* the term (scope ends at commas, periods, semicolons, dashes, and
+  contrastive conjunctions). A strong coercion marker (`cannot/unable/must/mandatory/
+  compulsory`) or a double-negation affirmer ("not the case that …") in the clause overrides
+  the negation. So "we never ask for a fee" stays silent, but "beware of scams, pay the
+  activation fee", "we do not overcharge. A refundable deposit is required", "you cannot
+  start without the training fee", and "it is not the case that we do not require a charge"
+  all fire. A "no" *after* the term ("whatsapp, no interview") does not suppress it.
+  Negation tokens are multilingual (English + fr/es/pt/it/id/hi/de). **Matchers see RAW
+  claim text** (not the ASCII-normalized view) so clause punctuation survives.
 - **Off-platform channels:** short links are the platform (`t.me`→Telegram, `wa.me`→
   WhatsApp); Viber, Signal, Discord, WeChat, Line, Skype, Kakao, Snapchat, Google Chat,
   Linktree, and SMS-only phone funnels are detected (`contact.off_platform_messaging`).
@@ -227,12 +228,12 @@ Invariants are enforced by test/score-trace.test.mjs across the full labeled dat
 
 ## Measurement harness and dataset
 
-- `test/fixtures/scoring-dataset.mjs` — 222 labeled cases (58 safe / 55 caution / 109
+- `test/fixtures/scoring-dataset.mjs` — 228 labeled cases (59 safe / 55 caution / 114
   high-risk) built from hand-labeled archetypes plus label-preserving surface variants,
   plus adversarial cases in `test/fixtures/redteam-cases.mjs`: 58 harvested by a multi-agent
-  red-team workflow (11 attack dimensions) and 14 regression guards for execution-verified
-  code-review findings — all independently label-audited. Splits (train 138 / validation
-  37 / test 47) are assigned at the archetype level so near-duplicate scenarios never leak
+  red-team workflow (11 attack dimensions) and 20 regression guards for execution-verified
+  code-review findings — all independently label-audited. Splits (train 140 / validation
+  39 / test 49) are assigned at the archetype level so near-duplicate scenarios never leak
   across splits.
 - `node scripts/eval-scenarios.mjs <file.json>` — runs arbitrary `{claims, evidence,
   expected}` scenarios through the real engine, for execution-verifying red-team
@@ -272,20 +273,27 @@ node scripts/train-risk-weights.mjs   # refits, rewrites lib/risk-weights.genera
                                       # prints the hand-tuned vs trained validation comparison
 ```
 
+## Evasion folds
+
+Beyond homoglyph/fullwidth/diacritic folding, the normalizers also handle:
+
+- **Leetspeak / digit substitution** (`Te1egram`, `f33`, `registrati0n`): a leet digit is
+  folded to its letter ONLY when adjacent to a letter, so pure number runs (`$80,000`,
+  `Web3`) and amount parsing are never corrupted.
+- **Emoji / pictographs mid-keyword** (`Tele😀gram`): emoji and variation selectors are
+  deleted (not spaced), rejoining the keyword.
+- **Nested double negation** ("it is not the case that we do not require a charge"): a
+  double-negation affirmer re-affirms the inner negation so the demand fires.
+
 ## Known residuals
 
-Honest limits, kept as documented residuals rather than silently unhandled. All were found
-by an adversarial code review that reproduced each against the live engine:
+Honest limits, kept as documented residuals rather than silently unhandled:
 
-- **Leetspeak / digit substitution** (`Te1egram`, `f33`) is not folded — digit→letter
-  mapping would corrupt salary amounts, so it is deliberately out of scope.
-- **Emoji or unmapped-script characters mid-keyword** (`Tele😀gram`) split the token and can
-  evade a keyword; only *single*-character letter-spacing is collapsed.
-- **Nested double negation** ("it is not the case that we do not require a charge") is not
-  parsed by the clause-boundary negation model.
 - **Coverage is a curated list**, not exhaustive: languages/scripts and scam-archetype
   wordings outside the lists above degrade to caution rather than high-risk. Extend the
-  term lists + dataset as new patterns appear.
+  term lists + dataset (verify with `scripts/eval-scenarios.mjs`) as new patterns appear.
+- **The two engine layers duplicate term lists and matchers** and must be kept in sync;
+  layer drift has been a real bug class (guarded now, but stay vigilant when adding terms).
 
 ## Reproducing the metrics
 

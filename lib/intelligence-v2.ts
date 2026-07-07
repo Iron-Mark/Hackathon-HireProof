@@ -74,18 +74,40 @@ const CONFUSABLE_MAP: Record<string, string> = {
 }
 const CONFUSABLE_RE = new RegExp(`[${Object.keys(CONFUSABLE_MAP).join('')}]`, 'g')
 
+const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{1F1E6}-\u{1F1FF}️™ℹ⌨⏏Ⓜ]/gu
+
 function foldConfusables(value: string) {
   return String(value || '')
     .replace(/[​-‍﻿⁠­]/g, '')
+    .replace(EMOJI_RE, '')
     .replace(CONFUSABLE_RE, ch => CONFUSABLE_MAP[ch] || ch)
 }
+
+const LEET_MAP: Record<string, string> = { '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's', '7': 't' }
+function leetFold(value: string) {
+  let text = String(value || '')
+  for (let pass = 0; pass < 4; pass += 1) {
+    let changed = false
+    const next = text.replace(/[013457]/g, (digit, index: number, source: string) => {
+      const prev = source[index - 1] || ''
+      const after = source[index + 1] || ''
+      if (/[a-z]/i.test(prev) || /[a-z]/i.test(after)) { changed = true; return LEET_MAP[digit] }
+      return digit
+    })
+    text = next
+    if (!changed) break
+  }
+  return text
+}
+
+const DOUBLE_NEG_AFFIRMER_RE = /\b(?:not the case that|cannot deny|can not deny|no one can deny|it is false that|never fail(?:s)? to)\b/i
 
 function stripDiacritics(value: string) {
   return String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
 function normalizeText(value: string) {
-  return stripDiacritics(foldConfusables(collapseSpacedLetters(String(value || '').normalize('NFKC'))))
+  return stripDiacritics(foldConfusables(leetFold(collapseSpacedLetters(String(value || '').normalize('NFKC')))))
     .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
@@ -121,7 +143,7 @@ function collapseSpacedLetters(value: string) {
 }
 
 function tokenizeWithBoundaries(value: string) {
-  const marked = stripDiacritics(foldConfusables(collapseSpacedLetters(String(value || '').normalize('NFKC'))))
+  const marked = stripDiacritics(foldConfusables(leetFold(collapseSpacedLetters(String(value || '').normalize('NFKC')))))
     .toLowerCase()
     .replace(/[,;:!?]+|\.(?=\s|$)|\s[-–—/]\s|\b(?:but|however|though|although|yet|whereas|nevertheless)\b/g, ' cbrk ')
     .replace(/[^a-z0-9 ]+/g, ' ')
@@ -135,13 +157,14 @@ function tokenizeWithBoundaries(value: string) {
 // marker ("cannot ... without the fee", "must pay") in the same clause overrides it.
 function hasUnnegatedTerm(value: string, terms: string[]) {
   const tokens = tokenizeWithBoundaries(value)
+  const globalCoerce = DOUBLE_NEG_AFFIRMER_RE.test(String(value || ''))
   for (const term of terms) {
     const parts = term.split(' ')
     for (let i = 0; i + parts.length <= tokens.length; i += 1) {
       if (!parts.every((part, k) => tokens[i + k] === part)) continue
       // Negation only governs from BEFORE the term; coercion counts either direction.
       let negated = false
-      let coerced = false
+      let coerced = globalCoerce
       for (let j = i - 1; j >= 0 && tokens[j] !== 'cbrk'; j -= 1) {
         if (NEGATION_TOKENS.has(tokens[j])) negated = true
         if (COERCION_TOKENS.has(tokens[j])) coerced = true

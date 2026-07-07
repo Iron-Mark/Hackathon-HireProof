@@ -154,6 +154,21 @@ test('ambiguous channels as work tools / job duties do NOT flag off-platform', a
   assert.ok(signalIds(stack, { contactMethod: 'message us on Discord to apply', applicationPath: 'no interview' }).includes('contact.off_platform_messaging'))
 })
 
+test('leetspeak and emoji-split keyword evasion is folded, without corrupting amounts', async () => {
+  const stack = await loadScoringStack()
+  assert.ok(signalIds(stack, { applicationPath: 'pay the registrati0n f33 to start' }).includes('process.upfront_payment'))
+  assert.ok(signalIds(stack, { contactMethod: 'add us on t3l3gram' }).includes('contact.telegram_only'))
+  assert.ok(signalIds(stack, { contactMethod: 'contact us on Tele\u{1F600}gram' }).includes('contact.telegram_only'))
+  // A legit "$80,000" salary and a "Web3" role must NOT be leet-corrupted into a scam signal.
+  const legit = signalIds(stack, { role: 'Web3 Developer', salary: '$80,000 per year', applicationPath: 'apply on the official careers page' })
+  assert.ok(!legit.some((id) => id.startsWith('process.') || id.startsWith('contact.telegram')))
+})
+
+test('nested double negation ("not the case that we do not require a charge") fires', async () => {
+  const stack = await loadScoringStack()
+  assert.ok(signalIds(stack, { applicationPath: 'It is not the case that we do not require a processing charge before payout.' }).includes('process.upfront_payment'))
+})
+
 test('trust-surface ceilings never cancel a hard financial-loss floor', async () => {
   const stack = await loadScoringStack()
   // Unverifiable company + training fee + a reputable-board snippet + LinkedIn apply wording.
