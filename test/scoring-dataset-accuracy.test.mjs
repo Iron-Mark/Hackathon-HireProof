@@ -65,12 +65,13 @@ test('safety invariant: hard-safety scenarios are never scored safe', async () =
     // negation governs it within its own clause (scope stops at sentence punctuation).
     // "we will never ask you to pay a training fee" is a disclaimer, not a fee ask.
     const hasFeeAsk = (() => {
-      const raw = String(claims.applicationPath || '').toLowerCase()
-      const clauses = raw.split(/[.,;:!?]/)
-      const negations = ['no', 'never', 'not', 'without', 'dont', "don't", 'doesnt', 'wont', "won't", 'zero', 'beware', 'avoid']
-      return clauses.some((clause) => {
+      // Strip apostrophes so "don't" -> "dont", then split each clause into words and
+      // check membership against a negation set (no data-built regexes).
+      const raw = String(claims.applicationPath || '').toLowerCase().replace(/['‘’`]/g, '')
+      const negations = new Set(['no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid'])
+      return raw.split(/[.,;:!?]/).some((clause) => {
         if (!/\b(?:fee|charge|deposit|purchase software|software license|starter kit)\b/.test(clause)) return false
-        return !negations.some((n) => new RegExp(`\\b${n.replace("'", "\\'?")}\\b`).test(clause))
+        return !clause.split(/[^a-z0-9]+/).some((word) => negations.has(word))
       })
     })()
     const hasApplyMismatch = evidence.some((entry) => /apply path mismatch|domain mismatch/i.test(entry.type || ''))
