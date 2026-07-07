@@ -1,10 +1,10 @@
 {
   "generatedFrom": "scripts/score-accuracy.mjs",
-  "datasetSize": 150,
+  "datasetSize": 208,
   "fixedNow": "2026-07-01T00:00:00.000Z",
   "splits": {
     "overall": {
-      "count": 150,
+      "count": 208,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -12,49 +12,49 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 48
+          "support": 56
         },
         "caution": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 44
+          "support": 55
         },
         "high-risk": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 58
+          "support": 97
         }
       }
     },
     "train": {
-      "count": 91,
+      "count": 133,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
         "safe": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 34
+        },
+        "caution": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
           "support": 29
         },
-        "caution": {
-          "precision": 1,
-          "recall": 1,
-          "f1": 1,
-          "support": 23
-        },
         "high-risk": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 39
+          "support": 70
         }
       }
     },
     "validation": {
-      "count": 24,
+      "count": 32,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -62,13 +62,13 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 6
+          "support": 9
         },
         "caution": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 9
+          "support": 14
         },
         "high-risk": {
           "precision": 1,
@@ -79,7 +79,7 @@
       }
     },
     "test": {
-      "count": 35,
+      "count": 43,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -99,7 +99,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 10
+          "support": 18
         }
       }
     }

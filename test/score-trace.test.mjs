@@ -18,9 +18,8 @@ test('trace invariant: sum of v2 trace deltas equals the final risk score for ev
   for (const item of SCORING_DATASET) {
     const report = buildReport(stack, item)
     const sum = report.intelligence.scoreTrace.reduce((total, step) => total + step.delta, 0)
-    assert.equal(
-      Math.round(sum),
-      report.riskScore,
+    assert.ok(
+      Math.abs(sum - report.riskScore) < 0.011,
       `${item.id}: trace deltas sum to ${sum} but riskScore is ${report.riskScore}`,
     )
     const last = report.intelligence.scoreTrace.at(-1)
@@ -38,7 +37,7 @@ test('trace invariant: base-engine trace deltas sum to the base score for every 
       item.input.evidence,
     )
     const sum = trace.reduce((total, step) => total + step.delta, 0)
-    assert.equal(Math.round(sum * 100) / 100, score, `${item.id}: base trace sums to ${sum}, score is ${score}`)
+    assert.ok(Math.abs(sum - score) < 0.011, `${item.id}: base trace sums to ${sum}, score is ${score}`)
   }
 })
 

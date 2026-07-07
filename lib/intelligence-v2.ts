@@ -64,8 +64,39 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)))
 }
 
+// Cross-script confusables -> Latin (homoglyph evasion). Kept in sync with
+// lib/audit-signals.mjs.
+const CONFUSABLE_MAP: Record<string, string> = {
+  'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y', 'ѕ': 's', 'і': 'i', 'ј': 'j',
+  'к': 'k', 'н': 'h', 'в': 'b', 'т': 't', 'м': 'm', 'ո': 'n', 'ԁ': 'd', 'ԛ': 'q', 'ѡ': 'w', 'г': 'r',
+  'α': 'a', 'ο': 'o', 'ρ': 'p', 'ε': 'e', 'ι': 'i', 'κ': 'k', 'ν': 'v', 'τ': 't', 'υ': 'u', 'χ': 'x',
+  'β': 'b', 'η': 'n', 'μ': 'm', 'ϲ': 'c', 'ⅼ': 'l', 'ⅰ': 'i', '，': ',', '．': '.', '；': ';',
+}
+const CONFUSABLE_RE = new RegExp(`[${Object.keys(CONFUSABLE_MAP).join('')}]`, 'g')
+
+function foldConfusables(value: string) {
+  return String(value || '')
+    .replace(/[​-‍﻿⁠­]/g, '')
+    .replace(CONFUSABLE_RE, ch => CONFUSABLE_MAP[ch] || ch)
+}
+
+function stripDiacritics(value: string) {
+  return String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 function normalizeText(value: string) {
-  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  return stripDiacritics(foldConfusables(String(value || '').normalize('NFKC')))
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+// Diacritic-folded raw string that keeps non-ASCII scripts, for multilingual idioms.
+function rawFolded(value: string) {
+  return stripDiacritics(foldConfusables(String(value || '').normalize('NFKC'))).toLowerCase()
+}
+
+function hasRawPhrase(value: string, phrases: string[]) {
+  const text = rawFolded(value)
+  return phrases.some(phrase => text.includes(phrase))
 }
 
 // Token-boundary phrase match on normalized text (' t me ' matches "t.me/handle").
@@ -74,50 +105,116 @@ function hasTokenPhrase(value: string, phrase: string) {
 }
 
 const NEGATION_TOKENS = new Set([
-  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'anti',
+  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'anti', 'nor', 'none',
+  'ne', 'pas', 'jamais', 'aucun', 'aucune', 'sans', 'nunca', 'ningun', 'ninguna', 'sin', 'nao', 'nenhum', 'sem',
+  'tidak', 'tanpa', 'jangan', 'nahi', 'bina', 'kein', 'keine', 'nie', 'niemals',
 ])
 
-// True when any term appears WITHOUT a negation token in the 6 tokens before it —
-// "we never ask for any registration fee" must not read as a fee request.
+const DEMAND_TOKENS = new Set([
+  'pay', 'send', 'deposit', 'remit', 'wire', 'transfer', 'submit', 'purchase', 'buy', 'settle', 'load', 'reload',
+])
+
+function tokenizeWithBoundaries(value: string) {
+  const marked = stripDiacritics(foldConfusables(String(value || '').normalize('NFKC')))
+    .toLowerCase()
+    .replace(/[,;:!?]+|\.(?=\s|$)|\s[-–—/]\s|\b(?:but|however|though|although|yet|whereas|nevertheless)\b/g, ' cbrk ')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return marked ? marked.split(' ') : []
+}
+
+// Clause-boundary-aware negation with payment-demand override (kept in sync with
+// lib/audit-signals.mjs). A negation only suppresses within its own clause, and a
+// payment-demand verb in the same clause fires the term regardless of negation.
 function hasUnnegatedTerm(value: string, terms: string[]) {
-  const padded = ` ${normalizeText(value)} `
+  const tokens = tokenizeWithBoundaries(value)
   for (const term of terms) {
-    const needle = ` ${term} `
-    let index = padded.indexOf(needle)
-    while (index !== -1) {
-      const before = padded.slice(0, index).split(' ').filter(Boolean).slice(-6)
-      if (!before.some(token => NEGATION_TOKENS.has(token))) return true
-      index = padded.indexOf(needle, index + 1)
+    const parts = term.split(' ')
+    for (let i = 0; i + parts.length <= tokens.length; i += 1) {
+      if (!parts.every((part, k) => tokens[i + k] === part)) continue
+      let negated = false
+      let demand = false
+      for (let j = i - 1; j >= 0; j -= 1) {
+        if (tokens[j] === 'cbrk') break
+        if (DEMAND_TOKENS.has(tokens[j])) demand = true
+        if (NEGATION_TOKENS.has(tokens[j])) { negated = true; break }
+      }
+      for (let j = i + parts.length; j < tokens.length; j += 1) {
+        if (tokens[j] === 'cbrk') break
+        if (DEMAND_TOKENS.has(tokens[j])) demand = true
+      }
+      if (!negated || demand) return true
     }
   }
   return false
 }
 
 const UPFRONT_PAYMENT_TERMS = [
-  ...['training', 'registration', 'activation', 'processing', 'application', 'membership', 'placement', 'onboarding', 'handling', 'admin', 'upfront']
-    .flatMap(kind => [`${kind} fee`, `${kind} charge`]),
-  'equipment deposit',
-  'security deposit',
-  'refundable deposit',
-  'deposit required',
-  'deposit to unlock',
-  'with deposit',
-  'purchase software',
-  'software license',
-  'starter kit',
-  'pay to start',
-  'pay before starting',
-  'upfront payment',
+  ...['training', 'registration', 'activation', 'processing', 'application', 'membership', 'placement', 'onboarding', 'handling', 'admin', 'upfront', 'setup', 'account', 'service']
+    .flatMap(kind => [`${kind} fee`, `${kind} charge`, `${kind} cost`]),
+  'equipment deposit', 'security deposit', 'refundable deposit', 'deposit required', 'deposit to unlock', 'with deposit',
+  'purchase software', 'software license', 'starter kit', 'pay to start', 'pay before starting', 'upfront payment',
+  'cuota de inscripcion', 'tarifa de inscripcion', 'cuota de registro', 'pago inicial', 'deposito inicial',
+  'taxa de treinamento', 'taxa de inscricao', 'taxa de adesao', 'taxa de cadastro',
+  'frais de dossier', 'frais d inscription', 'frais de formation', 'frais de traitement',
+  'biaya pelatihan', 'biaya pendaftaran', 'uang pendaftaran',
+  'registration ke liye', 'fees jama', 'jama karein', 'jama karna',
 ]
+const UPFRONT_PAYMENT_RAW_TERMS = ['报名费', '培训费', '押金', '保证金', '会费', '工本费', '服务费', '手续费', '注册费', '가입비', '보증금', '수수료']
+const NO_VETTING_RAW_TERMS = ['无需面试', '免面试', '无面试', '不需要面试', '面接なし', '면접 없이', '면접없이']
 
 const NO_VETTING_TERMS = [
-  'no interview',
-  'without interview',
-  'skip interview',
-  'no exam',
-  'no screening',
-  'walang interview',
-  'walang exam',
+  'no interview', 'without interview', 'skip interview', 'no exam', 'no screening', 'no assessment',
+  'walang interview', 'walang exam',
+  'sin entrevista', 'sem entrevista', 'sans entretien', 'tanpa wawancara', 'senza colloquio', 'ohne vorstellungsgesprach',
+  'koi interview nahi', 'bina interview', 'interview nahi',
+]
+
+const OFF_PLATFORM_MESSAGING_TERMS = [
+  'discord', 'wechat', 'we chat', 'weixin', 'skype', 'kakao', 'kakaotalk', 'snapchat', 'snap chat',
+  'signal app', 'on signal', 'via signal', 'signal messenger', 'add me on signal', 'message on signal', 'signal number',
+  'line app', 'line id', 'line official', 'add me on line', 'message on line', 'chat on line', 'reach me on line',
+  'facebook messenger', 'fb messenger', 'instagram dm', 'ig dm', 'dm on instagram', 'dm me on ig', 'dm us on',
+  'google chat', 'gchat', 'google hangouts', 'hangouts', 'session app', 'threema', 'wickr',
+  'linktree', 'linktr ee', 'text to apply', 'sms only', 'text me at', 'text us at', 'text to start',
+]
+const OFF_PLATFORM_RAW_TERMS = ['微信', '加微信', '电报', '텔레그램', '왓츠앱', 'ватсап', 'телеграм', 'واتساب', 'تلغرام']
+
+function isSmsOnlyFunnel(contactMethod?: string, applicationPath?: string) {
+  const combinedRaw = `${contactMethod || ''} ${applicationPath || ''}`
+  const hasUrl = /https?:\/\/|www\.|@|\.[a-z]{2,}/i.test(combinedRaw)
+  const hasPhone = /(?:\+?\d[\d ()–—-]{7,}\d)/.test(combinedRaw)
+  const smsWords = /\b(text|sms|call or text|txt|text me|text us)\b/i.test(combinedRaw)
+  return hasPhone && !hasUrl && smsWords
+}
+
+const MONEY_MULE_TERMS = [
+  'deposit the check', 'deposit this check', 'deposit the cheque', 'cash the check', 'cash this check', 'mobile deposit the check',
+  'wire the remaining', 'wire the balance', 'wire the funds', 'wire back', 'transfer the remaining', 'transfer the balance',
+  'forward the payment', 'forward the funds', 'send the balance', 'send back the difference', 'keep your commission and wire',
+  'reship', 're ship', 'reshipping', 'forward packages', 'forward parcels', 'receive packages and forward', 'receive parcels and forward',
+  're label packages', 'relabel packages', 'package forwarding', 'parcel forwarding', 'process payments on our behalf',
+  'money transfer agent', 'payment processing agent', 'mystery shopper', 'secret shopper',
+  'western union', 'moneygram', 'wiring', 'wire to', 'deposit into your account', 'deposit funds into your',
+  'withdraw it then', 'withdraw and wire', 'withdraw the funds and', 'keep the difference', 'keep your commission and',
+  'evaluate a money transfer', 'money transfer service', 'test recipient', 'evaluate western union',
+]
+const CRYPTO_DEPOSIT_TERMS = [
+  'deposit usdt', 'deposit btc', 'deposit eth', 'deposit crypto', 'load usdt', 'fund your wallet', 'fund the wallet',
+  'company wallet', 'company trading', 'trading platform to activate', 'crypto deposit', 'deposit into the platform',
+  'top up your account with', 'recharge your account with', 'deposit to your trading',
+]
+const BUY_TO_WORK_TERMS = [
+  'buy your', 'purchase your', 'buy the materials', 'buy materials', 'purchase materials', 'buy your materials',
+  'buy samples', 'purchase samples', 'buy gift cards', 'purchase gift cards', 'buy promotional', 'purchase promotional',
+  'assembly kit', 'sample kit', 'inventory purchase', 'buy inventory', 'buy equipment first', 'purchase the starter',
+]
+const CREDENTIAL_HARVEST_TERMS = [
+  'social security number', 'ssn and', 'your ssn', 'bank login', 'online banking username', 'online banking password',
+  'banking username', 'banking password', 'account password', 'card pin', 'debit card pin', 'one time password', 'otp code',
+  'photo of your id holding', 'selfie holding your id', 'selfie with your id', 'routing number and account number',
+  'mother maiden name and', 'full card number and cvv',
 ]
 
 // Matched as tokens through the negation guard so "no scam reports found" is clean.
@@ -171,7 +268,14 @@ function isFreeEmailDomain(domain?: string) {
   ].includes(domain))
 }
 
+// Broker-assigned evidence types that genuinely carry official-strength trust. The
+// STRONGEST tiers key on this structured type (or a trusted host), never on the
+// snippet text alone — otherwise a scammer's own web copy ("Trust: official") on a
+// generic search result would forge trust and disarm the safety floors.
+const STRUCTURED_OFFICIAL_TYPES = new Set(['Official Company Presence', 'Verified Local Presence', 'Knowledge Graph'])
+
 function classifySourceQuality(item: EvidenceItem): NonNullable<EvidenceItem['sourceQuality']> {
+  const structuredType = String(item.type || '')
   const labelText = normalizeText(`${item.source} ${item.type} ${item.snippet}`)
   const text = normalizeText(`${labelText} ${item.url || ''}`)
   const host = hostnameFromUrl(item.url)
@@ -179,10 +283,7 @@ function classifySourceQuality(item: EvidenceItem): NonNullable<EvidenceItem['so
 
   if (text.includes('risk signal') || text.includes('apply path mismatch')) return 'risky'
   if (
-    text.includes('official company presence') ||
-    text.includes('knowledge graph') ||
-    text.includes('trust official') ||
-    text.includes('verified local') ||
+    STRUCTURED_OFFICIAL_TYPES.has(structuredType) ||
     (/\b(careers page|careers listing|company website|official careers)\b/.test(labelText) && host && !isWeakHost(host))
   ) return 'official'
   if (
@@ -211,7 +312,8 @@ function classifySourceType(item: EvidenceItem): NonNullable<EvidenceItem['sourc
 function classifyTrustLevel(item: EvidenceItem): NonNullable<EvidenceItem['trustLevel']> {
   const text = normalizeText(`${item.type} ${item.snippet}`)
   if (text.includes('risk signal') || text.includes('mismatch') || hasUnnegatedTerm(text, REPUTATION_RISK_TERMS)) return 'risk'
-  if (text.includes('official company presence') || text.includes('verified local') || text.includes('trust official') || text.includes('verified local')) return 'high'
+  // High trust requires the structured broker type, not a snippet substring.
+  if (STRUCTURED_OFFICIAL_TYPES.has(String(item.type || ''))) return 'high'
   if (text.includes('company check') || text.includes('comparable jobs') || text.includes('reputable job board')) return 'medium'
   return 'low'
 }
@@ -434,13 +536,24 @@ export function normalizeCompensation(value: string): NormalizedCompensation | n
             ? 'AUD'
             : 'PHP'
   const lower = text.toLowerCase()
-  const period: NormalizedCompensation['period'] = lower.includes('hour')
+  // Prefer the explicit "per X" / "X-ly" pattern next to the amount over a bare
+  // substring, so incidental words ("steps up with logged hours", "40-hour week")
+  // don't hijack the period. "$720 per week ... hours" is weekly, not hourly.
+  const period: NormalizedCompensation['period'] = /\bper hour\b|\bhourly\b|\/\s?hour\b|\/\s?hr\b|\bper hr\b/.test(lower)
     ? 'hour'
-    : lower.includes('week') || hasWeeklyToken
+    : /\bper week\b|\bweekly\b|\/\s?wk\b|\bper wk\b/.test(lower) || hasWeeklyToken
       ? 'week'
-      : lower.includes('year') || lower.includes('annum') || lower.includes('annual')
+      : /\bper (?:year|annum)\b|\bannually\b|\byearly\b|\bper annum\b/.test(lower)
         ? 'year'
-        : 'month'
+        : /\bper month\b|\bmonthly\b|\bper mo\b/.test(lower)
+          ? 'month'
+          : lower.includes('hour')
+            ? 'hour'
+            : lower.includes('week')
+              ? 'week'
+              : lower.includes('year') || lower.includes('annum') || lower.includes('annual')
+                ? 'year'
+                : 'month'
 
   const monthlyAmount = period === 'hour'
     ? Math.round(amount * 173.2)
@@ -680,10 +793,28 @@ function deriveIntelligence(
     /risk signal|very recent|new certificate/i.test(item.snippet || '')
   ))
   const applicationPathText = normalizeText(extractedClaims.applicationPath)
+  const noVettingRaw = `${extractedClaims.applicationPath} ${extractedClaims.role}`
   const claimsNoInterview = NO_VETTING_TERMS.some(term => hasTokenPhrase(applicationPathText, term)) ||
-    applicationPathText.includes('no interview')
+    applicationPathText.includes('no interview') ||
+    hasRawPhrase(noVettingRaw, NO_VETTING_RAW_TERMS)
   const paymentContext = `${extractedClaims.applicationPath} ${extractedClaims.salary} ${extractedClaims.role}`
-  const claimsUpfrontPayment = hasUnnegatedTerm(paymentContext, UPFRONT_PAYMENT_TERMS)
+  const claimsUpfrontPayment = hasUnnegatedTerm(paymentContext, UPFRONT_PAYMENT_TERMS) ||
+    hasRawPhrase(paymentContext, UPFRONT_PAYMENT_RAW_TERMS)
+  // A legitimate employer NEVER charges an employee-job fee (equipment/security deposit,
+  // training/registration/activation fee). A franchise/reseller BUSINESS purchase
+  // (franchise fee, license, starter kit) can be legitimate-but-caution. Only the latter
+  // qualifies for the franchise-caution exemption to the advance-fee floor.
+  const claimsEmployeeJobFee = hasUnnegatedTerm(paymentContext, [
+    'equipment deposit', 'security deposit', 'refundable deposit', 'deposit required', 'deposit to unlock', 'with deposit',
+    'training fee', 'training charge', 'training cost', 'registration fee', 'registration charge',
+    'activation fee', 'activation charge', 'processing fee', 'processing charge', 'application fee', 'application charge',
+    'onboarding fee', 'onboarding charge', 'onboarding cost', 'account fee', 'account charge', 'service fee', 'service charge',
+  ]) || hasRawPhrase(paymentContext, UPFRONT_PAYMENT_RAW_TERMS)
+  const claimsMoneyMule = hasUnnegatedTerm(paymentContext, MONEY_MULE_TERMS)
+  const claimsCryptoDeposit = hasUnnegatedTerm(paymentContext, CRYPTO_DEPOSIT_TERMS)
+  const claimsBuyToWork = hasUnnegatedTerm(paymentContext, BUY_TO_WORK_TERMS)
+  const claimsCredentialHarvest = hasUnnegatedTerm(paymentContext, CREDENTIAL_HARVEST_TERMS)
+  const hasHardFinancialVector = claimsMoneyMule || claimsCryptoDeposit || claimsCredentialHarvest
   const contractorDisclosureText = normalizeText([
     extractedClaims.role,
     extractedClaims.salary,
@@ -699,6 +830,14 @@ function deriveIntelligence(
     'project dependent',
     'hours vary',
     'not guaranteed',
+    // Commission-only / variable-income disclosures are a "know what you're signing up
+    // for" caution, like variable-hours contracting.
+    'commission only',
+    'commission based',
+    'uncapped commission',
+    'draw against commission',
+    'depending on closed deals',
+    'pay depends on',
   ].some(term => contractorDisclosureText.includes(term))
   const officialSourceMatches = findOfficialSourceMatches(extractedClaims, evidence)
   const globalHiringContext = hasGlobalHiringContext(extractedClaims, evidence)
@@ -709,7 +848,10 @@ function deriveIntelligence(
   const hasTelegramContact = hasUnnegatedTerm(offPlatformContext, ['telegram', 't me'])
   const hasWhatsAppContact = hasUnnegatedTerm(offPlatformContext, ['whatsapp', 'wa me'])
   const hasViberContact = hasUnnegatedTerm(offPlatformContext, ['viber'])
-  const hasOffPlatformContact = hasTelegramContact || hasWhatsAppContact || hasViberContact
+  const hasOtherOffPlatformChannel = hasUnnegatedTerm(offPlatformContext, OFF_PLATFORM_MESSAGING_TERMS) ||
+    hasRawPhrase(offPlatformContext, OFF_PLATFORM_RAW_TERMS) ||
+    isSmsOnlyFunnel(extractedClaims.contactMethod, extractedClaims.applicationPath)
+  const hasOffPlatformContact = hasTelegramContact || hasWhatsAppContact || hasViberContact || hasOtherOffPlatformChannel
   const submittedApplyPathTrust = deriveSubmittedApplyPathTrust(extractedClaims.applicationPath || '', officialEvidence)
   const { hasSubmittedOfficialApplyPath, hasSubmittedTrustedApplyPath } = submittedApplyPathTrust
   const companyProfileMode = inferCompanyProfileMode(extractedClaims, evidence, verifiedLocalEvidence)
@@ -845,9 +987,15 @@ function deriveIntelligence(
   const benchmarkCurrencyMatches = !claimedSalary || benchmark.currency === claimedSalary.currency
   const comparableMonthly = liveComparableMedian || (benchmarkCurrencyMatches ? benchmark.comparableMonthlyAmount : undefined)
   const salaryRatio = claimedSalary && comparableMonthly ? Number((claimedSalary.monthlyAmount / comparableMonthly).toFixed(2)) : undefined
+  // A weekly quote is only anomalous when it is also far above the comparable band
+  // (or, absent a benchmark, an implausibly high monthly-equivalent). A modest weekly
+  // wage (cruise crew, au-pair stipend, hourly-paid-weekly) is a normal pay schedule,
+  // not a scam signal — the bare weekly PERIOD no longer forces an anomaly.
+  const hasOfficialOrReputableEvidence = officialEvidence.length > 0 || verifiedLocalEvidence.length > 0 ||
+    evidence.some(item => item.sourceQuality === 'reputable' || item.sourceQuality === 'official')
   const salaryAnomalous = Boolean(claimedSalary && (
-    claimedSalary.period === 'week' ||
-    (typeof salaryRatio === 'number' && salaryRatio >= 2.5)
+    (typeof salaryRatio === 'number' && salaryRatio >= 2.5) ||
+    (typeof salaryRatio !== 'number' && claimedSalary.period === 'week' && claimedSalary.monthlyAmount >= 25000 && !hasOfficialOrReputableEvidence)
   ))
 
   // Live comparables give a high-confidence anomaly read; a seeded band or a
@@ -1046,6 +1194,62 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Upfront payment', 22, 'Upfront fee, deposit, or purchase request is a direct financial-loss vector.', 'process_upfront_payment')
   }
 
+  if (claimsMoneyMule) {
+    addSignal(signals, {
+      id: 'process_money_mule',
+      label: 'Money-mule / reshipping pattern',
+      direction: 'risk',
+      severity: 'high',
+      confidence: 'high',
+      weight: 34,
+      evidenceIds: [],
+      rationale: 'The role asks the applicant to receive and redistribute money or reship packages, a money-laundering pattern.',
+    })
+    score = applyTrace(scoreTrace, score, 'Money mule', 34, 'Receiving and forwarding money or packages is a laundering / fake-check pattern.', 'process_money_mule')
+  }
+
+  if (claimsCryptoDeposit) {
+    addSignal(signals, {
+      id: 'process_crypto_deposit',
+      label: 'Crypto funding required to activate',
+      direction: 'risk',
+      severity: 'high',
+      confidence: 'high',
+      weight: 32,
+      evidenceIds: [],
+      rationale: 'Requiring the applicant to deposit or fund crypto to "activate" is a direct financial-loss vector.',
+    })
+    score = applyTrace(scoreTrace, score, 'Crypto deposit', 32, 'Applicant-funded crypto deposit to activate is a financial-loss scam.', 'process_crypto_deposit')
+  }
+
+  if (claimsBuyToWork) {
+    addSignal(signals, {
+      id: 'process_buy_to_work',
+      label: 'Must purchase materials/kit/gift cards to work',
+      direction: 'risk',
+      severity: 'high',
+      confidence: 'high',
+      weight: 26,
+      evidenceIds: [],
+      rationale: 'Requiring a purchase of materials, kits, or gift cards before earning is a purchase/advance-fee scam.',
+    })
+    score = applyTrace(scoreTrace, score, 'Buy to work', 26, 'Buying materials, kits, or gift cards before earning is an advance-fee scam pattern.', 'process_buy_to_work')
+  }
+
+  if (claimsCredentialHarvest) {
+    addSignal(signals, {
+      id: 'process_credential_harvest',
+      label: 'Pre-hire credential / identity harvesting',
+      direction: 'risk',
+      severity: 'high',
+      confidence: 'high',
+      weight: 30,
+      evidenceIds: [],
+      rationale: 'Collecting bank logins, government IDs, or one-time codes before any hire is an identity/account-theft pattern.',
+    })
+    score = applyTrace(scoreTrace, score, 'Credential harvest', 30, 'Pre-hire collection of bank logins, IDs, or OTPs is a credential-theft pattern.', 'process_credential_harvest')
+  }
+
   if (staleEvidence.length > 0) {
     addSignal(signals, {
       id: 'stale_evidence',
@@ -1116,6 +1320,18 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Threat intel floor', 70 - score, 'Known phishing/malware intelligence match forces a high-risk verdict regardless of other context.')
   }
 
+  // Hard financial/identity-loss vectors: money-mule/reshipping, applicant-funded
+  // crypto, and pre-hire credential harvesting are scams regardless of any trust
+  // evidence (evidence can't launder a "deposit this check and wire the balance" ask).
+  if (hasHardFinancialVector && score < 80) {
+    const vectors = [
+      claimsMoneyMule ? 'money-mule/reshipping' : '',
+      claimsCryptoDeposit ? 'applicant-funded crypto' : '',
+      claimsCredentialHarvest ? 'pre-hire credential harvesting' : '',
+    ].filter(Boolean).join('; ')
+    score = applyTrace(scoreTrace, score, 'Financial/identity-vector floor', 80 - score, `Direct financial/identity-loss pattern (${vectors}) forces a high-risk verdict.`)
+  }
+
   // Impersonation stack: a mismatching apply path combined with independent
   // infrastructure or identity risk is a scam pattern, not a caution pattern.
   const hasImpersonationStack = mismatchEvidence.length > 0 && (
@@ -1127,20 +1343,52 @@ function deriveIntelligence(
     score = applyTrace(scoreTrace, score, 'Impersonation floor', 65 - score, 'Apply-domain mismatch layered with recruiter or domain-infrastructure risk matches employer-impersonation scams.')
   }
 
-  // Advance-fee floor: an upfront payment ask without strong corroborating
-  // evidence for the employer is the definitional advance-fee scam.
+  // Advance-fee floor: an upfront fee/deposit or buy-to-work ask forces high-risk when
+  // there is no strong corroboration AND a scam co-signal is present (unverifiable
+  // company, off-platform pivot, no interview, reputation risk). A NAMED, plausibly-real
+  // company charging a business/franchise/reseller fee lacks a co-signal, so it stays in
+  // the caution band (the +22/+26 signal still applies) rather than being forced high-risk.
   const hasStrongCorroborationEvidence = officialEvidence.length > 0 ||
     verifiedLocalEvidence.length > 0 ||
     evidence.some(item => item.sourceQuality === 'reputable' || item.sourceQuality === 'official')
-  if (claimsUpfrontPayment && !hasStrongCorroborationEvidence && score < 65) {
-    score = applyTrace(scoreTrace, score, 'Advance-fee floor', 65 - score, 'Upfront payment request from an employer without strong corroboration matches advance-fee scams.')
+  const companyIsUnverifiable = normalizeText(extractedClaims.company).includes('unknown') ||
+    normalizeText(extractedClaims.company).length <= 2
+
+  // Buy-to-work (materials / gift cards / samples) is a pure-loss scam pattern that
+  // legitimate employment never uses — force high-risk unconditionally.
+  if (claimsBuyToWork && score < 65) {
+    score = applyTrace(scoreTrace, score, 'Buy-to-work floor', 65 - score, 'Requiring the applicant to buy materials, kits, or gift cards to work is a purchase scam.')
+  }
+
+  // Upfront fee/deposit forces high-risk UNLESS it looks like a named, plausibly-real
+  // business charging a franchise/reseller fee (named company with at least a partial
+  // web footprint and no other scam co-signal) — that stays caution.
+  // Only a business-purchase fee (not an employee-job fee) from a named company with a
+  // web footprint and no scam co-signal qualifies as franchise-like caution.
+  const franchiseLikeCaution = !claimsEmployeeJobFee &&
+    !companyIsUnverifiable &&
+    byType('Company Check').length > 0 &&
+    !hasOffPlatformContact && !claimsNoInterview && reputationRiskEvidence.length === 0 &&
+    !hasHardFinancialVector
+  if (claimsUpfrontPayment && !hasStrongCorroborationEvidence && !franchiseLikeCaution && score < 65) {
+    score = applyTrace(scoreTrace, score, 'Advance-fee floor', 65 - score, 'Upfront fee or deposit request with no strong corroboration and no legitimate-business context matches advance-fee scams.')
+  }
+
+  // Unverifiable + off-platform floor: an unidentifiable company that funnels ALL
+  // contact to a personal messaging app with no corroborating evidence is the canonical
+  // off-platform recruitment scam, stronger than a caution-band off-platform case
+  // (which has official/reputable evidence).
+  if (companyIsUnverifiable && hasOffPlatformContact && !hasStrongCorroborationEvidence &&
+    byType('Company Check').length === 0 && score < 65) {
+    score = applyTrace(scoreTrace, score, 'Unverifiable off-platform floor', 65 - score, 'An unverifiable company steering all contact to a personal messaging app with no footprint is an off-platform scam.')
   }
 
   // Reputation scam-pattern floor: company-specific scam warnings combined with
   // any structural scam signal is a high-risk pattern, not a caution pattern.
   if (
     reputationRiskEvidence.length > 0 &&
-    (salaryAnomalous || hasOffPlatformContact || claimsNoInterview || claimsUpfrontPayment) &&
+    (salaryAnomalous || claimedSalary?.period === 'week' || hasOffPlatformContact || claimsNoInterview ||
+      claimsUpfrontPayment || claimsBuyToWork || hasHardFinancialVector) &&
     score < 65
   ) {
     score = applyTrace(scoreTrace, score, 'Reputation scam-pattern floor', 65 - score, 'Scam-warning reputation evidence combined with a structural scam signal forces a high-risk verdict.')
@@ -1152,10 +1400,20 @@ function deriveIntelligence(
   // one of these concerns is open.
   const hasFreshCorroboration = evidence.some(item => item.freshness === 'fresh' || item.freshness === 'recent')
   const hasStrongCorroboration = hasStrongCorroborationEvidence
+  // A no-interview flow is expected for app-based gig platforms and open-enrollment
+  // programs — but ONLY when the post shows an explicit alternative-vetting signal
+  // (background check, aptitude test, orientation, online sign-up) AND broker-verified
+  // official evidence corroborates. A plain "no interview, direct onboarding" at a real
+  // company is still anomalous and stays caution.
+  const hasAlternativeVettingSignal = /\b(background check|aptitude test|skills? (?:test|assessment)|open enrollment|orientation|sign up online|app[- ]based|gig|shopper|driver partner|onboarding assessment|drug (?:test|screen))\b/i
+    .test(`${extractedClaims.applicationPath} ${extractedClaims.role}`)
+  const noInterviewExpectedGivenCorroboration = claimsNoInterview && hasStrongCorroboration && hasAlternativeVettingSignal &&
+    !hasOffPlatformContact && !claimsUpfrontPayment && !claimsBuyToWork && !hasHardFinancialVector &&
+    mismatchEvidence.length === 0 && reputationRiskEvidence.length === 0 && !salaryAnomalous
   const verificationConcerns: string[] = []
   if (hasOffPlatformContact) verificationConcerns.push('off-platform recruiter contact')
-  if (claimsNoInterview) verificationConcerns.push('no-interview hiring flow')
-  if (claimsUpfrontPayment) verificationConcerns.push('upfront fee, deposit, or purchase request')
+  if (claimsNoInterview && !noInterviewExpectedGivenCorroboration) verificationConcerns.push('no-interview hiring flow')
+  if (claimsUpfrontPayment || claimsBuyToWork) verificationConcerns.push('upfront fee, deposit, or purchase request')
   if (salaryAnomalous) verificationConcerns.push('salary far outside comparable market signals')
   if (newDomainRiskEvidence.length > 0) verificationConcerns.push('newly registered domain')
   if (recruiterIdentity.status === 'risky') verificationConcerns.push('recruiter identity mismatch or free-mail contact')

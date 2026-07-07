@@ -20,6 +20,8 @@
  * ≥2.5x the comparable band is treated as implausible for the level.
  */
 
+import { REDTEAM_CASES } from './redteam-cases.mjs'
+
 export const FIXED_NOW = Date.parse('2026-07-01T00:00:00.000Z')
 
 // ---------------------------------------------------------------------------
@@ -905,6 +907,25 @@ addVariantOf('risk.noevidence.telegram-fee.1', { id: 'risk.noevidence.telegram-f
 addVariantOf('risk.lookalike.domain.1', { id: 'risk.lookalike.domain.3', note: 'insurance brand', claims: { company: 'Veridian Bank', role: 'Fraud Review Assistant', salary: '$4,400 per month', applicationPath: 'https://veridianbank-verify.net/apply' }, evidence: [EV.official('Veridian Bank', 'veridianbank.com'), EV.applyMismatch('veridianbank-verify.net', 'veridianbank.com'), EV.newDomain('veridianbank-verify.net'), EV.certRecent('veridianbank-verify.net')] })
 addVariantOf('risk.threat.intel.1', { id: 'risk.threat.intel.4', note: 'courier brand lure', claims: { company: 'Arrow Courier Express', role: 'Delivery Slot Coordinator', salary: '$3,600 per month', applicationPath: 'https://arrow-courier-jobs.top/apply' }, evidence: [EV.threatIntel('https://arrow-courier-jobs.top/apply')] })
 addVariantOf('risk.impersonation.brand.1', { id: 'risk.impersonation.brand.4', note: 'pharma brand lure', claims: { company: 'Novaris Pharmaceuticals', role: 'Remote Data Steward', salary: '$5,500 per month', applicationPath: 'https://novaris-talent.org/apply', recruiterEmail: 'novaris.recruit@gmail.com' }, evidence: [EV.official('Novaris Pharmaceuticals', 'novaris.com'), EV.applyMismatch('novaris-talent.org', 'novaris.com'), EV.recruiterFreeMail('novaris.recruit@gmail.com')] })
+
+// ---------------------------------------------------------------------------
+// Adversarial red-team cases (multi-agent workflow, label-audited + execution-
+// verified). Imported and validated through the same makeCase() gate.
+// ---------------------------------------------------------------------------
+
+for (const definition of REDTEAM_CASES) {
+  cases.push(makeCase({
+    id: definition.id,
+    archetype: definition.archetype,
+    split: definition.split,
+    expected: definition.expected,
+    provenance: definition.provenance,
+    rationale: definition.rationale,
+    claims: definition.claims,
+    evidence: definition.evidence || [],
+    enrichmentRedFlags: definition.enrichmentRedFlags,
+  }))
+}
 
 // ---------------------------------------------------------------------------
 
