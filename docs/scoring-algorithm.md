@@ -74,28 +74,56 @@ live same-currency comparables, medium from seeded bands. The signal keeps its n
 
 ## Adversarial matching rules
 
-Text matching is hardened against the wordings scammers actually rotate through:
+Text matching is hardened against the wordings and evasions scammers actually use. All of
+it is deterministic and mirrored in both engine layers (`lib/audit-signals.mjs` and
+`lib/intelligence-v2.ts`).
 
+- **Unicode / homoglyph normalization:** `normalize` applies NFKC (folds fullwidth and
+  compatibility forms), strips zero-width characters, folds cross-script confusables
+  (Cyrillic/Greek → Latin, so `tеlegram` with a Cyrillic *е* becomes `telegram`), and
+  strips combining diacritics (so `cuota de inscripción` matches `cuota de inscripcion`).
 - **Token-boundary phrases** (`hasTokenPhrase`): matching happens on normalized,
   space-padded token sequences, so `t.me/handle` (→ ` t me `) is detected while the inside
   of "don't message" never is.
-- **Short links ARE the platform:** `t.me` → Telegram, `wa.me` → WhatsApp. Viber is a
-  first-class off-platform channel (`contact.viber_only`), reflecting PH scam patterns.
-- **Negation guard** (`hasUnnegatedTerm`): risk terms only fire when no negation token
-  (`no, never, not, without, dont, doesnt, wont, zero, beware, avoid, anti`) appears within
-  the six preceding tokens. "Pay the registration fee" fires; "we never ask for any
-  registration fee — beware of scammers" stays silent. Applied to fee/charge terms,
-  off-platform contact terms, and reputation risk words (`scam/fraud/fake/...`) in both
-  layers and in the evidence classifiers. Known imprecision: an unrelated negation shortly
-  before a risk term (e.g. "no exam needed, refundable deposit required") can suppress that
-  one term — composed floors (off-platform + no-vetting) cover the observed cases.
-- **No-vetting synonyms:** no interview, without/skip interview, no exam, no screening,
-  and Taglish `walang interview/exam`.
+- **Clause-boundary-aware negation with demand override** (`hasUnnegatedTerm` +
+  `tokenizeWithBoundaries`): a negation only suppresses a risk term inside its own clause
+  (scope ends at commas, periods, semicolons, dashes, and contrastive conjunctions), and a
+  payment-demand verb (`pay/send/deposit/wire/purchase/buy/…`) in the same clause fires the
+  term regardless of negation. So "we never ask for a fee" stays silent, but "beware of
+  scams, pay the activation fee" and "we do not overcharge. A refundable deposit is
+  required" both fire. Negation tokens are multilingual (English + fr/es/pt/it/id/hi/de).
+  **Matchers see RAW claim text** (not the ASCII-normalized view) so clause punctuation
+  survives. Acknowledged limit: nested double negation ("it is not the case that we do not
+  require a charge") is not parsed.
+- **Off-platform channels:** short links are the platform (`t.me`→Telegram, `wa.me`→
+  WhatsApp); Viber, Signal, Discord, WeChat, Line, Skype, Kakao, Snapchat, Google Chat,
+  Linktree, and SMS-only phone funnels are detected (`contact.off_platform_messaging`).
+  `'official'` no longer earns bare-substring trust (the "Line official account" collision),
+  and professional-apply-path trust is suppressed whenever an off-platform channel is present.
+- **No-vetting synonyms:** no/without/skip interview, no exam/screening/assessment, Taglish
+  `walang interview/exam`, and Spanish/Portuguese/French/Bahasa/Hinglish equivalents; CJK
+  and Hangul idioms (`无需面试`, `면접 없이`) via a raw-script scan.
 - **Fee generalization:** `{training|registration|activation|processing|application|
-  membership|placement|onboarding|handling|admin|upfront} × {fee|charge}` plus deposit /
-  purchase phrasings and `refundable deposit`.
-- **Weekly pay:** `/wk` counts as weekly; an hourly rate "paid weekly" is a pay schedule,
-  not a weekly salary quote.
+  membership|placement|onboarding|handling|admin|upfront|setup|account|service} ×
+  {fee|charge|cost}` plus deposit/purchase phrasings and the Spanish/Portuguese/French/
+  Bahasa/Hinglish + CJK/Hangul fee idioms.
+- **New scam-archetype detectors:** money-mule / reshipping / check-overpayment
+  (`process.money_mule`, +34), applicant-funded crypto (`process.crypto_deposit`, +32),
+  buy-to-work / gift-card (`process.buy_to_work`, +26), and pre-hire credential harvesting
+  (`process.credential_harvest`, +30) — each with a hard high-risk floor.
+- **Weekly pay:** period parsing prefers explicit `per X` / `X-ly` over incidental words
+  (so "$720 per week … logged hours" is weekly, not hourly); `/wk` counts as weekly; an
+  hourly rate "paid weekly" is a pay schedule, not a weekly quote.
+
+## Evidence-poisoning resistance
+
+Evidence snippets can contain attacker-planted text (a scammer's own web page saying
+"Trust: official"). The strongest trust tiers therefore key on the **broker-assigned
+evidence `type`** (`Official Company Presence`, `Verified Local Presence`, `Knowledge
+Graph`) or a trusted host — never on snippet substrings. A generic `Company Check` whose
+snippet merely *says* "official" classifies as `public`, so it cannot forge trust or disarm
+the advance-fee / verification floors. Reputation risk words are matched through the same
+negation guard, so "no scam reports found" reads as clean.
 
 ## Safety floors and ceilings (guardrails above all weights)
 
@@ -119,11 +147,21 @@ Intelligence v2 (after policy reconciliation):
 | Rule | Score |
 | --- | --- |
 | Known threat-intelligence match | ≥ 70 |
+| Financial/identity vector: money-mule, applicant-funded crypto, or credential harvesting | ≥ 80 |
+| Buy-to-work (materials / gift cards / samples) | ≥ 65 |
 | Impersonation stack: apply mismatch + (risky recruiter OR new domain OR fresh certificate) | ≥ 65 |
-| Advance fee: upfront payment ask without strong corroboration | ≥ 65 |
-| Reputation scam pattern: scam-warning news + structural scam signal | ≥ 65 |
+| Advance fee: upfront fee/deposit, no strong corroboration, not a named-business franchise fee | ≥ 65 |
+| Unverifiable company + off-platform channel + no footprint | ≥ 65 |
+| Reputation scam pattern: scam-warning news + structural scam signal (incl. weekly pay) | ≥ 65 |
 | Apply-path mismatch alone | ≥ 35 |
-| Verification floor: ANY open moderate concern (off-platform contact, no interview, salary anomaly, new domain, risky recruiter, stale-only evidence, weak-only corroboration, contractor terms, upfront fee) | ≥ 35 (cannot be `safe`) |
+| Verification floor: ANY open moderate concern (off-platform contact, no interview\*, salary anomaly, new domain, risky recruiter, stale-only evidence, weak-only corroboration, contractor/commission terms, upfront fee) | ≥ 35 (cannot be `safe`) |
+
+\* A no-interview flow is waived as a concern only when broker-verified official evidence
+corroborates the employer AND an explicit alternative-vetting signal is present (background
+check, aptitude test, orientation, online sign-up) — e.g. gig platforms and open-enrollment
+apprenticeships. A named business charging a franchise/reseller *business* fee stays caution
+(not high-risk), but an *employee-job* fee (equipment/training/registration deposit) always
+floors to high-risk.
 
 The verification floor encodes the product stance: trust evidence can lower a score
 *within* the caution band, but a report cannot certify a post as `safe` while a concern
@@ -176,12 +214,15 @@ Invariants are enforced by test/score-trace.test.mjs across the full labeled dat
 
 ## Measurement harness and dataset
 
-- `test/fixtures/scoring-dataset.mjs` — 150 labeled cases (48 safe / 44 caution / 58
-  high-risk) built from ~50 hand-labeled archetypes plus label-preserving surface
-  variants, including an adversarial family (short-link pivots, no-exam phrasing,
-  obfuscated charges, negation traps, held-out composed evasions). Splits (train 91 /
-  validation 24 / test 35) are assigned at the archetype level so near-duplicate
-  scenarios never leak across splits.
+- `test/fixtures/scoring-dataset.mjs` — 208 labeled cases (56 safe / 55 caution / 97
+  high-risk) built from hand-labeled archetypes plus label-preserving surface variants,
+  plus 58 adversarial cases in `test/fixtures/redteam-cases.mjs` harvested by a
+  multi-agent red-team workflow (11 attack dimensions, independently label-audited and
+  execution-verified). Splits (train 133 / validation 32 / test 43) are assigned at the
+  archetype level so near-duplicate scenarios never leak across splits.
+- `node scripts/eval-scenarios.mjs <file.json>` — runs arbitrary `{claims, evidence,
+  expected}` scenarios through the real engine, for execution-verifying red-team
+  candidates before folding them into the dataset.
 - `node scripts/score-accuracy.mjs` — confusion matrix, per-class precision/recall/F1,
   macro-F1 per split, misclassification dump with trace steps. `--json` for machine
   output, `--update-baseline` to record the gate, `--sweep` for threshold calibration.
