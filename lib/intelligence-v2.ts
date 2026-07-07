@@ -120,6 +120,17 @@ const NO_VETTING_TERMS = [
   'walang exam',
 ]
 
+// Matched as tokens through the negation guard so "no scam reports found" is clean.
+const REPUTATION_RISK_TERMS = [
+  'scam', 'scams', 'scammer', 'scammers',
+  'fraud', 'fraudulent',
+  'fake',
+  'impersonation', 'impersonating', 'impersonates',
+  'phishing',
+  'lawsuit', 'lawsuits',
+  'warning', 'warnings',
+]
+
 function hostnameFromUrl(url?: string) {
   if (!url) return undefined
   try {
@@ -184,7 +195,7 @@ function classifySourceQuality(item: EvidenceItem): NonNullable<EvidenceItem['so
 }
 
 function isWeakHost(host: string) {
-  return /\b(directory|mirror|scrape|jobsora|jooble|simplyhired|careerjet)\b/.test(host)
+  return /\b(directory|mirror|scrape|jobsora|jooble|simplyhired|careerjet|talent|trabajo)\b/.test(host)
 }
 
 function classifySourceType(item: EvidenceItem): NonNullable<EvidenceItem['sourceType']> {
@@ -199,7 +210,7 @@ function classifySourceType(item: EvidenceItem): NonNullable<EvidenceItem['sourc
 
 function classifyTrustLevel(item: EvidenceItem): NonNullable<EvidenceItem['trustLevel']> {
   const text = normalizeText(`${item.type} ${item.snippet}`)
-  if (text.includes('risk signal') || text.includes('mismatch') || text.includes('scam') || text.includes('fraud')) return 'risk'
+  if (text.includes('risk signal') || text.includes('mismatch') || hasUnnegatedTerm(text, REPUTATION_RISK_TERMS)) return 'risk'
   if (text.includes('official company presence') || text.includes('verified local') || text.includes('trust official') || text.includes('verified local')) return 'high'
   if (text.includes('company check') || text.includes('comparable jobs') || text.includes('reputable job board')) return 'medium'
   return 'low'
@@ -649,7 +660,10 @@ function deriveIntelligence(
   const mismatchEvidence = [...applyPathMismatchEvidence, ...domainMismatchEvidence]
   const inputConflictEvidence = byType('Input Conflict')
   const hasInputConflict = inputConflictEvidence.length > 0 || redFlags.some(flag => /input conflict|resolved job page|submitted .* does not match/i.test(flag))
-  const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && /risk signal|scam|fraud|fake|impersonat|phishing|lawsuit|warning/i.test(item.snippet || ''))
+  const reputationRiskEvidence = evidence.filter(item => item.type === 'Reputation' && (
+    /risk signal/i.test(item.snippet || '') ||
+    hasUnnegatedTerm(item.snippet || '', REPUTATION_RISK_TERMS)
+  ))
   const staleEvidence = evidence.filter(item => item.freshness === 'stale')
   const weakEvidence = evidence.filter(item => item.sourceQuality === 'weak')
   const threatIntelEvidence = evidence.filter(item => (

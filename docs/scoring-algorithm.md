@@ -55,7 +55,7 @@ V2 signals cover the same ground plus derived analyses: `company_official_match`
 
 ## Confidence-aware scoring
 
-A base-engine signal's effective contribution is `weight × confidence multiplier`:
+A signal's effective contribution is `weight × confidence multiplier` in BOTH layers:
 
 | Confidence | Multiplier |
 | --- | --- |
@@ -64,10 +64,38 @@ A base-engine signal's effective contribution is `weight × confidence multiplie
 | low | 0.60 |
 
 Rationale: a low-confidence detection (e.g. fallback OCR, fuzzy text match) should move
-the score less than a structured, high-confidence one (e.g. RDAP domain age). Implemented
-in `effectiveSignalWeight()` (lib/audit-signals.mjs). V2 signal weights are hand-tuned
-integers and are not confidence-scaled (the `IntelligenceSignal` schema has no confidence
-field); their reliability is instead encoded in the weights themselves.
+the score less than a structured, high-confidence one (e.g. RDAP domain age). Base engine:
+`effectiveSignalWeight()` (lib/audit-signals.mjs). V2: every `IntelligenceSignal` carries a
+`confidence` field — structured domain/email/maps checks and explicit claims are high;
+token-overlap heuristics, seeded benchmarks, and news-language reads are medium;
+freshness/source-quality nudges are low. Salary-anomaly confidence is dynamic: high with
+live same-currency comparables, medium from seeded bands. The signal keeps its nominal
+`weight`; the trace records the scaled (effective) delta.
+
+## Adversarial matching rules
+
+Text matching is hardened against the wordings scammers actually rotate through:
+
+- **Token-boundary phrases** (`hasTokenPhrase`): matching happens on normalized,
+  space-padded token sequences, so `t.me/handle` (→ ` t me `) is detected while the inside
+  of "don't message" never is.
+- **Short links ARE the platform:** `t.me` → Telegram, `wa.me` → WhatsApp. Viber is a
+  first-class off-platform channel (`contact.viber_only`), reflecting PH scam patterns.
+- **Negation guard** (`hasUnnegatedTerm`): risk terms only fire when no negation token
+  (`no, never, not, without, dont, doesnt, wont, zero, beware, avoid, anti`) appears within
+  the six preceding tokens. "Pay the registration fee" fires; "we never ask for any
+  registration fee — beware of scammers" stays silent. Applied to fee/charge terms,
+  off-platform contact terms, and reputation risk words (`scam/fraud/fake/...`) in both
+  layers and in the evidence classifiers. Known imprecision: an unrelated negation shortly
+  before a risk term (e.g. "no exam needed, refundable deposit required") can suppress that
+  one term — composed floors (off-platform + no-vetting) cover the observed cases.
+- **No-vetting synonyms:** no interview, without/skip interview, no exam, no screening,
+  and Taglish `walang interview/exam`.
+- **Fee generalization:** `{training|registration|activation|processing|application|
+  membership|placement|onboarding|handling|admin|upfront} × {fee|charge}` plus deposit /
+  purchase phrasings and `refundable deposit`.
+- **Weekly pay:** `/wk` counts as weekly; an hourly rate "paid weekly" is a pay schedule,
+  not a weekly salary quote.
 
 ## Safety floors and ceilings (guardrails above all weights)
 
@@ -148,10 +176,12 @@ Invariants are enforced by test/score-trace.test.mjs across the full labeled dat
 
 ## Measurement harness and dataset
 
-- `test/fixtures/scoring-dataset.mjs` — 134 labeled cases (45 safe / 43 caution / 46
-  high-risk) built from ~40 hand-labeled archetypes plus label-preserving surface
-  variants. Splits (train 80 / validation 22 / test 32) are assigned at the archetype
-  level so near-duplicate scenarios never leak across splits.
+- `test/fixtures/scoring-dataset.mjs` — 150 labeled cases (48 safe / 44 caution / 58
+  high-risk) built from ~50 hand-labeled archetypes plus label-preserving surface
+  variants, including an adversarial family (short-link pivots, no-exam phrasing,
+  obfuscated charges, negation traps, held-out composed evasions). Splits (train 91 /
+  validation 24 / test 35) are assigned at the archetype level so near-duplicate
+  scenarios never leak across splits.
 - `node scripts/score-accuracy.mjs` — confusion matrix, per-class precision/recall/F1,
   macro-F1 per split, misclassification dump with trace steps. `--json` for machine
   output, `--update-baseline` to record the gate, `--sweep` for threshold calibration.
