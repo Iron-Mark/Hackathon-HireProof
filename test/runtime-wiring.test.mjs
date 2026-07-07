@@ -1184,8 +1184,12 @@ test('audit scoring uses normalized evidence-weighted signals', async () => {
   assert.match(signals, /sourceTier/)
   assert.match(signals, /entity\.input_conflict/)
   assert.match(signals, /salary\.implausible_weekly_entry_role/)
-  assert.match(signals, /score = Math\.max\(score, 80\)/)
-  assert.match(signals, /score = Math\.min\(score, 30\)/)
+  // Pattern floors/ceilings are applied through the traced floor()/ceiling()
+  // helpers so the score and its trace can never diverge.
+  assert.match(signals, /floor\(80, 'Critical scam-pattern floor'/)
+  assert.match(signals, /ceiling\(30, 'Official-surface ceiling'/)
+  assert.match(signals, /traceAuditSignals/)
+  assert.match(signals, /effectiveSignalWeight/)
 })
 
 test('redis-backed services trim production environment variables before client creation', async () => {
