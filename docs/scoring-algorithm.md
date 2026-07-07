@@ -79,9 +79,22 @@ it is deterministic and mirrored in both engine layers (`lib/audit-signals.mjs` 
 `lib/intelligence-v2.ts`).
 
 - **Unicode / homoglyph normalization:** `normalize` applies NFKC (folds fullwidth and
-  compatibility forms), strips zero-width characters, folds cross-script confusables
-  (Cyrillic/Greek → Latin, so `tеlegram` with a Cyrillic *е* becomes `telegram`), and
-  strips combining diacritics (so `cuota de inscripción` matches `cuota de inscripcion`).
+  compatibility forms), strips zero-width characters, collapses letter-spaced evasion
+  (`t-e-l-e-g-r-a-m` → `telegram`), folds cross-script confusables (Cyrillic/Greek → Latin,
+  so `tеlegram` with a Cyrillic *е* becomes `telegram`), and strips combining diacritics
+  (so `cuota de inscripción` matches `cuota de inscripcion`). A **separate `rawFolded` path**
+  (NFKC + lowercase only, *no* confusable-fold or diacritic-strip) is used for non-Latin
+  idiom matching so precomposed CJK/Hangul (`가입비`) and Cyrillic (`телеграм`) needles are
+  not corrupted before matching.
+- **Multilingual coverage:** fee, no-vetting, and off-platform idioms across English,
+  Tagalog, Spanish, Portuguese, French, Italian, German, Bahasa, Hinglish, plus raw-script
+  matching for CJK, Hangul, Cyrillic, Arabic, and Thai. Negation tokens are multilingual;
+  a strong **coercion** marker (`cannot`/`must`/`mandatory`) overrides a negation so
+  "you cannot start without the training fee" fires while "we never ask for a fee" stays silent.
+- **Ambiguous-channel disambiguation:** channels that are also work tools or job duties
+  (Discord, Skype, WeChat, Instagram DM, Google Chat) only count as an off-platform pivot
+  when a recruitment-pivot verb sits in the same clause, so "manage our Discord community"
+  (a job duty) and "we use Slack/Discord daily" (a work tool) do not flag.
 - **Token-boundary phrases** (`hasTokenPhrase`): matching happens on normalized,
   space-padded token sequences, so `t.me/handle` (→ ` t me `) is detected while the inside
   of "don't message" never is.
@@ -214,12 +227,13 @@ Invariants are enforced by test/score-trace.test.mjs across the full labeled dat
 
 ## Measurement harness and dataset
 
-- `test/fixtures/scoring-dataset.mjs` — 208 labeled cases (56 safe / 55 caution / 97
+- `test/fixtures/scoring-dataset.mjs` — 222 labeled cases (58 safe / 55 caution / 109
   high-risk) built from hand-labeled archetypes plus label-preserving surface variants,
-  plus 58 adversarial cases in `test/fixtures/redteam-cases.mjs` harvested by a
-  multi-agent red-team workflow (11 attack dimensions, independently label-audited and
-  execution-verified). Splits (train 133 / validation 32 / test 43) are assigned at the
-  archetype level so near-duplicate scenarios never leak across splits.
+  plus adversarial cases in `test/fixtures/redteam-cases.mjs`: 58 harvested by a multi-agent
+  red-team workflow (11 attack dimensions) and 14 regression guards for execution-verified
+  code-review findings — all independently label-audited. Splits (train 138 / validation
+  37 / test 47) are assigned at the archetype level so near-duplicate scenarios never leak
+  across splits.
 - `node scripts/eval-scenarios.mjs <file.json>` — runs arbitrary `{claims, evidence,
   expected}` scenarios through the real engine, for execution-verifying red-team
   candidates before folding them into the dataset.
@@ -257,6 +271,21 @@ To retrain after extending the dataset:
 node scripts/train-risk-weights.mjs   # refits, rewrites lib/risk-weights.generated.mjs,
                                       # prints the hand-tuned vs trained validation comparison
 ```
+
+## Known residuals
+
+Honest limits, kept as documented residuals rather than silently unhandled. All were found
+by an adversarial code review that reproduced each against the live engine:
+
+- **Leetspeak / digit substitution** (`Te1egram`, `f33`) is not folded — digit→letter
+  mapping would corrupt salary amounts, so it is deliberately out of scope.
+- **Emoji or unmapped-script characters mid-keyword** (`Tele😀gram`) split the token and can
+  evade a keyword; only *single*-character letter-spacing is collapsed.
+- **Nested double negation** ("it is not the case that we do not require a charge") is not
+  parsed by the clause-boundary negation model.
+- **Coverage is a curated list**, not exhaustive: languages/scripts and scam-archetype
+  wordings outside the lists above degrade to caution rather than high-risk. Extend the
+  term lists + dataset as new patterns appear.
 
 ## Reproducing the metrics
 

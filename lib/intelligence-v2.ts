@@ -85,13 +85,15 @@ function stripDiacritics(value: string) {
 }
 
 function normalizeText(value: string) {
-  return stripDiacritics(foldConfusables(String(value || '').normalize('NFKC')))
+  return stripDiacritics(foldConfusables(collapseSpacedLetters(String(value || '').normalize('NFKC'))))
     .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
-// Diacritic-folded raw string that keeps non-ASCII scripts, for multilingual idioms.
+// NFKC-composed raw string that keeps non-ASCII scripts intact (no confusable fold, no
+// NFD decomposition) so precomposed CJK/Hangul/Cyrillic idiom needles can match. Kept in
+// sync with lib/audit-signals.mjs.
 function rawFolded(value: string) {
-  return stripDiacritics(foldConfusables(String(value || '').normalize('NFKC'))).toLowerCase()
+  return String(value || '').normalize('NFKC').toLowerCase()
 }
 
 function hasRawPhrase(value: string, phrases: string[]) {
@@ -105,17 +107,21 @@ function hasTokenPhrase(value: string, phrase: string) {
 }
 
 const NEGATION_TOKENS = new Set([
-  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'anti', 'nor', 'none',
+  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'nor', 'none',
   'ne', 'pas', 'jamais', 'aucun', 'aucune', 'sans', 'nunca', 'ningun', 'ninguna', 'sin', 'nao', 'nenhum', 'sem',
   'tidak', 'tanpa', 'jangan', 'nahi', 'bina', 'kein', 'keine', 'nie', 'niemals',
 ])
 
-const DEMAND_TOKENS = new Set([
-  'pay', 'send', 'deposit', 'remit', 'wire', 'transfer', 'submit', 'purchase', 'buy', 'settle', 'load', 'reload',
+const COERCION_TOKENS = new Set([
+  'cannot', 'unable', 'must', 'mandatory', 'obligatory', 'compulsory',
 ])
 
+function collapseSpacedLetters(value: string) {
+  return String(value || '').replace(/\b(?:[a-z0-9][ .\-_]){3,}[a-z0-9]\b/gi, (m) => m.replace(/[ .\-_]/g, ''))
+}
+
 function tokenizeWithBoundaries(value: string) {
-  const marked = stripDiacritics(foldConfusables(String(value || '').normalize('NFKC')))
+  const marked = stripDiacritics(foldConfusables(collapseSpacedLetters(String(value || '').normalize('NFKC'))))
     .toLowerCase()
     .replace(/[,;:!?]+|\.(?=\s|$)|\s[-–—/]\s|\b(?:but|however|though|although|yet|whereas|nevertheless)\b/g, ' cbrk ')
     .replace(/[^a-z0-9 ]+/g, ' ')
@@ -124,27 +130,26 @@ function tokenizeWithBoundaries(value: string) {
   return marked ? marked.split(' ') : []
 }
 
-// Clause-boundary-aware negation with payment-demand override (kept in sync with
-// lib/audit-signals.mjs). A negation only suppresses within its own clause, and a
-// payment-demand verb in the same clause fires the term regardless of negation.
+// Clause-boundary-aware negation with a strong-coercion override (kept in sync with
+// lib/audit-signals.mjs). A negation only suppresses within its own clause; a coercion
+// marker ("cannot ... without the fee", "must pay") in the same clause overrides it.
 function hasUnnegatedTerm(value: string, terms: string[]) {
   const tokens = tokenizeWithBoundaries(value)
   for (const term of terms) {
     const parts = term.split(' ')
     for (let i = 0; i + parts.length <= tokens.length; i += 1) {
       if (!parts.every((part, k) => tokens[i + k] === part)) continue
+      // Negation only governs from BEFORE the term; coercion counts either direction.
       let negated = false
-      let demand = false
-      for (let j = i - 1; j >= 0; j -= 1) {
-        if (tokens[j] === 'cbrk') break
-        if (DEMAND_TOKENS.has(tokens[j])) demand = true
-        if (NEGATION_TOKENS.has(tokens[j])) { negated = true; break }
+      let coerced = false
+      for (let j = i - 1; j >= 0 && tokens[j] !== 'cbrk'; j -= 1) {
+        if (NEGATION_TOKENS.has(tokens[j])) negated = true
+        if (COERCION_TOKENS.has(tokens[j])) coerced = true
       }
-      for (let j = i + parts.length; j < tokens.length; j += 1) {
-        if (tokens[j] === 'cbrk') break
-        if (DEMAND_TOKENS.has(tokens[j])) demand = true
+      for (let j = i + parts.length; j < tokens.length && tokens[j] !== 'cbrk'; j += 1) {
+        if (COERCION_TOKENS.has(tokens[j])) coerced = true
       }
-      if (!negated || demand) return true
+      if (!negated || coerced) return true
     }
   }
   return false
@@ -160,9 +165,20 @@ const UPFRONT_PAYMENT_TERMS = [
   'frais de dossier', 'frais d inscription', 'frais de formation', 'frais de traitement',
   'biaya pelatihan', 'biaya pendaftaran', 'uang pendaftaran',
   'registration ke liye', 'fees jama', 'jama karein', 'jama karna',
+  'bearbeitungsgebuhr', 'schulungsgebuhr', 'anmeldegebuhr', 'vermittlungsgebuhr', 'kaution',
+  'quota di iscrizione', 'tassa di formazione', 'quota di adesione', 'cauzione',
+  'bayad sa registration', 'bayad sa training', 'registration bayad', 'training bayad', 'pambayad sa',
 ]
-const UPFRONT_PAYMENT_RAW_TERMS = ['报名费', '培训费', '押金', '保证金', '会费', '工本费', '服务费', '手续费', '注册费', '가입비', '보증금', '수수료']
-const NO_VETTING_RAW_TERMS = ['无需面试', '免面试', '无面试', '不需要面试', '面接なし', '면접 없이', '면접없이']
+const UPFRONT_PAYMENT_RAW_TERMS = [
+  '报名费', '培训费', '押金', '保证金', '会费', '工本费', '服务费', '手续费', '注册费', '가입비', '보증금', '수수료',
+  'регистрационный взнос', 'взнос', 'залог', 'плата за обучение', 'предоплата',
+  'رسوم التسجيل', 'رسوم التدريب', 'رسوم', 'عربون',
+  'ค่าสมัคร', 'ค่าธรรมเนียม', 'ค่าลงทะเบียน', 'ค่าฝึกอบรม', 'เงินมัดจำ',
+]
+const NO_VETTING_RAW_TERMS = [
+  '无需面试', '免面试', '无面试', '不需要面试', '面接なし', '면접 없이', '면접없이',
+  'без собеседования', 'بدون مقابلة', 'ไม่ต้องสัมภาษณ์',
+]
 
 const NO_VETTING_TERMS = [
   'no interview', 'without interview', 'skip interview', 'no exam', 'no screening', 'no assessment',
@@ -171,21 +187,43 @@ const NO_VETTING_TERMS = [
   'koi interview nahi', 'bina interview', 'interview nahi',
 ]
 
-const OFF_PLATFORM_MESSAGING_TERMS = [
-  'discord', 'wechat', 'we chat', 'weixin', 'skype', 'kakao', 'kakaotalk', 'snapchat', 'snap chat',
-  'signal app', 'on signal', 'via signal', 'signal messenger', 'add me on signal', 'message on signal', 'signal number',
-  'line app', 'line id', 'line official', 'add me on line', 'message on line', 'chat on line', 'reach me on line',
-  'facebook messenger', 'fb messenger', 'instagram dm', 'ig dm', 'dm on instagram', 'dm me on ig', 'dm us on',
-  'google chat', 'gchat', 'google hangouts', 'hangouts', 'session app', 'threema', 'wickr',
-  'linktree', 'linktr ee', 'text to apply', 'sms only', 'text me at', 'text us at', 'text to start',
+// Kept in sync with lib/audit-signals.mjs.
+const OFF_PLATFORM_UNAMBIGUOUS = [
+  'linktree', 'linktr ee', 'wickr', 'threema', 'session app', 'snapchat', 'snap chat', 'weixin',
+  'signal app', 'signal messenger', 'kakaotalk',
 ]
+const OFF_PLATFORM_AMBIGUOUS = [
+  'discord', 'skype', 'hangouts', 'google chat', 'gchat', 'wechat', 'we chat', 'kakao',
+  'signal', 'line', 'instagram dm', 'ig dm', 'facebook messenger', 'fb messenger', 'messenger',
+]
+const OFF_PLATFORM_PIVOT_VERBS = new Set([
+  'message', 'messages', 'msg', 'contact', 'add', 'dm', 'dms', 'reach', 'apply', 'applying', 'chat',
+  'ping', 'connect', 'join', 'inbox', 'pm', 'hmu', 'text', 'write', 'talk', 'find', 'reply',
+])
 const OFF_PLATFORM_RAW_TERMS = ['微信', '加微信', '电报', '텔레그램', '왓츠앱', 'ватсап', 'телеграм', 'واتساب', 'تلغرام']
+
+function hasAmbiguousChannelPivot(rawText: string) {
+  const tokens = tokenizeWithBoundaries(rawText)
+  for (const channel of OFF_PLATFORM_AMBIGUOUS) {
+    const parts = channel.split(' ')
+    for (let i = 0; i + parts.length <= tokens.length; i += 1) {
+      if (!parts.every((part, k) => tokens[i + k] === part)) continue
+      for (let j = i - 1; j >= 0 && tokens[j] !== 'cbrk'; j -= 1) {
+        if (OFF_PLATFORM_PIVOT_VERBS.has(tokens[j])) return true
+      }
+      for (let j = i + parts.length; j < tokens.length && tokens[j] !== 'cbrk'; j += 1) {
+        if (OFF_PLATFORM_PIVOT_VERBS.has(tokens[j])) return true
+      }
+    }
+  }
+  return false
+}
 
 function isSmsOnlyFunnel(contactMethod?: string, applicationPath?: string) {
   const combinedRaw = `${contactMethod || ''} ${applicationPath || ''}`
-  const hasUrl = /https?:\/\/|www\.|@|\.[a-z]{2,}/i.test(combinedRaw)
+  const hasUrl = /https?:\/\/|www\.[a-z]|@[a-z0-9.-]+\.[a-z]{2,}|\b[a-z0-9][a-z0-9-]*\.(?:com|net|org|io|co|ph|me|app|xyz|top|info|site|dev|ai|gov|edu|uk|au|ca|us|in)\b/i.test(combinedRaw)
   const hasPhone = /(?:\+?\d[\d ()–—-]{7,}\d)/.test(combinedRaw)
-  const smsWords = /\b(text|sms|call or text|txt|text me|text us)\b/i.test(combinedRaw)
+  const smsWords = /\b(?:sms|txt|text me|text us|call or text|text this|text to apply|apply by text)\b/i.test(combinedRaw)
   return hasPhone && !hasUrl && smsWords
 }
 
@@ -215,6 +253,21 @@ const CREDENTIAL_HARVEST_TERMS = [
   'banking username', 'banking password', 'account password', 'card pin', 'debit card pin', 'one time password', 'otp code',
   'photo of your id holding', 'selfie holding your id', 'selfie with your id', 'routing number and account number',
   'mother maiden name and', 'full card number and cvv',
+]
+
+// Article/synonym-tolerant fallbacks so "buy the parts kit", "buy prepaid cards", and
+// "top up your wallet with USDT" fire even though the exact bigram is not listed. Run on
+// normalizeText output. Kept in sync with lib/audit-signals.mjs.
+const BUY_TO_WORK_RE = /\b(?:buy|purchase|pay for|order)\b(?:\s+\w+){0,3}\s+(?:material|materials|kit|kits|sample|samples|supply|supplies|inventory|equipment|gift card|gift cards|prepaid card|prepaid cards|prepaid voucher|voucher|vouchers|starter pack|starter kit|assembly)\b/
+const CRYPTO_DEPOSIT_RE = /\b(?:deposit|fund|load|top up|recharge|send|transfer|pay|preload)\b(?:\s+\w+){0,4}\s+(?:usdt|usdc|btc|eth|bnb|trx|crypto|bitcoin|ethereum|tether|wallet|trading platform|trading account)\b/
+const MONEY_MULE_RE = /\b(?:deposit|cash|receive)\b(?:\s+\w+){0,4}\s+check\b(?:\s+\w+){0,8}\s+(?:wire|transfer|send|forward|western union|moneygram)\b|\b(?:reship|re ship|reshipping|forward|receive)\b(?:\s+\w+){0,3}\s+(?:package|packages|parcel|parcels)\b/
+
+// Business-purchase fees that a legitimate franchise/reseller model can charge (caution,
+// not high-risk). Everything else in UPFRONT_PAYMENT_TERMS is an employee-job fee that a
+// real employer never charges.
+const BUSINESS_PURCHASE_TERMS = [
+  'franchise fee', 'franchise charge', 'starter kit', 'software license', 'purchase software',
+  'reseller', 'distributor kit', 'dealership fee', 'licensing fee',
 ]
 
 // Matched as tokens through the negation guard so "no scam reports found" is clean.
@@ -800,24 +853,26 @@ function deriveIntelligence(
   const paymentContext = `${extractedClaims.applicationPath} ${extractedClaims.salary} ${extractedClaims.role}`
   const claimsUpfrontPayment = hasUnnegatedTerm(paymentContext, UPFRONT_PAYMENT_TERMS) ||
     hasRawPhrase(paymentContext, UPFRONT_PAYMENT_RAW_TERMS)
-  // A legitimate employer NEVER charges an employee-job fee (equipment/security deposit,
-  // training/registration/activation fee). A franchise/reseller BUSINESS purchase
-  // (franchise fee, license, starter kit) can be legitimate-but-caution. Only the latter
-  // qualifies for the franchise-caution exemption to the advance-fee floor.
-  const claimsEmployeeJobFee = hasUnnegatedTerm(paymentContext, [
-    'equipment deposit', 'security deposit', 'refundable deposit', 'deposit required', 'deposit to unlock', 'with deposit',
-    'training fee', 'training charge', 'training cost', 'registration fee', 'registration charge',
-    'activation fee', 'activation charge', 'processing fee', 'processing charge', 'application fee', 'application charge',
-    'onboarding fee', 'onboarding charge', 'onboarding cost', 'account fee', 'account charge', 'service fee', 'service charge',
-  ]) || hasRawPhrase(paymentContext, UPFRONT_PAYMENT_RAW_TERMS)
-  const claimsMoneyMule = hasUnnegatedTerm(paymentContext, MONEY_MULE_TERMS)
-  const claimsCryptoDeposit = hasUnnegatedTerm(paymentContext, CRYPTO_DEPOSIT_TERMS)
-  const claimsBuyToWork = hasUnnegatedTerm(paymentContext, BUY_TO_WORK_TERMS)
+  // A legitimate employer NEVER charges an employee-job fee. Derive it as "any upfront
+  // payment that is NOT a business-purchase fee" (single source of truth = UPFRONT_
+  // PAYMENT_TERMS), so a new fee synonym is treated as an employee fee by default and
+  // only the explicit business-purchase allow-list qualifies for the franchise exemption.
+  const claimsBusinessPurchaseFee = hasUnnegatedTerm(paymentContext, BUSINESS_PURCHASE_TERMS)
+  const claimsEmployeeJobFee = (claimsUpfrontPayment && !claimsBusinessPurchaseFee) ||
+    hasRawPhrase(paymentContext, UPFRONT_PAYMENT_RAW_TERMS)
+  const paymentNorm = normalizeText(paymentContext)
+  const claimsMoneyMule = hasUnnegatedTerm(paymentContext, MONEY_MULE_TERMS) || MONEY_MULE_RE.test(paymentNorm)
+  const claimsCryptoDeposit = hasUnnegatedTerm(paymentContext, CRYPTO_DEPOSIT_TERMS) || CRYPTO_DEPOSIT_RE.test(paymentNorm)
+  const claimsBuyToWork = hasUnnegatedTerm(paymentContext, BUY_TO_WORK_TERMS) || BUY_TO_WORK_RE.test(paymentNorm)
   const claimsCredentialHarvest = hasUnnegatedTerm(paymentContext, CREDENTIAL_HARVEST_TERMS)
   const hasHardFinancialVector = claimsMoneyMule || claimsCryptoDeposit || claimsCredentialHarvest
+  // Same fields the base engine scans (role, salary, location, contactMethod,
+  // applicationPath, evidence) so the two layers agree on contractor disclosure.
   const contractorDisclosureText = normalizeText([
     extractedClaims.role,
     extractedClaims.salary,
+    extractedClaims.location,
+    extractedClaims.contactMethod,
     extractedClaims.applicationPath,
     ...evidence.map(item => `${item.type} ${item.snippet}`),
   ].join(' '))
@@ -830,6 +885,9 @@ function deriveIntelligence(
     'project dependent',
     'hours vary',
     'not guaranteed',
+    'no guaranteed hours',
+    'weekly via paypal',
+    'weekly via stripe',
     // Commission-only / variable-income disclosures are a "know what you're signing up
     // for" caution, like variable-hours contracting.
     'commission only',
@@ -848,7 +906,8 @@ function deriveIntelligence(
   const hasTelegramContact = hasUnnegatedTerm(offPlatformContext, ['telegram', 't me'])
   const hasWhatsAppContact = hasUnnegatedTerm(offPlatformContext, ['whatsapp', 'wa me'])
   const hasViberContact = hasUnnegatedTerm(offPlatformContext, ['viber'])
-  const hasOtherOffPlatformChannel = hasUnnegatedTerm(offPlatformContext, OFF_PLATFORM_MESSAGING_TERMS) ||
+  const hasOtherOffPlatformChannel = hasUnnegatedTerm(offPlatformContext, OFF_PLATFORM_UNAMBIGUOUS) ||
+    hasAmbiguousChannelPivot(offPlatformContext) ||
     hasRawPhrase(offPlatformContext, OFF_PLATFORM_RAW_TERMS) ||
     isSmsOnlyFunnel(extractedClaims.contactMethod, extractedClaims.applicationPath)
   const hasOffPlatformContact = hasTelegramContact || hasWhatsAppContact || hasViberContact || hasOtherOffPlatformChannel

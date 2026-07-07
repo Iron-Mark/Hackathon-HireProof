@@ -1,10 +1,10 @@
 {
   "generatedFrom": "scripts/score-accuracy.mjs",
-  "datasetSize": 208,
+  "datasetSize": 222,
   "fixedNow": "2026-07-01T00:00:00.000Z",
   "splits": {
     "overall": {
-      "count": 208,
+      "count": 222,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -12,7 +12,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 56
+          "support": 58
         },
         "caution": {
           "precision": 1,
@@ -24,12 +24,12 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 97
+          "support": 109
         }
       }
     },
     "train": {
-      "count": 133,
+      "count": 138,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -49,12 +49,12 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 70
+          "support": 75
         }
       }
     },
     "validation": {
-      "count": 32,
+      "count": 37,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -62,7 +62,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 9
+          "support": 10
         },
         "caution": {
           "precision": 1,
@@ -74,12 +74,12 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 9
+          "support": 13
         }
       }
     },
     "test": {
-      "count": 43,
+      "count": 47,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -87,7 +87,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 13
+          "support": 14
         },
         "caution": {
           "precision": 1,
@@ -99,7 +99,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 18
+          "support": 21
         }
       }
     }

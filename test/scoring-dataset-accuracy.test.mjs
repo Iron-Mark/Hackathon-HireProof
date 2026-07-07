@@ -61,14 +61,17 @@ test('safety invariant: hard-safety scenarios are never scored safe', async () =
 
     const hasThreatIntel = evidence.some((entry) =>
       text(entry.sourceType) === 'threat intel' || /known threat|known phishing|urlhaus|phishtank/i.test(`${entry.type} ${entry.source}`))
-    // Negation-aware fee detection (mirrors the engine's rule): "we never ask for
-    // any registration fee" is an anti-scam disclaimer, not a fee ask.
+    // Clause-aware negation (mirrors the engine): a fee term is only a real ask when no
+    // negation governs it within its own clause (scope stops at sentence punctuation).
+    // "we will never ask you to pay a training fee" is a disclaimer, not a fee ask.
     const hasFeeAsk = (() => {
-      const normalized = ` ${String(claims.applicationPath || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `
-      const match = normalized.match(/\b(?:fee|charge|deposit|purchase software|software license|starter kit)\b/)
-      if (!match) return false
-      const before = normalized.slice(0, match.index).split(' ').filter(Boolean).slice(-6)
-      return !before.some((token) => ['no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid'].includes(token))
+      const raw = String(claims.applicationPath || '').toLowerCase()
+      const clauses = raw.split(/[.,;:!?]/)
+      const negations = ['no', 'never', 'not', 'without', 'dont', "don't", 'doesnt', 'wont', "won't", 'zero', 'beware', 'avoid']
+      return clauses.some((clause) => {
+        if (!/\b(?:fee|charge|deposit|purchase software|software license|starter kit)\b/.test(clause)) return false
+        return !negations.some((n) => new RegExp(`\\b${n.replace("'", "\\'?")}\\b`).test(clause))
+      })
     })()
     const hasApplyMismatch = evidence.some((entry) => /apply path mismatch|domain mismatch/i.test(entry.type || ''))
     const offPlatformNoInterview = /telegram|whatsapp/i.test(claims.contactMethod || '') &&
