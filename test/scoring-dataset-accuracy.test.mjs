@@ -61,7 +61,15 @@ test('safety invariant: hard-safety scenarios are never scored safe', async () =
 
     const hasThreatIntel = evidence.some((entry) =>
       text(entry.sourceType) === 'threat intel' || /known threat|known phishing|urlhaus|phishtank/i.test(`${entry.type} ${entry.source}`))
-    const hasFeeAsk = /fee|deposit|purchase software|software license|starter kit/i.test(claims.applicationPath || '')
+    // Negation-aware fee detection (mirrors the engine's rule): "we never ask for
+    // any registration fee" is an anti-scam disclaimer, not a fee ask.
+    const hasFeeAsk = (() => {
+      const normalized = ` ${String(claims.applicationPath || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `
+      const match = normalized.match(/\b(?:fee|charge|deposit|purchase software|software license|starter kit)\b/)
+      if (!match) return false
+      const before = normalized.slice(0, match.index).split(' ').filter(Boolean).slice(-6)
+      return !before.some((token) => ['no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid'].includes(token))
+    })()
     const hasApplyMismatch = evidence.some((entry) => /apply path mismatch|domain mismatch/i.test(entry.type || ''))
     const offPlatformNoInterview = /telegram|whatsapp/i.test(claims.contactMethod || '') &&
       /no interview/i.test(claims.applicationPath || '')

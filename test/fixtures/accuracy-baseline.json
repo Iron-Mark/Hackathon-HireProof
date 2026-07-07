@@ -1,10 +1,10 @@
 {
   "generatedFrom": "scripts/score-accuracy.mjs",
-  "datasetSize": 134,
+  "datasetSize": 150,
   "fixedNow": "2026-07-01T00:00:00.000Z",
   "splits": {
     "overall": {
-      "count": 134,
+      "count": 150,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -12,24 +12,24 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 45
+          "support": 48
         },
         "caution": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 43
+          "support": 44
         },
         "high-risk": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 46
+          "support": 58
         }
       }
     },
     "train": {
-      "count": 80,
+      "count": 91,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -37,24 +37,24 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 27
+          "support": 29
         },
         "caution": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 22
+          "support": 23
         },
         "high-risk": {
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 31
+          "support": 39
         }
       }
     },
     "validation": {
-      "count": 22,
+      "count": 24,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -74,12 +74,12 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 7
+          "support": 9
         }
       }
     },
     "test": {
-      "count": 32,
+      "count": 35,
       "accuracy": 1,
       "macroF1": 1,
       "perClass": {
@@ -87,7 +87,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 12
+          "support": 13
         },
         "caution": {
           "precision": 1,
@@ -99,7 +99,7 @@
           "precision": 1,
           "recall": 1,
           "f1": 1,
-          "support": 8
+          "support": 10
         }
       }
     }

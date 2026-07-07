@@ -68,6 +68,58 @@ function normalizeText(value: string) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
+// Token-boundary phrase match on normalized text (' t me ' matches "t.me/handle").
+function hasTokenPhrase(value: string, phrase: string) {
+  return ` ${normalizeText(value)} `.includes(` ${phrase} `)
+}
+
+const NEGATION_TOKENS = new Set([
+  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'anti',
+])
+
+// True when any term appears WITHOUT a negation token in the 6 tokens before it —
+// "we never ask for any registration fee" must not read as a fee request.
+function hasUnnegatedTerm(value: string, terms: string[]) {
+  const padded = ` ${normalizeText(value)} `
+  for (const term of terms) {
+    const needle = ` ${term} `
+    let index = padded.indexOf(needle)
+    while (index !== -1) {
+      const before = padded.slice(0, index).split(' ').filter(Boolean).slice(-6)
+      if (!before.some(token => NEGATION_TOKENS.has(token))) return true
+      index = padded.indexOf(needle, index + 1)
+    }
+  }
+  return false
+}
+
+const UPFRONT_PAYMENT_TERMS = [
+  ...['training', 'registration', 'activation', 'processing', 'application', 'membership', 'placement', 'onboarding', 'handling', 'admin', 'upfront']
+    .flatMap(kind => [`${kind} fee`, `${kind} charge`]),
+  'equipment deposit',
+  'security deposit',
+  'refundable deposit',
+  'deposit required',
+  'deposit to unlock',
+  'with deposit',
+  'purchase software',
+  'software license',
+  'starter kit',
+  'pay to start',
+  'pay before starting',
+  'upfront payment',
+]
+
+const NO_VETTING_TERMS = [
+  'no interview',
+  'without interview',
+  'skip interview',
+  'no exam',
+  'no screening',
+  'walang interview',
+  'walang exam',
+]
+
 function hostnameFromUrl(url?: string) {
   if (!url) return undefined
   try {
@@ -357,6 +409,8 @@ export function normalizeCompensation(value: string): NormalizedCompensation | n
   const amount = Number(numberMatch[1].replace(/,/g, ''))
   if (!Number.isFinite(amount) || amount <= 0) return null
 
+  const hasWeeklyToken = /\bwk\b/i.test(text)
+
   const currency = /(?:USD|usd|\$|dollars)/.test(text)
     ? 'USD'
     : /(?:GBP|£|pounds)/i.test(text)
@@ -371,7 +425,7 @@ export function normalizeCompensation(value: string): NormalizedCompensation | n
   const lower = text.toLowerCase()
   const period: NormalizedCompensation['period'] = lower.includes('hour')
     ? 'hour'
-    : lower.includes('week')
+    : lower.includes('week') || hasWeeklyToken
       ? 'week'
       : lower.includes('year') || lower.includes('annum') || lower.includes('annual')
         ? 'year'
@@ -601,29 +655,11 @@ function deriveIntelligence(
     /\bcertificate transparency\b/i.test(item.type || '') &&
     /risk signal|very recent|new certificate/i.test(item.snippet || '')
   ))
-  const claimsNoInterview = normalizeText(extractedClaims.applicationPath).includes('no interview')
-  const paymentContext = normalizeText(`${extractedClaims.applicationPath} ${extractedClaims.salary} ${extractedClaims.role}`)
-  const claimsUpfrontPayment = [
-    'training fee',
-    'registration fee',
-    'activation fee',
-    'processing fee',
-    'application fee',
-    'membership fee',
-    'placement fee',
-    'equipment deposit',
-    'security deposit',
-    'deposit required',
-    'deposit to unlock',
-    'with deposit',
-    'purchase software',
-    'software license',
-    'starter kit',
-    'pay to start',
-    'pay before starting',
-    'upfront payment',
-    'upfront fee',
-  ].some(term => paymentContext.includes(term))
+  const applicationPathText = normalizeText(extractedClaims.applicationPath)
+  const claimsNoInterview = NO_VETTING_TERMS.some(term => hasTokenPhrase(applicationPathText, term)) ||
+    applicationPathText.includes('no interview')
+  const paymentContext = `${extractedClaims.applicationPath} ${extractedClaims.salary} ${extractedClaims.role}`
+  const claimsUpfrontPayment = hasUnnegatedTerm(paymentContext, UPFRONT_PAYMENT_TERMS)
   const contractorDisclosureText = normalizeText([
     extractedClaims.role,
     extractedClaims.salary,
@@ -643,7 +679,13 @@ function deriveIntelligence(
   const officialSourceMatches = findOfficialSourceMatches(extractedClaims, evidence)
   const globalHiringContext = hasGlobalHiringContext(extractedClaims, evidence)
   const normalizedContactMethod = normalizeText(extractedClaims.contactMethod)
-  const hasOffPlatformContact = normalizedContactMethod.includes('telegram') || normalizedContactMethod.includes('whatsapp')
+  // Contact method and apply path together — scammers put the t.me/wa.me pivot in
+  // either field, and short links ARE the platform.
+  const offPlatformContext = `${extractedClaims.contactMethod} ${extractedClaims.applicationPath}`
+  const hasTelegramContact = hasUnnegatedTerm(offPlatformContext, ['telegram', 't me'])
+  const hasWhatsAppContact = hasUnnegatedTerm(offPlatformContext, ['whatsapp', 'wa me'])
+  const hasViberContact = hasUnnegatedTerm(offPlatformContext, ['viber'])
+  const hasOffPlatformContact = hasTelegramContact || hasWhatsAppContact || hasViberContact
   const submittedApplyPathTrust = deriveSubmittedApplyPathTrust(extractedClaims.applicationPath || '', officialEvidence)
   const { hasSubmittedOfficialApplyPath, hasSubmittedTrustedApplyPath } = submittedApplyPathTrust
   const companyProfileMode = inferCompanyProfileMode(extractedClaims, evidence, verifiedLocalEvidence)
@@ -982,8 +1024,8 @@ function deriveIntelligence(
   }
 
   const contactMethod = normalizedContactMethod
-  if (contactMethod.includes('telegram') || contactMethod.includes('whatsapp')) {
-    const offPlatformWeight = recruiterIdentity.status === 'verified' || recruiterIdentity.status === 'domain-match' ? 8 : contactMethod.includes('telegram') ? 16 : 12
+  if (hasOffPlatformContact) {
+    const offPlatformWeight = recruiterIdentity.status === 'verified' || recruiterIdentity.status === 'domain-match' ? 8 : hasTelegramContact ? 16 : 12
     addSignal(signals, {
       id: 'off_platform_contact',
       label: 'Off-platform recruiter contact',
@@ -993,7 +1035,7 @@ function deriveIntelligence(
       evidenceIds: recruiterIdentity.evidenceIds,
       rationale: offPlatformWeight < 12
         ? 'Off-platform contact is still risky, but verified recruiter/company-domain evidence reduces the severity.'
-        : 'Telegram or WhatsApp-only hiring paths commonly bypass official recruiter verification.',
+        : 'Telegram, WhatsApp, or Viber-only hiring paths (including t.me/wa.me short links) commonly bypass official recruiter verification.',
     })
     score = applyTrace(scoreTrace, score, 'Contact method', offPlatformWeight, 'Off-platform contact increases job-scam risk.', 'off_platform_contact', recruiterIdentity.evidenceIds)
   }
@@ -1006,8 +1048,7 @@ function deriveIntelligence(
     reputationRiskEvidence.length === 0 &&
     threatIntelEvidence.length === 0 &&
     newDomainRiskEvidence.length === 0 &&
-    !contactMethod.includes('telegram') &&
-    !contactMethod.includes('whatsapp') &&
+    !hasOffPlatformContact &&
     (
       hasSubmittedOfficialApplyPath ||
       hasSubmittedTrustedApplyPath

@@ -722,6 +722,124 @@ add({
 ])
 
 // ---------------------------------------------------------------------------
+// ADVERSARIAL archetypes: evasion wordings scammers actually use (short-link
+// pivots, exam-instead-of-interview phrasing, obfuscated charges, abbreviations)
+// plus near-miss traps where naive substring matching would overfire.
+// ---------------------------------------------------------------------------
+
+add({
+  id: 'risk.evasion.tme.1',
+  archetype: 'risk.evasion.tme',
+  split: 'train',
+  expected: 'high-risk',
+  rationale: 'Telegram pivot hidden behind a t.me short link plus a no-interview flow from an unverifiable employer — the link is the platform.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Remote Encoding Assistant', salary: 'PHP 45,000 per month', location: 'Remote Philippines', contactMethod: 'Message HR at t.me/hiringdesk_ph', applicationPath: 'No interview mentioned, message to start' },
+  evidence: [],
+}, [
+  { id: 'risk.evasion.tme.2', note: 'different handle and role', claims: { role: 'Online Product Rater', salary: 'PHP 52,000 per month', contactMethod: 'Chat via t.me/ph_jobs_fasthire' } },
+])
+
+add({
+  id: 'risk.evasion.wame.1',
+  archetype: 'risk.evasion.wame',
+  split: 'validation',
+  expected: 'high-risk',
+  rationale: 'WhatsApp pivot hidden behind a wa.me short link with a no-interview flow and no verifiable employer.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Remote Data Checker', salary: 'PHP 48,000 per month', location: 'Remote Philippines', contactMethod: 'Apply through wa.me/639171234567', applicationPath: 'No interview mentioned' },
+  evidence: [],
+})
+
+add({
+  id: 'risk.evasion.viber.1',
+  archetype: 'risk.evasion.viber',
+  split: 'train',
+  expected: 'high-risk',
+  rationale: 'Viber-only recruitment (common in PH scams) with a no-interview flow and unverifiable employer.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Home Based Typist', salary: 'PHP 40,000 per month', location: 'Remote Philippines', contactMethod: 'Viber only', applicationPath: 'No interview mentioned, start today' },
+  evidence: [],
+}, [
+  { id: 'risk.evasion.viber.2', note: 'viber group invite wording', claims: { role: 'Part Time Encoder', contactMethod: 'Join our Viber community to be onboarded' } },
+])
+
+add({
+  id: 'risk.evasion.noexam.1',
+  archetype: 'risk.evasion.noexam',
+  split: 'train',
+  expected: 'high-risk',
+  rationale: '"No exam, direct hire today" is the same no-vetting claim as "no interview", phrased to dodge the keyword.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Warehouse Encoder', salary: 'PHP 42,000 per month', location: 'Remote Philippines', contactMethod: 'Viber only', applicationPath: 'No exam, direct hire today' },
+  evidence: [],
+}, [
+  { id: 'risk.evasion.noexam.2', note: 'walang-interview tagalog wording', claims: { role: 'Online Assistant', contactMethod: 'Message us on Viber', applicationPath: 'Walang interview, start agad' } },
+])
+
+add({
+  id: 'risk.evasion.weekly-abbrev.1',
+  archetype: 'risk.evasion.weekly-abbrev',
+  split: 'validation',
+  expected: 'high-risk',
+  rationale: 'Implausible weekly pay abbreviated as /wk for an entry role with Telegram contact — abbreviation must not dodge the weekly-pay logic.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Entry Level Remote Assistant', salary: '₱85,000/wk', location: 'Remote Philippines', contactMethod: 'Telegram', applicationPath: 'No interview mentioned' },
+  evidence: [],
+})
+
+add({
+  id: 'risk.evasion.fee-obfuscated.1',
+  archetype: 'risk.evasion.fee-obfuscated',
+  split: 'train',
+  expected: 'high-risk',
+  rationale: 'The advance-fee ask reworded as an "onboarding charge" — the charge is the scam regardless of the noun.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Remote Account Assistant', salary: 'PHP 55,000 per month', location: 'Remote Philippines', contactMethod: 'Email', applicationPath: 'Small onboarding charge of PHP 500 before account activation' },
+  evidence: [],
+}, [
+  { id: 'risk.evasion.fee-obfuscated.2', note: 'activation-charge wording', claims: { role: 'Data Entry Associate', applicationPath: 'Pay the account activation charge to receive your first task batch' } },
+])
+
+add({
+  id: 'risk.evasion.combo.1',
+  archetype: 'risk.evasion.combo',
+  split: 'test',
+  expected: 'high-risk',
+  rationale: 'Generalization check: short-link pivot + exam-dodge wording + reworded charge, composed — each individually hardened fix must also compose.',
+  claims: { company: 'Unknown / Not Verifiable', role: 'Remote Task Specialist', salary: 'PHP 60,000 per month', location: 'Remote Philippines', contactMethod: 'Message coordinator at t.me/taskdesk_hq', applicationPath: 'No exam needed, refundable deposit required to unlock tasks' },
+  evidence: [],
+}, [
+  { id: 'risk.evasion.combo.2', note: 'wa.me + processing charge', claims: { role: 'Parcel Coordination Agent', contactMethod: 'Apply via wa.me/639221230000', applicationPath: 'No exam, pay the processing charge to reserve your slot' } },
+])
+
+add({
+  id: 'safe.negation.feewarning.1',
+  archetype: 'safe.negation.feewarning',
+  split: 'train',
+  expected: 'safe',
+  rationale: 'Negation trap: an official employer explicitly warning "we never ask for any registration fee" must not trip the fee detector.',
+  claims: { company: 'Stellar Contact Solutions', role: 'Customer Support Representative', salary: 'PHP 27,000 per month', location: 'Taguig, Metro Manila', contactMethod: 'Email', applicationPath: 'Official careers page — the company never asks for any registration fee; beware of scammers' },
+  evidence: [EV.official('Stellar Contact Solutions', 'stellarcontact.ph'), EV.verifiedLocal('Stellar Contact Solutions', 'Taguig, Metro Manila'), EV.jobBoard('Stellar Contact Solutions', 'Customer Support Representative', 'JobStreet')],
+}, [
+  { id: 'safe.negation.feewarning.2', note: 'no-fees-ever wording', claims: { role: 'Technical Support Representative', applicationPath: 'Apply on the official careers page. We do not charge any application fee or training fee.' } },
+])
+
+add({
+  id: 'safe.nearmiss.weeklypay.1',
+  archetype: 'safe.nearmiss.weeklypay',
+  split: 'test',
+  expected: 'safe',
+  rationale: 'Hourly US role paid weekly via direct deposit — a weekly pay SCHEDULE for an hourly wage is normal and must not read as a weekly salary quote.',
+  claims: { company: 'Brightlane Logistics', role: 'Warehouse Associate', salary: '$18/hour, paid weekly via direct deposit', location: 'Austin, Texas', contactMethod: 'Email', applicationPath: 'Official careers page at brightlanelogistics.com' },
+  evidence: [EV.official('Brightlane Logistics', 'brightlanelogistics.com'), EV.verifiedLocal('Brightlane Logistics', 'Austin, Texas'), EV.comparable('Brightlane Logistics', 'Warehouse Associate', '$17/hour')],
+})
+
+add({
+  id: 'caution.viber.local.1',
+  archetype: 'caution.viber.local',
+  split: 'train',
+  expected: 'caution',
+  rationale: 'Verified local business recruiting over Viber — plausibly legitimate in the PH market, but the off-platform channel still needs verification before trusting.',
+  claims: { company: 'Mendoza Dental Group', role: 'Dental Assistant', salary: 'PHP 21,000 per month', location: 'Makati, Metro Manila', contactMethod: 'Viber', applicationPath: 'Message the clinic to schedule an interview' },
+  evidence: [EV.official('Mendoza Dental Group', 'mendozadental.ph'), EV.verifiedLocal('Mendoza Dental Group', 'Makati, Metro Manila')],
+})
+
+// ---------------------------------------------------------------------------
 // Surface expansions: strictly label-preserving renames (company / role / city /
 // currency formatting) of existing archetype bases. Each inherits split and label
 // from its base, so no scenario leaks across splits.
