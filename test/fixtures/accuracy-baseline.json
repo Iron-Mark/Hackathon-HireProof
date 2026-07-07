@@ -1,0 +1,108 @@
+{
+  "generatedFrom": "scripts/score-accuracy.mjs",
+  "datasetSize": 228,
+  "fixedNow": "2026-07-01T00:00:00.000Z",
+  "splits": {
+    "overall": {
+      "count": 228,
+      "accuracy": 1,
+      "macroF1": 1,
+      "perClass": {
+        "safe": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 59
+        },
+        "caution": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 55
+        },
+        "high-risk": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 114
+        }
+      }
+    },
+    "train": {
+      "count": 140,
+      "accuracy": 1,
+      "macroF1": 1,
+      "perClass": {
+        "safe": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 34
+        },
+        "caution": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 29
+        },
+        "high-risk": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 77
+        }
+      }
+    },
+    "validation": {
+      "count": 39,
+      "accuracy": 1,
+      "macroF1": 1,
+      "perClass": {
+        "safe": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 10
+        },
+        "caution": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 14
+        },
+        "high-risk": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 15
+        }
+      }
+    },
+    "test": {
+      "count": 49,
+      "accuracy": 1,
+      "macroF1": 1,
+      "perClass": {
+        "safe": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 15
+        },
+        "caution": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 12
+        },
+        "high-risk": {
+          "precision": 1,
+          "recall": 1,
+          "f1": 1,
+          "support": 22
+        }
+      }
+    }
+  },
+  "misclassifications": []
+}

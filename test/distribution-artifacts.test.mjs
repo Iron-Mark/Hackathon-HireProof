@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import { execFileSync } from 'node:child_process'
+import zlib from 'node:zlib'
 
 const archives = [
   'public/downloads/hireproof-extension.zip',
@@ -16,35 +16,45 @@ const forbiddenPatterns = [
   /DEFAULT_API_KEY/,
 ]
 
-function listArchiveEntries(archive) {
-  return execFileSync('tar', ['-tf', archive], { encoding: 'utf8' })
-    .split(/\r?\n/)
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-}
+// Pure-Node ZIP reader (no external tar/unzip, so the scan is portable across CI where
+// GNU tar cannot read ZIP). Handles stored (method 0) and deflated (method 8) entries;
+// the artifacts are STORE-only with accurate local-header sizes and no data descriptor
+// (see scripts/package-extension.mjs makeZip).
+const LOCAL_FILE_HEADER = 0x04034b50
 
-function readArchiveEntry(archive, entry) {
-  try {
-    return execFileSync('tar', ['-xOf', archive, entry], {
-      encoding: 'utf8',
-      maxBuffer: 20 * 1024 * 1024,
-    })
-  } catch {
-    return ''
+function readZipEntries(archivePath) {
+  const buf = fs.readFileSync(archivePath)
+  const entries = []
+  let pos = 0
+  while (pos + 30 <= buf.length && buf.readUInt32LE(pos) === LOCAL_FILE_HEADER) {
+    const method = buf.readUInt16LE(pos + 8)
+    const compSize = buf.readUInt32LE(pos + 18)
+    const nameLen = buf.readUInt16LE(pos + 26)
+    const extraLen = buf.readUInt16LE(pos + 28)
+    const nameStart = pos + 30
+    const name = buf.toString('utf8', nameStart, nameStart + nameLen)
+    const dataStart = nameStart + nameLen + extraLen
+    const raw = buf.subarray(dataStart, dataStart + compSize)
+    let content
+    if (method === 0) content = raw
+    else if (method === 8) { try { content = zlib.inflateRawSync(raw) } catch { content = Buffer.alloc(0) } }
+    else content = Buffer.alloc(0)
+    entries.push({ name, text: content.toString('utf8') })
+    pos = dataStart + compSize
   }
+  return entries
 }
 
 test('downloadable integration artifacts do not ship public API key residue', () => {
   for (const archive of archives) {
     assert.equal(fs.existsSync(archive), true, `${archive} should exist before artifact scanning`)
 
-    const entries = listArchiveEntries(archive)
+    const entries = readZipEntries(archive)
     assert.ok(entries.length > 0, `${archive} should contain packaged files`)
 
-    for (const entry of entries) {
-      const content = readArchiveEntry(archive, entry)
+    for (const { name, text } of entries) {
       for (const pattern of forbiddenPatterns) {
-        assert.doesNotMatch(content, pattern, `${archive}:${entry} should not match ${pattern}`)
+        assert.doesNotMatch(text, pattern, `${archive}:${name} should not match ${pattern}`)
       }
     }
   }
