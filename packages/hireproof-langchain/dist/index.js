@@ -43,9 +43,8 @@ async function readBoundedAuditResponseJson(response) {
         return {}
       }
     }
-    if (typeof response.json === 'function') {
-      return response.json()
-    }
+    // No bounded read path is available. Do NOT fall back to an unbounded body
+    // parse — a hostile server could stream an arbitrarily large response.
     throw new Error('HireProof audit response body is not readable.')
   }
 
