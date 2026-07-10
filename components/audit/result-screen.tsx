@@ -784,9 +784,9 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
           <motion.section variants={itemVariants} className="rounded-2xl border border-caution/30 bg-caution-bg/30 p-4 text-caution-text">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="text-xs font-black uppercase tracking-widest">Demo fixture</div>
+                <div className="text-xs font-black uppercase tracking-widest">Instant offline check</div>
                 <p className="mt-1 text-sm font-semibold leading-6">
-                  This is a prebuilt example report. Use live evidence mode for fresh source checks.
+                  This verdict was scored offline by the deterministic engine. No external sources were contacted. Turn on Live evidence for fresh source checks.
                 </p>
               </div>
               <span className="inline-flex w-fit rounded-lg border border-caution/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest">

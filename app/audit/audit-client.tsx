@@ -171,7 +171,7 @@ async function readErrorMessage(response: Response) {
   }
 }
 
-const STOPPED_AUDIT_MESSAGE = 'Stopped waiting for the live audit result. You can retry or switch to demo fixtures.'
+const STOPPED_AUDIT_MESSAGE = 'Stopped waiting for the live audit result. You can retry or run an instant offline check instead.'
 const COST_GUARDRAIL_MESSAGE = 'Live evidence is capped. Public audits stay available with deterministic checks; hosted live provider runs are BYOK or API-key gated to protect production costs.'
 
 function DemoCostSnackbar({ visible }: { visible: boolean }) {
@@ -338,6 +338,7 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
               </div>
             )}
 
+            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted">Try an example</div>
             <div className="mb-5 grid gap-3 md:grid-cols-3">
               {QUICK_DEMOS.map((demo) => {
                 const Icon = demo.icon
@@ -365,25 +366,25 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
                 transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg border border-safe/50 bg-safe shadow-lg shadow-safe/20"
               />
-              <ModeTooltip align="left" content="Runs the real audit using configured evidence search, OCR, and model providers.">
+              <ModeTooltip align="left" content="Advanced. Also cross-checks live sources (evidence search, OCR, model providers). BYOK or API-key gated and cost-capped.">
                 <button
                   type="button"
                   onClick={() => setLiveMode(true)}
-                  aria-label="Use live evidence mode. Runs the real audit flow using configured evidence search, OCR, and model providers."
+                  aria-label="Use live evidence mode. Advanced, opt-in. Also cross-checks live sources using configured evidence search, OCR, and model providers. BYOK or API-key gated and cost-capped."
                   className={`relative z-10 min-h-10 w-full rounded-lg px-3 py-2 transition-colors ${liveMode ? 'text-background' : 'text-muted hover:text-safe'}`}
                 >
                   <span>Live evidence</span>
                   <HelpCircle className="absolute right-1 top-1 h-3 w-3 opacity-70" aria-hidden="true" />
                 </button>
               </ModeTooltip>
-              <ModeTooltip align="right" content="Loads prebuilt example reports instantly for demos or credential-offline testing.">
+              <ModeTooltip align="right" content="Runs an instant, offline check of your pasted text. No external sources are contacted and nothing is charged.">
                 <button
                   type="button"
                   onClick={() => setLiveMode(false)}
-                  aria-label="Use demo fixtures mode. Loads prebuilt example reports instantly for demos when live credentials are unavailable."
+                  aria-label="Check my post. Runs an instant, offline check of your pasted text. No external sources are contacted and nothing is charged."
                   className={`relative z-10 min-h-10 w-full rounded-lg px-3 py-2 transition-colors ${!liveMode ? 'text-background' : 'text-muted hover:text-safe'}`}
                 >
-                  <span>Demo fixtures</span>
+                  <span>Check my post</span>
                   <HelpCircle className="absolute right-1 top-1 h-3 w-3 opacity-70" aria-hidden="true" />
                 </button>
               </ModeTooltip>
