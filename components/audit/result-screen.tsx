@@ -732,8 +732,8 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
                 <span className="text-xl font-bold text-muted opacity-40">/100</span>
               </div>
               <p className="max-w-md text-base font-semibold leading-relaxed text-muted">
-                HireProof checked the listing against the available evidence and risk signals. 
-                <span className="text-foreground"> Confidence: {result.confidence}.</span>
+                {result.summary}
+                <span className="block mt-1 text-foreground">Confidence: {result.confidence}.</span>
               </p>
             </div>
 
@@ -779,6 +779,20 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
             </div>
           </div>
         </motion.section>
+
+        {result.nextSteps.length > 0 && (
+          <motion.section variants={itemVariants} data-testid="what-to-do-now" className="rounded-2xl border border-safe/25 bg-safe/5 p-6 shadow-sm sm:p-7">
+            <h2 className="mb-3 text-lg font-black">What to do right now</h2>
+            <ul className="space-y-2">
+              {result.nextSteps.slice(0, 3).map((step, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm font-semibold leading-6">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-safe" />
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
 
         {isDemoReport && (
           <motion.section variants={itemVariants} className="rounded-2xl border border-caution/30 bg-caution-bg/30 p-4 text-caution-text">
