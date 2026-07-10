@@ -2,13 +2,16 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 
-test('public audit UI defaults to demo fixtures instead of live provider work', async () => {
+test('public audit default runs the zero-spend server demo path, not a client-side fixture', async () => {
   const source = await fs.readFile(new URL('../app/audit/audit-client.tsx', import.meta.url), 'utf8')
 
+  // Default mode is the free deterministic path.
   assert.match(source, /const \[liveMode, setLiveMode\] = useState\(false\)/)
-  assert.match(source, /if \(!liveMode\) \{/)
-  assert.match(source, /buildDemoReport\(chooseDemoVerdict\(request\.text\)\)/)
+  // Every submission posts to the server; default (liveMode=false) => mode:'demo' (no paid providers).
   assert.match(source, /body: JSON\.stringify\(\{ \.\.\.request, mode: liveMode \? 'live' : 'demo' \}\)/)
+  // The fabricated client-side fixture short-circuit is gone: real text is always analyzed.
+  assert.doesNotMatch(source, /if \(!liveMode\) \{/)
+  assert.doesNotMatch(source, /chooseDemoVerdict/)
 })
 
 test('public lab stream uses demo mode by default to avoid paid provider work', async () => {

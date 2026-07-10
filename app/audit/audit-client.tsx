@@ -12,8 +12,6 @@ import { AuditSkeleton } from '@/components/audit/audit-skeleton'
 import { AuditLiveProgress, type AuditProgressEvent } from '@/components/audit/audit-live-progress'
 import { trackProductEvent } from '@/components/analytics/product-event-tracker'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
-import { getFixtureByVerdict } from '@/lib/fixtures'
-import { buildAuditReportV2 } from '@/lib/intelligence-v2'
 import type { AuditReport, AuditRequest } from '@/lib/schemas'
 import { showToast } from '@/components/system/toast'
 
@@ -122,35 +120,6 @@ function isDemoVerdict(value: string | null): value is DemoVerdict {
   return Boolean(value && DEMO_VERDICTS.includes(value as DemoVerdict))
 }
 
-function buildDemoReport(verdict: DemoVerdict): AuditReport {
-  const fixture = getFixtureByVerdict(verdict)
-  const report = buildAuditReportV2({
-    id: `demo_${verdict}_${Date.now()}`,
-    extractedClaims: fixture.extractedClaims,
-    evidence: fixture.evidence,
-    ownerId: 'demo',
-    source: 'demo',
-  })
-
-  return {
-    ...report,
-    ...fixture,
-    version: '2',
-    intelligence: report.intelligence,
-    mode: 'demo',
-    credentialMode: 'demo',
-    source: 'demo',
-    publiclyListed: true,
-  }
-}
-
-function chooseDemoVerdict(text: string): DemoVerdict {
-  const lower = text.toLowerCase()
-  if (lower.includes('80000') || lower.includes('telegram') || lower.includes('urgent')) return 'high-risk'
-  if (lower.includes('unclear') || lower.includes('caution') || lower.includes('competitive')) return 'caution'
-  return 'safe'
-}
-
 async function readAuditStream(response: Response, onEvent: (event: StreamEvent) => void, signal?: AbortSignal) {
   if (!response.body) throw new Error('Audit stream did not return a readable body.')
 
@@ -230,7 +199,7 @@ function DemoCostSnackbar({ visible }: { visible: boolean }) {
   )
 }
 
-function AuditContent() {
+function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditReport> }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { addReport } = useAuditHistory()
@@ -263,58 +232,49 @@ function AuditContent() {
     if (!isDemoVerdict(demo)) return
     if (loadedDemoRef.current === demo) return
 
-    const demoReport = buildDemoReport(demo)
+    const demoReport = demoReports[demo]
     loadedDemoRef.current = demo
     trackProductEvent('demo_open', { verdict: demo, source: 'audit_query' })
     setLiveMode(false)
     setReport(demoReport)
     setError(null)
-    setStreamLogs(['Demo fixture loaded. No live source checks were run.'])
-    setStreamEvents([{ type: 'log', message: 'Demo fixture loaded. No live source checks were run.', phase: 'report', status: 'complete', label: 'Demo fixture' }])
-    showToast('Demo fixture loaded. No live source checks were run.', 'info')
+    setStreamLogs(['Sample report loaded. This is a labelled example, not a check of your own post.'])
+    setStreamEvents([{ type: 'log', message: 'Sample report loaded. This is a labelled example, not a check of your own post.', phase: 'report', status: 'complete', label: 'Sample report' }])
+    showToast('Sample report loaded. This is a labelled example, not a check of your own post.', 'info')
     addReport(demoReport)
-  }, [searchParams, addReport])
+  }, [searchParams, addReport, demoReports])
 
   const handleAudit = async (request: AuditRequest) => {
     setIsAuditing(true)
     setReport(null)
     setError(null)
     setStreamLogs([])
-    setStreamEvents([{ type: 'log', message: 'Opening live evidence stream...', phase: 'intake', status: 'active', label: 'Intake' }])
+    setStreamEvents([{ type: 'log', message: liveMode ? 'Opening live evidence stream...' : 'Running an instant offline check of your post...', phase: 'intake', status: 'active', label: 'Intake' }])
     const controller = new AbortController()
     activeAuditRef.current = controller
 
     try {
-      if (!liveMode) {
-        const demoReport = buildDemoReport(chooseDemoVerdict(request.text))
-        setStreamLogs(['Demo fixture loaded. No live source checks were run.'])
-        setStreamEvents([{ type: 'log', message: 'Demo fixture loaded. No live source checks were run.', phase: 'report', status: 'complete', label: 'Demo fixture' }])
-        showToast('Demo fixture loaded. No live source checks were run.', 'info')
-        setReport(demoReport)
-        addReport(demoReport)
-        return
+      // Every submission is scored on the server from the user's real text.
+      // Default (liveMode=false) => mode:'demo': deterministic, zero paid-provider spend.
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...request, mode: liveMode ? 'live' : 'demo' }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok) {
+        throw new Error(await readErrorMessage(res))
       }
 
-      // Real API Call
-      const res = await fetch('/api/audit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...request, mode: liveMode ? 'live' : 'demo' }),
-          signal: controller.signal,
-        })
-        
-        if (!res.ok) {
-          throw new Error(await readErrorMessage(res))
+      const finalReport = await readAuditStream(res, (event) => {
+        if (event.type === 'log') {
+          setStreamLogs((logs) => [...logs, event.message].slice(-8))
+          setStreamEvents((events) => [...events, event].slice(-16))
         }
-        
-        const finalReport = await readAuditStream(res, (event) => {
-          if (event.type === 'log') {
-            setStreamLogs((logs) => [...logs, event.message].slice(-8))
-            setStreamEvents((events) => [...events, event].slice(-16))
-          }
-        }, controller.signal)
-        setReport(finalReport)
-        addReport(finalReport)
+      }, controller.signal)
+      setReport(finalReport)
+      addReport(finalReport)
     } catch (err: any) {
       if (controller.signal.aborted) {
         setError(STOPPED_AUDIT_MESSAGE)
@@ -496,11 +456,11 @@ function AuditContent() {
   )
 }
 
-export function AuditClient() {
+export function AuditClient({ demoReports }: { demoReports: Record<DemoVerdict, AuditReport> }) {
   return (
     <ErrorBoundary>
       <Suspense fallback={<AuditSkeleton />}>
-        <AuditContent />
+        <AuditContent demoReports={demoReports} />
       </Suspense>
     </ErrorBoundary>
   )
