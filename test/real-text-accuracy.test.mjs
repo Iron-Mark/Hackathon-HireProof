@@ -75,3 +75,25 @@ test('raw post text feeds the payment-scam matchers (rawText is the driver; abse
   const withoutRaw = stack.buildAuditReportV2({ id: 'wiretest', extractedClaims: claims, evidence: [], now: FIXED_NOW })
   assert.notEqual(withoutRaw.verdict, 'high-risk')
 })
+
+test('a careers@ scam email earns no forged official apply-path trust; a real careers page still does', async () => {
+  const stack = await loadScoringStack()
+  const build = (text) => {
+    const claims = extractClaimsFromText({ text })
+    return stack.buildAuditReportV2({ id: 'careers', extractedClaims: claims, evidence: [], rawText: text, now: FIXED_NOW })
+  }
+  const hasApplyTrust = (report) => report.intelligence.signals.some((s) => s.id === 'apply_path_professional')
+
+  // The exploit: a scam names a careers@ address, so the post contains the word "careers".
+  // It must NOT forge the "recognizable official channel" trust signal (or its score discount).
+  const scam = build(
+    'Join our team at Meridian Global. A one-time $150 onboarding processing fee applies once you accept. Email your resume to careers@meridian-global-hr.com.',
+  )
+  assert.ok(!hasApplyTrust(scam), 'careers@ email must not forge an official apply-path trust signal')
+
+  // A genuine careers-page post (no URL, so the page phrasing itself must carry it) still earns it.
+  const legit = build(
+    'Product Manager at Acme. Apply through our official careers page. Our team runs a two-round interview.',
+  )
+  assert.ok(hasApplyTrust(legit), 'a genuine careers page should still earn the apply-path trust signal')
+})

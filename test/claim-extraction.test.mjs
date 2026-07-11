@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { recoverObviousClaims } from '../lib/claim-extraction.mjs'
+import { recoverObviousClaims, extractClaimsFromText, isOfficialCareersChannel } from '../lib/claim-extraction.mjs'
 import {
   buildEnrichmentEvidence,
   buildEnrichmentRedFlags,
@@ -435,4 +435,71 @@ test('enrichAuditRequestInput prefers resolved job page evidence when pasted tex
   const redFlags = buildEnrichmentRedFlags(enrichment)
   assert.ok(evidence.some((item) => item.type === 'Input Conflict'))
   assert.ok(redFlags.some((flag) => flag.includes('company')))
+})
+
+// ---------------------------------------------------------------------------------------
+// "Official careers channel" must reflect a real careers PAGE/PORTAL/SITE/URL — never a bare
+// "careers@" email local-part or the standalone word "official". Matching those forged an
+// unearned apply-path trust signal (a green "recognizable official channel" line) and a score
+// discount for any post that merely contained the word.
+// ---------------------------------------------------------------------------------------
+
+test('isOfficialCareersChannel accepts genuine careers-page/portal phrasing (incl. plurals)', () => {
+  for (const legit of [
+    'Apply on our official careers site.',
+    'Submit your application through our careers page.',
+    'Apply through official careers website.',
+    'Apply on our Workday careers portal.',
+    'our official company website',
+    'Browse all our careers pages for open roles.',    // plural
+    'Explore our regional careers sites.',             // plural
+    'Our careers hub lists every current vacancy.',    // hub synonym
+  ]) {
+    assert.ok(isOfficialCareersChannel(legit), `expected official careers channel: "${legit}"`)
+  }
+})
+
+// Adversarial breakers surfaced by a red-team pass and adjudicated through the real engine. This
+// function judges PHRASING, never URL/email parsing — apply URLs go through the `url` field — so
+// none of these forge an official-apply-path trust signal.
+test('isOfficialCareersChannel rejects careers@ emails, careers-shaped URLs, and "official" collisions', () => {
+  for (const notOfficial of [
+    // careers@ contact emails (plain and dotted local parts)
+    'Our recruiter will contact you from careers@vercel-hr-team.com.',
+    'Email your resume to careers.acme.hr@gmail.com - no phone calls.',
+    'Send your CV to careers.hr.team@acme-recruit.com',
+    'Send your resume to jobs@quickhire-jobs.co and DM us.',
+    // careers-shaped URLs / filenames / slugs (handled by the url field, not prose parsing)
+    'Full details are in the attached careers.2024.pdf',
+    'Reach our recruiter on Telegram: t.me/careers',
+    'Submit your application at bit.ly/careers',
+    'Register now at acme.com/careers-fair',
+    // "careers channel" lure (Telegram/WhatsApp) + "official + unrelated noun" collisions
+    'Join our careers channel on Telegram to get hired today.',
+    'reach me on Line official',
+    'Join our official Telegram account to onboard.',
+    'This is an official offer, act now.',
+    'Congratulations - your official career offer is attached; pay the $99 kit fee.',
+    // newline must not glue a heading "careers" to a following "Page"/"Section" line
+    'Explore rewarding careers\nPage 1 of 3',
+    'See our current openings in careers\nSection 2: Benefits',
+  ]) {
+    assert.ok(!isOfficialCareersChannel(notOfficial), `must NOT be an official careers channel: "${notOfficial}"`)
+  }
+})
+
+test('extractClaimsFromText does not forge an official apply path from a careers@ scam email', () => {
+  // The exact exploit: a scam names a careers@ address so the post contains the word "careers".
+  const scam = extractClaimsFromText({
+    text: 'Join our team at Meridian Global. To confirm your position, a one-time $150 onboarding processing fee applies once you accept the offer. Email your resume to careers@meridian-global-hr.com.',
+  })
+  assert.notEqual(scam.applicationPath, 'Official careers channel')
+  assert.equal(scam.contactMethod, 'Email') // the honest claim: it is an email contact
+
+  // A genuinely official careers-page post still resolves to the official channel (no URL supplied,
+  // so extraction must rely on the page/portal phrasing, not a short-circuiting job URL).
+  const legit = extractClaimsFromText({
+    text: 'Software Engineer at Acme. Apply through our official careers page. Interviews are conducted over two rounds.',
+  })
+  assert.equal(legit.applicationPath, 'Official careers channel')
 })
