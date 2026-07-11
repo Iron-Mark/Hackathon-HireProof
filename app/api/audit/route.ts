@@ -389,6 +389,7 @@ export async function POST(request: Request) {
           id: createPublicReportId('report'),
           extractedClaims,
           evidence,
+          rawText: validated.text,
           enrichmentEvidence: [...buildEnrichmentEvidence(requestEnrichment), ...ocrEvidence],
           enrichmentRedFlags: [...enrichmentRedFlags, ...routeRedFlags],
           mode: demoMode ? 'demo' : 'live',

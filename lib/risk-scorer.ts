@@ -12,9 +12,10 @@ export function calculateRiskScore(
   redFlags: string[],
   greenFlags: string[],
   evidence: EvidenceItem[],
-  signalWeightOverrides?: Record<string, number>
+  signalWeightOverrides?: Record<string, number>,
+  rawText = ''
 ): number {
-  const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence)
+  const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence, rawText)
   return scoreAuditSignals(signals, evidence, signalWeightOverrides)
 }
 
@@ -28,9 +29,10 @@ export function traceRiskScore(
   redFlags: string[],
   greenFlags: string[],
   evidence: EvidenceItem[],
-  signalWeightOverrides?: Record<string, number>
+  signalWeightOverrides?: Record<string, number>,
+  rawText = ''
 ): { score: number; trace: ScoreTraceItem[] } {
-  const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence)
+  const signals = buildAuditSignals(extractedClaims, redFlags, greenFlags, evidence, rawText)
   return traceAuditSignals(signals, evidence, signalWeightOverrides)
 }
 
@@ -52,17 +54,19 @@ export function getConfidenceLabel(riskScore: number, evidenceCount: number): st
 
 export function extractRedFlags(
   extractedClaims: ExtractedClaims,
-  evidence: EvidenceItem[]
+  evidence: EvidenceItem[],
+  rawText = ''
 ): string[] {
-  const signals = buildAuditSignals(extractedClaims, [], [], evidence)
+  const signals = buildAuditSignals(extractedClaims, [], [], evidence, rawText)
   return strongestRiskSignals(signals, 8).map((item: any) => item.explanation)
 }
 
 export function extractGreenFlags(
   extractedClaims: ExtractedClaims,
-  evidence: EvidenceItem[]
+  evidence: EvidenceItem[],
+  rawText = ''
 ): string[] {
-  const signals = buildAuditSignals(extractedClaims, [], [], evidence)
+  const signals = buildAuditSignals(extractedClaims, [], [], evidence, rawText)
   return strongestTrustSignals(signals, 8).map((item: any) => item.explanation)
 }
 
