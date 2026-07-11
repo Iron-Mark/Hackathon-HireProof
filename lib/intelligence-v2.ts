@@ -27,6 +27,13 @@ type BuildReportV2Input = {
   enrichmentEvidence?: EvidenceItem[]
   enrichmentRedFlags?: string[]
   /**
+   * The raw pasted post text. Optional. When present, payment-scam matchers (money-mule,
+   * buy-to-work, upfront fee, crypto deposit, credential harvest) can fire on scam prose that
+   * never made it into a structured claim field. Synthetic datasets omit it, so their scores
+   * are unaffected.
+   */
+  rawText?: string
+  /**
    * Reference timestamp (ms since epoch) used for evidence-freshness classification and the
    * report timestamp. Injectable so scoring is deterministic: identical inputs + identical `now`
    * always produce identical scores. Defaults to the current time in production.
@@ -1628,13 +1635,13 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   )
   const trustedJobPageEvidence = hasTrustedJobPageEvidence(reportEvidence)
   let redFlags = [
-    ...extractRedFlags(input.extractedClaims, reportEvidence),
+    ...extractRedFlags(input.extractedClaims, reportEvidence, input.rawText),
     ...(input.enrichmentRedFlags || []),
   ]
   if (trustedJobPageEvidence) {
     redFlags = redFlags.filter(flag => !/no supporting evidence/i.test(flag))
   }
-  const greenFlags = extractGreenFlags(input.extractedClaims, reportEvidence)
+  const greenFlags = extractGreenFlags(input.extractedClaims, reportEvidence, input.rawText)
   const preliminaryProfileMode = inferCompanyProfileMode(
     input.extractedClaims,
     reportEvidence,
@@ -1658,11 +1665,11 @@ export function buildAuditReportV2(input: BuildReportV2Input): AuditReportV2 {
   // them back in double-counted every top signal (see legacy flag signals).
   // Guarded because unit tests mock '@/lib/risk-scorer' without the trace export.
   const baseTraceResult = typeof traceRiskScore === 'function'
-    ? traceRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides)
+    ? traceRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides, input.rawText)
     : undefined
   const rawBaseScore = baseTraceResult
     ? baseTraceResult.score
-    : calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides)
+    : calculateRiskScore(input.extractedClaims, input.enrichmentRedFlags || [], [], reportEvidence, input.signalWeightOverrides, input.rawText)
   const baseScore = Math.max(rawBaseScore, (input.enrichmentRedFlags || []).length > 0 ? 45 : 0)
   const baseScoreTrace = baseTraceResult ? [...baseTraceResult.trace] : undefined
   if (baseScoreTrace && baseScore > rawBaseScore) {

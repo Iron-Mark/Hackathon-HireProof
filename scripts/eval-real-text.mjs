@@ -85,6 +85,7 @@ export function evaluate(stack) {
       id: `realtext_${item.id}`,
       extractedClaims: claims,
       evidence: [],
+      rawText: item.text,
       now: FIXED_NOW,
     })
     results.push({
