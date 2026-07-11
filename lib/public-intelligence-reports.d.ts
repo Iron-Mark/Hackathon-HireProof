@@ -3,6 +3,11 @@ import type { AuditReport } from './schemas'
 export function isDemoFixtureReport(report: unknown): boolean
 export function isPublicIntelligenceReport(report: unknown): boolean
 export function filterPublicIntelligenceReports<T extends AuditReport>(reports: T[]): T[]
+export function sanitizePublicIntelligenceReport(report: AuditReport): AuditReport
+export function selectPublicReports(
+  rawReports: AuditReport[],
+  opts?: { query?: string; verdict?: string; limit?: number }
+): { reports: AuditReport[]; total: number }
 export function uniquePublicTrendReports<T extends AuditReport>(reports: T[]): T[]
 export function buildPublicReportTrends(reports: AuditReport[]): {
   totalReports: number

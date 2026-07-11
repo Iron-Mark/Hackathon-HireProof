@@ -12,8 +12,6 @@ import { AuditSkeleton } from '@/components/audit/audit-skeleton'
 import { AuditLiveProgress, type AuditProgressEvent } from '@/components/audit/audit-live-progress'
 import { trackProductEvent } from '@/components/analytics/product-event-tracker'
 import { useAuditHistory } from '@/hooks/useAuditHistory'
-import { getFixtureByVerdict } from '@/lib/fixtures'
-import { buildAuditReportV2 } from '@/lib/intelligence-v2'
 import type { AuditReport, AuditRequest } from '@/lib/schemas'
 import { showToast } from '@/components/system/toast'
 
@@ -122,35 +120,6 @@ function isDemoVerdict(value: string | null): value is DemoVerdict {
   return Boolean(value && DEMO_VERDICTS.includes(value as DemoVerdict))
 }
 
-function buildDemoReport(verdict: DemoVerdict): AuditReport {
-  const fixture = getFixtureByVerdict(verdict)
-  const report = buildAuditReportV2({
-    id: `demo_${verdict}_${Date.now()}`,
-    extractedClaims: fixture.extractedClaims,
-    evidence: fixture.evidence,
-    ownerId: 'demo',
-    source: 'demo',
-  })
-
-  return {
-    ...report,
-    ...fixture,
-    version: '2',
-    intelligence: report.intelligence,
-    mode: 'demo',
-    credentialMode: 'demo',
-    source: 'demo',
-    publiclyListed: true,
-  }
-}
-
-function chooseDemoVerdict(text: string): DemoVerdict {
-  const lower = text.toLowerCase()
-  if (lower.includes('80000') || lower.includes('telegram') || lower.includes('urgent')) return 'high-risk'
-  if (lower.includes('unclear') || lower.includes('caution') || lower.includes('competitive')) return 'caution'
-  return 'safe'
-}
-
 async function readAuditStream(response: Response, onEvent: (event: StreamEvent) => void, signal?: AbortSignal) {
   if (!response.body) throw new Error('Audit stream did not return a readable body.')
 
@@ -202,7 +171,7 @@ async function readErrorMessage(response: Response) {
   }
 }
 
-const STOPPED_AUDIT_MESSAGE = 'Stopped waiting for the live audit result. You can retry or switch to demo fixtures.'
+const STOPPED_AUDIT_MESSAGE = 'Stopped waiting for the live audit result. You can retry or run an instant offline check instead.'
 const COST_GUARDRAIL_MESSAGE = 'Live evidence is capped. Public audits stay available with deterministic checks; hosted live provider runs are BYOK or API-key gated to protect production costs.'
 
 function DemoCostSnackbar({ visible }: { visible: boolean }) {
@@ -230,7 +199,7 @@ function DemoCostSnackbar({ visible }: { visible: boolean }) {
   )
 }
 
-function AuditContent() {
+function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditReport> }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { addReport } = useAuditHistory()
@@ -244,6 +213,8 @@ function AuditContent() {
   const [costPosture, setCostPosture] = useState<CostPosture | null>(null)
   const loadedDemoRef = useRef<string | null>(null)
   const activeAuditRef = useRef<AbortController | null>(null)
+  const lastRequestRef = useRef<AuditRequest | null>(null)
+  const shareUrlRef = useRef<{ id: string; url: string } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -263,58 +234,51 @@ function AuditContent() {
     if (!isDemoVerdict(demo)) return
     if (loadedDemoRef.current === demo) return
 
-    const demoReport = buildDemoReport(demo)
+    const demoReport = demoReports[demo]
     loadedDemoRef.current = demo
     trackProductEvent('demo_open', { verdict: demo, source: 'audit_query' })
     setLiveMode(false)
     setReport(demoReport)
     setError(null)
-    setStreamLogs(['Demo fixture loaded. No live source checks were run.'])
-    setStreamEvents([{ type: 'log', message: 'Demo fixture loaded. No live source checks were run.', phase: 'report', status: 'complete', label: 'Demo fixture' }])
-    showToast('Demo fixture loaded. No live source checks were run.', 'info')
+    setStreamLogs(['Sample report loaded. This is a labelled example, not a check of your own post.'])
+    setStreamEvents([{ type: 'log', message: 'Sample report loaded. This is a labelled example, not a check of your own post.', phase: 'report', status: 'complete', label: 'Sample report' }])
+    showToast('Sample report loaded. This is a labelled example, not a check of your own post.', 'info')
     addReport(demoReport)
-  }, [searchParams, addReport])
+  }, [searchParams, addReport, demoReports])
 
   const handleAudit = async (request: AuditRequest) => {
+    lastRequestRef.current = request
+    shareUrlRef.current = null
     setIsAuditing(true)
     setReport(null)
     setError(null)
     setStreamLogs([])
-    setStreamEvents([{ type: 'log', message: 'Opening live evidence stream...', phase: 'intake', status: 'active', label: 'Intake' }])
+    setStreamEvents([{ type: 'log', message: liveMode ? 'Opening live evidence stream...' : 'Running an instant offline check of your post...', phase: 'intake', status: 'active', label: 'Intake' }])
     const controller = new AbortController()
     activeAuditRef.current = controller
 
     try {
-      if (!liveMode) {
-        const demoReport = buildDemoReport(chooseDemoVerdict(request.text))
-        setStreamLogs(['Demo fixture loaded. No live source checks were run.'])
-        setStreamEvents([{ type: 'log', message: 'Demo fixture loaded. No live source checks were run.', phase: 'report', status: 'complete', label: 'Demo fixture' }])
-        showToast('Demo fixture loaded. No live source checks were run.', 'info')
-        setReport(demoReport)
-        addReport(demoReport)
-        return
+      // Every submission is scored on the server from the user's real text.
+      // Default (liveMode=false) => mode:'demo': deterministic, zero paid-provider spend.
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...request, mode: liveMode ? 'live' : 'demo' }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok) {
+        throw new Error(await readErrorMessage(res))
       }
 
-      // Real API Call
-      const res = await fetch('/api/audit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...request, mode: liveMode ? 'live' : 'demo' }),
-          signal: controller.signal,
-        })
-        
-        if (!res.ok) {
-          throw new Error(await readErrorMessage(res))
+      const finalReport = await readAuditStream(res, (event) => {
+        if (event.type === 'log') {
+          setStreamLogs((logs) => [...logs, event.message].slice(-8))
+          setStreamEvents((events) => [...events, event].slice(-16))
         }
-        
-        const finalReport = await readAuditStream(res, (event) => {
-          if (event.type === 'log') {
-            setStreamLogs((logs) => [...logs, event.message].slice(-8))
-            setStreamEvents((events) => [...events, event].slice(-16))
-          }
-        }, controller.signal)
-        setReport(finalReport)
-        addReport(finalReport)
+      }, controller.signal)
+      setReport(finalReport)
+      addReport(finalReport)
     } catch (err: any) {
       if (controller.signal.aborted) {
         setError(STOPPED_AUDIT_MESSAGE)
@@ -339,8 +303,41 @@ function AuditContent() {
     setError(null)
     setStreamLogs([])
     setStreamEvents([])
+    shareUrlRef.current = null
     activeAuditRef.current?.abort()
     router.push('/audit')
+  }
+
+  // Persist-on-share: resolve a shareable permalink for the current report on demand.
+  // Live reports are already persisted; demo reports are persisted here via a free, deterministic
+  // re-run with publish:true. Sample cards (no submitted request) return null.
+  const requestShareLink = async (): Promise<string | null> => {
+    if (typeof window === 'undefined') return null
+    const current = report
+    if (!current) return null
+    const origin = window.location.origin
+
+    if (current.mode !== 'demo' && current.id) {
+      return `${origin}/audit/${current.id}`
+    }
+    if (shareUrlRef.current && current.id && shareUrlRef.current.id === current.id) {
+      return shareUrlRef.current.url
+    }
+    const request = lastRequestRef.current
+    if (!request) return null
+
+    const res = await fetch('/api/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...request, mode: 'demo', publish: true }),
+    })
+    if (!res.ok) throw new Error(await readErrorMessage(res))
+    const finalReport = await readAuditStream(res, () => {})
+    if (!finalReport?.id) return null
+
+    const url = `${origin}/audit/${finalReport.id}`
+    shareUrlRef.current = { id: current.id || finalReport.id, url }
+    return url
   }
 
   const isDemoReport = report?.mode === 'demo' || report?.credentialMode === 'demo' || report?.source === 'demo'
@@ -378,6 +375,7 @@ function AuditContent() {
               </div>
             )}
 
+            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted">Try an example</div>
             <div className="mb-5 grid gap-3 md:grid-cols-3">
               {QUICK_DEMOS.map((demo) => {
                 const Icon = demo.icon
@@ -405,25 +403,25 @@ function AuditContent() {
                 transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg border border-safe/50 bg-safe shadow-lg shadow-safe/20"
               />
-              <ModeTooltip align="left" content="Runs the real audit using configured evidence search, OCR, and model providers.">
+              <ModeTooltip align="left" content="Advanced. Also cross-checks live sources (evidence search, OCR, model providers). BYOK or API-key gated and cost-capped.">
                 <button
                   type="button"
                   onClick={() => setLiveMode(true)}
-                  aria-label="Use live evidence mode. Runs the real audit flow using configured evidence search, OCR, and model providers."
+                  aria-label="Use live evidence mode. Advanced, opt-in. Also cross-checks live sources using configured evidence search, OCR, and model providers. BYOK or API-key gated and cost-capped."
                   className={`relative z-10 min-h-10 w-full rounded-lg px-3 py-2 transition-colors ${liveMode ? 'text-background' : 'text-muted hover:text-safe'}`}
                 >
                   <span>Live evidence</span>
                   <HelpCircle className="absolute right-1 top-1 h-3 w-3 opacity-70" aria-hidden="true" />
                 </button>
               </ModeTooltip>
-              <ModeTooltip align="right" content="Loads prebuilt example reports instantly for demos or credential-offline testing.">
+              <ModeTooltip align="right" content="Runs an instant, offline check of your pasted text. No external sources are contacted and nothing is charged.">
                 <button
                   type="button"
                   onClick={() => setLiveMode(false)}
-                  aria-label="Use demo fixtures mode. Loads prebuilt example reports instantly for demos when live credentials are unavailable."
+                  aria-label="Check my post. Runs an instant, offline check of your pasted text. No external sources are contacted and nothing is charged."
                   className={`relative z-10 min-h-10 w-full rounded-lg px-3 py-2 transition-colors ${!liveMode ? 'text-background' : 'text-muted hover:text-safe'}`}
                 >
-                  <span>Demo fixtures</span>
+                  <span>Check my post</span>
                   <HelpCircle className="absolute right-1 top-1 h-3 w-3 opacity-70" aria-hidden="true" />
                 </button>
               </ModeTooltip>
@@ -488,7 +486,7 @@ function AuditContent() {
             exit={{ opacity: 0, scale: 1.05 }}
             className="pb-20"
           >
-            <ResultScreen result={report} onBackToAudit={reset} timelineEvents={streamEvents} />
+            <ResultScreen result={report} onBackToAudit={reset} timelineEvents={streamEvents} onRequestShareLink={requestShareLink} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -496,11 +494,11 @@ function AuditContent() {
   )
 }
 
-export function AuditClient() {
+export function AuditClient({ demoReports }: { demoReports: Record<DemoVerdict, AuditReport> }) {
   return (
     <ErrorBoundary>
       <Suspense fallback={<AuditSkeleton />}>
-        <AuditContent />
+        <AuditContent demoReports={demoReports} />
       </Suspense>
     </ErrorBoundary>
   )
