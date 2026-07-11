@@ -85,6 +85,9 @@ interface ResultScreenProps {
   result: Result
   onBackToAudit?: () => void
   timelineEvents?: TimelineEvent[]
+  // Resolves a shareable permalink for this report on demand (persist-on-share). Returns null when
+  // no link is available (e.g. a sample card). When omitted, the permalink page falls back to result.id.
+  onRequestShareLink?: () => Promise<string | null>
 }
 
 type TimelineEvent = string | {
@@ -437,9 +440,11 @@ function preparePngExportClone(clonedDocument: Document, isDark: boolean) {
   })
 }
 
-export default function ResultScreen({ result, onBackToAudit, timelineEvents = [] }: ResultScreenProps) {
+export default function ResultScreen({ result, onBackToAudit, timelineEvents = [], onRequestShareLink }: ResultScreenProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [sharingLink, setSharingLink] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const [feedbackLoading, setFeedbackLoading] = useState<string | null>(null)
   const [feedbackReason, setFeedbackReason] = useState(result.userFeedbackReason || '')
   const [expandedOcr, setExpandedOcr] = useState(false)
@@ -504,13 +509,59 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
     }
   }
 
+  const canShareLink = Boolean(onRequestShareLink) || Boolean(result.id)
+
+  const resolveShareLink = async (): Promise<string | null> => {
+    if (onRequestShareLink) return onRequestShareLink()
+    if (result.id && typeof window !== 'undefined') return `${window.location.origin}/audit/${result.id}`
+    return null
+  }
+
   const handleShare = async () => {
     const shareText = `HireProof verdict: ${getVerdictText(result.verdict)}\nRisk score: ${result.riskScore}/100`
+    let url: string | null = null
+    try {
+      setSharingLink(true)
+      url = await resolveShareLink()
+    } catch {
+      url = null
+    } finally {
+      setSharingLink(false)
+    }
+
     if (typeof navigator !== 'undefined' && navigator.share) {
-      await navigator.share({ title: 'HireProof investigation', text: shareText })
+      const payload = url
+        ? { title: 'HireProof investigation', text: shareText, url }
+        : { title: 'HireProof investigation', text: shareText }
+      try {
+        await navigator.share(payload)
+      } catch {
+        // User dismissed the share sheet.
+      }
       return
     }
-    await navigator.clipboard.writeText(shareText)
+
+    await navigator.clipboard.writeText(url ? `${shareText}\n${url}` : shareText)
+    showToast(url ? 'Verdict and report link copied.' : 'Verdict copied.', 'success')
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      setSharingLink(true)
+      const url = await resolveShareLink()
+      if (!url) {
+        showToast('A shareable link is available after you check your own post.', 'info')
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setLinkCopied(true)
+      showToast('Report link copied.', 'success')
+      window.setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      showToast('Could not create a share link. Please try again.', 'error')
+    } finally {
+      setSharingLink(false)
+    }
   }
 
   const handleDownload = async () => {
@@ -676,11 +727,24 @@ export default function ResultScreen({ result, onBackToAudit, timelineEvents = [
               <Table className="w-4 h-4" />
               <span className="hidden text-xs font-black sm:inline">CSV</span>
             </button>
+            {canShareLink && (
+              <button
+                onClick={handleCopyLink}
+                disabled={sharingLink}
+                title="Copy shareable report link"
+                aria-label="Copy shareable report link"
+                className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 disabled:opacity-60 sm:w-auto sm:gap-1.5 sm:px-3"
+              >
+                {sharingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                <span className="hidden text-xs font-black sm:inline">{linkCopied ? 'Copied' : 'Copy link'}</span>
+              </button>
+            )}
             <button
               onClick={handleShare}
+              disabled={sharingLink}
               title="Share verdict"
               aria-label="Share verdict"
-              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 sm:w-auto sm:gap-1.5 sm:px-3"
+              className="hireproof-focus flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-evidence transition-all hover:-translate-y-0.5 hover:bg-evidence-bg active:translate-y-0 active:scale-95 disabled:opacity-60 sm:w-auto sm:gap-1.5 sm:px-3"
             >
               <Share2 className="w-4 h-4" />
               <span className="hidden text-xs font-black sm:inline">Share</span>

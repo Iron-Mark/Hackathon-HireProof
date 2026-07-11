@@ -469,7 +469,9 @@ export async function POST(request: Request) {
           },
         })
 
-        if (!demoMode) {
+        // Live reports always persist. Demo reports persist only on an explicit share request
+        // (publish), so the user gets a shareable permalink without storing every default check.
+        if (!demoMode || validated.publish) {
           await persistReportSafely(report)
         }
         sendEvent('log', { message: 'Report assembled and ready to review.', phase: 'report', status: 'complete', label: 'Report ready' })

@@ -213,6 +213,8 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
   const [costPosture, setCostPosture] = useState<CostPosture | null>(null)
   const loadedDemoRef = useRef<string | null>(null)
   const activeAuditRef = useRef<AbortController | null>(null)
+  const lastRequestRef = useRef<AuditRequest | null>(null)
+  const shareUrlRef = useRef<{ id: string; url: string } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -245,6 +247,8 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
   }, [searchParams, addReport, demoReports])
 
   const handleAudit = async (request: AuditRequest) => {
+    lastRequestRef.current = request
+    shareUrlRef.current = null
     setIsAuditing(true)
     setReport(null)
     setError(null)
@@ -299,8 +303,41 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
     setError(null)
     setStreamLogs([])
     setStreamEvents([])
+    shareUrlRef.current = null
     activeAuditRef.current?.abort()
     router.push('/audit')
+  }
+
+  // Persist-on-share: resolve a shareable permalink for the current report on demand.
+  // Live reports are already persisted; demo reports are persisted here via a free, deterministic
+  // re-run with publish:true. Sample cards (no submitted request) return null.
+  const requestShareLink = async (): Promise<string | null> => {
+    if (typeof window === 'undefined') return null
+    const current = report
+    if (!current) return null
+    const origin = window.location.origin
+
+    if (current.mode !== 'demo' && current.id) {
+      return `${origin}/audit/${current.id}`
+    }
+    if (shareUrlRef.current && current.id && shareUrlRef.current.id === current.id) {
+      return shareUrlRef.current.url
+    }
+    const request = lastRequestRef.current
+    if (!request) return null
+
+    const res = await fetch('/api/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...request, mode: 'demo', publish: true }),
+    })
+    if (!res.ok) throw new Error(await readErrorMessage(res))
+    const finalReport = await readAuditStream(res, () => {})
+    if (!finalReport?.id) return null
+
+    const url = `${origin}/audit/${finalReport.id}`
+    shareUrlRef.current = { id: current.id || finalReport.id, url }
+    return url
   }
 
   const isDemoReport = report?.mode === 'demo' || report?.credentialMode === 'demo' || report?.source === 'demo'
@@ -449,7 +486,7 @@ function AuditContent({ demoReports }: { demoReports: Record<DemoVerdict, AuditR
             exit={{ opacity: 0, scale: 1.05 }}
             className="pb-20"
           >
-            <ResultScreen result={report} onBackToAudit={reset} timelineEvents={streamEvents} />
+            <ResultScreen result={report} onBackToAudit={reset} timelineEvents={streamEvents} onRequestShareLink={requestShareLink} />
           </motion.div>
         )}
       </AnimatePresence>
