@@ -1,27 +1,41 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Search, Globe, ShieldAlert, Sparkles, TrendingUp, Cpu, Terminal, ArrowRight, BookOpen, Compass } from 'lucide-react'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/layout/site-header'
 import type { AuditReport } from '@/lib/schemas'
 
-export function ExploreClient() {
-  const [reports, setReports] = useState<AuditReport[]>([])
-  const [totalReports, setTotalReports] = useState(0)
+export function ExploreClient({
+  initialReports = [],
+  initialTotal = 0,
+}: {
+  initialReports?: AuditReport[]
+  initialTotal?: number
+}) {
+  const [reports, setReports] = useState<AuditReport[]>(initialReports)
+  const [totalReports, setTotalReports] = useState(initialTotal)
   const [query, setQuery] = useState('')
   const [verdict, setVerdict] = useState('all')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  // The server already rendered the default (unfiltered) results, so skip the mount fetch
+  // and only re-query when the user changes the search box or verdict filter.
+  const isFirstRun = useRef(true)
 
   useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false
+      return
+    }
+
     const fetchReports = async () => {
       setLoading(true)
       try {
         const params = new URLSearchParams()
         if (query) params.set('q', query)
         if (verdict !== 'all') params.set('verdict', verdict)
-        
+
         const res = await fetch(`/api/intelligence/reports?${params.toString()}`)
         const data = await res.json()
         setReports(data.reports || [])
@@ -32,7 +46,7 @@ export function ExploreClient() {
         setLoading(false)
       }
     }
-    
+
     const debounce = setTimeout(fetchReports, 300)
     return () => clearTimeout(debounce)
   }, [query, verdict])

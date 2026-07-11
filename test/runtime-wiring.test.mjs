@@ -1111,8 +1111,10 @@ test('screenshot audits are excluded from public explore and trends listings by 
 
   assert.match(uiRoute, /publiclyListed:\s*!demoMode && !validated\.image/)
   assert.match(v1Route, /publiclyListed:\s*false/)
-  assert.match(reportsRoute, /filterPublicIntelligenceReports/)
-  assert.match(reportsRoute, /sanitizePublicIntelligenceReport/)
+  // The route delegates to selectPublicReports, which enforces the public filter + sanitize.
+  assert.match(reportsRoute, /selectPublicReports/)
+  assert.match(publicReports, /export function selectPublicReports/)
+  assert.match(publicReports, /selectPublicReports[\s\S]*filterPublicIntelligenceReports/)
   assert.match(db, /buildPublicReportTrends/)
   assert.match(publicReports, /publiclyListed === true/)
   assert.match(publicReports, /version === '2'/)

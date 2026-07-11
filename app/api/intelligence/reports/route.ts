@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { listReports } from '@/lib/db'
-import { filterPublicIntelligenceReports, sanitizePublicIntelligenceReport } from '@/lib/public-intelligence-reports.mjs'
+import { selectPublicReports } from '@/lib/public-intelligence-reports.mjs'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { requestIp } from '@/lib/request-security'
 
@@ -17,22 +17,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
   }
 
-  const reports = filterPublicIntelligenceReports(await listReports(200))
+  const { reports, total } = selectPublicReports(await listReports(200), { query, verdict, limit: 50 })
 
-  const filtered = reports.filter((report) => {
-    const haystack = [
-      report.extractedClaims.company,
-      report.extractedClaims.role,
-      report.extractedClaims.location,
-      report.summary,
-    ].join(' ').toLowerCase()
-    const queryMatch = !query || haystack.includes(query)
-    const verdictMatch = verdict === 'all' || report.verdict === verdict
-    return queryMatch && verdictMatch
-  })
-
-  return NextResponse.json({
-    reports: filtered.slice(0, 50).map(sanitizePublicIntelligenceReport),
-    total: filtered.length,
-  })
+  return NextResponse.json({ reports, total })
 }
