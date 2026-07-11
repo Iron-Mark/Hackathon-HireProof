@@ -52,10 +52,14 @@ export async function loadScoringStack() {
 
   const read = (relative) => fs.readFile(new URL(relative, import.meta.url), 'utf8')
 
-  const auditSignalsSource = await read('../../lib/audit-signals.mjs')
-  const auditSignalsCompiled = auditSignalsSource.replace(/^export function /gm, 'function ')
-    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, traceAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
-  const auditSignals = runCommonJs(auditSignalsCompiled, () => ({}))
+  // Shared scam vocabulary + normalization/matcher primitives, imported by both
+  // audit-signals.mjs and intelligence-v2.ts. Self-contained (no requires of its own).
+  const scamVocabulary = runCommonJs(transpile(await read('../../lib/scam-vocabulary.mjs')), () => ({}))
+
+  const auditSignals = runCommonJs(transpile(await read('../../lib/audit-signals.mjs')), (id) => {
+    if (id === './scam-vocabulary.mjs') return scamVocabulary
+    throw new Error(`Unexpected require in audit-signals.mjs: ${id}`)
+  })
 
   const riskScorer = runCommonJs(transpile(await read('../../lib/risk-scorer.ts')), (id) => {
     if (id === '@/lib/audit-signals.mjs') return auditSignals
@@ -74,6 +78,7 @@ export async function loadScoringStack() {
     if (id === '@/lib/risk-scorer') return riskScorer
     if (id === '@/lib/salary-benchmarks') return salaryBenchmarks
     if (id === '@/lib/alternative-jobs') return alternativeJobs
+    if (id === '@/lib/scam-vocabulary.mjs') return scamVocabulary
     throw new Error(`Unexpected require in intelligence-v2.ts: ${id}`)
   })
 

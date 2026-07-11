@@ -19,6 +19,28 @@ import {
   getConfidenceLabel,
   traceRiskScore,
 } from '@/lib/risk-scorer'
+import {
+  hasRawPhrase,
+  normalize as normalizeText,
+  hasTokenPhrase,
+  tokenizeWithBoundaries,
+  hasUnnegatedTerm,
+  OFF_PLATFORM_UNAMBIGUOUS,
+  OFF_PLATFORM_AMBIGUOUS,
+  OFF_PLATFORM_PIVOT_VERBS,
+  OFF_PLATFORM_RAW_TERMS,
+  NO_VETTING_TERMS,
+  NO_VETTING_RAW_TERMS,
+  UPFRONT_PAYMENT_TERMS,
+  UPFRONT_PAYMENT_RAW_TERMS,
+  MONEY_MULE_TERMS,
+  MONEY_MULE_RE,
+  BUY_TO_WORK_TERMS,
+  BUY_TO_WORK_RE,
+  CRYPTO_DEPOSIT_TERMS,
+  CRYPTO_DEPOSIT_RE,
+  CREDENTIAL_HARVEST_TERMS,
+} from '@/lib/scam-vocabulary.mjs'
 
 type BuildReportV2Input = {
   id: string
@@ -71,166 +93,7 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)))
 }
 
-// Cross-script confusables -> Latin (homoglyph evasion). Kept in sync with
-// lib/audit-signals.mjs.
-const CONFUSABLE_MAP: Record<string, string> = {
-  'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y', 'ѕ': 's', 'і': 'i', 'ј': 'j',
-  'к': 'k', 'н': 'h', 'в': 'b', 'т': 't', 'м': 'm', 'ո': 'n', 'ԁ': 'd', 'ԛ': 'q', 'ѡ': 'w', 'г': 'r',
-  'α': 'a', 'ο': 'o', 'ρ': 'p', 'ε': 'e', 'ι': 'i', 'κ': 'k', 'ν': 'v', 'τ': 't', 'υ': 'u', 'χ': 'x',
-  'β': 'b', 'η': 'n', 'μ': 'm', 'ϲ': 'c', 'ⅼ': 'l', 'ⅰ': 'i', '，': ',', '．': '.', '；': ';',
-}
-const CONFUSABLE_RE = new RegExp(`[${Object.keys(CONFUSABLE_MAP).join('')}]`, 'g')
 
-const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{1F1E6}-\u{1F1FF}️™ℹ⌨⏏Ⓜ]/gu
-
-function foldConfusables(value: string) {
-  return String(value || '')
-    .replace(/[​-‍﻿⁠­]/g, '')
-    .replace(EMOJI_RE, '')
-    .replace(CONFUSABLE_RE, ch => CONFUSABLE_MAP[ch] || ch)
-}
-
-const LEET_MAP: Record<string, string> = { '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's', '7': 't' }
-function leetFold(value: string) {
-  let text = String(value || '')
-  for (let pass = 0; pass < 4; pass += 1) {
-    let changed = false
-    const next = text.replace(/[013457]/g, (digit, index: number, source: string) => {
-      const prev = source[index - 1] || ''
-      const after = source[index + 1] || ''
-      if (/[a-z]/i.test(prev) || /[a-z]/i.test(after)) { changed = true; return LEET_MAP[digit] }
-      return digit
-    })
-    text = next
-    if (!changed) break
-  }
-  return text
-}
-
-const DOUBLE_NEG_AFFIRMER_RE = /\b(?:not the case that|cannot deny|can not deny|no one can deny|it is false that|never fail(?:s)? to)\b/i
-
-function stripDiacritics(value: string) {
-  return String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function normalizeText(value: string) {
-  return stripDiacritics(foldConfusables(leetFold(collapseSpacedLetters(String(value || '').normalize('NFKC')))))
-    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-}
-
-// NFKC-composed raw string that keeps non-ASCII scripts intact (no confusable fold, no
-// NFD decomposition) so precomposed CJK/Hangul/Cyrillic idiom needles can match. Kept in
-// sync with lib/audit-signals.mjs.
-function rawFolded(value: string) {
-  return String(value || '').normalize('NFKC').toLowerCase()
-}
-
-function hasRawPhrase(value: string, phrases: string[]) {
-  const text = rawFolded(value)
-  return phrases.some(phrase => text.includes(phrase))
-}
-
-// Token-boundary phrase match on normalized text (' t me ' matches "t.me/handle").
-function hasTokenPhrase(value: string, phrase: string) {
-  return ` ${normalizeText(value)} `.includes(` ${phrase} `)
-}
-
-const NEGATION_TOKENS = new Set([
-  'no', 'never', 'not', 'without', 'dont', 'doesnt', 'wont', 'zero', 'beware', 'avoid', 'nor', 'none',
-  'ne', 'pas', 'jamais', 'aucun', 'aucune', 'sans', 'nunca', 'ningun', 'ninguna', 'sin', 'nao', 'nenhum', 'sem',
-  'tidak', 'tanpa', 'jangan', 'nahi', 'bina', 'kein', 'keine', 'nie', 'niemals',
-])
-
-const COERCION_TOKENS = new Set([
-  'cannot', 'unable', 'must', 'mandatory', 'obligatory', 'compulsory',
-])
-
-function collapseSpacedLetters(value: string) {
-  return String(value || '').replace(/\b(?:[a-z0-9][ .\-_]){3,}[a-z0-9]\b/gi, (m) => m.replace(/[ .\-_]/g, ''))
-}
-
-function tokenizeWithBoundaries(value: string) {
-  const marked = stripDiacritics(foldConfusables(leetFold(collapseSpacedLetters(String(value || '').normalize('NFKC')))))
-    .toLowerCase()
-    .replace(/[,;:!?]+|\.(?=\s|$)|\s[-–—/]\s|\b(?:but|however|though|although|yet|whereas|nevertheless)\b/g, ' cbrk ')
-    .replace(/[^a-z0-9 ]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return marked ? marked.split(' ') : []
-}
-
-// Clause-boundary-aware negation with a strong-coercion override (kept in sync with
-// lib/audit-signals.mjs). A negation only suppresses within its own clause; a coercion
-// marker ("cannot ... without the fee", "must pay") in the same clause overrides it.
-function hasUnnegatedTerm(value: string, terms: string[]) {
-  const tokens = tokenizeWithBoundaries(value)
-  const globalCoerce = DOUBLE_NEG_AFFIRMER_RE.test(String(value || ''))
-  for (const term of terms) {
-    const parts = term.split(' ')
-    for (let i = 0; i + parts.length <= tokens.length; i += 1) {
-      if (!parts.every((part, k) => tokens[i + k] === part)) continue
-      // Negation only governs from BEFORE the term; coercion counts either direction.
-      let negated = false
-      let coerced = globalCoerce
-      for (let j = i - 1; j >= 0 && tokens[j] !== 'cbrk'; j -= 1) {
-        if (NEGATION_TOKENS.has(tokens[j])) negated = true
-        if (COERCION_TOKENS.has(tokens[j])) coerced = true
-      }
-      for (let j = i + parts.length; j < tokens.length && tokens[j] !== 'cbrk'; j += 1) {
-        if (COERCION_TOKENS.has(tokens[j])) coerced = true
-      }
-      if (!negated || coerced) return true
-    }
-  }
-  return false
-}
-
-const UPFRONT_PAYMENT_TERMS = [
-  ...['training', 'registration', 'activation', 'processing', 'application', 'membership', 'placement', 'onboarding', 'handling', 'admin', 'upfront', 'setup', 'account', 'service']
-    .flatMap(kind => [`${kind} fee`, `${kind} charge`, `${kind} cost`]),
-  'equipment deposit', 'security deposit', 'refundable deposit', 'deposit required', 'deposit to unlock', 'with deposit',
-  'purchase software', 'software license', 'starter kit', 'pay to start', 'pay before starting', 'upfront payment',
-  'cuota de inscripcion', 'tarifa de inscripcion', 'cuota de registro', 'pago inicial', 'deposito inicial',
-  'taxa de treinamento', 'taxa de inscricao', 'taxa de adesao', 'taxa de cadastro',
-  'frais de dossier', 'frais d inscription', 'frais de formation', 'frais de traitement',
-  'biaya pelatihan', 'biaya pendaftaran', 'uang pendaftaran',
-  'registration ke liye', 'fees jama', 'jama karein', 'jama karna',
-  'bearbeitungsgebuhr', 'schulungsgebuhr', 'anmeldegebuhr', 'vermittlungsgebuhr', 'kaution',
-  'quota di iscrizione', 'tassa di formazione', 'quota di adesione', 'cauzione',
-  'bayad sa registration', 'bayad sa training', 'registration bayad', 'training bayad', 'pambayad sa',
-]
-const UPFRONT_PAYMENT_RAW_TERMS = [
-  '报名费', '培训费', '押金', '保证金', '会费', '工本费', '服务费', '手续费', '注册费', '가입비', '보증금', '수수료',
-  'регистрационный взнос', 'взнос', 'залог', 'плата за обучение', 'предоплата',
-  'رسوم التسجيل', 'رسوم التدريب', 'رسوم', 'عربون',
-  'ค่าสมัคร', 'ค่าธรรมเนียม', 'ค่าลงทะเบียน', 'ค่าฝึกอบรม', 'เงินมัดจำ',
-]
-const NO_VETTING_RAW_TERMS = [
-  '无需面试', '免面试', '无面试', '不需要面试', '面接なし', '면접 없이', '면접없이',
-  'без собеседования', 'بدون مقابلة', 'ไม่ต้องสัมภาษณ์',
-]
-
-const NO_VETTING_TERMS = [
-  'no interview', 'without interview', 'skip interview', 'no exam', 'no screening', 'no assessment',
-  'walang interview', 'walang exam',
-  'sin entrevista', 'sem entrevista', 'sans entretien', 'tanpa wawancara', 'senza colloquio', 'ohne vorstellungsgesprach',
-  'koi interview nahi', 'bina interview', 'interview nahi',
-]
-
-// Kept in sync with lib/audit-signals.mjs.
-const OFF_PLATFORM_UNAMBIGUOUS = [
-  'linktree', 'linktr ee', 'wickr', 'threema', 'session app', 'snapchat', 'snap chat', 'weixin',
-  'signal app', 'signal messenger', 'kakaotalk',
-]
-const OFF_PLATFORM_AMBIGUOUS = [
-  'discord', 'skype', 'hangouts', 'google chat', 'gchat', 'wechat', 'we chat', 'kakao',
-  'signal', 'line', 'instagram dm', 'ig dm', 'facebook messenger', 'fb messenger', 'messenger',
-]
-const OFF_PLATFORM_PIVOT_VERBS = new Set([
-  'message', 'messages', 'msg', 'contact', 'add', 'dm', 'dms', 'reach', 'apply', 'applying', 'chat',
-  'ping', 'connect', 'join', 'inbox', 'pm', 'hmu', 'text', 'write', 'talk', 'find', 'reply',
-])
-const OFF_PLATFORM_RAW_TERMS = ['微信', '加微信', '电报', '텔레그램', '왓츠앱', 'ватсап', 'телеграм', 'واتساب', 'تلغرام']
 
 function hasAmbiguousChannelPivot(rawText: string) {
   const tokens = tokenizeWithBoundaries(rawText)
@@ -257,40 +120,6 @@ function isSmsOnlyFunnel(contactMethod?: string, applicationPath?: string) {
   return hasPhone && !hasUrl && smsWords
 }
 
-const MONEY_MULE_TERMS = [
-  'deposit the check', 'deposit this check', 'deposit the cheque', 'cash the check', 'cash this check', 'mobile deposit the check',
-  'wire the remaining', 'wire the balance', 'wire the funds', 'wire back', 'transfer the remaining', 'transfer the balance',
-  'forward the payment', 'forward the funds', 'send the balance', 'send back the difference', 'keep your commission and wire',
-  'reship', 're ship', 'reshipping', 'forward packages', 'forward parcels', 'receive packages and forward', 'receive parcels and forward',
-  're label packages', 'relabel packages', 'package forwarding', 'parcel forwarding', 'process payments on our behalf',
-  'money transfer agent', 'payment processing agent', 'mystery shopper', 'secret shopper',
-  'western union', 'moneygram', 'wiring', 'wire to', 'deposit into your account', 'deposit funds into your',
-  'withdraw it then', 'withdraw and wire', 'withdraw the funds and', 'keep the difference', 'keep your commission and',
-  'evaluate a money transfer', 'money transfer service', 'test recipient', 'evaluate western union',
-]
-const CRYPTO_DEPOSIT_TERMS = [
-  'deposit usdt', 'deposit btc', 'deposit eth', 'deposit crypto', 'load usdt', 'fund your wallet', 'fund the wallet',
-  'company wallet', 'company trading', 'trading platform to activate', 'crypto deposit', 'deposit into the platform',
-  'top up your account with', 'recharge your account with', 'deposit to your trading',
-]
-const BUY_TO_WORK_TERMS = [
-  'buy your', 'purchase your', 'buy the materials', 'buy materials', 'purchase materials', 'buy your materials',
-  'buy samples', 'purchase samples', 'buy gift cards', 'purchase gift cards', 'buy promotional', 'purchase promotional',
-  'assembly kit', 'sample kit', 'inventory purchase', 'buy inventory', 'buy equipment first', 'purchase the starter',
-]
-const CREDENTIAL_HARVEST_TERMS = [
-  'social security number', 'ssn and', 'your ssn', 'bank login', 'online banking username', 'online banking password',
-  'banking username', 'banking password', 'account password', 'card pin', 'debit card pin', 'one time password', 'otp code',
-  'photo of your id holding', 'selfie holding your id', 'selfie with your id', 'routing number and account number',
-  'mother maiden name and', 'full card number and cvv',
-]
-
-// Article/synonym-tolerant fallbacks so "buy the parts kit", "buy prepaid cards", and
-// "top up your wallet with USDT" fire even though the exact bigram is not listed. Run on
-// normalizeText output. Kept in sync with lib/audit-signals.mjs.
-const BUY_TO_WORK_RE = /\b(?:buy|purchase|pay for|order)\b(?:\s+\w+){0,3}\s+(?:material|materials|kit|kits|sample|samples|supply|supplies|inventory|equipment|gift card|gift cards|prepaid card|prepaid cards|prepaid voucher|voucher|vouchers|starter pack|starter kit|assembly)\b/
-const CRYPTO_DEPOSIT_RE = /\b(?:deposit|fund|load|top up|recharge|send|transfer|pay|preload)\b(?:\s+\w+){0,4}\s+(?:usdt|usdc|btc|eth|bnb|trx|crypto|bitcoin|ethereum|tether|wallet|trading platform|trading account)\b/
-const MONEY_MULE_RE = /\b(?:deposit|cash|receive)\b(?:\s+\w+){0,4}\s+check\b(?:\s+\w+){0,8}\s+(?:wire|transfer|send|forward|western union|moneygram)\b|\b(?:reship|re ship|reshipping|forward|receive)\b(?:\s+\w+){0,3}\s+(?:package|packages|parcel|parcels)\b/
 
 // Business-purchase fees that a legitimate franchise/reseller model can charge (caution,
 // not high-risk). Everything else in UPFRONT_PAYMENT_TERMS is an employee-job fee that a
