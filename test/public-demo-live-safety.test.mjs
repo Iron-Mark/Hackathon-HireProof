@@ -25,7 +25,9 @@ test('public audit route keeps demo mode out of live providers and public storag
   assert.match(route, /mode: demoMode \? 'demo' : 'live'/)
   assert.match(route, /source: demoMode \? 'demo' : 'web'/)
   assert.match(route, /publiclyListed: !demoMode && !validated\.image/)
-  assert.match(route, /if \(!demoMode\) {\s*await persistReportSafely\(report\)\s*}/)
+  // Demo reports persist only on an explicit share (publish); they stay publiclyListed:false above,
+  // so they remain out of the public (Explore/Trends) listing even when a share link is minted.
+  assert.match(route, /if \(!demoMode \|\| validated\.publish\) {\s*await persistReportSafely\(report\)\s*}/)
   assert.doesNotMatch(route, /if \(true\)/)
   assert.match(reportBuilder, /mode\?: AuditReport\['mode'\]/)
   assert.match(reportBuilder, /mode: input\.mode \|\| 'live'/)
