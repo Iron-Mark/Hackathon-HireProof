@@ -11,16 +11,16 @@ const BLOCKED_SCANNER_UA_PATTERNS = [
   /zgrab/i,
 ]
 
-// AI crawler User-Agents are blocked on public pages only.
+// Training / scraping AI crawler User-Agents are blocked on public pages only.
 // API, MCP, webhook, and headless agent routes stay reachable for AI-to-AI integrations.
+// Retrieval / citation crawlers (OAI-SearchBot, ChatGPT-User, PerplexityBot, Perplexity-User,
+// Claude-User, Claude-SearchBot) are intentionally NOT listed here: they answer live user queries
+// and cite pages with a link back, so they are allowed on public pages to drive referral traffic.
+// (The /claudebot/i pattern below matches only "ClaudeBot", not Claude-User / Claude-SearchBot.)
 const BLOCKED_AI_CRAWLER_UA_PATTERNS = [
   /gptbot/i,
-  /chatgpt-user/i,
-  /oai-searchbot/i,
   /claudebot/i,
   /anthropic-ai/i,
-  /perplexitybot/i,
-  /perplexity-user/i,
   /ccbot/i,
   /bytespider/i,
   /google-extended/i,

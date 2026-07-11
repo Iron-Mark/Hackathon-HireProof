@@ -241,6 +241,9 @@ export const AuditRequestSchema = z.object({
   mode: z.enum(['live', 'demo']).optional(),
   image: z.string().max(5_000_000).optional(), // ~3.75MB base64 cap
   webhook_url: z.string().url().max(2000).optional(),
+  // When true, a demo (zero-cost, deterministic) report is persisted so it gets a shareable
+  // permalink. Only set by the on-demand "share this report" flow. Live reports always persist.
+  publish: z.boolean().optional(),
 }).superRefine((value, context) => {
   if (!value.text && !value.url && !value.image) {
     context.addIssue({

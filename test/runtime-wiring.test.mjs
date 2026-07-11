@@ -937,7 +937,7 @@ test('audit page consumes the live audit sse stream instead of parsing it as jso
   assert.match(source, /parsed\.type === 'result'/)
   assert.match(source, /parsed\.type === 'error'/)
   assert.match(source, /Live evidence/)
-  assert.match(source, /Demo fixtures/)
+  assert.match(source, /Check my post/)
   assert.match(progress, /Analyst console/)
   assert.match(progress, /aria-live="polite"/)
   assert.match(progress, /prefers-reduced-motion/)
@@ -952,15 +952,15 @@ test('audit page consumes the live audit sse stream instead of parsing it as jso
   assert.doesNotMatch(source, /Math\.random\(\)/)
 })
 
-test('audit mode tabs explain live evidence and demo fixtures with accessible help text', async () => {
+test('audit mode tabs explain live evidence and the instant offline check with accessible help text', async () => {
   const source = await fs.readFile(new URL('../app/audit/audit-client.tsx', import.meta.url), 'utf8')
 
   assert.match(source, /function ModeTooltip/)
   assert.match(source, /HelpCircle/)
-  assert.match(source, /Runs the real audit using configured evidence search, OCR, and model providers/)
-  assert.match(source, /Loads prebuilt example reports instantly/)
+  assert.match(source, /Also cross-checks live sources/)
+  assert.match(source, /Runs an instant, offline check of your pasted text/)
   assert.match(source, /aria-label="Use live evidence mode/)
-  assert.match(source, /aria-label="Use demo fixtures mode/)
+  assert.match(source, /aria-label="Check my post\. Runs an instant/)
   assert.doesNotMatch(source, /title="Live evidence runs/)
   assert.doesNotMatch(source, /title="Demo fixtures load/)
   assert.match(source, /overflow-visible rounded-xl/)
@@ -972,21 +972,21 @@ test('audit mode tabs explain live evidence and demo fixtures with accessible he
   assert.match(source, /role="tooltip"/)
 })
 
-test('demo reports disclose fixture mode and timeline avoids fake timings', async () => {
+test('offline reports disclose non-live mode and timeline avoids fake timings', async () => {
   const auditClient = await fs.readFile(new URL('../app/audit/audit-client.tsx', import.meta.url), 'utf8')
   const resultScreen = await fs.readFile(new URL('../components/audit/result-screen.tsx', import.meta.url), 'utf8')
 
-  assert.match(auditClient, /showToast\('Demo fixture loaded/)
+  assert.match(auditClient, /showToast\('Sample report loaded/)
   assert.match(auditClient, /timelineEvents=/)
-  assert.match(auditClient, /Demo fixture/)
-  assert.match(resultScreen, /Demo fixture/)
+  assert.match(auditClient, /not a check of your own post/)
+  assert.match(resultScreen, /Instant offline check/)
   assert.match(resultScreen, /timelineEvents/)
   assert.match(resultScreen, /expandedTimelineSteps/)
   assert.match(resultScreen, /aria-expanded=\{isExpanded\}/)
   assert.match(resultScreen, /Expand timeline/)
   assert.match(resultScreen, /Collapse timeline/)
   assert.match(resultScreen, /Timeline details explain the audit process/)
-  assert.match(resultScreen, /Use live evidence mode for fresh source checks/)
+  assert.match(resultScreen, /Turn on Live evidence for fresh source checks/)
   assert.doesNotMatch(resultScreen, /T\+0\.4s/)
   assert.doesNotMatch(resultScreen, /T\+1\.2s/)
   assert.doesNotMatch(resultScreen, /T\+2\.1s/)
@@ -1111,8 +1111,10 @@ test('screenshot audits are excluded from public explore and trends listings by 
 
   assert.match(uiRoute, /publiclyListed:\s*!demoMode && !validated\.image/)
   assert.match(v1Route, /publiclyListed:\s*false/)
-  assert.match(reportsRoute, /filterPublicIntelligenceReports/)
-  assert.match(reportsRoute, /sanitizePublicIntelligenceReport/)
+  // The route delegates to selectPublicReports, which enforces the public filter + sanitize.
+  assert.match(reportsRoute, /selectPublicReports/)
+  assert.match(publicReports, /export function selectPublicReports/)
+  assert.match(publicReports, /selectPublicReports[\s\S]*filterPublicIntelligenceReports/)
   assert.match(db, /buildPublicReportTrends/)
   assert.match(publicReports, /publiclyListed === true/)
   assert.match(publicReports, /version === '2'/)
@@ -1206,13 +1208,27 @@ test('redis-backed services trim production environment variables before client 
   assert.match(bot, /REDIS_URL!\.trim\(\)/)
 })
 
-test('robots and proxy discourage common AI crawlers from scraping public pages', async () => {
+test('robots and proxy allow AI retrieval crawlers while blocking training/scraping crawlers', async () => {
   const robots = await fs.readFile(new URL('../app/robots.ts', import.meta.url), 'utf8')
   const proxy = await fs.readFile(new URL('../proxy.ts', import.meta.url), 'utf8')
 
-  for (const crawler of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'CCBot', 'Bytespider', 'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent']) {
+  // Training / scraping crawlers stay blocked in both the advisory robots list and the proxy enforcement.
+  for (const crawler of ['GPTBot', 'ClaudeBot', 'CCBot', 'Bytespider', 'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent']) {
     assert.match(robots, new RegExp(crawler.replace('-', '[-]'), 'i'))
     assert.match(proxy, new RegExp(crawler.replace('-', '[-]'), 'i'))
+  }
+
+  // Retrieval / citation crawlers are allowed: present in robots' allow list and NOT in the proxy 403 block patterns.
+  assert.match(robots, /AI_RETRIEVAL_CRAWLERS/)
+  const retrievalBlockPatterns = [
+    ['OAI-SearchBot', /\/oai-searchbot\/i/],
+    ['ChatGPT-User', /\/chatgpt-user\/i/],
+    ['PerplexityBot', /\/perplexitybot\/i/],
+    ['Perplexity-User', /\/perplexity-user\/i/],
+  ]
+  for (const [bot, blockPattern] of retrievalBlockPatterns) {
+    assert.match(robots, new RegExp(bot.replace('-', '[-]'), 'i'))
+    assert.doesNotMatch(proxy, blockPattern)
   }
 
   assert.match(robots, /disallow:\s*'\/'/)
