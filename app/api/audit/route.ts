@@ -28,7 +28,7 @@ import { runEvidenceBroker } from '@/lib/evidence-broker'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { createPublicReportId, saveReport } from '@/lib/db'
 import { getHireProofModel, hasHireProofModelProvider } from '@/lib/ai-model'
-import { recoverObviousClaims } from '@/lib/claim-extraction.mjs'
+import { recoverObviousClaims, extractClaimsFromText } from '@/lib/claim-extraction.mjs'
 import { buildAuditReportV2 } from '@/lib/intelligence-v2'
 import {
   buildEnrichmentEvidence,
@@ -45,77 +45,11 @@ import { getTrustedInternalBaseUrl } from '@/lib/trusted-base-url'
 export const runtime = 'nodejs'
 const UI_AUDIT_PAYLOAD_LIMIT_BYTES = 5 * 1024 * 1024
 
-function extractFirstMatch(text: string, patterns: RegExp[], fallback = 'Unknown') {
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    const value = match?.[1]?.trim().replace(/[.。]+$/, '')
-    if (value) return value
-  }
-  return fallback
-}
-
-function extractCompanyFromUrl(url?: string) {
-  if (!url) return null
-  try {
-    const hostname = new URL(url).hostname.replace(/^www\./, '')
-    const [name] = hostname.split('.')
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : null
-  } catch {
-    return null
-  }
-}
-
 async function extractClaims(input: AuditRequest, options: { useModel?: boolean } = {}): Promise<ExtractedClaims> {
   const text = input.text
 
   if (options.useModel === false || !hasHireProofModelProvider()) {
-    const companyFromUrl = extractCompanyFromUrl(input.url || undefined)
-    const company = companyFromUrl || extractFirstMatch(text, [
-      /(?:company|employer)\s*[:\-]\s*([A-Za-z0-9&,' -]{2,70}?)(?=\s*(?:[.;\n\r]|role|position|job title|salary|location|contact|apply)\s*[:\-]?|$)/i,
-      /(?:at|from|with)\s+([A-Z][A-Za-z0-9&.,' -]{2,70})(?:\s+(?:is|for|as|hiring|offers|seeks)|[.,\n]|$)/,
-    ], 'Unknown / Not Verifiable')
-  
-    const rawRole = extractFirstMatch(text, [
-      /(?:role|position|job title)\s*[:\-]\s*([A-Za-z /+-]{2,70})/i,
-      /(?:hiring|seeking|looking for)\s+(?:a|an)?\s*([A-Za-z /+-]{2,70})(?:\s+(?:at|for|in|with)|[.,\n]|$)/i,
-      /\b((?:frontend|front-end|backend|back-end|full stack|software|web|ui\/ux|data|virtual assistant|customer support)[A-Za-z /+-]{0,40}(?:engineer|developer|intern|designer|analyst|assistant|specialist|representative)?)\b/i,
-    ], 'Unspecified role')
-    const role = rawRole.replace(/\s+(?:at|for|with|in)\s+.*$/i, '').trim()
-  
-    const salary = extractFirstMatch(text, [
-      /((?:PHP|Php|php|USD|usd|₱|\$)\s*[\d,.]+(?:\s*[-–]\s*(?:PHP|Php|php|USD|usd|₱|\$)?\s*[\d,.]+)?(?:\s*(?:\/|per)?\s*(?:week|month|year|hour|annum|annually))?)/i,
-      /([\d,.]+\s*(?:PHP|Php|php|USD|usd|pesos|dollars)\s*(?:\/|per)?\s*(?:week|month|year|hour)?)/i,
-    ], 'Not specified')
-  
-    const lower = text.toLowerCase()
-    const contactMethod = lower.includes('telegram')
-      ? 'Telegram'
-      : lower.includes('whatsapp')
-        ? 'WhatsApp'
-        : lower.includes('linkedin')
-          ? 'LinkedIn'
-          : lower.includes('email')
-            ? 'Email'
-            : 'Not specified'
-  
-    const applicationPath = lower.includes('no interview')
-      ? 'No interview mentioned'
-      : lower.includes('direct message') || lower.includes('dm ')
-        ? 'Direct message'
-        : input.url
-          ? 'Provided job URL'
-          : lower.includes('official') || lower.includes('careers')
-            ? 'Official careers channel'
-            : 'Not specified'
-  
-    return recoverObviousClaims(input, {
-      company,
-      role,
-      salary,
-      location: input.location || 'Not specified',
-      contactMethod,
-      applicationPath,
-    })
+    return extractClaimsFromText(input)
   }
 
   const delimiter = `---USER_INPUT_${Math.random().toString(36).substring(2, 12).toUpperCase()}---`
