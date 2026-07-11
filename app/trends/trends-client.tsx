@@ -1,22 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SiteHeader } from '@/components/layout/site-header'
 import { TrendingUp, AlertTriangle, ShieldCheck, Zap, BarChart3, Clock, Download, Filter } from 'lucide-react'
 import { buildTrendsViewModel } from '@/lib/trends-view-model.mjs'
 import { buildTrendsJsonExport, buildTrendsCsvExport } from '@/lib/report-actions.mjs'
 
-export function TrendsClient() {
-  const [stats, setStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/intelligence/trends')
-      .then(res => res.json())
-      .then(setStats)
-      .finally(() => setLoading(false))
-  }, [])
+export function TrendsClient({ initialStats }: { initialStats: any }) {
+  // Rendered from server-provided stored-audit trends; no client fetch (keeps crawlable HTML and zero cost).
+  const stats = initialStats
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,18 +57,6 @@ export function TrendsClient() {
     safe: 'border-safe/30 bg-safe/10 text-safe',
     evidence: 'border-evidence/30 bg-evidence/10 text-evidence',
     caution: 'border-caution/40 bg-caution-bg/30 text-caution-text',
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <div className="mx-auto max-w-7xl px-6 py-20 text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-safe border-t-transparent" />
-          <p className="mt-4 text-sm font-black uppercase tracking-widest text-muted">Analyzing job scam patterns...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
