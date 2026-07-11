@@ -1,6 +1,9 @@
 import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Metadata, MetadataRoute } from 'next'
+import { scamSitemapEntries } from '@/lib/scam-seo.mjs'
+
+export { buildScamPatternJsonLd, scamSitemapEntries } from '@/lib/scam-seo.mjs'
 
 export const SITE_URL = 'https://hireproof.tech'
 export const SITE_NAME = 'HireProof'
@@ -86,6 +89,7 @@ export const PUBLIC_SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: '/docs/competitive-roadmap', changeFrequency: 'monthly', priority: 0.58 },
   { path: '/docs/dead-internet', changeFrequency: 'monthly', priority: 0.56 },
   { path: '/docs/legal', changeFrequency: 'yearly', priority: 0.48 },
+  ...scamSitemapEntries(),
 ]
 
 export function absoluteUrl(path = '/') {
