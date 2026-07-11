@@ -1208,13 +1208,27 @@ test('redis-backed services trim production environment variables before client 
   assert.match(bot, /REDIS_URL!\.trim\(\)/)
 })
 
-test('robots and proxy discourage common AI crawlers from scraping public pages', async () => {
+test('robots and proxy allow AI retrieval crawlers while blocking training/scraping crawlers', async () => {
   const robots = await fs.readFile(new URL('../app/robots.ts', import.meta.url), 'utf8')
   const proxy = await fs.readFile(new URL('../proxy.ts', import.meta.url), 'utf8')
 
-  for (const crawler of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'CCBot', 'Bytespider', 'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent']) {
+  // Training / scraping crawlers stay blocked in both the advisory robots list and the proxy enforcement.
+  for (const crawler of ['GPTBot', 'ClaudeBot', 'CCBot', 'Bytespider', 'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent']) {
     assert.match(robots, new RegExp(crawler.replace('-', '[-]'), 'i'))
     assert.match(proxy, new RegExp(crawler.replace('-', '[-]'), 'i'))
+  }
+
+  // Retrieval / citation crawlers are allowed: present in robots' allow list and NOT in the proxy 403 block patterns.
+  assert.match(robots, /AI_RETRIEVAL_CRAWLERS/)
+  const retrievalBlockPatterns = [
+    ['OAI-SearchBot', /\/oai-searchbot\/i/],
+    ['ChatGPT-User', /\/chatgpt-user\/i/],
+    ['PerplexityBot', /\/perplexitybot\/i/],
+    ['Perplexity-User', /\/perplexity-user\/i/],
+  ]
+  for (const [bot, blockPattern] of retrievalBlockPatterns) {
+    assert.match(robots, new RegExp(bot.replace('-', '[-]'), 'i'))
+    assert.doesNotMatch(proxy, blockPattern)
   }
 
   assert.match(robots, /disallow:\s*'\/'/)
