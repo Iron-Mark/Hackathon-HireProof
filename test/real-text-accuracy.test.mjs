@@ -4,6 +4,7 @@ import fs from 'node:fs/promises'
 import { loadScoringStack } from './helpers/load-scoring-stack.mjs'
 import { evaluate, computeMetrics, isRunOnCompany } from '../scripts/eval-real-text.mjs'
 import { extractClaimsFromText } from '../lib/claim-extraction.mjs'
+import { FIXED_NOW } from './fixtures/scoring-dataset.mjs'
 
 const baseline = JSON.parse(
   await fs.readFile(new URL('./fixtures/real-text-baseline.json', import.meta.url), 'utf8'),
@@ -50,4 +51,49 @@ test('the reproduced production misfire extracts a bounded company, not a run-on
   // A connector-joined name ("Bank of America") is preserved.
   const connector = extractClaimsFromText({ text: 'Great role with Bank of America is hiring analysts.' })
   assert.equal(connector.company, 'Bank Of America')
+})
+
+test('raw post text feeds the payment-scam matchers (rawText is the driver; absence leaves scoring unchanged)', async () => {
+  const stack = await loadScoringStack()
+  const claims = {
+    company: 'Unknown / Not Verifiable',
+    role: '',
+    salary: '$300',
+    contactMethod: 'Not specified',
+    applicationPath: 'Direct message',
+    location: 'Not specified',
+  }
+  const scamText =
+    'You got the job! Before your start date you must buy the mandatory equipment kit for $300. Pay via gift cards and DM us to confirm.'
+
+  // With the raw post, the buy-to-work / gift-card scam pattern fires and the hard floor forces high-risk.
+  const withRaw = stack.buildAuditReportV2({ id: 'wiretest', extractedClaims: claims, evidence: [], rawText: scamText, now: FIXED_NOW })
+  assert.equal(withRaw.verdict, 'high-risk', `expected high-risk with rawText, got ${withRaw.verdict} (${withRaw.riskScore})`)
+
+  // Without rawText (as the synthetic calibration dataset calls it), the same claims are NOT forced
+  // high-risk — proving rawText is the sole driver and synthetic datasets are unaffected.
+  const withoutRaw = stack.buildAuditReportV2({ id: 'wiretest', extractedClaims: claims, evidence: [], now: FIXED_NOW })
+  assert.notEqual(withoutRaw.verdict, 'high-risk')
+})
+
+test('a careers@ scam email earns no forged official apply-path trust; a real careers page still does', async () => {
+  const stack = await loadScoringStack()
+  const build = (text) => {
+    const claims = extractClaimsFromText({ text })
+    return stack.buildAuditReportV2({ id: 'careers', extractedClaims: claims, evidence: [], rawText: text, now: FIXED_NOW })
+  }
+  const hasApplyTrust = (report) => report.intelligence.signals.some((s) => s.id === 'apply_path_professional')
+
+  // The exploit: a scam names a careers@ address, so the post contains the word "careers".
+  // It must NOT forge the "recognizable official channel" trust signal (or its score discount).
+  const scam = build(
+    'Join our team at Meridian Global. A one-time $150 onboarding processing fee applies once you accept. Email your resume to careers@meridian-global-hr.com.',
+  )
+  assert.ok(!hasApplyTrust(scam), 'careers@ email must not forge an official apply-path trust signal')
+
+  // A genuine careers-page post (no URL, so the page phrasing itself must carry it) still earns it.
+  const legit = build(
+    'Product Manager at Acme. Apply through our official careers page. Our team runs a two-round interview.',
+  )
+  assert.ok(hasApplyTrust(legit), 'a genuine careers page should still earn the apply-path trust signal')
 })

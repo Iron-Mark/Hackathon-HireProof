@@ -14,6 +14,17 @@ async function loadIntelligenceModule() {
     },
   }).outputText
 
+  // intelligence-v2 imports the REAL shared scam vocabulary (pure, no deps). The scoring
+  // dependencies below are stubbed, but the vocabulary/normalizers must be the real thing.
+  const vocabCompiled = ts.transpileModule(
+    await fs.readFile(new URL('../lib/scam-vocabulary.mjs', import.meta.url), 'utf8'),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } },
+  ).outputText
+  const vocabCtx = { exports: {}, console }
+  vocabCtx.module = { exports: vocabCtx.exports }
+  vm.runInNewContext(vocabCompiled, vocabCtx)
+  const scamVocabulary = vocabCtx.module.exports
+
   const context = {
     exports: {},
     console,
@@ -79,6 +90,7 @@ async function loadIntelligenceModule() {
             }),
         }
       }
+      if (id === '@/lib/scam-vocabulary.mjs') return scamVocabulary
       return {}
     },
     Date,

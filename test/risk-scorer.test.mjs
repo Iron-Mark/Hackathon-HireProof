@@ -5,32 +5,28 @@ import vm from 'node:vm'
 import ts from 'typescript'
 
 async function loadRiskScorer() {
-  const auditSignalsSource = await fs.readFile(new URL('../lib/audit-signals.mjs', import.meta.url), 'utf8')
-  const auditSignalsCompiled = auditSignalsSource
-    .replace(/^export function /gm, 'function ')
-    + '\nmodule.exports = { buildAuditSignals, scoreAuditSignals, traceAuditSignals, strongestRiskSignals, strongestTrustSignals, effectiveSignalWeight }\n'
-  const auditSignalsContext = { exports: {}, module: { exports: {} }, console }
-  vm.runInNewContext(auditSignalsCompiled, auditSignalsContext)
-
-  const source = await fs.readFile(new URL('../lib/risk-scorer.ts', import.meta.url), 'utf8')
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2020,
-      esModuleInterop: true,
-    },
+  const transpileCjs = (src) => ts.transpileModule(src, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true },
   }).outputText
-
-  const context = {
-    exports: {},
-    require: (id) => {
-      if (id === '@/lib/audit-signals.mjs') return auditSignalsContext.module.exports
-      return {}
-    },
+  const runCjs = (compiled, requireImpl) => {
+    const ctx = { exports: {}, console, require: requireImpl }
+    ctx.module = { exports: ctx.exports }
+    vm.runInNewContext(compiled, ctx)
+    return ctx.module.exports
   }
+  const read = (relative) => fs.readFile(new URL(relative, import.meta.url), 'utf8')
 
-  vm.runInNewContext(compiled, context)
-  return context.exports
+  // audit-signals.mjs now imports the shared scam vocabulary; provide it as a require target.
+  const scamVocabulary = runCjs(transpileCjs(await read('../lib/scam-vocabulary.mjs')), () => ({}))
+  const auditSignals = runCjs(transpileCjs(await read('../lib/audit-signals.mjs')), (id) => {
+    if (id === './scam-vocabulary.mjs') return scamVocabulary
+    throw new Error(`Unexpected require in audit-signals.mjs: ${id}`)
+  })
+
+  return runCjs(transpileCjs(await read('../lib/risk-scorer.ts')), (id) => {
+    if (id === '@/lib/audit-signals.mjs') return auditSignals
+    return {}
+  })
 }
 
 test('green verification signals lower risk instead of increasing it', async () => {

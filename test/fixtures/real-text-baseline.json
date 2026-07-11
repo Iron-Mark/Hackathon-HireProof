@@ -1,6 +1,6 @@
 {
   "count": 24,
-  "accuracy": 0.8333,
-  "macroF1": 0.8342,
+  "accuracy": 0.9583,
+  "macroF1": 0.9582,
   "runOnCompanyCount": 0
 }
