@@ -122,6 +122,6 @@
     "autoprefixer": "^10.5.0",
     "playwright": "^1.60.0",
     "postcss": "^8.5.10",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^4.3.2"
   }
 }
