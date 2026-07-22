@@ -1,52 +1,48 @@
 # AGENTS.md
 
-Project instructions for Codex agents working in HireProof.
+## Scope
 
-## Project Context
+HireProof (hireproof.tech) — Next.js app that audits suspicious job posts, recruiter messages, and job URLs and returns a Safe / Caution / High-Risk verdict with visible evidence. Solo Cursor-hackathon project, archived under `zStale-Projects`. Current branch: `dev` (in sync with `origin/dev`).
 
-HireProof is a Next.js app for checking suspicious job posts, recruiter messages, and job URLs with visible evidence before returning a safety verdict.
+Keep the product story centered on employment fraud and job scams. Do not broaden it into a generic fraud/security platform, and do not claim ML, continuous learning, or in-house deepfake detection — none of that is implemented.
 
-Keep the product story centered on employment fraud and job scams. Do not broaden it into a generic fraud or security platform unless the user explicitly asks.
+## Environment / Stack
 
-## Core Commands
+- Node 24.x (`engines` in `package.json` and `.node-version`); npm with workspaces (`package-lock.json` is the only lockfile — a `pnpm-workspace.yaml` exists but there is no pnpm lockfile, so use npm).
+- Next.js 16.2.9, React 19, TypeScript 6, Tailwind CSS 4.
+- Workspaces: `sdk`, `integrations/n8n-nodes-hireproof`, `packages/hireproof-langchain`, `packages/hireproof-cli`.
 
-- `npm run dev` starts the app on port `3002`.
-- `npm run lint` runs the TypeScript lint/typecheck path.
-- `npm run build` verifies the Next.js production build.
-- `node --test test/runtime-wiring.test.mjs` is a key runtime wiring regression check.
-- `npm run proof:chat-live` checks live chat proof behavior.
-- `npm run discord:commands` registers Discord slash commands.
+## Key commands
 
-Use targeted checks when the change is narrow, but do not claim broad E2E readiness without a matching live/browser/API verification pass.
+| Task | Command |
+|------|---------|
+| Install | `npm install` |
+| Dev server (port 3002) | `npm run dev` |
+| Lint / typecheck (`tsc --noEmit`) | `npm run lint` |
+| Build (postbuild patches SWC trace) | `npm run build` |
+| Full regression suite | `npm run test:security` |
+| Key wiring check | `node --test test/runtime-wiring.test.mjs` |
+| Live chat proof | `npm run proof:chat-live` |
+| Register Discord slash commands | `npm run discord:commands` |
+| CLI | `npm run cli` |
 
-## Deployment and Live Verification
+Discord "commands" means slash commands; default to global registration so they work in any installed server.
 
-- Canonical public URL: `https://hireproof.tech`.
-- The public alias can be healthy while raw Vercel deployment URLs or `git-main` URLs return `401 Unauthorized` because of deployment protection.
-- When dashboard preview links disagree with the public alias, use `npx vercel inspect <deployment-url>` and direct HTTP checks before deciding whether production is actually broken.
-- When the user asks to check env or Vercel, verify live environment/deployment behavior directly instead of inferring from code.
-- Do not call authenticated flows proven unless a real logged-in flow was exercised.
+## Secrets / env
 
-## Product Truthfulness
+- `.env.example` is the canonical key list; local values load from `.env.local` (gitignored). Never print values.
+- Sensitive key names include `AGENT_API_KEY`, `SESSION_SECRET`, `BYOK_ENCRYPTION_KEY`, `API_KEY_HASH_PEPPER`, `AI_GATEWAY_API_KEY`, `SERPAPI_API_KEY`, `UPSTASH_REDIS_REST_URL`/`_TOKEN`, plus Slack/Discord/Telegram bot tokens and signing/webhook secrets, `ZERNIO_*` keys, and `CURSOR_*` keys.
+- Hosted BYOK/provider-credential flows are security-sensitive: verify same-origin, session, rate-limit, and redaction behavior when touching them.
 
-- Prefer explicit evidence-weighted safety-policy wording.
-- Do not claim ML, continuous learning, in-house deepfake detection, or broad fraud-platform coverage unless the implementation is verified.
-- Public `/trends` and `/explore` surfaces should show sample-size and quality caveats when data is limited.
-- Keep sample/demo warnings visible when outputs are deterministic or seeded for judge/demo use.
+## Deployment notes
 
-## Discord and Integrations
+- Canonical public URL: `https://hireproof.tech` (Vercel; `.vercel/` and `vercel.json` present).
+- Raw Vercel deployment or `git-main` URLs can return `401 Unauthorized` from deployment protection while the public alias is healthy — check the alias and `npx vercel inspect <deployment-url>` before declaring production broken.
 
-- Discord `commands` means slash commands, not mention-only behavior.
-- Default to global Discord command registration when commands must work in any installed server.
-- Treat hosted BYOK/provider credential storage as security-sensitive; verify same-origin, session, rate-limit, and redaction behavior when touching those flows.
+## Current status
 
-## Verification Expectations
+- Archived/stale: last commit 2026-07-12 (merge of PR #66, scam-vocabulary dedup, on `dev`). Remote: `github.com/Iron-Mark/Hackathon-HireProof` (default branch `main`).
+- Working tree: this AGENTS.md refresh is uncommitted (modified), plus untracked `.claude/`; nothing else changed. Local `feat/*` branches are all merged into `dev` (safe to delete); five remote `dependabot/*` branches remain unmerged.
+- No known build blockers recorded; run `npm run lint` and `npm run build` fresh before reporting pass/fail.
 
-Before reporting completion for non-trivial changes, prefer:
-
-1. `npm run lint`
-2. Relevant `node --test ...` regression checks
-3. `npm run build`
-4. Browser or live URL verification for user-facing flows
-
-If any step is skipped, say exactly what was not verified and why.
+Last verified: 2026-07-22 (workspace AGENTS.md refresh pass)
