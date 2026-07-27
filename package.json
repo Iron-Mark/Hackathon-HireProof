@@ -60,7 +60,7 @@
   "dependencies": {
     "@ai-sdk/gateway": "^4.0.16",
     "@ai-sdk/openai": "^4.0.20",
-    "@chat-adapter/discord": "4.34.0",
+    "@chat-adapter/discord": "4.35.0",
     "@chat-adapter/slack": "4.34.0",
     "@chat-adapter/state-redis": "4.34.0",
     "@chat-adapter/telegram": "4.34.0",
