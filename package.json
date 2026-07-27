@@ -63,7 +63,7 @@
     "@chat-adapter/discord": "4.34.0",
     "@chat-adapter/slack": "4.34.0",
     "@chat-adapter/state-redis": "4.34.0",
-    "@chat-adapter/telegram": "4.34.0",
+    "@chat-adapter/telegram": "4.35.0",
     "@cursor/sdk": "^1.0.22",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@swc/helpers": "0.5.23",
