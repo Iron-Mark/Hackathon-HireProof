@@ -72,7 +72,7 @@
     "@vercel/analytics": "^2.0.1",
     "@zernio/chat-sdk-adapter": "^0.4.0",
     "ai": "^7.0.37",
-    "chat": "4.34.0",
+    "chat": "4.35.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.0",
