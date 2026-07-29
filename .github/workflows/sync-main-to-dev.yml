@@ -1,0 +1,275 @@
+name: Sync Main Back to Dev
+
+# WHY THIS EXISTS
+# ---------------
+# `branch-flow-guard` requires every pull request into `main` to come from `dev`,
+# and `main` protection sets "require branches to be up to date" (strict) with
+# `enforce_admins: true`. Merging a `dev` -> `main` promotion therefore lands a
+# merge commit on `main` that `dev` does not have, which leaves `dev` behind and
+# makes the NEXT promotion unmergeable. Every manual escape is closed:
+#   * a `main` -> `dev` pull request is rejected by `branch-flow-guard`
+#   * a direct push to `dev` is rejected by the branch ruleset
+#   * `gh pr merge --admin` is disabled by `enforce_admins: true`
+# `branch-flow-guard` only rejects a head branch named literally `main`, so this
+# workflow stages the same history on `chore/sync-dev-with-main` and opens that
+# into `dev`. The guard's own error text ("Rebase or fast-forward dev from main
+# when needed") points at exactly this remedy.
+#
+# !! REQUIRED SECRET: SYNC_BACK_TOKEN !!
+# --------------------------------------
+# GitHub deliberately does not fire `pull_request` workflow events for pull
+# requests created with the default `GITHUB_TOKEN` (loop prevention). All four
+# required checks on `dev` are `pull_request`-driven:
+#   lint-build-cursor-tests, branch-flow-guard,
+#   codeql-analyze (javascript-typescript), CodeQL
+# so a sync PR opened by `GITHUB_TOKEN` sits at "Expected - waiting for status to
+# be reported" forever, and `enforce_admins: true` means nobody can override it.
+#
+# This is not theoretical - it was verified inside this org before shipping:
+#   Iron-Mark/Iron-Mark PRs #122 / #110 / #104 (opened by github-actions[bot],
+#   base `dev`) report ZERO checks, while human PRs #120 / #117 into the same
+#   branch of the same repo get `enforce-pr-flow` and `validate`.
+#
+# To make this workflow fully self-sufficient, create a repository secret:
+#   Name:  SYNC_BACK_TOKEN
+#   Value: a PAT owned by a user with write access to this repository
+#   Fine-grained PAT permissions on Iron-Mark/Hackathon-HireProof:
+#          Contents: Read and write
+#          Pull requests: Read and write
+#          Workflows: Read and write   (a sync can carry .github/workflows changes;
+#                                       without it the push is rejected outright)
+#   Classic PAT equivalent: `repo` + `workflow`
+#
+# WITHOUT the secret this workflow is still useful, not an inert no-op: it stages
+# the branch, opens the pull request, and then says loudly - in the job summary
+# and in the PR body - to close and reopen the PR by hand. A human close/reopen
+# fires `pull_request: reopened` as a real user, which starts every required check.
+#
+# NOTE: this workflow only becomes live once it reaches `main`, because `push`
+# events run the workflow file as it exists on the pushed branch. It has no
+# effect while it lives only on `dev`.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: sync-main-to-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-back:
+    name: sync-main-to-dev
+    # Do not run in forks: they have no `dev` promotion flow and the push would fail.
+    if: github.repository == 'Iron-Mark/Hackathon-HireProof'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # Persist whichever token we push with, so `git push` and `gh` agree.
+          token: ${{ secrets.SYNC_BACK_TOKEN || github.token }}
+
+      - name: Stage sync branch and open pull request into dev
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_BACK_TOKEN || github.token }}
+          HAS_SYNC_BACK_TOKEN: ${{ secrets.SYNC_BACK_TOKEN != '' }}
+          SYNC_BRANCH: chore/sync-dev-with-main
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch --no-tags --prune origin '+refs/heads/*:refs/remotes/origin/*'
+
+          main_sha="$(git rev-parse --short=7 origin/main)"
+
+          # --- No-op path: dev already contains every commit on main ---------------
+          # This must exit GREEN. Any ordinary push to main after the sync PR has
+          # merged lands here, and a red "nothing to do" run just trains people to
+          # ignore the workflow.
+          if git merge-base --is-ancestor origin/main origin/dev; then
+            echo "dev already contains main (${main_sha}). Nothing to sync."
+            {
+              echo "### Sync Main Back to Dev"
+              echo
+              echo "\`dev\` already contains \`main\` (\`${main_sha}\`). No sync needed."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          counts="$(git rev-list --left-right --count origin/main...origin/dev)"
+          main_only="$(printf '%s' "$counts" | cut -f1)"
+          dev_only="$(printf '%s' "$counts" | cut -f2)"
+          echo "main is ahead by ${main_only} commit(s); dev is ahead by ${dev_only}."
+
+          # Reuse an already-open sync PR instead of stacking duplicates.
+          existing_pr="$(gh pr list --base dev --head "$SYNC_BRANCH" --state open \
+            --json number --jq '.[0].number // empty')"
+
+          branch_existed=false
+          if git rev-parse --verify --quiet "refs/remotes/origin/${SYNC_BRANCH}" >/dev/null; then
+            branch_existed=true
+          fi
+
+          # --- Build the sync branch ----------------------------------------------
+          # Reuse the existing branch when a PR is already open, so a human's
+          # conflict resolution on it is never discarded. Otherwise start clean.
+          # Start from dev (not main) so dev-only work is carried along, which also
+          # satisfies dev's strict "require branches to be up to date" rule.
+          if [ -n "$existing_pr" ] && [ "$branch_existed" = "true" ]; then
+            echo "Reusing sync branch behind open PR #${existing_pr}."
+            git switch --force-create "$SYNC_BRANCH" "origin/${SYNC_BRANCH}"
+          else
+            echo "Creating a fresh sync branch from origin/dev."
+            git switch --force-create "$SYNC_BRANCH" origin/dev
+          fi
+
+          for ref in origin/main origin/dev; do
+            if ! git merge --no-edit -m "Merge ${ref} into ${SYNC_BRANCH}" "$ref"; then
+              git merge --abort || true
+              echo "::error title=Sync conflict::Merging ${ref} into ${SYNC_BRANCH} conflicts, so the sync cannot be automated. Resolve it by hand and open the pull request into dev."
+              {
+                echo "### Sync Main Back to Dev - conflict"
+                echo
+                echo "Merging \`${ref}\` into \`${SYNC_BRANCH}\` hit a conflict, so this sync needs a human."
+                echo
+                echo '```sh'
+                echo "git fetch origin"
+                echo "git switch --force-create ${SYNC_BRANCH} origin/dev"
+                echo "git merge origin/main   # resolve conflicts here"
+                echo "git push --force-with-lease origin ${SYNC_BRANCH}"
+                echo '```'
+                echo
+                echo "Then open \`${SYNC_BRANCH}\` -> \`dev\`."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+          done
+
+          # A file-level difference between main and dev is NOT an error. A hotfix
+          # committed straight onto main is exactly when this sync matters most.
+          # (The Portfolio-Mark-Siazon copy of this workflow hard-fails there, which
+          # is a bug, not a safety feature.)
+          if git diff --quiet origin/dev origin/main; then
+            diff_summary="none - history-only sync"
+          else
+            diff_summary="$(git diff --shortstat origin/dev origin/main | sed 's/^ *//')"
+            echo "::notice title=Content sync::main carries file changes dev does not have (${diff_summary})."
+          fi
+
+          if git merge-base --is-ancestor HEAD origin/dev; then
+            echo "Sync branch adds nothing to dev after merging. Nothing to do."
+            exit 0
+          fi
+
+          # --- Push ----------------------------------------------------------------
+          if [ "$branch_existed" = "true" ] && ! git merge-base --is-ancestor "origin/${SYNC_BRANCH}" HEAD; then
+            # Only reachable when a stale sync branch with no open PR is reset.
+            git push \
+              "--force-with-lease=refs/heads/${SYNC_BRANCH}:$(git rev-parse "origin/${SYNC_BRANCH}")" \
+              origin "HEAD:refs/heads/${SYNC_BRANCH}"
+          else
+            git push origin "HEAD:refs/heads/${SYNC_BRANCH}"
+          fi
+          echo "Pushed ${SYNC_BRANCH} at $(git rev-parse --short=7 HEAD)."
+
+          # --- Pull request --------------------------------------------------------
+          pr_title="chore: sync dev with main (${main_sha})"
+          body_file="${RUNNER_TEMP:-/tmp}/sync-pr-body.md"
+
+          cat > "$body_file" <<EOF
+          Opened automatically by \`.github/workflows/sync-main-to-dev.yml\`.
+
+          \`main\` is ahead of \`dev\` by ${main_only} commit(s), which blocks the next
+          \`dev\` -> \`main\` promotion because \`main\` requires branches to be up to date.
+          This branch carries that history back into \`dev\`.
+
+          | field | value |
+          | --- | --- |
+          | source | \`main\` @ \`${main_sha}\` |
+          | head branch | \`${SYNC_BRANCH}\` (deliberately not \`main\`, which \`branch-flow-guard\` rejects) |
+          | file diff vs dev | ${diff_summary} |
+
+          Merge this with a **merge commit**. Squashing or rebasing would rewrite the
+          production history and leave \`dev\` behind again.
+          EOF
+
+          if [ "$HAS_SYNC_BACK_TOKEN" != "true" ]; then
+            cat >> "$body_file" <<'EOF'
+
+          ---
+
+          > [!IMPORTANT]
+          > **The required checks on this pull request will never start on their own.**
+          > It was opened with the default `GITHUB_TOKEN`, and GitHub does not fire
+          > `pull_request` events for those, so `lint-build-cursor-tests`,
+          > `branch-flow-guard`, `codeql-analyze (javascript-typescript)` and `CodeQL`
+          > stay at "Expected" and `enforce_admins: true` blocks any override.
+          >
+          > **Unblock this PR now:** click **Close pull request**, then **Reopen pull request**.
+          > That is a real user event and starts every check.
+          >
+          > **Stop this recurring:** add a repository secret `SYNC_BACK_TOKEN` holding a
+          > PAT with Contents: Read and write, Pull requests: Read and write, and
+          > Workflows: Read and write (classic PAT: `repo` + `workflow`).
+          EOF
+          fi
+
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" --title "$pr_title" --body-file "$body_file" >/dev/null
+            pr_url="$(gh pr view "$existing_pr" --json url --jq '.url')"
+            echo "Updated existing sync pull request: ${pr_url}"
+          elif pr_url="$(gh pr create --base dev --head "$SYNC_BRANCH" \
+              --title "$pr_title" --body-file "$body_file")"; then
+            echo "Opened sync pull request: ${pr_url}"
+          else
+            # Lost a race with a concurrent run, or a PR already exists unlisted.
+            pr_url="$(gh pr list --base dev --head "$SYNC_BRANCH" --state open \
+              --json url --jq '.[0].url // empty')"
+            if [ -z "$pr_url" ]; then
+              echo "::error title=Pull request failed::Could not create or find a sync pull request from ${SYNC_BRANCH} into dev."
+              exit 1
+            fi
+            echo "Found existing sync pull request: ${pr_url}"
+          fi
+
+          {
+            echo "### Sync Main Back to Dev"
+            echo
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| main ahead of dev by | ${main_only} commit(s) |"
+            echo "| dev ahead of main by | ${dev_only} commit(s) |"
+            echo "| sync branch | \`${SYNC_BRANCH}\` |"
+            echo "| file diff | ${diff_summary} |"
+            echo "| pull request | ${pr_url} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$HAS_SYNC_BACK_TOKEN" != "true" ]; then
+            echo "::warning title=SYNC_BACK_TOKEN is not set::The sync PR was opened with GITHUB_TOKEN, so its required checks will never start. Close and reopen ${pr_url} to trigger them, or add a SYNC_BACK_TOKEN secret to automate this end to end."
+            {
+              echo
+              echo "> [!WARNING]"
+              echo "> \`SYNC_BACK_TOKEN\` is **not set**, so ${pr_url} was opened with the default"
+              echo "> \`GITHUB_TOKEN\`. GitHub does not fire \`pull_request\` events for those, so all"
+              echo "> four required checks on \`dev\` stay at \"Expected\" and \`enforce_admins: true\`"
+              echo "> blocks any override."
+              echo ">"
+              echo "> **Unblock it now:** close and reopen that pull request in the UI."
+              echo ">"
+              echo "> **Stop this recurring:** add a repository secret \`SYNC_BACK_TOKEN\` holding a PAT"
+              echo "> with Contents: Read and write, Pull requests: Read and write, and Workflows:"
+              echo "> Read and write (classic PAT: \`repo\` + \`workflow\`)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
