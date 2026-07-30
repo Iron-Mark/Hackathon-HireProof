@@ -1,0 +1,79 @@
+name: Identity Guard
+
+# WHY THIS EXISTS
+# ---------------
+# PRs #76/#78/#84/#85 carried commits authored as a work-account email. Their
+# squash merges (surfaced in PR #86) folded that identity into main and dev as
+# Co-authored-by trailers, which took a history rewrite + force-push of every
+# branch to remove (2026-07-30). This check fails any pull request whose
+# commits carry that identity, so it can never reach protected history again.
+#
+# It runs server-side on purpose: the tainted commits were created through
+# GitHub-side actions while the wrong account was active, and no local hook
+# fires for those. hooks/commit-msg is the local convenience layer only.
+# See docs/identity-guard.md for the rewrite recipe if this ever fires red.
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  identity-guard:
+    name: identity-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full history so merge-base can resolve the real fork point. The
+          # event's base.sha is a snapshot from PR-creation time and goes
+          # stale as the base branch moves.
+          fetch-depth: 0
+
+      - name: Scan commit authors, committers, and trailers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # Case-insensitive. Matches the work email domain and, by
+          # substring, the MarkS-Trampettimg login.
+          FORBIDDEN: trampettimg
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          echo "Scanning ${base}..${HEAD_SHA}"
+
+          offenders=0
+          for sha in $(git rev-list "${base}..${HEAD_SHA}"); do
+            # Identity fields: always checked.
+            ident="$(git show -s --format='author    %an <%ae>%ncommitter %cn <%ce>' "$sha")"
+
+            # Only trailer lines from the body, not prose. Scanning the whole
+            # message would fail a commit that merely mentions the domain.
+            trailers="$(git show -s --format='%B' "$sha" \
+              | grep -iE '^[[:space:]]*(co-authored-by|signed-off-by):' || true)"
+
+            hits="$(printf '%s\n%s\n' "$ident" "$trailers" | grep -inE "$FORBIDDEN" || true)"
+
+            if [ -n "$hits" ]; then
+              echo "::error::commit ${sha} carries the forbidden identity '${FORBIDDEN}'"
+              printf '%s\n' "$hits" | sed 's/^/      /'
+              offenders=$((offenders + 1))
+            fi
+          done
+
+          if [ "$offenders" -ne 0 ]; then
+            echo
+            echo "${offenders} commit(s) must be rewritten before this pull request can merge."
+            echo "See docs/identity-guard.md for the rewrite recipe."
+            exit 1
+          fi
+
+          echo "Clean: no work-account identity in any commit."
