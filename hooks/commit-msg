@@ -3,13 +3,20 @@
 #
 # Install (per clone):
 #   cp hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+#   git config identity-guard.pattern '<forbidden pattern>'
+#
+# The pattern lives in your local git config (never committed), or in the
+# IDENTITY_GUARD_PATTERN environment variable. With neither set, the hook
+# passes silently.
 #
 # This cannot catch commits made through the GitHub web UI or API - no local
 # hook runs for those. Identity Guard in CI is the real gate.
 
 set -uo pipefail
 
-FORBIDDEN="${IDENTITY_GUARD_PATTERN:-trampettimg}"
+pattern="${IDENTITY_GUARD_PATTERN:-$(git config --get identity-guard.pattern || true)}"
+[ -z "$pattern" ] && exit 0
+
 msg_file="$1"
 
 # The identity git is about to stamp on this commit.
@@ -18,13 +25,10 @@ $(git var GIT_COMMITTER_IDENT 2>/dev/null || true)"
 
 trailers="$(grep -iE '^[[:space:]]*(co-authored-by|signed-off-by):' "$msg_file" || true)"
 
-hits="$(printf '%s\n%s\n' "$ident" "$trailers" | grep -inE "$FORBIDDEN" || true)"
-
-if [ -n "$hits" ]; then
-  echo "error: this commit carries the work-account identity '${FORBIDDEN}':" >&2
-  printf '%s\n' "$hits" | sed 's/^/    /' >&2
-  echo >&2
-  echo "Fix the trailer in your message, or correct the identity:" >&2
-  echo "    git config user.email 67873853+Iron-Mark@users.noreply.github.com" >&2
+if printf '%s\n%s\n' "$ident" "$trailers" | grep -iqE "$pattern"; then
+  echo "error: this commit carries a forbidden identity (matches identity-guard.pattern)." >&2
+  echo "Check your author/committer identity and any Co-authored-by trailers:" >&2
+  echo "    git var GIT_AUTHOR_IDENT" >&2
+  echo "    git config user.email <your GitHub noreply address>" >&2
   exit 1
 fi
