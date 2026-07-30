@@ -1,0 +1,91 @@
+name: Identity Guard
+
+# WHY THIS EXISTS
+# ---------------
+# In July 2026 an unwanted account identity entered protected history in this
+# account's repos as Co-authored-by trailers, via squash merges of PR branches
+# that carried commits made under the wrong identity. Removing it afterwards
+# took a history rewrite and a force-push of every affected branch. This check
+# makes a repeat cost one red CI run instead.
+#
+# The forbidden pattern deliberately lives OUTSIDE the repository, in the
+# IDENTITY_GUARD_PATTERN secret (set in BOTH the Actions and Dependabot secret
+# stores - Dependabot-triggered runs only receive the latter). Secrets are
+# masked in logs, so the pattern never appears in repo content or public logs.
+# On a hit, only the commit SHA and field name are printed - never the matched
+# text. See docs/identity-guard.md.
+#
+# It runs server-side on purpose: the July incident entered through
+# GitHub-side commits, and no local hook fires for those. hooks/commit-msg is
+# the local convenience layer only.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  identity-guard:
+    name: identity-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full history so merge-base can resolve the real fork point. The
+          # event's base.sha is a snapshot from PR-creation time and goes
+          # stale as the base branch moves.
+          fetch-depth: 0
+
+      - name: Scan commit authors, committers, and trailers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PATTERN: ${{ secrets.IDENTITY_GUARD_PATTERN }}
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          if [ -z "${PATTERN}" ]; then
+            echo "::warning::IDENTITY_GUARD_PATTERN secret is not set for this run; identity scan skipped. Set it in both the Actions and Dependabot secret stores."
+            exit 0
+          fi
+
+          base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          echo "Scanning ${base}..${HEAD_SHA}"
+
+          offenders=0
+          for sha in $(git rev-list "${base}..${HEAD_SHA}"); do
+            # Identity fields: always checked.
+            ident="$(git show -s --format='author %an <%ae>%ncommitter %cn <%ce>' "$sha")"
+
+            # Only trailer lines from the body, not prose, so a commit that
+            # merely mentions a matching word in its text does not fail.
+            trailers="$(git show -s --format='%B' "$sha" \
+              | grep -iE '^[[:space:]]*(co-authored-by|signed-off-by):' || true)"
+
+            fields=""
+            printf '%s' "$ident" | grep -iqE "$PATTERN" && fields="identity"
+            if [ -n "$trailers" ] && printf '%s' "$trailers" | grep -iqE "$PATTERN"; then
+              fields="${fields:+$fields+}trailer"
+            fi
+
+            if [ -n "$fields" ]; then
+              # Deliberately do not print the matching text: this log may be
+              # public, and the whole point is keeping that identity out of it.
+              echo "::error::commit ${sha} carries a forbidden identity (${fields})"
+              offenders=$((offenders + 1))
+            fi
+          done
+
+          if [ "$offenders" -ne 0 ]; then
+            echo
+            echo "${offenders} commit(s) must be rewritten before this pull request can merge."
+            echo "Inspect locally: git show -s --format='%an <%ae>%n%cn <%ce>%n%B' <sha>"
+            echo "Rewrite recipe: docs/identity-guard.md"
+            exit 1
+          fi
+
+          echo "Clean: no forbidden identity in any commit."
