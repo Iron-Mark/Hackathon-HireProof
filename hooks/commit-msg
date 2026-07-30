@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Local convenience guard: fail at commit time rather than at PR time.
+#
+# Install (per clone):
+#   cp hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+#   git config identity-guard.pattern '<forbidden pattern>'
+#
+# The pattern lives in your local git config (never committed), or in the
+# IDENTITY_GUARD_PATTERN environment variable. With neither set, the hook
+# passes silently.
+#
+# This cannot catch commits made through the GitHub web UI or API - no local
+# hook runs for those. Identity Guard in CI is the real gate.
+
+set -uo pipefail
+
+pattern="${IDENTITY_GUARD_PATTERN:-$(git config --get identity-guard.pattern || true)}"
+[ -z "$pattern" ] && exit 0
+
+msg_file="$1"
+
+# The identity git is about to stamp on this commit.
+ident="$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)
+$(git var GIT_COMMITTER_IDENT 2>/dev/null || true)"
+
+trailers="$(grep -iE '^[[:space:]]*(co-authored-by|signed-off-by):' "$msg_file" || true)"
+
+if printf '%s\n%s\n' "$ident" "$trailers" | grep -iqE "$pattern"; then
+  echo "error: this commit carries a forbidden identity (matches identity-guard.pattern)." >&2
+  echo "Check your author/committer identity and any Co-authored-by trailers:" >&2
+  echo "    git var GIT_AUTHOR_IDENT" >&2
+  echo "    git config user.email <your GitHub noreply address>" >&2
+  exit 1
+fi
