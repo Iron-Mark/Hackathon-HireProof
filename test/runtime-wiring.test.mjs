@@ -502,9 +502,12 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   const zernioWebhook = await fs.readFile(new URL('../app/api/webhooks/zernio/route.ts', import.meta.url), 'utf8')
   const chatRoute = await fs.readFile(new URL('../app/api/chat/hireproof/route.ts', import.meta.url), 'utf8')
 
-  assert.equal(packageJson.dependencies['@chat-adapter/discord'], '^4.31.0')
-  assert.equal(packageJson.dependencies['@chat-adapter/telegram'], '^4.31.0')
-  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.3.0')
+  const chatVersion = packageJson.dependencies.chat
+  assert.equal(packageJson.dependencies['@chat-adapter/discord'], chatVersion)
+  assert.equal(packageJson.dependencies['@chat-adapter/slack'], chatVersion)
+  assert.equal(packageJson.dependencies['@chat-adapter/state-redis'], chatVersion)
+  assert.equal(packageJson.dependencies['@chat-adapter/telegram'], chatVersion)
+  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.4.0')
   assert.match(bot, /from '@chat-adapter\/discord'/)
   assert.match(bot, /from '@chat-adapter\/telegram'/)
   assert.match(bot, /from '@zernio\/chat-sdk-adapter'/)
