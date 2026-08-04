@@ -59,7 +59,7 @@
   "homepage": "https://github.com/Iron-Mark/Hackathon-HireProof#readme",
   "dependencies": {
     "@ai-sdk/gateway": "^4.0.16",
-    "@ai-sdk/openai": "^4.0.20",
+    "@ai-sdk/openai": "^4.0.27",
     "@chat-adapter/discord": "4.35.0",
     "@chat-adapter/slack": "4.35.0",
     "@chat-adapter/state-redis": "4.35.0",
