@@ -17,12 +17,14 @@ Updated: 2026-08-04, Asia/Manila
 
 Verified locally on 2026-08-04:
 
-- Local branch: `dev` at `1009345`.
-- `origin/dev`: `60d6d40`; local `dev` is ahead by one local tooling-ignore
-  commit.
+- Local branch: `dev` at `dc9fb5d`.
+- `origin/dev`: `7d055ca`; local `dev` is ahead by the tooling-ignore commit
+  `8ea1642` and continuity checkpoint `dc9fb5d` after a clean rebase.
 - `origin/main`: `6e620be`, the PR #102 synchronization from `dev`.
-- No commit or push is implied by this handoff. Preserve the local-ahead commit
-  until the owner chooses its destination.
+- Recovery branch `backup/hireproof-dev-pre-reconcile-20260804-2155` preserves
+  the pre-rebase commits (`1009345` and `66218c9`).
+- No push is implied by this handoff. Preserve the local-ahead commits until the
+  owner chooses their destination.
 
 ## Product and Plan Status
 

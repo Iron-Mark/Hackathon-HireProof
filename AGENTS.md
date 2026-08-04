@@ -41,11 +41,13 @@ Discord "commands" means slash commands; default to global registration so they 
 
 ## Current status
 
-- Local `dev` is intentionally one commit ahead of `origin/dev`: `1009345`
-  ignores local `.claude` tooling configuration. Preserve that local commit
-  unless the owner explicitly chooses how to publish or replace it.
+- Local `dev` is intentionally two commits ahead of `origin/dev`: `8ea1642`
+  ignores local `.claude` tooling configuration and `dc9fb5d` checkpoints the
+  continuity guidance. Preserve both unless the owner explicitly chooses how
+  to publish or replace them.
 - `origin/main` includes the `dev` synchronization through PR #102 at
-  `6e620be`; `origin/dev` is `60d6d40`. Recheck refs before making branch claims.
+  `6e620be`; `origin/dev` includes PR #103 at `7d055ca`. Recheck refs before
+  making branch claims.
 - The honest-core and scoring work is implemented and documented in
   `docs/scoring-algorithm.md`, tests, and the archived Superpowers plans. Treat
   those plans as implementation history, not an open backlog.
