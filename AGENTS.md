@@ -2,7 +2,7 @@
 
 ## Scope
 
-HireProof (hireproof.tech) — Next.js app that audits suspicious job posts, recruiter messages, and job URLs and returns a Safe / Caution / High-Risk verdict with visible evidence. Solo Cursor-hackathon project, archived under `zStale-Projects`. Current branch: `dev` (in sync with `origin/dev`).
+HireProof (hireproof.tech) — Next.js app that audits suspicious job posts, recruiter messages, and job URLs and returns a Safe / Caution / High-Risk verdict with visible evidence. Solo Cursor-hackathon project, archived under `zStale-Projects`. Read `HANDOFF.md` before resuming work; it records the current branch relationship and the authoritative plan/document map.
 
 Keep the product story centered on employment fraud and job scams. Do not broaden it into a generic fraud/security platform, and do not claim ML, continuous learning, or in-house deepfake detection — none of that is implemented.
 
@@ -41,8 +41,15 @@ Discord "commands" means slash commands; default to global registration so they 
 
 ## Current status
 
-- Archived/stale: last commit 2026-07-12 (merge of PR #66, scam-vocabulary dedup, on `dev`). Remote: `github.com/Iron-Mark/Hackathon-HireProof` (default branch `main`).
-- Working tree: this AGENTS.md refresh is uncommitted (modified), plus untracked `.claude/`; nothing else changed. Local `feat/*` branches are all merged into `dev` (safe to delete); five remote `dependabot/*` branches remain unmerged.
+- Local `dev` is intentionally one commit ahead of `origin/dev`: `1009345`
+  ignores local `.claude` tooling configuration. Preserve that local commit
+  unless the owner explicitly chooses how to publish or replace it.
+- `origin/main` includes the `dev` synchronization through PR #102 at
+  `6e620be`; `origin/dev` is `60d6d40`. Recheck refs before making branch claims.
+- The honest-core and scoring work is implemented and documented in
+  `docs/scoring-algorithm.md`, tests, and the archived Superpowers plans. Treat
+  those plans as implementation history, not an open backlog.
 - No known build blockers recorded; run `npm run lint` and `npm run build` fresh before reporting pass/fail.
 
-Last verified: 2026-07-22 (workspace AGENTS.md refresh pass)
+Last guidance refresh: 2026-08-04 (branch refs verified locally; build status
+not re-asserted by this documentation migration).
