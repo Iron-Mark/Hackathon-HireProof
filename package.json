@@ -102,7 +102,7 @@
     "dompurify": "3.4.12",
     "esbuild": "0.28.1",
     "express-rate-limit": "^8.5.1",
-    "fast-uri": "^3.1.4",
+    "fast-uri": "^3.1.5",
     "fast-xml-builder": "^1.2.0",
     "hono": "4.12.32",
     "http-proxy-agent": "9.0.0",
