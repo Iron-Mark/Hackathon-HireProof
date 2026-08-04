@@ -18,7 +18,7 @@ jobs:
           echo "head=${{ github.head_ref }}"
 
           if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != "dev" ]]; then
-            if [[ "${{ github.actor }}" == "dependabot[bot]" && "${{ github.head_ref }}" == dependabot/* ]]; then
+            if [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" && "${{ github.head_ref }}" == dependabot/* ]]; then
               echo "Allowing a Dependabot security update against the default branch."
             else
               echo "::error::main only accepts promotion pull requests from dev, except Dependabot security updates. Open feature and fix pull requests against dev first."
