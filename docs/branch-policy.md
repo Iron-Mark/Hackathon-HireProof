@@ -10,6 +10,8 @@ HireProof uses `main` as the production branch and `dev` as the development/stag
 
 Do not open feature branches directly into `main`. The required `branch-flow-guard` check fails `main` pull requests unless the source branch is `dev`.
 
+Dependabot security updates are the narrow exception. GitHub always opens those pull requests against the repository's default branch, even though regular Dependabot version updates target `dev`. The guard therefore allows a `dependabot/*` source branch into `main` only when the pull request author is `dependabot[bot]`; every normal required check still has to pass. Checking the PR author rather than the event actor keeps maintainer-triggered rebases valid without allowing a human-authored branch to spoof the exception.
+
 ## Protected Branches
 
 Both `main` and `dev` are protected by GitHub branch protection and the repository ruleset named `Protect production and development branches`.

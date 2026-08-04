@@ -45,3 +45,4 @@ artifacts/web-vitals/hireproof-web-vitals-*.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.claude/
