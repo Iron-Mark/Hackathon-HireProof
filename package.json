@@ -65,7 +65,7 @@
     "@chat-adapter/state-redis": "4.35.0",
     "@chat-adapter/telegram": "4.35.0",
     "@cursor/sdk": "^1.0.22",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@swc/helpers": "0.5.23",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
