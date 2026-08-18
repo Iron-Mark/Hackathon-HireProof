@@ -1,0 +1,186 @@
+name: Weekly repository health audit
+
+on:
+  schedule:
+    # 10:00 AM Monday in Asia/Manila (UTC+8).
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  checks: read
+  contents: read
+  issues: write
+  pull-requests: read
+  security-events: read
+  vulnerability-alerts: read
+
+concurrency:
+  group: weekly-repository-health-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Audit repository health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      AUDIT_ISSUE_TITLE: "[bot] Weekly repository health audit"
+    steps:
+      - name: Inspect settings, pull requests, alerts, and stale branches
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          report="$(mktemp)"
+          problems=0
+          warnings=0
+
+          add_problem() {
+            printf -- "- ❌ %s\n" "$1" >> "${report}"
+            problems=$((problems + 1))
+          }
+
+          add_warning() {
+            printf -- "- ⚠️ %s\n" "$1" >> "${report}"
+            warnings=$((warnings + 1))
+          }
+
+          alert_count() {
+            local endpoint="$1"
+            local output
+            output="$(mktemp)"
+            if gh api --paginate "${endpoint}" --jq '.[]' > "${output}" 2>/dev/null; then
+              wc -l < "${output}" | tr -d ' '
+            else
+              printf "unavailable"
+            fi
+            rm -f "${output}"
+          }
+
+          repo_json="$(gh api "repos/${GH_REPO}")"
+          default_branch="$(jq -r '.default_branch' <<<"${repo_json}")"
+          auto_merge="$(jq -r '.allow_auto_merge' <<<"${repo_json}")"
+          delete_merged="$(jq -r '.delete_branch_on_merge' <<<"${repo_json}")"
+          secret_scanning="$(jq -r '.security_and_analysis.secret_scanning.status // "unavailable"' <<<"${repo_json}")"
+          push_protection="$(jq -r '.security_and_analysis.secret_scanning_push_protection.status // "unavailable"' <<<"${repo_json}")"
+
+          {
+            printf "# Weekly repository health audit\n\n"
+            printf -- "- Repository: \`%s\`\n" "${GH_REPO}"
+            printf -- "- Run: %s\n" "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            printf -- "- Checked: %s (%s)\n\n" "$(TZ=Asia/Manila date '+%Y-%m-%d %H:%M %Z')" "$(date -u '+%Y-%m-%d %H:%M UTC')"
+            printf "## Findings\n\n"
+          } > "${report}"
+
+          [[ "${auto_merge}" == "true" ]] || add_problem "Repository auto-merge is disabled."
+          [[ "${delete_merged}" == "true" ]] || add_problem "Automatic deletion of merged head branches is disabled."
+          [[ "${secret_scanning}" == "enabled" ]] || add_problem "Secret scanning is not enabled (status: \`${secret_scanning}\`)."
+          [[ "${push_protection}" == "enabled" ]] || add_problem "Secret-scanning push protection is not enabled (status: \`${push_protection}\`)."
+
+          prs_json="$(gh api --paginate "repos/${GH_REPO}/pulls?state=open&per_page=100" --jq '.[]' | jq -s '.')"
+          open_prs="$(jq 'length' <<<"${prs_json}")"
+          fork_prs="$(jq '[.[] | select(.head.repo.fork == true or .head.repo.full_name != $repo)] | length' --arg repo "${GH_REPO}" <<<"${prs_json}")"
+          dependabot_prs="$(jq '[.[] | select(.user.login == "dependabot[bot]" and .user.id == 49699333 and .head.repo.full_name == $repo and (.head.ref | startswith("dependabot/")))] | length' --arg repo "${GH_REPO}" <<<"${prs_json}")"
+
+          if (( fork_prs > 0 )); then
+            add_warning "${fork_prs} open pull request(s) originate from a fork and require human review."
+            jq -r '.[] | select(.head.repo.fork == true or .head.repo.full_name != $repo) | "  - #\(.number): \(.html_url)"' --arg repo "${GH_REPO}" <<<"${prs_json}" >> "${report}"
+          fi
+
+          while IFS=$'\t' read -r number sha url; do
+            [[ -n "${number}" ]] || continue
+            if checks_json="$(gh api "repos/${GH_REPO}/commits/${sha}/check-runs?per_page=100" 2>/dev/null)"; then
+              failed="$(jq '[.check_runs[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .conclusion == "action_required")] | length' <<<"${checks_json}")"
+              if (( failed > 0 )); then
+                add_problem "Dependabot PR #${number} has ${failed} failed required/check run(s): ${url}"
+              fi
+            else
+              add_warning "Could not read check runs for Dependabot PR #${number}: ${url}"
+            fi
+          done < <(jq -r --arg repo "${GH_REPO}" '.[] | select(.user.login == "dependabot[bot]" and .user.id == 49699333 and .head.repo.full_name == $repo and (.head.ref | startswith("dependabot/"))) | [.number, .head.sha, .html_url] | @tsv' <<<"${prs_json}")
+
+          dependabot_alerts="$(alert_count "repos/${GH_REPO}/dependabot/alerts?state=open&per_page=100")"
+          code_alerts="$(alert_count "repos/${GH_REPO}/code-scanning/alerts?state=open&per_page=100")"
+          secret_alerts="$(alert_count "repos/${GH_REPO}/secret-scanning/alerts?state=open&per_page=100")"
+
+          for item in "Dependabot:${dependabot_alerts}" "Code scanning:${code_alerts}" "Secret scanning:${secret_alerts}"; do
+            label="${item%%:*}"
+            count="${item#*:}"
+            if [[ "${count}" == "unavailable" ]]; then
+              add_warning "${label} alerts could not be read with the workflow token."
+            elif (( count > 0 )); then
+              add_problem "${label} has ${count} open alert(s)."
+            fi
+          done
+
+          if analysis="$(gh api "repos/${GH_REPO}/code-scanning/analyses?per_page=1" 2>/dev/null)"; then
+            latest_analysis="$(jq -r '.[0].created_at // "none"' <<<"${analysis}")"
+            [[ "${latest_analysis}" != "none" ]] || add_problem "No CodeQL/code-scanning analysis is available."
+          else
+            add_problem "CodeQL/code-scanning analysis could not be verified."
+            latest_analysis="unavailable"
+          fi
+
+          branches_json="$(gh api --paginate "repos/${GH_REPO}/branches?per_page=100" --jq '.[]' | jq -s '.')"
+          cutoff="$(date -u -d '30 days ago' +%s)"
+          stale_branches=()
+
+          while IFS=$'\t' read -r branch protected sha; do
+            [[ -n "${branch}" ]] || continue
+            [[ "${branch}" == "${default_branch}" || "${branch}" == "dev" || "${protected}" == "true" ]] && continue
+            if jq -e --arg branch "${branch}" '.[] | select(.head.repo.full_name == $repo and .head.ref == $branch)' --arg repo "${GH_REPO}" <<<"${prs_json}" >/dev/null; then
+              continue
+            fi
+            if commit_json="$(gh api "repos/${GH_REPO}/commits/${sha}" 2>/dev/null)"; then
+              committed_at="$(jq -r '.commit.committer.date // .commit.author.date' <<<"${commit_json}")"
+              committed_epoch="$(date -u -d "${committed_at}" +%s)"
+              if (( committed_epoch < cutoff )); then
+                stale_branches+=("${branch} (${committed_at})")
+              fi
+            fi
+          done < <(jq -r '.[] | [.name, .protected, .commit.sha] | @tsv' <<<"${branches_json}")
+
+          if (( ${#stale_branches[@]} > 0 )); then
+            add_warning "${#stale_branches[@]} unprotected branch(es) have had no commit for over 30 days and have no open PR."
+            for branch in "${stale_branches[@]}"; do
+              printf "  - \`%s\`\n" "${branch}" >> "${report}"
+            done
+          fi
+
+          {
+            printf "\n## Snapshot\n\n"
+            printf -- "- Open PRs: %s\n" "${open_prs}"
+            printf -- "- Verified Dependabot PRs: %s\n" "${dependabot_prs}"
+            printf -- "- Fork PRs: %s\n" "${fork_prs}"
+            printf -- "- Open alerts: Dependabot=%s, code=%s, secret=%s\n" "${dependabot_alerts}" "${code_alerts}" "${secret_alerts}"
+            printf -- "- Latest code-scanning analysis: %s\n" "${latest_analysis}"
+            printf -- "- Auto-merge: %s\n" "${auto_merge}"
+            printf -- "- Delete merged branches: %s\n" "${delete_merged}"
+            printf -- "- Push protection: %s\n" "${push_protection}"
+          } >> "${report}"
+
+          if (( problems == 0 && warnings == 0 )); then
+            printf "\n✅ No action is required.\n" >> "${report}"
+          else
+            printf "\nProblems: %s · Warnings: %s\n" "${problems}" "${warnings}" >> "${report}"
+          fi
+
+          cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
+
+          existing_issue="$(gh issue list --repo "${GH_REPO}" --state open --limit 100 --json number,title | jq -r --arg title "${AUDIT_ISSUE_TITLE}" '.[] | select(.title == $title) | .number' | head -n 1)"
+
+          if (( problems > 0 || warnings > 0 )); then
+            if [[ -n "${existing_issue}" ]]; then
+              gh issue edit "${existing_issue}" --repo "${GH_REPO}" --body-file "${report}" >/dev/null
+            else
+              gh issue create --repo "${GH_REPO}" --title "${AUDIT_ISSUE_TITLE}" --body-file "${report}" >/dev/null
+            fi
+            printf "::error::Repository health audit found %s problem(s) and %s warning(s).\n" "${problems}" "${warnings}"
+            exit 1
+          fi
+
+          if [[ -n "${existing_issue}" ]]; then
+            gh issue close "${existing_issue}" --repo "${GH_REPO}" --comment "The latest weekly audit is healthy; closing this tracking issue automatically." >/dev/null
+          fi
