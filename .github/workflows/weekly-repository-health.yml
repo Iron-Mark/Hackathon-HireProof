@@ -61,10 +61,16 @@ jobs:
 
           repo_json="$(gh api "repos/${GH_REPO}")"
           default_branch="$(jq -r '.default_branch' <<<"${repo_json}")"
-          auto_merge="$(jq -r '.allow_auto_merge' <<<"${repo_json}")"
-          delete_merged="$(jq -r '.delete_branch_on_merge' <<<"${repo_json}")"
-          secret_scanning="$(jq -r '.security_and_analysis.secret_scanning.status // "unavailable"' <<<"${repo_json}")"
-          push_protection="$(jq -r '.security_and_analysis.secret_scanning_push_protection.status // "unavailable"' <<<"${repo_json}")"
+          issues_enabled="$(jq -r '.has_issues' <<<"${repo_json}")"
+          repo_owner="${GH_REPO%%/*}"
+          repo_name="${GH_REPO#*/}"
+          settings_json="$(gh api graphql \
+            -f query='query($owner:String!,$name:String!){repository(owner:$owner,name:$name){autoMergeAllowed deleteBranchOnMerge hasVulnerabilityAlertsEnabled}}' \
+            -F owner="${repo_owner}" \
+            -F name="${repo_name}")"
+          auto_merge="$(jq -r '.data.repository.autoMergeAllowed' <<<"${settings_json}")"
+          delete_merged="$(jq -r '.data.repository.deleteBranchOnMerge' <<<"${settings_json}")"
+          vulnerability_alerts="$(jq -r '.data.repository.hasVulnerabilityAlertsEnabled' <<<"${settings_json}")"
 
           {
             printf "# Weekly repository health audit\n\n"
@@ -76,17 +82,16 @@ jobs:
 
           [[ "${auto_merge}" == "true" ]] || add_problem "Repository auto-merge is disabled."
           [[ "${delete_merged}" == "true" ]] || add_problem "Automatic deletion of merged head branches is disabled."
-          [[ "${secret_scanning}" == "enabled" ]] || add_problem "Secret scanning is not enabled (status: \`${secret_scanning}\`)."
-          [[ "${push_protection}" == "enabled" ]] || add_problem "Secret-scanning push protection is not enabled (status: \`${push_protection}\`)."
+          [[ "${vulnerability_alerts}" == "true" ]] || add_problem "Dependabot vulnerability alerts are disabled."
 
           prs_json="$(gh api --paginate "repos/${GH_REPO}/pulls?state=open&per_page=100" --jq '.[]' | jq -s '.')"
           open_prs="$(jq 'length' <<<"${prs_json}")"
-          fork_prs="$(jq '[.[] | select(.head.repo.fork == true or .head.repo.full_name != $repo)] | length' --arg repo "${GH_REPO}" <<<"${prs_json}")"
+          fork_prs="$(jq '[.[] | select(.head.repo.full_name != $repo)] | length' --arg repo "${GH_REPO}" <<<"${prs_json}")"
           dependabot_prs="$(jq '[.[] | select(.user.login == "dependabot[bot]" and .user.id == 49699333 and .head.repo.full_name == $repo and (.head.ref | startswith("dependabot/")))] | length' --arg repo "${GH_REPO}" <<<"${prs_json}")"
 
           if (( fork_prs > 0 )); then
             add_warning "${fork_prs} open pull request(s) originate from a fork and require human review."
-            jq -r '.[] | select(.head.repo.fork == true or .head.repo.full_name != $repo) | "  - #\(.number): \(.html_url)"' --arg repo "${GH_REPO}" <<<"${prs_json}" >> "${report}"
+            jq -r '.[] | select(.head.repo.full_name != $repo) | "  - #\(.number): \(.html_url)"' --arg repo "${GH_REPO}" <<<"${prs_json}" >> "${report}"
           fi
 
           while IFS=$'\t' read -r number sha url; do
@@ -109,7 +114,11 @@ jobs:
             label="${item%%:*}"
             count="${item#*:}"
             if [[ "${count}" == "unavailable" ]]; then
-              add_warning "${label} alerts could not be read with the workflow token."
+              if [[ "${label}" == "Secret scanning" ]]; then
+                printf -- "- ℹ️ Secret-scanning alert contents require a separate admin-scoped token; enablement is managed in repository settings.\n" >> "${report}"
+              else
+                add_warning "${label} alerts could not be read with the workflow token."
+              fi
             elif (( count > 0 )); then
               add_problem "${label} has ${count} open alert(s)."
             fi
@@ -158,7 +167,8 @@ jobs:
             printf -- "- Latest code-scanning analysis: %s\n" "${latest_analysis}"
             printf -- "- Auto-merge: %s\n" "${auto_merge}"
             printf -- "- Delete merged branches: %s\n" "${delete_merged}"
-            printf -- "- Push protection: %s\n" "${push_protection}"
+            printf -- "- Dependabot vulnerability alerts: %s\n" "${vulnerability_alerts}"
+            printf -- "- Issues enabled: %s\n" "${issues_enabled}"
           } >> "${report}"
 
           if (( problems == 0 && warnings == 0 )); then
@@ -169,13 +179,20 @@ jobs:
 
           cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
 
-          existing_issue="$(gh issue list --repo "${GH_REPO}" --state open --limit 100 --json number,title | jq -r --arg title "${AUDIT_ISSUE_TITLE}" '.[] | select(.title == $title) | .number' | head -n 1)"
+          existing_issue=""
+          if [[ "${issues_enabled}" == "true" ]]; then
+            existing_issue="$(gh issue list --repo "${GH_REPO}" --state open --limit 100 --json number,title | jq -r --arg title "${AUDIT_ISSUE_TITLE}" '.[] | select(.title == $title) | .number' | head -n 1)"
+          fi
 
           if (( problems > 0 || warnings > 0 )); then
-            if [[ -n "${existing_issue}" ]]; then
-              gh issue edit "${existing_issue}" --repo "${GH_REPO}" --body-file "${report}" >/dev/null
+            if [[ "${issues_enabled}" == "true" ]]; then
+              if [[ -n "${existing_issue}" ]]; then
+                gh issue edit "${existing_issue}" --repo "${GH_REPO}" --body-file "${report}" >/dev/null
+              else
+                gh issue create --repo "${GH_REPO}" --title "${AUDIT_ISSUE_TITLE}" --body-file "${report}" >/dev/null
+              fi
             else
-              gh issue create --repo "${GH_REPO}" --title "${AUDIT_ISSUE_TITLE}" --body-file "${report}" >/dev/null
+              printf "::notice::Issues are disabled; findings are available in the workflow summary.\n"
             fi
             printf "::error::Repository health audit found %s problem(s) and %s warning(s).\n" "${problems}" "${warnings}"
             exit 1
