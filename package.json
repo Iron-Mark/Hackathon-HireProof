@@ -87,7 +87,7 @@
     "sharp": "^0.35.2",
     "tesseract.js": "^7.0.0",
     "typescript": "6.0.3",
-    "workflow": "5.0.0-beta.36",
+    "workflow": "5.0.0-beta.46",
     "zod": "^4.4.3"
   },
   "overrides": {
