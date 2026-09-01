@@ -28,7 +28,8 @@ Fresh proof artifacts are stored at:
 
 The proof set can be shared from:
 
-`artifacts/hireproof-post-hackathon-proof-set.zip`
+The packaged proof set should be published as a release artifact or to object
+storage instead of being committed to Git.
 
 ## Use Order
 
