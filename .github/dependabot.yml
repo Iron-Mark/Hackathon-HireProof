@@ -10,23 +10,17 @@ updates:
       timezone: "Asia/Manila"
     open-pull-requests-limit: 5
     groups:
-      next-runtime:
+      npm-patches:
+        applies-to: version-updates
         patterns:
-          - "next"
-          - "react"
-          - "react-dom"
-      security-overrides:
-        patterns:
-          - "@swc/helpers"
-          - "brace-expansion"
-          - "devalue"
-          - "tar"
-          - "ws"
-          - "sqlite3"
-          - "node-gyp"
-          - "make-fetch-happen"
-          - "http-proxy-agent"
-          - "@tootallnate/once"
+          - "*"
+        update-types:
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -40,6 +34,18 @@ updates:
       time: "09:30"
       timezone: "Asia/Manila"
     open-pull-requests-limit: 3
+    groups:
+      github-actions-patches:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
     commit-message:
       prefix: "chore"
       include: "scope"
