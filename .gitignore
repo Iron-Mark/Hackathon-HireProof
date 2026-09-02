@@ -29,6 +29,8 @@ yarn-error.log*
 /scratch/
 artifacts/**/*.log
 artifacts/research-agent/
+# Large generated proof bundles belong in release/object storage, not Git.
+/artifacts/*.zip
 # Generated proof run history stays local; keep only the stable latest evidence pointers.
 artifacts/seo-crawl-preview/hireproof-crawl-social-*.json
 !artifacts/seo-crawl-preview/hireproof-crawl-social-latest.json

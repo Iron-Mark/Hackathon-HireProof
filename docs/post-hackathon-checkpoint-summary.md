@@ -58,7 +58,8 @@ Turn the post-hackathon result into a positive, outcome-independent product stor
 
 Fresh local Playwright screenshots and results are stored in `artifacts/post-hackathon-e2e/`.
 
-The packaged proof set is stored at `artifacts/hireproof-post-hackathon-proof-set.zip`.
+The packaged proof set should be published as a release artifact or to object
+storage instead of being committed to Git.
 
 ## Public Distribution Updates
 
