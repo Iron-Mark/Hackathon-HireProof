@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Verify Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: ${{ github.token }}
 
@@ -42,12 +42,13 @@ jobs:
         run: |
           set -euo pipefail
           dependency_count="$(jq 'length' <<<"${UPDATED_DEPENDENCIES_JSON}")"
+          all_patch="$(jq -r 'length > 0 and all(.[]; .updateType == "version-update:semver-patch")' <<<"${UPDATED_DEPENDENCIES_JSON}")"
           eligible=false
-          if [[ "${dependency_count}" -eq 1 && "${UPDATE_TYPE}" == "version-update:semver-patch" ]]; then
+          if [[ "${all_patch}" == "true" && "${UPDATE_TYPE}" == "version-update:semver-patch" ]]; then
             eligible=true
           fi
           echo "eligible=${eligible}" >> "${GITHUB_OUTPUT}"
-          echo "Dependencies: ${dependency_count}; update type: ${UPDATE_TYPE}; eligible: ${eligible}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "Dependencies: ${dependency_count}; all patch: ${all_patch}; update type: ${UPDATE_TYPE}; eligible: ${eligible}" >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Enable squash auto-merge
         if: steps.policy.outputs.eligible == 'true'
