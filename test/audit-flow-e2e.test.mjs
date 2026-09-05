@@ -22,7 +22,7 @@ test('demo audit path auto-fills URL and location then renders a verdict', { tim
     ].join('\n')
 
     await page.goto(`${BASE_URL}/audit`, { waitUntil: 'networkidle' })
-    await page.getByRole('button', { name: 'Demo fixtures' }).click()
+    await page.getByRole('button', { name: /^Check my post\./ }).click()
     await page.getByTestId('demo-cost-snackbar').waitFor({ timeout: 5_000 })
     assert.match(await page.getByTestId('demo-cost-snackbar').innerText(), /Live evidence is capped/i)
     await page.getByTestId('job-input-text').fill(sample)
@@ -35,7 +35,7 @@ test('demo audit path auto-fills URL and location then renders a verdict', { tim
 
     const verdictText = await page.getByTestId('audit-result-verdict').innerText()
     assert.match(verdictText, /High-Risk/i)
-    assert.match(await page.getByRole('heading', { name: 'Evidence receipts' }).innerText(), /Evidence receipts/)
+    assert.match(await page.getByText('Evidence receipts', { exact: true }).first().innerText(), /Evidence receipts/i)
   } finally {
     await browser.close()
     await server.release()
