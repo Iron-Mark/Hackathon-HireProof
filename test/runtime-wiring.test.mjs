@@ -507,7 +507,7 @@ test('multi-platform chat agents are wired through ChatSDK adapters', async () =
   assert.equal(packageJson.dependencies['@chat-adapter/slack'], chatVersion)
   assert.equal(packageJson.dependencies['@chat-adapter/state-redis'], chatVersion)
   assert.equal(packageJson.dependencies['@chat-adapter/telegram'], chatVersion)
-  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.4.0')
+  assert.equal(packageJson.dependencies['@zernio/chat-sdk-adapter'], '^0.5.1')
   assert.match(bot, /from '@chat-adapter\/discord'/)
   assert.match(bot, /from '@chat-adapter\/telegram'/)
   assert.match(bot, /from '@zernio\/chat-sdk-adapter'/)

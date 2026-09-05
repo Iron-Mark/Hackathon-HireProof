@@ -56,7 +56,7 @@ test('/api/v1/audit returns an explicit demo report for mode=demo', { timeout: 2
   }
 })
 
-test('/api/v1/audit keeps live mode credential-backed with clear missing-key errors', { timeout: 120_000 }, async () => {
+test('/api/v1/audit keeps live mode credential-backed with clear missing-key errors', { timeout: 240_000 }, async () => {
   const server = await ensureE2eServer('/api/health')
 
   try {

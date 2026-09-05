@@ -16,6 +16,8 @@ test('mobile hamburger opens a full-screen navigation menu and opens pages from 
     assert.equal(await header.getByRole('button', { name: /^Search site/ }).count(), 0)
 
     await page.getByRole('button', { name: 'Open site navigation' }).click()
+    const mobileMenu = page.locator('[role="menu"]').filter({ hasText: 'Start here' })
+    await mobileMenu.waitFor({ state: 'visible' })
     const visibleMenus = await page.locator('[role="menu"]').evaluateAll((menus) =>
       menus
         .map((menu) => {
@@ -37,7 +39,6 @@ test('mobile hamburger opens a full-screen navigation menu and opens pages from 
     assert.ok(await page.getByRole('button', { name: 'Close site navigation' }).isVisible())
     assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Close site navigation')
 
-    const mobileMenu = page.locator('[role="menu"]').filter({ hasText: 'Start here' })
     await page.keyboard.press('Shift+Tab')
     assert.ok(await mobileMenu.evaluate((menu) => menu.contains(document.activeElement)))
     await page.keyboard.press('Tab')

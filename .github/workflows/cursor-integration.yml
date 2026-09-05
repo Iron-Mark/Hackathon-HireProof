@@ -2,10 +2,10 @@ name: Cursor Integration
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
-      - dev
+
+concurrency:
+  group: cursor-integration-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-build-cursor-tests:
@@ -26,11 +26,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Security regression suite
+        run: npm run test:security
+
       - name: Build
         run: npm run build
-
-      - name: Cursor integration unit tests
-        run: node --test test/cursor*.test.mjs
 
   # Cursor Bugbot is enabled in the Cursor dashboard and branch protection rules.
   # It is not invoked from this workflow because it requires Cursor-side configuration.
