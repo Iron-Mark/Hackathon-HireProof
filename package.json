@@ -106,7 +106,7 @@
     "fast-xml-builder": "^1.2.0",
     "hono": "4.13.5",
     "http-proxy-agent": "9.0.0",
-    "ip-address": "^10.4.0",
+    "ip-address": "^10.7.2",
     "make-fetch-happen": "16.0.0",
     "nanoid@^3.0.0": "3.3.18",
     "nanoid@^5.0.0": "5.1.16",
