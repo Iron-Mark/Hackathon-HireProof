@@ -1,12 +1,7 @@
 import { spawnSync } from 'node:child_process'
 
 const BLOCKED_SEVERITIES = new Set(['moderate', 'high', 'critical'])
-const ACCEPTED_ADVISORIES = new Map([
-  [
-    'https://github.com/advisories/GHSA-ch52-4w7c-c8xp',
-    'The affected cache helper is only present in the unused @workflow/nest CLI download chain; HireProof uses workflow/next and does not execute the Nest adapter. Upstream has no patched release.',
-  ],
-])
+const ACCEPTED_ADVISORIES = new Map()
 
 const npmCli = process.env.npm_execpath
 const args = npmCli
