@@ -6,6 +6,8 @@ This directory contains the historical research, strategy, and planning document
 For the most up-to-date production-shipped technical documentation, visit the **[Live Documentation Portal](https://hireproof.tech/docs)**.
 The local June 15 pro-research proof/docs stack can be ahead of that portal until it is checkpointed, pushed, deployed, and live-verified.
 
+For private SSH development, see [the remote CLI guide](./remote-development.md).
+
 ### Cursor integration
 - [`cursor/README.md`](./cursor/README.md): Index for Cursor SDK, MCP, Bugbot, QA, and architecture boundaries.
 - [`cursor/overview.md`](./cursor/overview.md): What Cursor must never own (verdicts) vs dev acceleration.
