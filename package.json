@@ -104,7 +104,7 @@
     "express-rate-limit": "^8.5.1",
     "fast-uri": "^3.1.8",
     "fast-xml-builder": "^1.2.0",
-    "hono": "4.13.7",
+    "hono": "^4.13.11",
     "http-cache-semantics": "4.3.0",
     "http-proxy-agent": "9.0.0",
     "ip-address": "^10.7.2",
