@@ -1,10 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrandMark, BrandWordmark } from "@/components/brand/brand-mark";
 import { Code2, Globe, MessageSquare, ShieldCheck } from "lucide-react";
+import {
+  ASK_AI_LABEL,
+  ASK_AI_PROVIDERS,
+  buildAskAiHref,
+  buildAskAiPrompt,
+  citePublishedCanonical,
+  showAskAiRow,
+} from "@/lib/ask-ai.mjs";
 
 const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -117,6 +126,9 @@ const footerLinks = {
 const socialLinkClass =
   "inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95";
 
+const askAiLinkClass =
+  "inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full transition-opacity duration-200 hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:opacity-70 motion-reduce:transition-none";
+
 const footerLinkClass =
   "inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-safe/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
@@ -173,7 +185,142 @@ function Tooltip({
   );
 }
 
+function AskAiIcon({
+  href,
+  accessibleName,
+  name,
+  lightSrc,
+  darkSrc,
+  tipId,
+}: {
+  href: string;
+  accessibleName: string;
+  name: string;
+  lightSrc: string;
+  darkSrc: string;
+  tipId: string;
+}) {
+  const [shift, setShift] = useState(0);
+  const [side, setSide] = useState<"top" | "bottom">("top");
+
+  const place = (anchor: HTMLSpanElement) => {
+    const tip = anchor.querySelector<HTMLElement>("[data-ask-tip]");
+    if (!tip) return;
+    const icon = anchor.getBoundingClientRect();
+    const margin = 8;
+    const ideal = icon.left + icon.width / 2 - tip.offsetWidth / 2;
+    const left = Math.max(margin, Math.min(ideal, window.innerWidth - margin - tip.offsetWidth));
+    const nextShift = left - ideal;
+    const nextSide = icon.top < tip.offsetHeight + margin + 8 ? "bottom" : "top";
+    setShift((current) => (current === nextShift ? current : nextShift));
+    setSide((current) => (current === nextSide ? current : nextSide));
+  };
+
+  return (
+    <span
+      className="group/ask relative"
+      data-side={side}
+      style={{ "--ask-tip-x": `${shift}px` } as React.CSSProperties}
+      onFocus={(event) => place(event.currentTarget)}
+      onMouseEnter={(event) => place(event.currentTarget)}
+    >
+      <span
+        id={tipId}
+        data-ask-tip
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-55 rounded-xl border border-border-soft bg-surface/95 px-4 py-2 text-center text-[10px] font-black uppercase tracking-widest text-foreground opacity-0 shadow-2xl ring-1 ring-white/10 backdrop-blur-md transition-opacity duration-200 group-data-[side=bottom]/ask:bottom-auto group-data-[side=bottom]/ask:top-full group-data-[side=bottom]/ask:mt-2 group-data-[side=bottom]/ask:mb-0 group-hover/ask:opacity-100 group-focus-within/ask:opacity-100 motion-reduce:transition-none"
+        style={{ transform: "translateX(calc(-50% + var(--ask-tip-x, 0px)))" }}
+      >
+        Ask {name}
+        <span
+          aria-hidden="true"
+          className="absolute top-full -mt-1 -translate-x-1/2 border-4 border-transparent border-t-border-soft group-data-[side=bottom]/ask:top-auto group-data-[side=bottom]/ask:bottom-full group-data-[side=bottom]/ask:mt-0 group-data-[side=bottom]/ask:-mb-1 group-data-[side=bottom]/ask:border-t-transparent group-data-[side=bottom]/ask:border-b-border-soft"
+          style={{ left: "calc(50% - var(--ask-tip-x, 0px))" }}
+        />
+      </span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={accessibleName}
+        aria-describedby={tipId}
+        className={askAiLinkClass}
+      >
+        <span aria-hidden="true" className="inline-flex items-center justify-center">
+          <img
+            src={lightSrc}
+            alt=""
+            width={32}
+            height={32}
+            draggable={false}
+            className="h-8 w-8 object-contain dark:hidden"
+          />
+          <img
+            src={darkSrc}
+            alt=""
+            width={32}
+            height={32}
+            draggable={false}
+            className="hidden h-8 w-8 object-contain dark:block"
+          />
+        </span>
+      </a>
+    </span>
+  );
+}
+
+function AskAiLinks({ pathname }: { pathname: string }) {
+  const [title, setTitle] = useState("HireProof");
+  const [publishedCanonical, setPublishedCanonical] = useState<string | null>(null);
+
+  useEffect(() => {
+    const read = () => {
+      const nextTitle = document.title.trim() || "HireProof";
+      const nextCanonical =
+        document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? null;
+      setTitle((current) => (current === nextTitle ? current : nextTitle));
+      setPublishedCanonical((current) => (current === nextCanonical ? current : nextCanonical));
+    };
+
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.head, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["href", "rel"],
+    });
+    return () => observer.disconnect();
+  }, [pathname]);
+
+  const canonicalUrl = citePublishedCanonical(publishedCanonical, pathname);
+  const prompt = buildAskAiPrompt(title, canonicalUrl);
+
+  return (
+    <div className="mt-12">
+      <p id="ask-ai-label" className="mb-2 text-xs font-black uppercase tracking-widest text-foreground">
+        {ASK_AI_LABEL}
+      </p>
+      <div className="flex max-w-full flex-wrap gap-2" role="group" aria-labelledby="ask-ai-label">
+        {ASK_AI_PROVIDERS.map((provider) => (
+          <AskAiIcon
+            key={provider.id}
+            href={buildAskAiHref(provider.href, prompt)}
+            accessibleName={`Ask ${provider.name} about ${title}, opens in a new tab`}
+            name={provider.name}
+            lightSrc={provider.lightSrc}
+            darkSrc={provider.darkSrc}
+            tipId={`ask-ai-tip-${provider.id}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SiteFooter() {
+  const pathname = usePathname();
   const [health, setHealth] = useState<{
     status: string;
     readiness?: {
@@ -316,6 +463,8 @@ export function SiteFooter() {
           </div>
         </div>
 
+        {showAskAiRow(pathname) ? <AskAiLinks pathname={pathname} /> : null}
+
         <div className="mt-16 pt-8 border-t border-border-soft flex flex-col items-center gap-6 text-center">
           <div className="flex items-center gap-4">
             <Tooltip content="Live connection to the HireProof verification engine">
@@ -356,7 +505,7 @@ export function SiteFooter() {
               M.Siazon
             </a>
             <span>.</span>
-            <span>Built for Cursor Hackathon</span>
+            <span>Built for the previous Vercel Global Hackathon</span>
             <span>·</span>
             <a
               href="/portfolio"
