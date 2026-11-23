@@ -3,6 +3,15 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import { buildTrendsViewModel } from '../lib/trends-view-model.mjs'
 
+test('PostCSS override follows the direct dependency when the updater changes its spec', async () => {
+  const packageJson = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const lockfile = JSON.parse(await fs.readFile(new URL('../package-lock.json', import.meta.url), 'utf8'))
+
+  assert.equal(packageJson.overrides.postcss, '$postcss')
+  assert.equal(typeof packageJson.devDependencies.postcss, 'string')
+  assert.equal(lockfile.packages[''].devDependencies.postcss, packageJson.devDependencies.postcss)
+})
+
 test('explore client fetches the intelligence reports endpoint', async () => {
   const source = await fs.readFile(new URL('../app/explore/explore-client.tsx', import.meta.url), 'utf8')
 
