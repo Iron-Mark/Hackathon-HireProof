@@ -2,6 +2,18 @@
 
 HireProof is built with a **Zero-Trust AI Architecture**. Every layer of the stack—from the network edge to the LLM orchestration—is hardened against modern attack vectors.
 
+## Dependency Update Compatibility
+
+The root PostCSS override uses `"postcss": "$postcss"`, referencing the direct
+`devDependencies.postcss` specification. This keeps the transitive version policy
+aligned with the direct dependency when Dependabot updates it, rather than
+duplicating a literal range that can cause npm's `EOVERRIDE` error. Keep the
+reviewed minimum version in the direct dependency; do not remove the override or
+freeze it separately to work around an updater failure.
+
+The runtime-wiring regression suite checks this reference and the lockfile's
+direct specification. See [npm's override reference documentation](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides).
+
 ## 1. Network & Transport Security
 
 ### 🔒 Strict-Transport-Security (HSTS)
